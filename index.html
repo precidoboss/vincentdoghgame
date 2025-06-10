@@ -608,12 +608,12 @@
 
           <!-- Game Over Screen Content (will be shown/hidden by JS) -->
           <div id="gameOverScreen" class="hidden">
-            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
+            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘�𝗘𝗔𝗟𝗘𝗗 🎉</h2>
             <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
             <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
-            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔�𝗜𝗚𝗔𝗟</p>
+            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
             <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
             <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
           </div>
@@ -752,7 +752,7 @@
   </script>
 
   <!-- Tone.js library for background sound -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+  <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
 
   <script type="module">
         // Get canvas and context
@@ -844,22 +844,19 @@
 
         // --- Image Assets (UPDATED PATHS AND ERROR HANDLING) ---
         const characterImage = new Image();
-        characterImage.src = './images/painter-character.png';
-        characterImage.onload = () => console.log('Character image loaded successfully.');
+        characterImage.onload = () => console.log('Character image loaded successfully:', characterImage.src, 'Complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
         characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
 
         const backgroundImage = new Image();
-        backgroundImage.src = './images/game-background.png';
         backgroundImage.onload = () => {
-            console.log('Background image loaded successfully.');
+            console.log('Background image loaded successfully:', backgroundImage.src, 'Complete:', backgroundImage.complete, 'NaturalWidth:', backgroundImage.naturalWidth);
             gameCanvas.classList.add('has-background');
             gameCanvas.style.backgroundImage = `url('./images/game-background.png')`; // Set background via JS after load
         };
         backgroundImage.onerror = (e) => console.error('Failed to load background image:', backgroundImage.src, e);
 
         const artToBeDrawnImage = new Image();
-        artToBeDrawnImage.src = './images/masterpiece-art.jpg';
-        artToBeDrawnImage.onload = () => console.log('Masterpiece art image loaded successfully.');
+        artToBeDrawnImage.onload = () => console.log('Masterpiece art image loaded successfully:', artToBeDrawnImage.src, 'Complete:', artToBeDrawnImage.complete, 'NaturalWidth:', artToBeDrawnImage.naturalWidth);
         artToBeDrawnImage.onerror = (e) => console.error('Failed to load masterpiece art image:', artToBeDrawnImage.src, e);
 
 
@@ -873,7 +870,7 @@
         let requiredItemType = null;
         const collectibleItemNames = ['meme', 'nft', 'vvd'];
 
-        // Function to resize the game canvas. Moved before other functions that might call it.
+        // Function to resize the game canvas. Moved to a higher scope.
         function resizeGameCanvas() {
             const container = gameCanvas.parentElement;
             gameCanvas.width = container.clientWidth > 500 ? 500 : container.clientWidth;
@@ -927,18 +924,20 @@
 
         function setupBackgroundSound() {
             // Set up a repeating loop for the background sound
-            // This is a simple 4-beat loop.
+            // Use '1m' for one measure, or '4n' for four quarter notes
             backgroundLoop = new Tone.Loop(time => {
                 // Kick on the first beat
                 kickSynth.triggerAttackRelease("C1", "8n", time);
 
                 // Bassline - a simple, driving pattern
+                // Use relative time strings or add numeric values to 'time' if it's a number
+                // The 'time' argument in Loop callback is a Tone.Time object, so .add() should work.
                 bassSynth.triggerAttackRelease("C2", "8n", time);
-                bassSynth.triggerAttackRelease("G1", "8n", Tone.Time(time).add("0:2")); // Halfway through the measure
+                bassSynth.triggerAttackRelease("G1", "8n", new Tone.Time(time).add("0:2")); // Using new Tone.Time(time) as workaround
 
                 // Cowbell-like sound on off-beats
-                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:1"));
-                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:3"));
+                cowbellSynth.triggerAttackRelease("C4", "32n", new Tone.Time(time).add("0:1"));
+                cowbellSynth.triggerAttackRelease("C4", "32n", new Tone.Time(time).add("0:3"));
 
             }, "1n").start(0); // "1n" means one whole note (loop repeats every 1 beat or measure)
 
@@ -1047,27 +1046,29 @@
         }
 
         window.addEventListener('load', async function() {
-            console.log('Window loaded event fired.');
-            resizeGameCanvas(); // Call it here, now that it's defined
+            console.log('Window loaded event fired. Starting initial setup.');
+            resizeGameCanvas(); // Call it here, now that it's defined globally
             characterX = (gameCanvas.width - characterWidth) / 2;
             showMessageBox("Welcome to Van Dogh: The Art Auction!", "Collect items to draw your masterpiece! Dodge chaos and get ready to bid!", true);
             window.addEventListener('resize', () => {
                 resizeGameCanvas();
             });
 
-            // Ensure all images are loaded before proceeding with setup that relies on them
-            // This waits for all images to either load successfully or fail.
-            const allImagesLoadedPromise = Promise.all([
+            // Set image sources and wait for all images to either load successfully or fail.
+            characterImage.src = './images/painter-character.png';
+            backgroundImage.src = './images/game-background.png';
+            artToBeDrawnImage.src = './images/masterpiece-art.jpg';
+
+            await Promise.all([
                 new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
                 new Promise(resolve => { backgroundImage.onload = resolve; backgroundImage.onerror = resolve; }),
                 new Promise(resolve => { artToBeDrawnImage.onload = resolve; artToBeDrawnImage.onerror = resolve; })
             ]);
+            console.log("All image load/error handlers have fired. Proceeding with game setup.");
 
-            await allImagesLoadedPromise;
-            console.log("All image load/error handlers have fired.");
-            setupImageGrid(); // This will only run once all images are confirmed loaded
+            setupImageGrid(); // This function now knows artToBeDrawnImage has tried to load.
 
-            // Setup background sound, but don't start it yet
+            // Setup background sound, but don't start it until user interaction
             setupBackgroundSound();
 
             const checkAuthReady = setInterval(() => {
@@ -1097,9 +1098,11 @@
         }
 
         function drawCharacter() {
+            console.log('Drawing character. Image complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
             if (characterImage.complete && characterImage.naturalWidth > 0) {
                 gameCtx.drawImage(characterImage, characterX, gameCanvas.height - characterHeight - 10, characterWidth, characterHeight);
             } else {
+                console.warn('Character image not ready for drawing, drawing fallback emoji.');
                 gameCtx.font = `${characterHeight}px Arial`;
                 gameCtx.textAlign = 'center';
                 gameCtx.textBaseline = 'middle';
@@ -1309,8 +1312,13 @@
         function gameLoop() {
             gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
+            // Draw background image if loaded, otherwise fill with a fallback color
             if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
                 gameCtx.drawImage(backgroundImage, 0, 0, gameCanvas.width, gameCanvas.height);
+            } else {
+                console.warn('Background image not ready for drawing, filling with fallback color.');
+                gameCtx.fillStyle = '#3a3a5a'; // Fallback background color
+                gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
             }
 
             update();
