@@ -175,7 +175,7 @@
     .img-piece {
       background-color: #1f2937; /* hidden mask */
       /* Masterpiece image, scaled to cover the entire grid */
-      background-image: url('https://github.com/precidoboss/my-game-sprites/blob/main/arttobedrawn.jpg?raw=true'); /* Updated URL with ?raw=true */
+      background-image: url('./images/masterpiece-art.jpg'); /* Updated path */
       background-size: 400% 300%; /* Image scaled to fill 4x3 grid entirely */
       opacity: 0; /* Hidden by default */
       transition: opacity 0.5s ease-in-out;
@@ -267,6 +267,28 @@
         transform: translateY(0);
         box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.2);
     }
+
+    /* Sound control button style */
+    #soundToggleButton {
+        background-color: #6a6a6a; /* A neutral color */
+        color: white;
+        padding: 0.15rem 0.3rem;
+        border-radius: 0.25rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border: none;
+        outline: none;
+        font-size: 0.6rem;
+        margin-left: 0.2rem; /* Space from other buttons */
+    }
+    #soundToggleButton:hover {
+        background-color: #5a5a5a;
+        transform: translateY(-0.25px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
 
     /* Message Box and Game Over Screen */
     .message-box {
@@ -524,7 +546,7 @@
           <img src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" alt="Twitter logo" />
           @TheVanDogh
         </div>
-        <div class="hashtag">#VVDMEMES 🎨 💎</div>
+        <div class="hashtag">#VVDMEMES 🎨🔥💎</div>
 
         <div class="score-board">𝗘𝗫𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
 
@@ -561,6 +583,9 @@
             <button id="moveRight" class="game-button">
                 Right <i class="fas fa-arrow-right"></i>
             </button>
+            <button id="soundToggleButton" class="game-button">
+                <i class="fas fa-volume-up"></i> Sound
+            </button>
         </div>
         <div id="userIdDisplay" class="user-id-display mt-4">User ID: Loading...</div>
     </div>
@@ -588,7 +613,7 @@
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
             <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
-            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
+            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔�𝗜𝗚𝗔𝗟</p>
             <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
             <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
           </div>
@@ -726,6 +751,9 @@
         };
   </script>
 
+  <!-- Tone.js library for background sound -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
   <script type="module">
         // Get canvas and context
         const gameCanvas = document.getElementById('gameCanvas');
@@ -740,6 +768,7 @@
         const moveLeftButton = document.getElementById('moveLeft');
         const moveRightButton = document.getElementById('moveRight');
         const startGameButton = document.getElementById('startGame');
+        const soundToggleButton = document.getElementById('soundToggleButton'); // New sound button
         const messageBox = document.getElementById('messageBox');
         const messageTitle = document.getElementById('messageTitle');
         const messageText = document.getElementById('messageText');
@@ -810,22 +839,28 @@
             'jeet_coin': { emoji: '🐍', points: 0, type: 'hazard', name: 'Jeet Coin' },
             'meme_brain': { emoji: '🧠', points: 0, type: 'powerup', duration: 10000, name: 'Meme Brain' },
             'art_tornado': { emoji: '🌀', points: 0, type: 'powerup', duration: 0, name: 'Art Tornado' },
-            'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000, name: 'Viral Mode' }
+            'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000 } // 15 seconds
         };
 
-        // --- Image Assets ---
+        // --- Image Assets (UPDATED PATHS AND ERROR HANDLING) ---
         const characterImage = new Image();
-        characterImage.src = './images/g9yo-_H3_400x400-removebg-preview.png'; // Path updated for local folder
-        characterImage.onerror = () => console.error('Failed to load character image.');
+        characterImage.src = './images/painter-character.png';
+        characterImage.onload = () => console.log('Character image loaded successfully.');
+        characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
 
         const backgroundImage = new Image();
-        backgroundImage.src = './images/Colorful Abstract World Art Day Instagram Post.png'; // Path updated for local folder
-        backgroundImage.onerror = () => console.error('Failed to load background image.');
+        backgroundImage.src = './images/game-background.png';
+        backgroundImage.onload = () => {
+            console.log('Background image loaded successfully.');
+            gameCanvas.classList.add('has-background');
+            gameCanvas.style.backgroundImage = `url('./images/game-background.png')`; // Set background via JS after load
+        };
+        backgroundImage.onerror = (e) => console.error('Failed to load background image:', backgroundImage.src, e);
 
-        // This is the correct raw URL for the masterpiece image
         const artToBeDrawnImage = new Image();
-        artToBeDrawnImage.src = './images/arttobedrawn.jpg'; // Path updated for local folder
-        artToBeDrawnImage.onerror = () => console.error('Failed to load art to be drawn image:', artToBeDrawnImage.src);
+        artToBeDrawnImage.src = './images/masterpiece-art.jpg';
+        artToBeDrawnImage.onload = () => console.log('Masterpiece art image loaded successfully.');
+        artToBeDrawnImage.onerror = (e) => console.error('Failed to load masterpiece art image:', artToBeDrawnImage.src, e);
 
 
         // Art Drawing Variables (for the image grid)
@@ -838,12 +873,97 @@
         let requiredItemType = null;
         const collectibleItemNames = ['meme', 'nft', 'vvd'];
 
+        // Function to resize the game canvas. Moved before other functions that might call it.
         function resizeGameCanvas() {
             const container = gameCanvas.parentElement;
             gameCanvas.width = container.clientWidth > 500 ? 500 : container.clientWidth;
             gameCanvas.height = gameCanvas.width;
             if (!gameRunning && !gameOver) {
                 characterX = (gameCanvas.width - characterWidth) / 2;
+            }
+            console.log(`Canvas resized to: ${gameCanvas.width}x${gameCanvas.height}`); // Added for debugging
+        }
+
+        // --- Tone.js Audio Setup ---
+        let backgroundLoop;
+        let isMuted = false;
+
+        // Basic synth for a low bassline
+        const bassSynth = new Tone.Synth({
+            oscillator: { type: "sawtooth" },
+            envelope: {
+                attack: 0.01,
+                decay: 0.2,
+                sustain: 0.1,
+                release: 0.8
+            }
+        }).toDestination();
+
+        // Membrane synth for a kick-like sound (mimicking phonk drums)
+        const kickSynth = new Tone.MembraneSynth({
+            envelope: {
+                attack: 0.001,
+                decay: 0.4,
+                sustain: 0.01,
+                release: 1.4
+            }
+        }).toDestination();
+
+        // Metal synth for a high-pitched metallic sound (like a cowbell)
+        const cowbellSynth = new Tone.MetalSynth({
+            frequency: 400,
+            envelope: {
+                attack: 0.001,
+                decay: 0.1,
+                sustain: 0.01,
+                release: 0.05
+            },
+            harmonicity: 3.1,
+            modulationIndex: 23,
+            resonance: 8000,
+            octaves: 1.5
+        }).toDestination();
+
+
+        function setupBackgroundSound() {
+            // Set up a repeating loop for the background sound
+            // This is a simple 4-beat loop.
+            backgroundLoop = new Tone.Loop(time => {
+                // Kick on the first beat
+                kickSynth.triggerAttackRelease("C1", "8n", time);
+
+                // Bassline - a simple, driving pattern
+                bassSynth.triggerAttackRelease("C2", "8n", time);
+                bassSynth.triggerAttackRelease("G1", "8n", Tone.Time(time).add("0:2")); // Halfway through the measure
+
+                // Cowbell-like sound on off-beats
+                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:1"));
+                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:3"));
+
+            }, "1n").start(0); // "1n" means one whole note (loop repeats every 1 beat or measure)
+
+            Tone.Transport.bpm.value = 120; // Set BPM for a moderate pace
+            Tone.Transport.loop = true;
+            Tone.Transport.loopEnd = '1m'; // Loop every 1 measure (same as "1n" in this context)
+
+            console.log("Background sound setup complete.");
+        }
+
+        // Function to start or stop the background sound
+        function toggleBackgroundSound() {
+            if (Tone.Transport.state === "started") {
+                Tone.Transport.pause();
+                isMuted = true;
+                soundToggleButton.innerHTML = '<i class="fas fa-volume-mute"></i> Muted';
+                console.log("Background sound paused.");
+            } else {
+                // User interaction required to start AudioContext
+                Tone.start().then(() => {
+                    Tone.Transport.start();
+                    isMuted = false;
+                    soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+                    console.log("Background sound started.");
+                }).catch(e => console.error("Tone.js AudioContext failed to start:", e));
             }
         }
 
@@ -927,37 +1047,28 @@
         }
 
         window.addEventListener('load', async function() {
-            resizeGameCanvas();
+            console.log('Window loaded event fired.');
+            resizeGameCanvas(); // Call it here, now that it's defined
             characterX = (gameCanvas.width - characterWidth) / 2;
             showMessageBox("Welcome to Van Dogh: The Art Auction!", "Collect items to draw your masterpiece! Dodge chaos and get ready to bid!", true);
             window.addEventListener('resize', () => {
                 resizeGameCanvas();
             });
 
-            let imagesLoadedCount = 0;
-            const totalImages = 3; // character, background, artToBeDrawn
+            // Ensure all images are loaded before proceeding with setup that relies on them
+            // This waits for all images to either load successfully or fail.
+            const allImagesLoadedPromise = Promise.all([
+                new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
+                new Promise(resolve => { backgroundImage.onload = resolve; backgroundImage.onerror = resolve; }),
+                new Promise(resolve => { artToBeDrawnImage.onload = resolve; artToBeDrawnImage.onerror = resolve; })
+            ]);
 
-            const checkImageLoad = () => {
-                imagesLoadedCount++;
-                console.log(`Image loaded: ${imagesLoadedCount}/${totalImages}`);
-                if (imagesLoadedCount === totalImages) {
-                    console.log("All core images loaded. Proceeding with grid setup.");
-                    setupImageGrid(); // This will only run once all images are confirmed loaded
-                }
-            };
+            await allImagesLoadedPromise;
+            console.log("All image load/error handlers have fired.");
+            setupImageGrid(); // This will only run once all images are confirmed loaded
 
-            characterImage.onload = checkImageLoad;
-            backgroundImage.onload = () => {
-                gameCanvas.classList.add('has-background');
-                gameCanvas.style.backgroundImage = `url('./images/Colorful Abstract World Art Day Instagram Post.png')`; // Set background via JS after load
-                checkImageLoad();
-            };
-            artToBeDrawnImage.onload = checkImageLoad;
-            artToBeDrawnImage.onerror = () => {
-                console.error("Failed to load artToBeDrawnImage from URL:", artToBeDrawnImage.src);
-                checkImageLoad(); // Still count as loaded to proceed, even if image failed
-            };
-
+            // Setup background sound, but don't start it yet
+            setupBackgroundSound();
 
             const checkAuthReady = setInterval(() => {
                 if (window.isAuthReady && window.currentUserId) {
@@ -1215,6 +1326,21 @@
             if (gameRunning) return;
             hideMessageBox();
 
+            // Ensure Tone.js audio context is started on user interaction
+            if (Tone.context.state !== 'running') {
+                Tone.start().then(() => {
+                    console.log("AudioContext resumed after user gesture.");
+                    Tone.Transport.start(); // Start the background loop
+                    isMuted = false;
+                    soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+                }).catch(e => console.error("Tone.js AudioContext failed to start:", e));
+            } else {
+                Tone.Transport.start(); // If already running, just start the loop
+                isMuted = false;
+                soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+            }
+
+
             score = 0;
             vvdCollected = 0;
             artItemsCollectedCount = 0;
@@ -1253,6 +1379,8 @@
             gameRunning = false;
             gameOver = true;
             cancelAnimationFrame(animationFrameId);
+
+            Tone.Transport.pause(); // Pause background music on game over
 
             clearTimeout(powerupTimer);
             clearTimeout(jeetCoinTimer);
@@ -1378,7 +1506,10 @@
         });
 
         startGameButton.addEventListener('click', startGame);
+        // The messageButton also triggers startGame, ensuring AudioContext starts with user interaction
         messageButton.addEventListener('click', startGame);
+        soundToggleButton.addEventListener('click', toggleBackgroundSound);
+
 
         let touchStartX = 0;
         let lastTouchMoveX = 0;
@@ -1420,3 +1551,4 @@
   </script>
 </body>
 </html>
+�
