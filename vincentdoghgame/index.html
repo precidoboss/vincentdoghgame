@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vicente Van Dogh Game</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <!-- Google Fonts for desired sketch style -->
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Patrick+Hand&family=Caveat&family=Permanent+Marker&display=swap" rel="stylesheet">
+  <style>
+    /* Universal sketch style vibes */
+    body {
+      font-family: 'Comic Neue', 'Patrick Hand', 'Caveat', cursive;
+      background-color: #1e1e2e;
+      color: #fefefe;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start; /* Align items to start to prevent excessive centering that pushes content off */
+      min-height: 100vh;
+      margin: 0;
+      padding: 0.01rem; /* Almost no padding */
+      overflow-y: auto; /* Fallback for very small screens, ideally not needed */
+    }
+
+    .game-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem; /* Minimal gap between major sections */
+        width: 99.8%; /* Maximize horizontal space */
+        max-width: 900px;
+        box-sizing: border-box;
+        align-items: center;
+    }
+
+    .main-ui-section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.1rem; /* Minimal gap between left/right panels */
+      width: 100%;
+    }
+
+    /* Scoreboard Container - left side */
+    .scoreboard-container {
+      flex: 1 1 calc(55% - 0.05rem); /* Give scoreboard more space, account for reduced gap */
+      min-width: 90px; /* Drastically reduced min-width */
+      background-color: #2c2c4c;
+      border-radius: 5px; /* Smaller border-radius */
+      padding: 0.05rem; /* Extremely reduced padding */
+      box-shadow: 0 0 3px #000;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: scale(0.7); /* Aggressively scale down the entire container */
+      transform-origin: top left; /* Scale from top-left to preserve position */
+    }
+
+    .scoreboard-header {
+      display: flex;
+      align-items: center;
+      font-size: 0.6rem; /* Tiny font size */
+      font-weight: bold;
+      margin-bottom: 0.01rem; /* Minimal margin */
+      color: #FFD700;
+      font-family: 'Arial Black', sans-serif;
+    }
+
+    .scoreboard-header img {
+      width: 8px; /* Tiny image size */
+      height: 8px;
+      margin-right: 0.02rem; /* Minimal margin */
+    }
+
+    .hashtag {
+      font-size: 0.3rem; /* Super tiny font size */
+      color: #ccc;
+      margin-bottom: 0.05rem; /* Minimal margin */
+    }
+
+    /* Score, Stats, Instruction Boards - chalkboard style */
+    .score-board,
+    .stats-display,
+    .instruction-board {
+      background: repeating-linear-gradient(
+        45deg,
+        #3a3a5a,
+        #3a3a5a 10px,
+        #353554 10px,
+        #353554 20px
+      );
+      border: 1px dashed #fcd34d; /* Thinner border */
+      border-radius: 0.3rem; /* Smaller border-radius */
+      padding: 0.1rem 0.2rem; /* Extremely reduced padding */
+      margin-bottom: 0.1rem; /* Extremely reduced margin */
+      text-align: center;
+      font-weight: bold;
+      font-size: 0.6rem; /* Tiny font size */
+      box-shadow: 0 0 2px rgba(252, 211, 77, 0.3); /* Smaller shadow */
+      text-shadow: 0.25px 0.25px #000; /* Smaller shadow */
+      color: #fef08a;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .stats-display {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.1rem; /* Minimal gap */
+      font-size: 0.55rem; /* Tiny font size */
+    }
+
+    .stats-display div {
+      flex: 1 1 48%; /* Adjusted flex for balance */
+      background-color: #4a4a6a;
+      border-radius: 0.2rem; /* Smaller border-radius */
+      padding: 0.08rem; /* Extremely reduced padding */
+      color: #fff;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .instruction-board {
+      font-size: 0.65rem; /* Tiny font size */
+      color: #fde68a;
+      background-color: #45456a;
+      border: 1px dotted #fcd34d; /* Thinner dotted border */
+      margin-bottom: 0.15rem; /* Minimal margin */
+    }
+
+    /* Art Preview Container - right side */
+    .art-preview-container {
+      flex: 1 1 calc(45% - 0.05rem); /* Give art reveal less space, account for reduced gap */
+      min-width: 90px; /* Drastically reduced min-width */
+      background: linear-gradient(135deg, #2a2a4a, #1e1e2e);
+      padding: 0.05rem; /* Extremely reduced padding */
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      text-align: center;
+      border: 2px dashed #fcd34d;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: scale(0.7); /* Aggressively scale down the entire container */
+      transform-origin: top left; /* Scale from top-left to preserve position */
+    }
+
+    .reveal-title {
+      font-size: 0.7rem; /* Tiny font size */
+      color: #fcd34d;
+      font-weight: bold;
+      margin-bottom: 0.05rem; /* Minimal margin */
+      font-family: 'Permanent Marker', cursive;
+      text-shadow: 0.25px 0.25px #000;
+    }
+
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 0.2px; /* Super minimal gap */
+      width: 100%;
+      max-width: 80px; /* Further reduced max-width for the grid itself */
+      aspect-ratio: 4 / 3;
+      margin: 0 auto;
+      border: 1px dashed #334155; /* Thinner border */
+      border-radius: 0.3rem; /* Smaller border-radius */
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .img-piece {
+      background-color: #1f2937; /* hidden mask */
+      /* Masterpiece image, scaled to cover the entire grid */
+      background-image: url('https://github.com/precidoboss/my-game-sprites/blob/main/arttobedrawn.jpg?raw=true'); /* Updated URL with ?raw=true */
+      background-size: 400% 300%; /* Image scaled to fill 4x3 grid entirely */
+      opacity: 0; /* Hidden by default */
+      transition: opacity 0.5s ease-in-out;
+      border-radius: 0.25px; /* Extremely minimal border-radius */
+      box-shadow: inset 0 0 0.5px rgba(0,0,0,0.5); /* Tiny shadow */
+      box-sizing: border-box;
+      /* background-position will be set by JS dynamically for each piece */
+    }
+
+    .img-piece.revealed {
+      opacity: 1;
+    }
+
+    /* Stat value animation */
+    .stat-value {
+      font-weight: bold;
+      color: #facc15;
+      transition: transform 0.3s ease-in-out;
+      display: inline-block;
+    }
+
+    .stat-value.flash {
+      animation: flash 0.5s ease-in-out;
+    }
+    @keyframes flash {
+      0% { background-color: #fcd34d; }
+      100% { background-color: transparent; }
+    }
+
+    /* Main game canvas and controls area */
+    .game-play-area {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.2rem; /* Minimal spacing from top UI */
+        background-color: #2a2a4a;
+        border-radius: 0.6rem; /* Smaller border-radius */
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        padding: 0.2rem; /* Reduced padding */
+        width: 100%;
+        max-width: 550px;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+        flex-grow: 1; /* Allow it to take up available vertical space */
+        min-height: 120px; /* Further reduced min height for the game */
+    }
+
+    canvas {
+        border-radius: 0.5rem; /* Smaller border-radius */
+        display: block;
+        touch-action: none;
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        max-width: 500px;
+        max-height: 500px;
+        border: 1px solid #5a5a8a;
+        background-color: transparent;
+    }
+
+    .buttons-container {
+        display: flex;
+        gap: 0.2rem; /* Reduced gap */
+        margin-top: 0.2rem; /* Reduced margin */
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .game-button {
+        background-color: #8b5cf6;
+        color: white;
+        padding: 0.15rem 0.3rem; /* Reduced padding */
+        border-radius: 0.25rem; /* Smaller border-radius */
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        border: none;
+        outline: none;
+        flex-grow: 1;
+        min-width: 35px; /* Reduced min width */
+        font-size: 0.6rem; /* Reduced font size */
+    }
+    .game-button:hover {
+        background-color: #7c3aed;
+        transform: translateY(-0.25px); /* Smaller transform */
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    .game-button:active {
+        transform: translateY(0);
+        box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Message Box and Game Over Screen */
+    .message-box {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 0.2rem; /* Reduced padding */
+        box-sizing: border-box;
+        display: none; /* Controlled by JS */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.2rem; /* Reduced gap */
+        z-index: 100;
+        text-align: center;
+        overflow-y: auto;
+    }
+    .message-box-content {
+        background-color: #2a2a4a;
+        border-radius: 0.5rem; /* Smaller border-radius */
+        padding: 0.5rem; /* Reduced padding */
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+        width: 99%; /* Wider on small screens */
+        max-width: 300px; /* Significantly increased max-width for game over content */
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem; /* Reduced gap */
+    }
+    .message-box h2 {
+        font-size: 0.8rem; /* Reduced font size */
+        margin-bottom: 0.02rem; /* Reduced margin */
+        color: #fcd34d;
+    }
+    .message-box p {
+        font-size: 0.55rem; /* Reduced font size */
+        margin-bottom: 0.1rem; /* Reduced margin */
+        line-height: 1.0;
+    }
+    .message-box input {
+        padding: 0.15rem; /* Reduced padding */
+        border-radius: 0.25rem;
+        border: 1px solid #5a5a8a;
+        background-color: #1a1a2e;
+        color: white;
+        font-size: 0.5rem; /* Reduced font size */
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    #gameOverScreen {
+      background-color: #222244;
+      padding: 0.5rem; /* Reduced padding */
+      border-radius: 0.5rem; /* Smaller border-radius */
+      margin-top: 0.2rem; /* Reduced margin */
+      color: #fff;
+      font-size: 0.6rem; /* Reduced font size */
+      display: none; /* Initially hidden, controlled by JS */
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    #gameOverScreen h2 {
+      color: #facc15;
+      font-size: 0.75rem; /* Reduced font size */
+      font-family: 'Arial Black', sans-serif;
+    }
+
+    .bold {
+      font-weight: bold;
+      color: #fcd34d;
+    }
+
+    .final-art {
+      width: 100%;
+      margin-top: 0.15rem; /* Reduced margin */
+      border: 1px dashed #FFD700; /* Thinner border */
+      border-radius: 5px; /* Smaller border-radius */
+      display: block;
+      max-width: 250px; /* Significantly increased max-width for the final masterpiece image */
+      height: auto;
+      object-fit: contain;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .leaderboard-display {
+        margin-top: 0.2rem; /* Reduced margin */
+        text-align: left;
+        padding: 0.2rem; /* Reduced padding */
+        background-color: #2a2a4a;
+        border-radius: 0.5rem; /* Smaller border-radius */
+        box-shadow: 0 1px 5px rgba(0,0,0,0.2);
+        color: #e0e0e0;
+        flex: 1;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .leaderboard-display h3 {
+        font-size: 0.75rem; /* Reduced font size */
+        color: #fcd34d;
+        margin-bottom: 0.15rem; /* Reduced margin */
+        text-align: center;
+    }
+    .leaderboard-display ol {
+        list-style: none;
+        padding: 0;
+        max-height: 40px; /* Reduced max height for leaderboard list */
+        overflow-y: auto;
+    }
+    .leaderboard-display li {
+        background-color: #3a3a5a;
+        margin-bottom: 0.1rem; /* Reduced margin */
+        padding: 0.1rem 0.2rem; /* Reduced padding */
+        border-radius: 0.2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.55rem; /* Reduced font size */
+        box-shadow: 0 0.25px 1px rgba(0,0,0,0.1);
+    }
+    .leaderboard-display li:nth-child(odd) {
+        background-color: #4a4a6a;
+    }
+    .leaderboard-display .leaderboard-score {
+        font-weight: bold;
+        color: #a7f3d0;
+    }
+    .loading-spinner {
+        display: none;
+        border: 1px solid rgba(255, 255, 255, 0.3); /* Thinner border */
+        border-radius: 50%;
+        border-top: 1px solid #fff;
+        width: 12px; /* Smaller spinner */
+        height: 12px;
+        -webkit-animation: spin 1s linear infinite;
+        animation: spin 1s linear infinite;
+    }
+    @-webkit-keyframes spin {
+      0% { -webkit-transform: rotate(0deg); }
+      100% { -webkit-transform: rotate(360deg); }
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .user-id-display {
+        font-size: 0.45rem; /* Reduced font size */
+        color: #999;
+        margin-top: 0.05rem;
+        word-break: break-all;
+    }
+
+    /* Power-up overlays */
+    .invincible-overlay, .double-points-overlay, .score-reset-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0.75rem;
+        pointer-events: none;
+        z-index: 50;
+        display: none;
+        box-sizing: border-box;
+    }
+    .invincible-overlay {
+        background-color: rgba(255, 255, 0, 0.2);
+        animation: pulse-yellow 1s infinite alternate;
+    }
+    @keyframes pulse-yellow {
+        from { opacity: 0.2; }
+        to { opacity: 0.5; }
+    }
+
+    .double-points-overlay {
+        background-color: rgba(139, 92, 246, 0.2);
+        animation: pulse-purple 1s infinite alternate;
+    }
+    @keyframes pulse-purple {
+        from { opacity: 0.2; }
+        to { opacity: 0.5; }
+    }
+
+    .score-reset-overlay {
+        background-color: rgba(255, 0, 0, 0.3);
+        animation: pulse-red 0.5s infinite alternate;
+    }
+    @keyframes pulse-red {
+        from { opacity: 0.3; }
+        to { opacity: 0.6; }
+    }
+    #gameCanvas.has-background {
+        background-size: cover;
+        background-position: center;
+    }
+
+    /* Responsive adjustments for mobile to ensure stacking gracefully */
+    @media (max-width: 767px) {
+        .main-ui-section {
+            flex-direction: column; /* Stack on smaller screens */
+            align-items: center;
+            gap: 0.3rem; /* More space when stacked */
+        }
+        .scoreboard-container, .art-preview-container {
+            flex: 1 1 100%; /* Take full width when stacked */
+            min-width: unset; /* Remove min-width when stacked */
+            width: 100%;
+            padding: 0.2rem; /* Slightly more padding when stacked */
+            transform: scale(1); /* Reset scale to 1 for stacked layout */
+            transform-origin: center; /* Center when stacked */
+        }
+        .game-play-area {
+            margin-top: 0.3rem; /* Reduced margin when stacked */
+            max-width: 100%; /* Ensure it doesn't overflow */
+            padding: 0.2rem; /* Reduced padding */
+        }
+        .scoreboard-header {
+            font-size: 0.7rem; /* Slightly larger when stacked for readability */
+        }
+        .score-board, .instruction-board {
+            font-size: 0.7rem;
+        }
+        .stats-display {
+            font-size: 0.65rem;
+        }
+        .stats-display div {
+             padding: 0.1rem;
+        }
+        .reveal-title {
+            font-size: 0.8rem;
+        }
+        .image-grid {
+            max-width: 100px; /* Keep a reasonable max width for the grid when stacked */
+            gap: 0.5px;
+        }
+        .message-box-content {
+            max-width: 98%; /* Allow message box to be wider on very small screens */
+        }
+        .final-art {
+            max-width: 180px; /* Adjusted for mobile */
+        }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-wrapper">
+    <div class="main-ui-section">
+      <div class="scoreboard-container">
+        <div class="scoreboard-header">
+          <img src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" alt="Twitter logo" />
+          @TheVanDogh
+        </div>
+        <div class="hashtag">#VVDMEMES 🎨 💎</div>
+
+        <div class="score-board">𝗘𝗫𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
+
+        <div class="stats-display">
+          <div>$VVD: <span id="vvdCollected" class="stat-value">0</span></div>
+          <div>Art Items: <span id="artItemsCollectedCount" class="stat-value">0</span></div>
+          <div>Accuracy: <span id="accuracy" class="stat-value">0%</span></div>
+          <div>Art Worth: $<span id="artWorthDisplay" class="stat-value">0</span></div>
+        </div>
+
+        <div class="instruction-board">🎯 Collect: <span id="requiredItem"></span></div>
+      </div>
+
+      <div class="art-preview-container">
+        <div class="reveal-title">✨ Reveal the Masterpiece ✨</div>
+        <div class="image-grid" id="imageGrid">
+          <!-- Image pieces will be dynamically added here by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <div class="game-play-area">
+        <div class="relative w-full max-w-[500px]">
+            <canvas id="gameCanvas"></canvas>
+            <div id="invincibleOverlay" class="invincible-overlay"></div>
+            <div id="doublePointsOverlay" class="double-points-overlay"></div>
+            <div id="scoreResetOverlay" class="score-reset-overlay"></div>
+        </div>
+        <div class="buttons-container">
+            <button id="moveLeft" class="game-button">
+                <i class="fas fa-arrow-left"></i> Left
+            </button>
+            <button id="startGame" class="game-button">Start Game</button>
+            <button id="moveRight" class="game-button">
+                Right <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+        <div id="userIdDisplay" class="user-id-display mt-4">User ID: Loading...</div>
+    </div>
+
+    <div class="leaderboard-display">
+        <h3>Top Art Collectors</h3>
+        <ol id="leaderboardList">
+            <li class="text-center text-gray-400">Loading Leaderboard... <div class="loading-spinner mx-auto mt-2"></div></li>
+        </ol>
+    </div>
+  </div>
+
+  <div id="messageBox" class="message-box">
+      <div class="message-box-content">
+          <h2 id="messageTitle">Welcome!</h2>
+          <p id="messageText">Collect art, avoid chaos! Tap left/right or use arrows to move.</p>
+          <input type="text" id="userNameInput" placeholder="Enter your name (optional)" class="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden" />
+          <button id="messageButton" class="game-button">Start Game</button>
+          <div id="loadingSpinner" class="loading-spinner mx-auto"></div>
+
+          <!-- Game Over Screen Content (will be shown/hidden by JS) -->
+          <div id="gameOverScreen" class="hidden">
+            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
+            <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
+            <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
+            <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
+            <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
+            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
+            <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
+            <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
+          </div>
+      </div>
+  </div>
+
+  <!-- Firebase SDK (kept at the end of body as best practice) -->
+  <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase instances and user ID
+        window.firebaseApp = null;
+        window.db = null;
+        window.auth = null;
+        window.currentUserId = null;
+        window.isAuthReady = false; // Flag to indicate auth state is determined
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Firebase configuration and initialization
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+
+            window.firebaseApp = initializeApp(firebaseConfig);
+            window.db = getFirestore(window.firebaseApp);
+            window.auth = getAuth(window.firebaseApp);
+
+            // Authentication Listener
+            onAuthStateChanged(window.auth, async (user) => {
+                if (user) {
+                    window.currentUserId = user.uid;
+                } else {
+                    // Sign in anonymously if no user is found
+                    try {
+                        const credential = await signInAnonymously(window.auth);
+                        window.currentUserId = credential.user.uid;
+                    } catch (error) {
+                        console.error("Anonymous sign-in failed:", error);
+                        window.currentUserId = crypto.randomUUID(); // Fallback to a random ID
+                    }
+                }
+                document.getElementById('userIdDisplay').textContent = `User ID: ${window.currentUserId}`;
+                window.isAuthReady = true;
+                console.log("Firebase Auth Ready. User ID:", window.currentUserId);
+
+                setupLeaderboardListener();
+            });
+
+            // Attempt to sign in with custom token if available
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(window.auth, __initial_auth_token);
+                    console.log("Signed in with custom token.");
+                } catch (error) {
+                    console.error("Custom token sign-in failed:", error);
+                }
+            } else {
+                console.log("No initial auth token found, relying on anonymous sign-in.");
+            }
+        });
+
+        // Function to listen for real-time leaderboard updates
+        function setupLeaderboardListener() {
+            if (!window.db || !window.isAuthReady) {
+                console.log("Firestore or Auth not ready for leaderboard listener.");
+                return;
+            }
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const leaderboardCollectionRef = collection(window.db, `/artifacts/${appId}/public/data/leaderboard`);
+            const q = query(leaderboardCollectionRef, orderBy('overallScore', 'desc'), limit(10));
+
+            onSnapshot(q, (snapshot) => {
+                const leaderboardData = [];
+                snapshot.forEach((doc) => {
+                    leaderboardData.push({ id: doc.id, ...doc.data() });
+                });
+                console.log("Leaderboard updated:", leaderboardData);
+                updateLeaderboardUI(leaderboardData);
+            }, (error) => {
+                console.error("Error fetching leaderboard:", error);
+                document.getElementById('leaderboardList').innerHTML = `<li class="text-center text-red-400">Error loading leaderboard.</li>`;
+            });
+        }
+
+        // Function to update the leaderboard UI
+        function updateLeaderboardUI(data) {
+            const leaderboardList = document.getElementById('leaderboardList');
+            leaderboardList.innerHTML = '';
+
+            if (data.length === 0) {
+                leaderboardList.innerHTML = `<li class="text-center text-gray-400">No scores yet. Be the first!</li>`;
+                return;
+            }
+
+            data.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${index + 1}. ${entry.userName || 'Anonymous'}</span>
+                    <span class="leaderboard-score">Score: ${entry.overallScore} | Bid: ${entry.finalAuctionAmountVVD ? entry.finalAuctionAmountVVD.toFixed(2) + ' $VVD' : 'N/A'}</span>
+                `;
+                leaderboardList.appendChild(li);
+            });
+        }
+
+        // Function to submit score to Firestore
+        window.submitScoreToFirestore = async (scoreData) => {
+            if (!window.db || !window.isAuthReady || !window.currentUserId) {
+                console.error("Firestore, Auth, or User ID not ready for submission.");
+                return false;
+            }
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+            const leaderboardCollectionRef = collection(window.db, `/artifacts/${appId}/public/data/leaderboard`);
+
+            try {
+                await addDoc(leaderboardCollectionRef, {
+                    userId: window.currentUserId,
+                    userName: scoreData.userName,
+                    overallScore: scoreData.score,
+                    vvdCollected: scoreData.vvd,
+                    artItemsCollected: scoreData.artItemsCollected,
+                    accuracy: scoreData.accuracy,
+                    finalAuctionAmount: scoreData.finalAuctionAmountUSD,
+                    finalAuctionAmountVVD: scoreData.finalAuctionAmountVVD,
+                    timestamp: serverTimestamp()
+                });
+                console.log("Score submitted successfully!");
+                return true;
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                return false;
+            }
+        };
+  </script>
+
+  <script type="module">
+        // Get canvas and context
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gameCtx = gameCanvas.getContext('2d');
+
+        const scoreDisplay = document.getElementById('score');
+        const vvdCollectedDisplay = document.getElementById('vvdCollected');
+        const artItemsCollectedCountDisplay = document.getElementById('artItemsCollectedCount');
+        const accuracyDisplay = document.getElementById('accuracy');
+        const artWorthDisplay = document.getElementById('artWorthDisplay');
+        const requiredItemDisplay = document.getElementById('requiredItem');
+        const moveLeftButton = document.getElementById('moveLeft');
+        const moveRightButton = document.getElementById('moveRight');
+        const startGameButton = document.getElementById('startGame');
+        const messageBox = document.getElementById('messageBox');
+        const messageTitle = document.getElementById('messageTitle');
+        const messageText = document.getElementById('messageText');
+        const userNameInput = document.getElementById('userNameInput');
+        const messageButton = document.getElementById('messageButton');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const invincibleOverlay = document.getElementById('invincibleOverlay');
+        const doublePointsOverlay = document.getElementById('doublePointsOverlay');
+        const scoreResetOverlay = document.getElementById('scoreResetOverlay');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+
+        // Game Over Screen specific elements
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalArtImage = document.getElementById('finalArtImage');
+        const highestBidSpan = document.getElementById('highestBid');
+        const finalHolderSpan = document.getElementById('finalHolder');
+        const finalAuctionAmountSpan = document.getElementById('finalAuctionAmount');
+        const imageGridContainer = document.getElementById('imageGrid');
+
+        // Game variables
+        let score = 0;
+        let vvdCollected = 0;
+        let artItemsCollectedCount = 0;
+        let artWorth = 0;
+        let baseArtWorth = 1000;
+        let paintSpillsHit = 0;
+        const paintSpillPenalty = 50;
+
+        let totalCorrectActions = 1;
+        let totalOpportunities = 2;
+        const ACCURACY_INCREMENT_PER_CORRECT = 1;
+        const ACCURACY_INCREMENT_PER_OPPORTUNITY = 1;
+
+        let gameRunning = false;
+        let gameOver = false;
+        let animationFrameId;
+
+        // Character (Painter) properties
+        const characterWidth = 60;
+        const characterHeight = 60;
+        let characterX;
+        const characterSpeed = 5;
+        let movingLeft = false;
+        let movingRight = false;
+
+        // Falling items
+        const fallingItems = [];
+        const itemSize = 30;
+        const itemSpeed = 2;
+        const itemSpawnRate = 800;
+        let lastSpawnTime = 0;
+
+        // Power-up states and timers
+        let isInvincible = false;
+        let doublePoints = false;
+        let scoreTemporarilyZero = false;
+        let powerupTimer = null;
+        let jeetCoinTimer = null;
+        let actualScoreBeforeJeet = 0;
+
+        // Item definitions
+        const itemTypes = {
+            'meme': { emoji: '🎨', points: 10, type: 'collectible', name: 'Meme Scroll' },
+            'nft': { emoji: '🖼️', points: 25, type: 'collectible', name: 'NFT Canvas' },
+            'vvd': { emoji: '💎', points: 50, type: 'collectible', name: '$VVD Token' },
+            'paint_spill': { emoji: '🪣', points: -10, type: 'hazard', name: 'Paint Spill' },
+            'soap': { emoji: '🧼', points: -25, type: 'hazard', name: 'Soap' },
+            'jeet_coin': { emoji: '🐍', points: 0, type: 'hazard', name: 'Jeet Coin' },
+            'meme_brain': { emoji: '🧠', points: 0, type: 'powerup', duration: 10000, name: 'Meme Brain' },
+            'art_tornado': { emoji: '🌀', points: 0, type: 'powerup', duration: 0, name: 'Art Tornado' },
+            'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000, name: 'Viral Mode' }
+        };
+
+        // --- Image Assets ---
+        const characterImage = new Image();
+        characterImage.src = './images/g9yo-_H3_400x400-removebg-preview.png'; // Path updated for local folder
+        characterImage.onerror = () => console.error('Failed to load character image.');
+
+        const backgroundImage = new Image();
+        backgroundImage.src = './images/Colorful Abstract World Art Day Instagram Post.png'; // Path updated for local folder
+        backgroundImage.onerror = () => console.error('Failed to load background image.');
+
+        // This is the correct raw URL for the masterpiece image
+        const artToBeDrawnImage = new Image();
+        artToBeDrawnImage.src = './images/arttobedrawn.jpg'; // Path updated for local folder
+        artToBeDrawnImage.onerror = () => console.error('Failed to load art to be drawn image:', artToBeDrawnImage.src);
+
+
+        // Art Drawing Variables (for the image grid)
+        const gridCols = 4;
+        const gridRows = 3;
+        const totalArtSegments = gridCols * gridRows;
+        let revealedSegments = 0;
+        let revealedPieceNumbers = new Set(); // Tracks the data-piece numbers that are revealed
+
+        let requiredItemType = null;
+        const collectibleItemNames = ['meme', 'nft', 'vvd'];
+
+        function resizeGameCanvas() {
+            const container = gameCanvas.parentElement;
+            gameCanvas.width = container.clientWidth > 500 ? 500 : container.clientWidth;
+            gameCanvas.height = gameCanvas.width;
+            if (!gameRunning && !gameOver) {
+                characterX = (gameCanvas.width - characterWidth) / 2;
+            }
+        }
+
+        // This function sets up `background-position` for each grid piece
+        function setupImageGrid() {
+            console.log("Attempting to setup image grid...");
+            imageGridContainer.innerHTML = ''; // Clear existing pieces
+            revealedPieceNumbers.clear(); // Clear revealed pieces tracker
+            revealedSegments = 0; // Reset counter
+
+            // We rely on artToBeDrawnImage.onload having completed already
+            // If it failed, pieces will just be their background-color
+            if (!artToBeDrawnImage.complete || artToBeDrawnImage.naturalWidth === 0) {
+                console.warn("Masterpiece image not fully loaded; grid pieces may be blank.");
+            }
+
+            for (let i = 0; i < totalArtSegments; i++) {
+                const piece = document.createElement('div');
+                piece.classList.add('img-piece');
+                piece.setAttribute('data-piece', i + 1);
+
+                const col = i % gridCols;
+                const row = Math.floor(i / gridCols);
+
+                // Calculate background-position to show the correct slice
+                // The background-size (400% 300%) is set in CSS
+                // We need to shift the background by a percentage of its own *scaled* size
+                const bgPosX = -(col * 100);
+                const bgPosY = -(row * 100);
+                piece.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+
+                imageGridContainer.appendChild(piece);
+            }
+            console.log("Image grid setup complete with background-image.");
+        }
+
+        function revealRandomArtSegment() {
+            if (revealedSegments >= totalArtSegments) {
+                console.log("All art segments already revealed.");
+                return false;
+            }
+
+            let unrevealedIndexes = [];
+            for (let i = 1; i <= totalArtSegments; i++) {
+                if (!revealedPieceNumbers.has(i)) {
+                    unrevealedIndexes.push(i);
+                }
+            }
+
+            if (unrevealedIndexes.length === 0) {
+                console.log("No unrevealed segments left, but revealedSegments count was less than total. Recalculating.");
+                revealedSegments = totalArtSegments; // Force set to total
+                return false;
+            }
+
+            const randomIndex = Math.floor(Math.random() * unrevealedIndexes.length);
+            const pieceNumberToReveal = unrevealedIndexes[randomIndex];
+
+            const pieceElement = document.querySelector(`#imageGrid .img-piece[data-piece="${pieceNumberToReveal}"]`);
+            if (pieceElement) {
+                pieceElement.classList.add('revealed');
+                revealedPieceNumbers.add(pieceNumberToReveal);
+                revealedSegments++;
+                console.log(`Revealed piece ${pieceNumberToReveal}. Total revealed: ${revealedSegments}/${totalArtSegments}`);
+                return true;
+            } else {
+                console.warn(`Could not find piece element for data-piece="${pieceNumberToReveal}".`);
+                return false;
+            }
+        }
+
+        function updateStat(id, value) {
+            const el = document.getElementById(id);
+            if (!el) {
+                console.warn(`Element with ID "${id}" not found.`);
+                return;
+            }
+            el.textContent = value;
+            el.classList.add("flash");
+            setTimeout(() => el.classList.remove("flash"), 500);
+        }
+
+        window.addEventListener('load', async function() {
+            resizeGameCanvas();
+            characterX = (gameCanvas.width - characterWidth) / 2;
+            showMessageBox("Welcome to Van Dogh: The Art Auction!", "Collect items to draw your masterpiece! Dodge chaos and get ready to bid!", true);
+            window.addEventListener('resize', () => {
+                resizeGameCanvas();
+            });
+
+            let imagesLoadedCount = 0;
+            const totalImages = 3; // character, background, artToBeDrawn
+
+            const checkImageLoad = () => {
+                imagesLoadedCount++;
+                console.log(`Image loaded: ${imagesLoadedCount}/${totalImages}`);
+                if (imagesLoadedCount === totalImages) {
+                    console.log("All core images loaded. Proceeding with grid setup.");
+                    setupImageGrid(); // This will only run once all images are confirmed loaded
+                }
+            };
+
+            characterImage.onload = checkImageLoad;
+            backgroundImage.onload = () => {
+                gameCanvas.classList.add('has-background');
+                gameCanvas.style.backgroundImage = `url('./images/Colorful Abstract World Art Day Instagram Post.png')`; // Set background via JS after load
+                checkImageLoad();
+            };
+            artToBeDrawnImage.onload = checkImageLoad;
+            artToBeDrawnImage.onerror = () => {
+                console.error("Failed to load artToBeDrawnImage from URL:", artToBeDrawnImage.src);
+                checkImageLoad(); // Still count as loaded to proceed, even if image failed
+            };
+
+
+            const checkAuthReady = setInterval(() => {
+                if (window.isAuthReady && window.currentUserId) {
+                    userIdDisplay.textContent = `User ID: ${window.currentUserId}`;
+                    clearInterval(checkAuthReady);
+                }
+            }, 100);
+        });
+
+        function showMessageBox(title, text, showInput = false) {
+            messageTitle.textContent = title;
+            messageText.innerHTML = text;
+            if (showInput) {
+                userNameInput.classList.remove('hidden');
+            } else {
+                userNameInput.classList.add('hidden');
+            }
+            loadingSpinner.style.display = 'none';
+            gameOverScreen.classList.add('hidden'); // Ensure game over screen is hidden
+            messageButton.textContent = "Start Game"; // Default button text
+            messageBox.style.display = 'flex';
+        }
+
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+        }
+
+        function drawCharacter() {
+            if (characterImage.complete && characterImage.naturalWidth > 0) {
+                gameCtx.drawImage(characterImage, characterX, gameCanvas.height - characterHeight - 10, characterWidth, characterHeight);
+            } else {
+                gameCtx.font = `${characterHeight}px Arial`;
+                gameCtx.textAlign = 'center';
+                gameCtx.textBaseline = 'middle';
+                gameCtx.fillText('🧑‍🎨', characterX + characterWidth / 2, gameCanvas.height - characterHeight / 2 - 10);
+            }
+        }
+
+        function drawItem(item) {
+            gameCtx.font = `${itemSize}px Arial`;
+            gameCtx.textAlign = 'center';
+            gameCtx.textBaseline = 'middle';
+            gameCtx.fillText(item.emoji, item.x + itemSize / 2, item.y + itemSize / 2);
+        }
+
+        function updateScoreValue(points) {
+            if (scoreTemporarilyZero) return;
+            let actualPoints = points;
+            if (doublePoints && points > 0) {
+                actualPoints *= 2;
+            }
+            score += actualPoints;
+            if (score < 0) score = 0;
+            updateStat("score", score);
+        }
+
+        function updateStatsValues(type) {
+            if (type === 'vvd') vvdCollected++;
+            if (itemTypes[type].type === 'collectible') {
+                artItemsCollectedCount++;
+            }
+            updateStat("vvdCollected", vvdCollected);
+            updateStat("artItemsCollectedCount", artItemsCollectedCount);
+            updateAccuracyDisplay();
+        }
+
+        function updateAccuracyDisplay() {
+            if (totalOpportunities === 0) {
+                updateStat("accuracy", '0%');
+                return;
+            }
+            const accuracy = (totalCorrectActions / totalOpportunities) * 100;
+            updateStat("accuracy", `${accuracy.toFixed(1)}%`);
+        }
+
+        function updateArtWorthDisplay() {
+            updateStat("artWorthDisplay", artWorth.toFixed(2));
+        }
+
+        function pickNewRequiredItem() {
+            requiredItemType = collectibleItemNames[Math.floor(Math.random() * collectibleItemNames.length)];
+            requiredItemDisplay.textContent = `🎯 ${itemTypes[requiredItemType].name} ${itemTypes[requiredItemType].emoji}`;
+        }
+
+        function activatePowerup(powerupType, duration) {
+            clearTimeout(powerupTimer);
+
+            if (powerupType === 'meme_brain') {
+                isInvincible = true;
+                invincibleOverlay.style.display = 'block';
+                powerupTimer = setTimeout(() => {
+                    isInvincible = false;
+                    invincibleOverlay.style.display = 'none';
+                }, duration);
+            } else if (powerupType === 'viral_mode') {
+                doublePoints = true;
+                doublePointsOverlay.style.display = 'block';
+                powerupTimer = setTimeout(() => {
+                    doublePoints = false;
+                    doublePointsOverlay.style.display = 'none';
+                }, duration);
+            } else if (powerupType === 'art_tornado') {
+                const tornadoRadius = 150;
+                for (let i = fallingItems.length - 1; i >= 0; i--) {
+                    const item = fallingItems[i];
+                    if (item.type === 'collectible') {
+                        const dx = (item.x + itemSize / 2) - (characterX + characterWidth / 2);
+                        const dy = (item.y + itemSize / 2) - (gameCanvas.height - characterHeight / 2);
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < tornadoRadius) {
+                            updateScoreValue(item.points);
+                            updateStatsValues(item.name);
+                            if (revealRandomArtSegment()) {
+                                if (revealedSegments >= totalArtSegments) {
+                                    endGame("Masterpiece Completed!");
+                                    return;
+                                }
+                            }
+                            totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
+                            totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
+                            fallingItems.splice(i, 1);
+                        }
+                    }
+                }
+            }
+        }
+
+        function activateJeetCoinEffect() {
+            if (isInvincible) return;
+
+            clearTimeout(jeetCoinTimer);
+            if (!scoreTemporarilyZero) {
+                actualScoreBeforeJeet = score;
+            }
+            score = 0;
+            updateStat("score", score);
+            scoreTemporarilyZero = true;
+            scoreResetOverlay.style.display = 'block';
+
+            jeetCoinTimer = setTimeout(() => {
+                score = actualScoreBeforeJeet;
+                updateStat("score", score);
+                scoreTemporarilyZero = false;
+                scoreResetOverlay.style.display = 'none';
+            }, 5000);
+        }
+
+        function update() {
+            if (!gameRunning || gameOver) return;
+
+            if (movingLeft && characterX > 0) {
+                characterX -= characterSpeed;
+            }
+            if (movingRight && characterX < gameCanvas.width - characterWidth) {
+                characterX += characterSpeed;
+            }
+
+            for (let i = fallingItems.length - 1; i >= 0; i--) {
+                const item = fallingItems[i];
+                item.y += item.speed;
+
+                if (
+                    item.y + itemSize > gameCanvas.height - characterHeight &&
+                    item.x < characterX + characterWidth &&
+                    item.x + itemSize > characterX
+                ) {
+                    totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
+
+                    if (item.type === 'collectible') {
+                        if (item.name === requiredItemType) {
+                            updateScoreValue(item.points);
+                            updateStatsValues(item.name);
+                            if (revealRandomArtSegment()) {
+                                if (revealedSegments >= totalArtSegments) {
+                                    endGame("Masterpiece Completed!");
+                                    return;
+                                }
+                                pickNewRequiredItem();
+                            }
+                        } else {
+                            updateScoreValue(-5);
+                        }
+                    } else if (item.type === 'hazard') {
+                        if (!isInvincible) {
+                            if (item.name === 'paint_spill') {
+                                paintSpillsHit++;
+                                artWorth -= paintSpillPenalty;
+                                if (artWorth < 0) artWorth = 0;
+                                updateArtWorthDisplay();
+                            } else if (item.name === 'jeet_coin') {
+                                activateJeetCoinEffect();
+                            } else if (item.name === 'soap') {
+                                updateScoreValue(item.points);
+                            }
+                        } else {
+                            totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
+                        }
+                    } else if (item.type === 'powerup') {
+                        activatePowerup(item.name, item.duration);
+                        totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
+                    }
+                    fallingItems.splice(i, 1);
+                } else if (item.y > gameCanvas.height) {
+                    if (item.name === requiredItemType) {
+                        totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
+                    } else if (item.type === 'hazard') {
+                        totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
+                        totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
+                    }
+                    fallingItems.splice(i, 1);
+                }
+            }
+
+            const currentTime = Date.now();
+            if (currentTime - lastSpawnTime > itemSpawnRate) {
+                const itemNames = Object.keys(itemTypes);
+                const randomItemName = itemNames[Math.floor(Math.random() * itemNames.length)];
+                const itemDef = itemTypes[randomItemName];
+
+                if (itemDef) {
+                    const newItem = {
+                        x: Math.random() * (gameCanvas.width - itemSize),
+                        y: -itemSize,
+                        emoji: itemDef.emoji,
+                        points: itemDef.points,
+                        type: itemDef.type,
+                        name: randomItemName,
+                        speed: itemSpeed + Math.random() * 1.5,
+                        duration: itemDef.duration
+                    };
+                    fallingItems.push(newItem);
+                }
+                lastSpawnTime = currentTime;
+            }
+        }
+
+        function gameLoop() {
+            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+            if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
+                gameCtx.drawImage(backgroundImage, 0, 0, gameCanvas.width, gameCanvas.height);
+            }
+
+            update();
+            drawCharacter();
+            fallingItems.forEach(drawItem);
+
+            if (gameRunning && !gameOver) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            hideMessageBox();
+
+            score = 0;
+            vvdCollected = 0;
+            artItemsCollectedCount = 0;
+            artWorth = baseArtWorth;
+            paintSpillsHit = 0;
+            totalCorrectActions = 1;
+            totalOpportunities = 2;
+
+            updateStat("score", score);
+            updateStat("vvdCollected", vvdCollected);
+            updateStat("artItemsCollectedCount", artItemsCollectedCount);
+            updateStat("accuracy", '50.0%');
+            updateArtWorthDisplay();
+            fallingItems.length = 0;
+            gameOver = false;
+            gameRunning = true;
+            characterX = (gameCanvas.width - characterWidth) / 2;
+            lastSpawnTime = Date.now();
+
+            clearTimeout(powerupTimer);
+            clearTimeout(jeetCoinTimer);
+            isInvincible = false;
+            doublePoints = false;
+            scoreTemporarilyZero = false;
+            invincibleOverlay.style.display = 'none';
+            doublePointsOverlay.style.display = 'none';
+            scoreResetOverlay.style.display = 'none';
+
+            setupImageGrid(); // Recreate and reset the image grid, now with background-image slicing
+            pickNewRequiredItem();
+
+            animationFrameId = requestAnimationFrame(gameLoop);
+        }
+
+        async function endGame(title) {
+            gameRunning = false;
+            gameOver = true;
+            cancelAnimationFrame(animationFrameId);
+
+            clearTimeout(powerupTimer);
+            clearTimeout(jeetCoinTimer);
+            isInvincible = false;
+            doublePoints = false;
+            scoreTemporarilyZero = false;
+            invincibleOverlay.style.display = 'none';
+            doublePointsOverlay.style.display = 'none';
+            scoreResetOverlay.style.display = 'none';
+
+            let currentAccuracy = 0;
+            if (totalOpportunities > 0) {
+                currentAccuracy = (totalCorrectActions / totalOpportunities);
+            }
+
+            let finalAuctionAmountUSD = artWorth;
+            finalAuctionAmountUSD *= (1 + (currentAccuracy - 0.5));
+
+            if (finalAuctionAmountUSD < 0) finalAuctionAmountUSD = 0;
+
+            const VVD_EXCHANGE_RATE = 0.0001;
+            let finalAuctionAmountVVD = finalAuctionAmountUSD / VVD_EXCHANGE_RATE;
+
+            // Ensure final art image is loaded and displayed
+            finalArtImage.src = artToBeDrawnImage.src; // Uses the updated local path for consistency
+            finalArtImage.onload = () => {
+                console.log("Final art image loaded for game over screen.");
+            };
+            finalArtImage.onerror = () => {
+                console.error("Failed to load final art image for game over screen.");
+                finalArtImage.src = "https://placehold.co/400x400/3a3a5a/f8f8f8?text=Image+Error";
+            };
+
+            highestBidSpan.textContent = (Math.random() * 5000 + 15001).toFixed(2);
+            finalAuctionAmountSpan.textContent = `${finalAuctionAmountVVD.toFixed(2)} $VVD`;
+
+            messageTitle.textContent = "🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉";
+            messageText.innerHTML = `
+                <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
+                <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
+                <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
+                <p>💰 <span class="bold">Highest Bid:</span> $${highestBidSpan.textContent}</p>
+                <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
+                <p>💎 <span class="bold">Final Amount:</span> ${finalAuctionAmountSpan.textContent}</p>
+            `;
+            userNameInput.classList.remove('hidden');
+            gameOverScreen.classList.remove('hidden'); // Show the dedicated game over content div
+            messageButton.textContent = "Submit & Play Again";
+            messageBox.style.display = 'flex';
+
+            messageButton.onclick = async () => {
+                loadingSpinner.style.display = 'block';
+                messageButton.disabled = true;
+                const userName = userNameInput.value.trim() || "Anonymous";
+
+                const scoreData = {
+                    userName: userName,
+                    overallScore: score,
+                    vvdCollected: vvdCollected,
+                    artItemsCollected: artItemsCollectedCount,
+                    accuracy: currentAccuracy.toFixed(3),
+                    finalAuctionAmountUSD: parseFloat(finalAuctionAmountUSD.toFixed(2)),
+                    finalAuctionAmountVVD: parseFloat(finalAuctionAmountVVD.toFixed(2))
+                };
+
+                const authReadyPromise = new Promise(resolve => {
+                    if (window.isAuthReady) {
+                        resolve();
+                    } else {
+                        const interval = setInterval(() => {
+                            if (window.isAuthReady) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 100);
+                    }
+                });
+                await authReadyPromise;
+
+                const submitted = await window.submitScoreToFirestore(scoreData);
+                if (submitted) {
+                    messageText.innerHTML = `Score submitted! Your masterpiece is now in the museum, ${userName}!<br><br>#VVDMemes #VicenteVanDogh`;
+                } else {
+                    messageText.innerHTML = "Failed to submit score. Please try again.";
+                }
+                loadingSpinner.style.display = 'none';
+                messageButton.disabled = false;
+                messageButton.textContent = "Play Again";
+                messageButton.onclick = startGame;
+            };
+        }
+
+        moveLeftButton.addEventListener('touchstart', (e) => { e.preventDefault(); movingLeft = true; }, { passive: false });
+        moveLeftButton.addEventListener('touchend', () => movingLeft = false);
+        moveLeftButton.addEventListener('mousedown', () => movingLeft = true);
+        moveLeftButton.addEventListener('mouseup', () => movingLeft = false);
+        moveLeftButton.addEventListener('mouseleave', () => movingLeft = false);
+
+        moveRightButton.addEventListener('touchstart', (e) => { e.preventDefault(); movingRight = true; }, { passive: false });
+        moveRightButton.addEventListener('touchend', () => movingRight = false);
+        moveRightButton.addEventListener('mousedown', () => movingRight = true);
+        moveRightButton.addEventListener('mouseup', () => movingRight = false);
+        moveRightButton.addEventListener('mouseleave', () => movingRight = false);
+
+        document.addEventListener('keydown', (e) => {
+            if (gameRunning && !gameOver) {
+                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                    movingLeft = true;
+                } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                    movingRight = true;
+                }
+            } else if (gameOver && e.key === 'Enter') {
+                messageButton.click();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
+                movingLeft = false;
+            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
+                movingRight = false;
+            }
+        });
+
+        startGameButton.addEventListener('click', startGame);
+        messageButton.addEventListener('click', startGame);
+
+        let touchStartX = 0;
+        let lastTouchMoveX = 0;
+        let touchMoveThreshold = 5;
+
+        gameCanvas.addEventListener('touchstart', (e) => {
+            if (!gameRunning && !gameOver) return;
+            e.preventDefault();
+            touchStartX = e.touches[0].clientX;
+            lastTouchMoveX = touchStartX;
+        }, { passive: false });
+
+        gameCanvas.addEventListener('touchmove', (e) => {
+            if (!gameRunning && !gameOver) return;
+            e.preventDefault();
+            if (e.touches.length > 0) {
+                const currentX = e.touches[0].clientX;
+                const deltaX = currentX - lastTouchMoveX;
+
+                movingLeft = false;
+                movingRight = false;
+
+                if (Math.abs(deltaX) > touchMoveThreshold) {
+                    if (deltaX < 0) {
+                        movingLeft = true;
+                    } else if (deltaX > 0) {
+                        movingRight = true;
+                    }
+                }
+                lastTouchMoveX = currentX;
+            }
+        }, { passive: false });
+
+        gameCanvas.addEventListener('touchend', () => {
+            movingLeft = false;
+            movingRight = false;
+        });
+
+  </script>
+</body>
+</html>
