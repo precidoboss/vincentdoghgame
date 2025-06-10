@@ -175,8 +175,7 @@
     .img-piece {
       background-color: #1f2937; /* hidden mask */
       /* Masterpiece image, scaled to cover the entire grid */
-      background-image: url('./images/masterpiece-art.jpg'); /* Updated path */
-      background-size: 400% 300%; /* Image scaled to fill 4x3 grid entirely */
+      /* THIS WILL BE UPDATED BY JS WITH THE EXTERNAL URL */
       opacity: 0; /* Hidden by default */
       transition: opacity 0.5s ease-in-out;
       border-radius: 0.25px; /* Extremely minimal border-radius */
@@ -548,7 +547,7 @@
         </div>
         <div class="hashtag">#VVDMEMES 🎨🔥💎</div>
 
-        <div class="score-board">𝗘𝗫𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
+        <div class="score-board">𝗘�𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
 
         <div class="stats-display">
           <div>$VVD: <span id="vvdCollected" class="stat-value">0</span></div>
@@ -608,7 +607,7 @@
 
           <!-- Game Over Screen Content (will be shown/hidden by JS) -->
           <div id="gameOverScreen" class="hidden">
-            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘�𝗘𝗔𝗟𝗘𝗗 🎉</h2>
+            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
             <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
@@ -842,7 +841,7 @@
             'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000 } // 15 seconds
         };
 
-        // --- Image Assets (UPDATED PATHS AND ERROR HANDLING) ---
+        // --- Image Assets (***UPDATED WITH YOUR IMGUR LINKS***) ---
         const characterImage = new Image();
         characterImage.onload = () => console.log('Character image loaded successfully:', characterImage.src, 'Complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
         characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
@@ -851,7 +850,7 @@
         backgroundImage.onload = () => {
             console.log('Background image loaded successfully:', backgroundImage.src, 'Complete:', backgroundImage.complete, 'NaturalWidth:', backgroundImage.naturalWidth);
             gameCanvas.classList.add('has-background');
-            gameCanvas.style.backgroundImage = `url('./images/game-background.png')`; // Set background via JS after load
+            gameCanvas.style.backgroundImage = `url('${backgroundImage.src}')`; // Use the actual loaded src
         };
         backgroundImage.onerror = (e) => console.error('Failed to load background image:', backgroundImage.src, e);
 
@@ -924,26 +923,17 @@
 
         function setupBackgroundSound() {
             // Set up a repeating loop for the background sound
-            // Use '1m' for one measure, or '4n' for four quarter notes
             backgroundLoop = new Tone.Loop(time => {
-                // Kick on the first beat
                 kickSynth.triggerAttackRelease("C1", "8n", time);
-
-                // Bassline - a simple, driving pattern
-                // Use relative time strings or add numeric values to 'time' if it's a number
-                // The 'time' argument in Loop callback is a Tone.Time object, so .add() should work.
                 bassSynth.triggerAttackRelease("C2", "8n", time);
-                bassSynth.triggerAttackRelease("G1", "8n", new Tone.Time(time).add("0:2")); // Using new Tone.Time(time) as workaround
+                bassSynth.triggerAttackRelease("G1", "8n", Tone.Time(time).add("0:2"));
+                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:1"));
+                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:3"));
+            }, "1n").start(0);
 
-                // Cowbell-like sound on off-beats
-                cowbellSynth.triggerAttackRelease("C4", "32n", new Tone.Time(time).add("0:1"));
-                cowbellSynth.triggerAttackRelease("C4", "32n", new Tone.Time(time).add("0:3"));
-
-            }, "1n").start(0); // "1n" means one whole note (loop repeats every 1 beat or measure)
-
-            Tone.Transport.bpm.value = 120; // Set BPM for a moderate pace
+            Tone.Transport.bpm.value = 120;
             Tone.Transport.loop = true;
-            Tone.Transport.loopEnd = '1m'; // Loop every 1 measure (same as "1n" in this context)
+            Tone.Transport.loopEnd = '1m';
 
             console.log("Background sound setup complete.");
         }
@@ -956,7 +946,6 @@
                 soundToggleButton.innerHTML = '<i class="fas fa-volume-mute"></i> Muted';
                 console.log("Background sound paused.");
             } else {
-                // User interaction required to start AudioContext
                 Tone.start().then(() => {
                     Tone.Transport.start();
                     isMuted = false;
@@ -974,7 +963,6 @@
             revealedSegments = 0; // Reset counter
 
             // We rely on artToBeDrawnImage.onload having completed already
-            // If it failed, pieces will just be their background-color
             if (!artToBeDrawnImage.complete || artToBeDrawnImage.naturalWidth === 0) {
                 console.warn("Masterpiece image not fully loaded; grid pieces may be blank.");
             }
@@ -987,12 +975,10 @@
                 const col = i % gridCols;
                 const row = Math.floor(i / gridCols);
 
-                // Calculate background-position to show the correct slice
-                // The background-size (400% 300%) is set in CSS
-                // We need to shift the background by a percentage of its own *scaled* size
                 const bgPosX = -(col * 100);
                 const bgPosY = -(row * 100);
                 piece.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+                piece.style.backgroundImage = `url('${artToBeDrawnImage.src}')`; // Use the actual loaded src
 
                 imageGridContainer.appendChild(piece);
             }
@@ -1047,17 +1033,17 @@
 
         window.addEventListener('load', async function() {
             console.log('Window loaded event fired. Starting initial setup.');
-            resizeGameCanvas(); // Call it here, now that it's defined globally
+            resizeGameCanvas();
             characterX = (gameCanvas.width - characterWidth) / 2;
             showMessageBox("Welcome to Van Dogh: The Art Auction!", "Collect items to draw your masterpiece! Dodge chaos and get ready to bid!", true);
             window.addEventListener('resize', () => {
                 resizeGameCanvas();
             });
 
-            // Set image sources and wait for all images to either load successfully or fail.
-            characterImage.src = './images/painter-character.png';
-            backgroundImage.src = './images/game-background.png';
-            artToBeDrawnImage.src = './images/masterpiece-art.jpg';
+            // Set image sources using the provided Imgur URLs
+            characterImage.src = 'https://imgur.com/W2gHD39';
+            backgroundImage.src = 'https://imgur.com/KDlgzbI';
+            artToBeDrawnImage.src = 'https://imgur.com/3JWWYj7';
 
             await Promise.all([
                 new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
@@ -1066,9 +1052,8 @@
             ]);
             console.log("All image load/error handlers have fired. Proceeding with game setup.");
 
-            setupImageGrid(); // This function now knows artToBeDrawnImage has tried to load.
+            setupImageGrid();
 
-            // Setup background sound, but don't start it until user interaction
             setupBackgroundSound();
 
             const checkAuthReady = setInterval(() => {
@@ -1088,8 +1073,8 @@
                 userNameInput.classList.add('hidden');
             }
             loadingSpinner.style.display = 'none';
-            gameOverScreen.classList.add('hidden'); // Ensure game over screen is hidden
-            messageButton.textContent = "Start Game"; // Default button text
+            gameOverScreen.classList.add('hidden');
+            messageButton.textContent = "Start Game";
             messageBox.style.display = 'flex';
         }
 
@@ -1312,12 +1297,11 @@
         function gameLoop() {
             gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
-            // Draw background image if loaded, otherwise fill with a fallback color
             if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
                 gameCtx.drawImage(backgroundImage, 0, 0, gameCanvas.width, gameCanvas.height);
             } else {
                 console.warn('Background image not ready for drawing, filling with fallback color.');
-                gameCtx.fillStyle = '#3a3a5a'; // Fallback background color
+                gameCtx.fillStyle = '#3a3a5a';
                 gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
             }
 
@@ -1334,20 +1318,18 @@
             if (gameRunning) return;
             hideMessageBox();
 
-            // Ensure Tone.js audio context is started on user interaction
             if (Tone.context.state !== 'running') {
                 Tone.start().then(() => {
                     console.log("AudioContext resumed after user gesture.");
-                    Tone.Transport.start(); // Start the background loop
+                    Tone.Transport.start();
                     isMuted = false;
                     soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
                 }).catch(e => console.error("Tone.js AudioContext failed to start:", e));
             } else {
-                Tone.Transport.start(); // If already running, just start the loop
+                Tone.Transport.start();
                 isMuted = false;
                 soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
             }
-
 
             score = 0;
             vvdCollected = 0;
@@ -1377,7 +1359,7 @@
             doublePointsOverlay.style.display = 'none';
             scoreResetOverlay.style.display = 'none';
 
-            setupImageGrid(); // Recreate and reset the image grid, now with background-image slicing
+            setupImageGrid();
             pickNewRequiredItem();
 
             animationFrameId = requestAnimationFrame(gameLoop);
@@ -1388,7 +1370,7 @@
             gameOver = true;
             cancelAnimationFrame(animationFrameId);
 
-            Tone.Transport.pause(); // Pause background music on game over
+            Tone.Transport.pause();
 
             clearTimeout(powerupTimer);
             clearTimeout(jeetCoinTimer);
@@ -1412,8 +1394,7 @@
             const VVD_EXCHANGE_RATE = 0.0001;
             let finalAuctionAmountVVD = finalAuctionAmountUSD / VVD_EXCHANGE_RATE;
 
-            // Ensure final art image is loaded and displayed
-            finalArtImage.src = artToBeDrawnImage.src; // Uses the updated local path for consistency
+            finalArtImage.src = artToBeDrawnImage.src;
             finalArtImage.onload = () => {
                 console.log("Final art image loaded for game over screen.");
             };
@@ -1435,7 +1416,7 @@
                 <p>💎 <span class="bold">Final Amount:</span> ${finalAuctionAmountSpan.textContent}</p>
             `;
             userNameInput.classList.remove('hidden');
-            gameOverScreen.classList.remove('hidden'); // Show the dedicated game over content div
+            gameOverScreen.classList.remove('hidden');
             messageButton.textContent = "Submit & Play Again";
             messageBox.style.display = 'flex';
 
@@ -1514,7 +1495,6 @@
         });
 
         startGameButton.addEventListener('click', startGame);
-        // The messageButton also triggers startGame, ensuring AudioContext starts with user interaction
         messageButton.addEventListener('click', startGame);
         soundToggleButton.addEventListener('click', toggleBackgroundSound);
 
