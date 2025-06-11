@@ -597,19 +597,19 @@
   <div id="messageBox" class="message-box">
       <div class="message-box-content">
           <h2 id="messageTitle">Welcome!</h2>
-          <p id="messageText">Collect art, avoid chaos! Tap left/right or use arrows to move.</p>
+          <p id="messageText">Collect items to draw your masterpiece! Dodge chaos and get ready to bid!</p>
           <input type="text" id="userNameInput" placeholder="Enter your name (optional)" class="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden" />
           <button id="messageButton" class="game-button">Start Game</button>
           <div id="loadingSpinner" class="loading-spinner mx-auto"></div>
 
           <!-- Game Over Screen Content (will be shown/hidden by JS) -->
           <div id="gameOverScreen" class="hidden">
-            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - �𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
+            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
             <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
             <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
-            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
+            <p>🏅 <span class="bold">Final Collector:</span> 𝗙�𝗩𝗜𝗚𝗔𝗟</p>
             <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
             <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
           </div>
@@ -841,7 +841,7 @@
             'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000 } // 15 seconds
         };
 
-        // --- Image Assets (***NOW USING PLACEHOLDER.CO FOR IMMEDIATE DEBUGGING***) ---
+        // --- Image Assets (***USING YOUR IMGUR URLS***) ---
         const characterImage = new Image();
         characterImage.onload = () => console.log('Character image loaded successfully:', characterImage.src, 'Complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
         characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
@@ -886,16 +886,23 @@
 
         // Basic synth for a low bassline
         const bassSynth = new Tone.Synth({
-            oscillator: { type: "sawtooth" },
+            oscillator: { type: "square" },
             envelope: {
-                attack: 0.01,
-                decay: 0.2,
-                sustain: 0.1,
+                attack: 0.05,
+                decay: 0.4,
+                sustain: 0.2,
                 release: 0.8
             }
         }).toDestination();
 
-        // Membrane synth for a kick-like sound (mimicking phonk drums)
+        // PluckSynth for a more melodic, arpeggiated sound
+        const melodySynth = new Tone.PluckSynth({
+            attackNoise: 1,
+            dampening: 4000,
+            resonance: 0.9
+        }).toDestination();
+
+        // Membrane synth for a kick-like sound
         const kickSynth = new Tone.MembraneSynth({
             envelope: {
                 attack: 0.001,
@@ -905,38 +912,50 @@
             }
         }).toDestination();
 
-        // Metal synth for a high-pitched metallic sound (like a cowbell)
-        const cowbellSynth = new Tone.MetalSynth({
-            frequency: 400,
+        // Metal synth for a high-pitched metallic sound (like a hi-hat or cowbell)
+        const percussionSynth = new Tone.MetalSynth({
+            frequency: 200,
             envelope: {
                 attack: 0.001,
                 decay: 0.1,
                 sustain: 0.01,
                 release: 0.05
             },
-            harmonicity: 3.1,
-            modulationIndex: 23,
-            resonance: 8000,
-            octaves: 1.5
+            harmonicity: 5.1,
+            modulationIndex: 20,
+            resonance: 4000,
+            octaves: 1
         }).toDestination();
 
 
         function setupBackgroundSound() {
-            // Set up a repeating loop for the background sound
-            backgroundLoop = new Tone.Loop(time => {
-                kickSynth.triggerAttackRelease("C1", "8n", time);
-                bassSynth.triggerAttackRelease("C2", "8n", time);
-                bassSynth.triggerAttackRelease("G1", "8n", Tone.Time(time).add("0:2"));
-                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:1"));
-                cowbellSynth.triggerAttackRelease("C4", "32n", Tone.Time(time).add("0:3"));
-            }, "1n").start(0);
+            // Simple melodic pattern for the melodySynth
+            const melodyPart = new Tone.Sequence((time, note) => {
+                melodySynth.triggerAttackRelease(note, "8n", time);
+            }, ["C4", ["E4", null], "G4", ["A4", null], "G4", ["E4", null], "C4", null], "4n"); // Pattern repeats every 4th note
+
+            // Drum pattern
+            const drumPart = new Tone.Sequence((time, beat) => {
+                if (beat === 0) kickSynth.triggerAttackRelease("C1", "8n", time);
+                if (beat % 2 === 1) percussionSynth.triggerAttackRelease("C5", "32n", time);
+            }, [0, 1, 2, 3], "8n"); // Repeats every 8th note, simulating 4/4 beats
+
+            // Bassline pattern
+            const bassPart = new Tone.Sequence((time, note) => {
+                bassSynth.triggerAttackRelease(note, "4n", time);
+            }, ["C2", "G1", "A1", "F1"], "1n"); // Repeats every whole note, simple chord progression
 
             Tone.Transport.bpm.value = 120;
             Tone.Transport.loop = true;
-            Tone.Transport.loopEnd = '1m';
+            Tone.Transport.loopEnd = '4m'; // Loop over 4 measures for a longer musical phrase
 
-            console.log("Background sound setup complete.");
+            melodyPart.start(0);
+            drumPart.start(0);
+            bassPart.start(0);
+
+            console.log("Background sound setup complete with musical patterns.");
         }
+
 
         // Function to start or stop the background sound
         function toggleBackgroundSound() {
@@ -1040,10 +1059,10 @@
                 resizeGameCanvas();
             });
 
-            // Set image sources using the placeholder URLs
-            characterImage.src = 'https://placehold.co/60x60/808080/FFFFFF?text=Painter';
-            backgroundImage.src = 'https://placehold.co/500x500/3a3a5a/FFFFFF?text=Background';
-            artToBeDrawnImage.src = 'https://placehold.co/400x300/3a3a5a/FFFFFF?text=Art';
+            // Set image sources using the provided Imgur URLs
+            characterImage.src = 'https://i.imgur.com/W2gHD39.png'; // Your Character Image
+            backgroundImage.src = 'https://i.imgur.com/KDlgzbI.png'; // Your Background Image
+            artToBeDrawnImage.src = 'https://i.imgur.com/3JWWYj7.png'; // Your Art To Be Drawn Image
 
             await Promise.all([
                 new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
@@ -1539,3 +1558,4 @@
   </script>
 </body>
 </html>
+�
