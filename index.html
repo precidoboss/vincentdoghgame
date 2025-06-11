@@ -19,15 +19,15 @@
       align-items: flex-start; /* Align items to start to prevent excessive centering that pushes content off */
       min-height: 100vh;
       margin: 0;
-      padding: 0.01rem; /* Almost no padding */
+      padding: 0.5rem; /* More reasonable padding for overall page */
       overflow-y: auto; /* Fallback for very small screens, ideally not needed */
     }
 
     .game-wrapper {
         display: flex;
         flex-direction: column;
-        gap: 0.1rem; /* Minimal gap between major sections */
-        width: 99.8%; /* Maximize horizontal space */
+        gap: 1rem; /* More space between major sections */
+        width: 99%; /* Maximize horizontal space */
         max-width: 900px;
         box-sizing: border-box;
         align-items: center;
@@ -35,48 +35,48 @@
 
     .main-ui-section {
       display: flex;
-      flex-wrap: wrap;
+      flex-wrap: wrap; /* Allows wrapping on smaller screens */
       justify-content: space-between;
-      gap: 0.1rem; /* Minimal gap between left/right panels */
+      gap: 1rem; /* More space between left/right panels */
       width: 100%;
     }
 
     /* Scoreboard Container - left side */
     .scoreboard-container {
-      flex: 1 1 calc(55% - 0.05rem); /* Give scoreboard more space, account for reduced gap */
-      min-width: 90px; /* Drastically reduced min-width */
+      flex: 1 1 calc(55% - 0.5rem); /* Give scoreboard more space, account for gap */
+      min-width: 250px; /* More reasonable min-width for readability */
       background-color: #2c2c4c;
-      border-radius: 5px; /* Smaller border-radius */
-      padding: 0.05rem; /* Extremely reduced padding */
-      box-shadow: 0 0 3px #000;
+      border-radius: 8px; /* Slightly larger border-radius */
+      padding: 1rem; /* More padding */
+      box-shadow: 0 0 5px #000;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transform: scale(0.7); /* Aggressively scale down the entire container */
-      transform-origin: top left; /* Scale from top-left to preserve position */
+      /* REMOVED: transform: scale(0.7); to ensure readability */
+      transform-origin: top left;
     }
 
     .scoreboard-header {
       display: flex;
       align-items: center;
-      font-size: 0.6rem; /* Tiny font size */
+      font-size: 1rem; /* Readable font size */
       font-weight: bold;
-      margin-bottom: 0.01rem; /* Minimal margin */
+      margin-bottom: 0.25rem;
       color: #FFD700;
       font-family: 'Arial Black', sans-serif;
     }
 
     .scoreboard-header img {
-      width: 8px; /* Tiny image size */
-      height: 8px;
-      margin-right: 0.02rem; /* Minimal margin */
+      width: 20px; /* Larger image size */
+      height: 20px;
+      margin-right: 0.25rem;
     }
 
     .hashtag {
-      font-size: 0.3rem; /* Super tiny font size */
+      font-size: 0.75rem; /* Larger font size */
       color: #ccc;
-      margin-bottom: 0.05rem; /* Minimal margin */
+      margin-bottom: 0.5rem;
     }
 
     /* Score, Stats, Instruction Boards - chalkboard style */
@@ -90,15 +90,15 @@
         #353554 10px,
         #353554 20px
       );
-      border: 1px dashed #fcd34d; /* Thinner border */
-      border-radius: 0.3rem; /* Smaller border-radius */
-      padding: 0.1rem 0.2rem; /* Extremely reduced padding */
-      margin-bottom: 0.1rem; /* Extremely reduced margin */
+      border: 1px dashed #fcd34d;
+      border-radius: 0.5rem; /* Larger border-radius */
+      padding: 0.75rem 1rem; /* More padding */
+      margin-bottom: 0.75rem;
       text-align: center;
       font-weight: bold;
-      font-size: 0.6rem; /* Tiny font size */
-      box-shadow: 0 0 2px rgba(252, 211, 77, 0.3); /* Smaller shadow */
-      text-shadow: 0.25px 0.25px #000; /* Smaller shadow */
+      font-size: 1rem; /* Readable font size */
+      box-shadow: 0 0 3px rgba(252, 211, 77, 0.3);
+      text-shadow: 0.5px 0.5px #000;
       color: #fef08a;
       width: 100%;
       box-sizing: border-box;
@@ -108,66 +108,66 @@
       display: flex;
       flex-wrap: wrap;
       justify-content: space-between;
-      gap: 0.1rem; /* Minimal gap */
-      font-size: 0.55rem; /* Tiny font size */
+      gap: 0.5rem; /* More gap */
+      font-size: 0.9rem; /* Readable font size */
     }
 
     .stats-display div {
-      flex: 1 1 48%; /* Adjusted flex for balance */
+      flex: 1 1 48%;
       background-color: #4a4a6a;
-      border-radius: 0.2rem; /* Smaller border-radius */
-      padding: 0.08rem; /* Extremely reduced padding */
+      border-radius: 0.4rem;
+      padding: 0.6rem;
       color: #fff;
       box-sizing: border-box;
       text-align: center;
     }
 
     .instruction-board {
-      font-size: 0.65rem; /* Tiny font size */
+      font-size: 1.05rem; /* Readable font size */
       color: #fde68a;
       background-color: #45456a;
-      border: 1px dotted #fcd34d; /* Thinner dotted border */
-      margin-bottom: 0.15rem; /* Minimal margin */
+      border: 1px dotted #fcd34d;
+      margin-bottom: 1rem;
     }
 
     /* Art Preview Container - right side */
     .art-preview-container {
-      flex: 1 1 calc(45% - 0.05rem); /* Give art reveal less space, account for reduced gap */
-      min-width: 90px; /* Drastically reduced min-width */
+      flex: 1 1 calc(45% - 0.5rem); /* Give art reveal less space, account for gap */
+      min-width: 250px; /* More reasonable min-width */
       background: linear-gradient(135deg, #2a2a4a, #1e1e2e);
-      padding: 0.05rem; /* Extremely reduced padding */
-      border-radius: 6px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
       text-align: center;
       border: 2px dashed #fcd34d;
       box-sizing: border-box;
       display: flex;
       flex-direction: column;
       align-items: center;
-      transform: scale(0.7); /* Aggressively scale down the entire container */
-      transform-origin: top left; /* Scale from top-left to preserve position */
+      /* REMOVED: transform: scale(0.7); */
+      transform-origin: top left;
     }
 
     .reveal-title {
-      font-size: 0.7rem; /* Tiny font size */
+      font-size: 1.1rem; /* Readable font size */
       color: #fcd34d;
       font-weight: bold;
-      margin-bottom: 0.05rem; /* Minimal margin */
+      margin-bottom: 0.5rem;
       font-family: 'Permanent Marker', cursive;
-      text-shadow: 0.25px 0.25px #000;
+      text-shadow: 0.5px 0.5px #000;
     }
 
     .image-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 0.2px; /* Super minimal gap */
+      gap: 1px; /* Small but visible gap */
       width: 100%;
-      max-width: 80px; /* Further reduced max-width for the grid itself */
+      max-width: 250px; /* Significantly increased max-width for visibility */
       aspect-ratio: 4 / 3;
       margin: 0 auto;
-      border: 1px dashed #334155; /* Thinner border */
-      border-radius: 0.3rem; /* Smaller border-radius */
+      border: 1px dashed #334155;
+      border-radius: 0.5rem;
       overflow: hidden;
       box-sizing: border-box;
     }
@@ -176,9 +176,10 @@
       background-color: #1f2937; /* hidden mask */
       opacity: 0; /* Hidden by default */
       transition: opacity 0.5s ease-in-out;
-      border-radius: 0.25px; /* Extremely minimal border-radius */
-      box-shadow: inset 0 0 0.5px rgba(0,0,0,0.5); /* Tiny shadow */
+      border-radius: 0.5px; /* Tiny border-radius */
+      box-shadow: inset 0 0 1px rgba(0,0,0,0.5); /* Tiny shadow */
       box-sizing: border-box;
+      background-size: 400% 300%; /* Explicitly set to slice the image across grid */
     }
 
     .img-piece.revealed {
@@ -206,83 +207,83 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        margin-top: 0.2rem; /* Minimal spacing from top UI */
+        margin-top: 1rem; /* More spacing from top UI */
         background-color: #2a2a4a;
-        border-radius: 0.6rem; /* Smaller border-radius */
+        border-radius: 0.75rem;
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-        padding: 0.2rem; /* Reduced padding */
+        padding: 1rem;
         width: 100%;
         max-width: 550px;
         margin-left: auto;
         margin-right: auto;
         box-sizing: border-box;
-        flex-grow: 1; /* Allow it to take up available vertical space */
-        min-height: 120px; /* Further reduced min height for the game */
+        flex-grow: 1;
+        min-height: 200px; /* Increased min height */
     }
 
     canvas {
-        border-radius: 0.5rem; /* Smaller border-radius */
+        border-radius: 0.6rem;
         display: block;
         touch-action: none;
         width: 100%;
         aspect-ratio: 1 / 1;
         max-width: 500px;
         max-height: 500px;
-        border: 1px solid #5a5a8a;
+        border: 2px solid #5a5a8a;
         background-color: transparent;
     }
 
     .buttons-container {
         display: flex;
-        gap: 0.2rem; /* Reduced gap */
-        margin-top: 0.2rem; /* Reduced margin */
+        gap: 0.75rem;
+        margin-top: 1rem;
         flex-wrap: wrap;
         justify-content: center;
     }
     .game-button {
         background-color: #8b5cf6;
         color: white;
-        padding: 0.15rem 0.3rem; /* Reduced padding */
-        border-radius: 0.25rem; /* Smaller border-radius */
+        padding: 0.5rem 1rem; /* More padding */
+        border-radius: 0.4rem;
         font-weight: bold;
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: none;
         outline: none;
         flex-grow: 1;
-        min-width: 35px; /* Reduced min width */
-        font-size: 0.6rem; /* Reduced font size */
+        min-width: 80px; /* Increased min width */
+        font-size: 0.9rem; /* Increased font size */
     }
     .game-button:hover {
         background-color: #7c3aed;
-        transform: translateY(-0.25px); /* Smaller transform */
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
     .game-button:active {
         transform: translateY(0);
-        box-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
     }
 
     /* Sound control button style */
     #soundToggleButton {
-        background-color: #6a6a6a; /* A neutral color */
+        background-color: #6a6a6a;
         color: white;
-        padding: 0.15rem 0.3rem;
-        border-radius: 0.25rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.4rem;
         font-weight: bold;
         cursor: pointer;
         transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border: none;
         outline: none;
-        font-size: 0.6rem;
-        margin-left: 0.2rem; /* Space from other buttons */
+        font-size: 0.9rem;
+        margin-left: 0.5rem; /* More space */
     }
     #soundToggleButton:hover {
         background-color: #5a5a5a;
-        transform: translateY(-0.25px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
 
 
@@ -295,64 +296,64 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.9);
         color: white;
-        padding: 0.2rem; /* Reduced padding */
+        padding: 1rem; /* More padding */
         box-sizing: border-box;
-        display: none; /* Controlled by JS */
+        display: none;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        gap: 0.2rem; /* Reduced gap */
+        gap: 1rem;
         z-index: 100;
         text-align: center;
         overflow-y: auto;
     }
     .message-box-content {
         background-color: #2a2a4a;
-        border-radius: 0.5rem; /* Smaller border-radius */
-        padding: 0.5rem; /* Reduced padding */
+        border-radius: 1rem;
+        padding: 2rem; /* More padding */
         box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-        width: 99%; /* Wider on small screens */
-        max-width: 300px; /* Significantly increased max-width for game over content */
+        width: 90%;
+        max-width: 450px; /* Adjusted max-width for better fit */
         display: flex;
         flex-direction: column;
-        gap: 0.4rem; /* Reduced gap */
+        gap: 1.5rem;
     }
     .message-box h2 {
-        font-size: 0.8rem; /* Reduced font size */
-        margin-bottom: 0.02rem; /* Reduced margin */
+        font-size: 1.8rem; /* Larger font size */
+        margin-bottom: 0.25rem;
         color: #fcd34d;
     }
     .message-box p {
-        font-size: 0.55rem; /* Reduced font size */
-        margin-bottom: 0.1rem; /* Reduced margin */
-        line-height: 1.0;
+        font-size: 1.1rem; /* Larger font size */
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
     }
     .message-box input {
-        padding: 0.15rem; /* Reduced padding */
-        border-radius: 0.25rem;
+        padding: 0.6rem; /* More padding */
+        border-radius: 0.35rem;
         border: 1px solid #5a5a8a;
         background-color: #1a1a2e;
         color: white;
-        font-size: 0.5rem; /* Reduced font size */
+        font-size: 0.9rem; /* Larger font size */
         width: 100%;
         box-sizing: border-box;
     }
 
     #gameOverScreen {
       background-color: #222244;
-      padding: 0.5rem; /* Reduced padding */
-      border-radius: 0.5rem; /* Smaller border-radius */
-      margin-top: 0.2rem; /* Reduced margin */
+      padding: 1rem; /* More padding */
+      border-radius: 0.6rem;
+      margin-top: 1rem;
       color: #fff;
-      font-size: 0.6rem; /* Reduced font size */
-      display: none; /* Initially hidden, controlled by JS */
+      font-size: 0.9rem; /* Larger font size */
+      display: none;
       width: 100%;
       box-sizing: border-box;
     }
 
     #gameOverScreen h2 {
       color: #facc15;
-      font-size: 0.75rem; /* Reduced font size */
+      font-size: 1.2rem; /* Larger font size */
       font-family: 'Arial Black', sans-serif;
     }
 
@@ -363,11 +364,11 @@
 
     .final-art {
       width: 100%;
-      margin-top: 0.15rem; /* Reduced margin */
-      border: 1px dashed #FFD700; /* Thinner border */
-      border-radius: 5px; /* Smaller border-radius */
+      margin-top: 0.75rem;
+      border: 2px dashed #FFD700;
+      border-radius: 8px;
       display: block;
-      max-width: 250px; /* Significantly increased max-width for the final masterpiece image */
+      max-width: 250px;
       height: auto;
       object-fit: contain;
       margin-left: auto;
@@ -375,11 +376,11 @@
     }
 
     .leaderboard-display {
-        margin-top: 0.2rem; /* Reduced margin */
+        margin-top: 1rem;
         text-align: left;
-        padding: 0.2rem; /* Reduced padding */
+        padding: 1rem;
         background-color: #2a2a4a;
-        border-radius: 0.5rem; /* Smaller border-radius */
+        border-radius: 0.75rem;
         box-shadow: 0 1px 5px rgba(0,0,0,0.2);
         color: #e0e0e0;
         flex: 1;
@@ -387,27 +388,27 @@
         box-sizing: border-box;
     }
     .leaderboard-display h3 {
-        font-size: 0.75rem; /* Reduced font size */
+        font-size: 1.1rem;
         color: #fcd34d;
-        margin-bottom: 0.15rem; /* Reduced margin */
+        margin-bottom: 0.75rem;
         text-align: center;
     }
     .leaderboard-display ol {
         list-style: none;
         padding: 0;
-        max-height: 40px; /* Reduced max height for leaderboard list */
+        max-height: 120px; /* Increased max height for leaderboard list */
         overflow-y: auto;
     }
     .leaderboard-display li {
         background-color: #3a3a5a;
-        margin-bottom: 0.1rem; /* Reduced margin */
-        padding: 0.1rem 0.2rem; /* Reduced padding */
-        border-radius: 0.2rem;
+        margin-bottom: 0.4rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 0.3rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.55rem; /* Reduced font size */
-        box-shadow: 0 0.25px 1px rgba(0,0,0,0.1);
+        font-size: 0.85rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }
     .leaderboard-display li:nth-child(odd) {
         background-color: #4a4a6a;
@@ -418,11 +419,11 @@
     }
     .loading-spinner {
         display: none;
-        border: 1px solid rgba(255, 255, 255, 0.3); /* Thinner border */
+        border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 50%;
-        border-top: 1px solid #fff;
-        width: 12px; /* Smaller spinner */
-        height: 12px;
+        border-top: 2px solid #fff;
+        width: 20px;
+        height: 20px;
         -webkit-animation: spin 1s linear infinite;
         animation: spin 1s linear infinite;
     }
@@ -435,9 +436,9 @@
       100% { transform: rotate(360deg); }
     }
     .user-id-display {
-        font-size: 0.45rem; /* Reduced font size */
+        font-size: 0.7rem;
         color: #999;
-        margin-top: 0.05rem;
+        margin-top: 0.75rem;
         word-break: break-all;
     }
 
@@ -487,48 +488,76 @@
 
     /* Responsive adjustments for mobile to ensure stacking gracefully */
     @media (max-width: 767px) {
+        body {
+            padding: 0.2rem; /* Less padding on very small screens */
+        }
+        .game-wrapper {
+            gap: 0.5rem;
+        }
         .main-ui-section {
             flex-direction: column; /* Stack on smaller screens */
             align-items: center;
-            gap: 0.3rem; /* More space when stacked */
+            gap: 0.5rem; /* More space when stacked */
         }
         .scoreboard-container, .art-preview-container {
             flex: 1 1 100%; /* Take full width when stacked */
             min-width: unset; /* Remove min-width when stacked */
             width: 100%;
-            padding: 0.2rem; /* Slightly more padding when stacked */
-            transform: scale(1); /* Reset scale to 1 for stacked layout */
-            transform-origin: center; /* Center when stacked */
+            padding: 0.75rem; /* Slightly more padding when stacked */
+            transform: scale(1); /* Ensure no unwanted scaling */
+            transform-origin: center;
         }
         .game-play-area {
-            margin-top: 0.3rem; /* Reduced margin when stacked */
+            margin-top: 0.5rem; /* Reduced margin when stacked */
             max-width: 100%; /* Ensure it doesn't overflow */
-            padding: 0.2rem; /* Reduced padding */
+            padding: 0.75rem;
         }
         .scoreboard-header {
-            font-size: 0.7rem; /* Slightly larger when stacked for readability */
+            font-size: 1.1rem;
         }
         .score-board, .instruction-board {
-            font-size: 0.7rem;
+            font-size: 1.1rem;
         }
         .stats-display {
-            font-size: 0.65rem;
+            font-size: 1rem;
+            gap: 0.4rem;
         }
         .stats-display div {
-             padding: 0.1rem;
+             padding: 0.5rem;
         }
         .reveal-title {
-            font-size: 0.8rem;
+            font-size: 1.2rem;
         }
         .image-grid {
-            max-width: 100px; /* Keep a reasonable max width for the grid when stacked */
+            max-width: 150px; /* Adjusted for mobile to be larger */
             gap: 0.5px;
         }
         .message-box-content {
-            max-width: 98%; /* Allow message box to be wider on very small screens */
+            max-width: 98%;
+            padding: 1.5rem;
+            gap: 1rem;
+        }
+        .message-box h2 {
+            font-size: 1.5rem;
+        }
+        .message-box p {
+            font-size: 1rem;
+        }
+        .message-box input {
+            font-size: 0.8rem;
+            padding: 0.4rem;
         }
         .final-art {
-            max-width: 180px; /* Adjusted for mobile */
+            max-width: 180px;
+        }
+        .game-button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            min-width: 70px;
+        }
+        #soundToggleButton {
+             padding: 0.4rem 0.8rem;
+             font-size: 0.8rem;
         }
     }
   </style>
@@ -609,7 +638,7 @@
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
             <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
-            <p>🏅 <span class="bold">Final Collector:</span> 𝗙�𝗩𝗜𝗚𝗔𝗟</p>
+            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
             <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
             <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
           </div>
@@ -1558,4 +1587,3 @@
   </script>
 </body>
 </html>
-�
