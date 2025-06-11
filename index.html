@@ -174,14 +174,11 @@
 
     .img-piece {
       background-color: #1f2937; /* hidden mask */
-      /* Masterpiece image, scaled to cover the entire grid */
-      /* THIS WILL BE UPDATED BY JS WITH THE EXTERNAL URL */
       opacity: 0; /* Hidden by default */
       transition: opacity 0.5s ease-in-out;
       border-radius: 0.25px; /* Extremely minimal border-radius */
       box-shadow: inset 0 0 0.5px rgba(0,0,0,0.5); /* Tiny shadow */
       box-sizing: border-box;
-      /* background-position will be set by JS dynamically for each piece */
     }
 
     .img-piece.revealed {
@@ -547,7 +544,7 @@
         </div>
         <div class="hashtag">#VVDMEMES 🎨🔥💎</div>
 
-        <div class="score-board">𝗘�𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
+        <div class="score-board">𝗘𝗫𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
 
         <div class="stats-display">
           <div>$VVD: <span id="vvdCollected" class="stat-value">0</span></div>
@@ -607,7 +604,7 @@
 
           <!-- Game Over Screen Content (will be shown/hidden by JS) -->
           <div id="gameOverScreen" class="hidden">
-            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
+            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - �𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
             <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
             <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
             <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
@@ -753,7 +750,10 @@
   <!-- Tone.js library for background sound -->
   <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
 
-  <script type="module">
+  <!-- Main Game Logic Script (NOT type="module" to ensure broader compatibility) -->
+  <script>
+        console.log("MAIN GAME SCRIPT STARTING!");
+
         // Get canvas and context
         const gameCanvas = document.getElementById('gameCanvas');
         const gameCtx = gameCanvas.getContext('2d');
@@ -841,7 +841,7 @@
             'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000 } // 15 seconds
         };
 
-        // --- Image Assets (***UPDATED WITH YOUR IMGUR LINKS***) ---
+        // --- Image Assets (***NOW USING PLACEHOLDER.CO FOR IMMEDIATE DEBUGGING***) ---
         const characterImage = new Image();
         characterImage.onload = () => console.log('Character image loaded successfully:', characterImage.src, 'Complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
         characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
@@ -850,7 +850,7 @@
         backgroundImage.onload = () => {
             console.log('Background image loaded successfully:', backgroundImage.src, 'Complete:', backgroundImage.complete, 'NaturalWidth:', backgroundImage.naturalWidth);
             gameCanvas.classList.add('has-background');
-            gameCanvas.style.backgroundImage = `url('${backgroundImage.src}')`; // Use the actual loaded src
+            gameCanvas.style.backgroundImage = `url('${backgroundImage.src}')`; // Set background via JS after load
         };
         backgroundImage.onerror = (e) => console.error('Failed to load background image:', backgroundImage.src, e);
 
@@ -1040,10 +1040,10 @@
                 resizeGameCanvas();
             });
 
-            // Set image sources using the provided Imgur URLs
-            characterImage.src = 'https://imgur.com/W2gHD39';
-            backgroundImage.src = 'https://imgur.com/KDlgzbI';
-            artToBeDrawnImage.src = 'https://imgur.com/3JWWYj7';
+            // Set image sources using the placeholder URLs
+            characterImage.src = 'https://placehold.co/60x60/808080/FFFFFF?text=Painter';
+            backgroundImage.src = 'https://placehold.co/500x500/3a3a5a/FFFFFF?text=Background';
+            artToBeDrawnImage.src = 'https://placehold.co/400x300/3a3a5a/FFFFFF?text=Art';
 
             await Promise.all([
                 new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
@@ -1539,4 +1539,3 @@
   </script>
 </body>
 </html>
-�
