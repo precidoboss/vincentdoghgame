@@ -1,1589 +1,988 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vicente Van Dogh Game</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-  <!-- Google Fonts for desired sketch style -->
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Patrick+Hand&family=Caveat&family=Permanent+Marker&display=swap" rel="stylesheet">
-  <style>
-    /* Universal sketch style vibes */
-    body {
-      font-family: 'Comic Neue', 'Patrick Hand', 'Caveat', cursive;
-      background-color: #1e1e2e;
-      color: #fefefe;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start; /* Align items to start to prevent excessive centering that pushes content off */
-      min-height: 100vh;
-      margin: 0;
-      padding: 0.5rem; /* More reasonable padding for overall page */
-      overflow-y: auto; /* Fallback for very small screens, ideally not needed */
-    }
-
-    .game-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem; /* More space between major sections */
-        width: 99%; /* Maximize horizontal space */
-        max-width: 900px;
-        box-sizing: border-box;
-        align-items: center;
-    }
-
-    .main-ui-section {
-      display: flex;
-      flex-wrap: wrap; /* Allows wrapping on smaller screens */
-      justify-content: space-between;
-      gap: 1rem; /* More space between left/right panels */
-      width: 100%;
-    }
-
-    /* Scoreboard Container - left side */
-    .scoreboard-container {
-      flex: 1 1 calc(55% - 0.5rem); /* Give scoreboard more space, account for gap */
-      min-width: 250px; /* More reasonable min-width for readability */
-      background-color: #2c2c4c;
-      border-radius: 8px; /* Slightly larger border-radius */
-      padding: 1rem; /* More padding */
-      box-shadow: 0 0 5px #000;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      /* REMOVED: transform: scale(0.7); to ensure readability */
-      transform-origin: top left;
-    }
-
-    .scoreboard-header {
-      display: flex;
-      align-items: center;
-      font-size: 1rem; /* Readable font size */
-      font-weight: bold;
-      margin-bottom: 0.25rem;
-      color: #FFD700;
-      font-family: 'Arial Black', sans-serif;
-    }
-
-    .scoreboard-header img {
-      width: 20px; /* Larger image size */
-      height: 20px;
-      margin-right: 0.25rem;
-    }
-
-    .hashtag {
-      font-size: 0.75rem; /* Larger font size */
-      color: #ccc;
-      margin-bottom: 0.5rem;
-    }
-
-    /* Score, Stats, Instruction Boards - chalkboard style */
-    .score-board,
-    .stats-display,
-    .instruction-board {
-      background: repeating-linear-gradient(
-        45deg,
-        #3a3a5a,
-        #3a3a5a 10px,
-        #353554 10px,
-        #353554 20px
-      );
-      border: 1px dashed #fcd34d;
-      border-radius: 0.5rem; /* Larger border-radius */
-      padding: 0.75rem 1rem; /* More padding */
-      margin-bottom: 0.75rem;
-      text-align: center;
-      font-weight: bold;
-      font-size: 1rem; /* Readable font size */
-      box-shadow: 0 0 3px rgba(252, 211, 77, 0.3);
-      text-shadow: 0.5px 0.5px #000;
-      color: #fef08a;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .stats-display {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: 0.5rem; /* More gap */
-      font-size: 0.9rem; /* Readable font size */
-    }
-
-    .stats-display div {
-      flex: 1 1 48%;
-      background-color: #4a4a6a;
-      border-radius: 0.4rem;
-      padding: 0.6rem;
-      color: #fff;
-      box-sizing: border-box;
-      text-align: center;
-    }
-
-    .instruction-board {
-      font-size: 1.05rem; /* Readable font size */
-      color: #fde68a;
-      background-color: #45456a;
-      border: 1px dotted #fcd34d;
-      margin-bottom: 1rem;
-    }
-
-    /* Art Preview Container - right side */
-    .art-preview-container {
-      flex: 1 1 calc(45% - 0.5rem); /* Give art reveal less space, account for gap */
-      min-width: 250px; /* More reasonable min-width */
-      background: linear-gradient(135deg, #2a2a4a, #1e1e2e);
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
-      text-align: center;
-      border: 2px dashed #fcd34d;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      /* REMOVED: transform: scale(0.7); */
-      transform-origin: top left;
-    }
-
-    .reveal-title {
-      font-size: 1.1rem; /* Readable font size */
-      color: #fcd34d;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      font-family: 'Permanent Marker', cursive;
-      text-shadow: 0.5px 0.5px #000;
-    }
-
-    .image-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 1px; /* Small but visible gap */
-      width: 100%;
-      max-width: 250px; /* Significantly increased max-width for visibility */
-      aspect-ratio: 4 / 3;
-      margin: 0 auto;
-      border: 1px dashed #334155;
-      border-radius: 0.5rem;
-      overflow: hidden;
-      box-sizing: border-box;
-    }
-
-    .img-piece {
-      background-color: #1f2937; /* hidden mask */
-      opacity: 0; /* Hidden by default */
-      transition: opacity 0.5s ease-in-out;
-      border-radius: 0.5px; /* Tiny border-radius */
-      box-shadow: inset 0 0 1px rgba(0,0,0,0.5); /* Tiny shadow */
-      box-sizing: border-box;
-      background-size: 400% 300%; /* Explicitly set to slice the image across grid */
-    }
-
-    .img-piece.revealed {
-      opacity: 1;
-    }
-
-    /* Stat value animation */
-    .stat-value {
-      font-weight: bold;
-      color: #facc15;
-      transition: transform 0.3s ease-in-out;
-      display: inline-block;
-    }
-
-    .stat-value.flash {
-      animation: flash 0.5s ease-in-out;
-    }
-    @keyframes flash {
-      0% { background-color: #fcd34d; }
-      100% { background-color: transparent; }
-    }
-
-    /* Main game canvas and controls area */
-    .game-play-area {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 1rem; /* More spacing from top UI */
-        background-color: #2a2a4a;
-        border-radius: 0.75rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
-        padding: 1rem;
-        width: 100%;
-        max-width: 550px;
-        margin-left: auto;
-        margin-right: auto;
-        box-sizing: border-box;
-        flex-grow: 1;
-        min-height: 200px; /* Increased min height */
-    }
-
-    canvas {
-        border-radius: 0.6rem;
-        display: block;
-        touch-action: none;
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        max-width: 500px;
-        max-height: 500px;
-        border: 2px solid #5a5a8a;
-        background-color: transparent;
-    }
-
-    .buttons-container {
-        display: flex;
-        gap: 0.75rem;
-        margin-top: 1rem;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    .game-button {
-        background-color: #8b5cf6;
-        color: white;
-        padding: 0.5rem 1rem; /* More padding */
-        border-radius: 0.4rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        border: none;
-        outline: none;
-        flex-grow: 1;
-        min-width: 80px; /* Increased min width */
-        font-size: 0.9rem; /* Increased font size */
-    }
-    .game-button:hover {
-        background-color: #7c3aed;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-    .game-button:active {
-        transform: translateY(0);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Sound control button style */
-    #soundToggleButton {
-        background-color: #6a6a6a;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 0.4rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        border: none;
-        outline: none;
-        font-size: 0.9rem;
-        margin-left: 0.5rem; /* More space */
-    }
-    #soundToggleButton:hover {
-        background-color: #5a5a5a;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-
-
-    /* Message Box and Game Over Screen */
-    .message-box {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 1rem; /* More padding */
-        box-sizing: border-box;
-        display: none;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        gap: 1rem;
-        z-index: 100;
-        text-align: center;
-        overflow-y: auto;
-    }
-    .message-box-content {
-        background-color: #2a2a4a;
-        border-radius: 1rem;
-        padding: 2rem; /* More padding */
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-        width: 90%;
-        max-width: 450px; /* Adjusted max-width for better fit */
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-    }
-    .message-box h2 {
-        font-size: 1.8rem; /* Larger font size */
-        margin-bottom: 0.25rem;
-        color: #fcd34d;
-    }
-    .message-box p {
-        font-size: 1.1rem; /* Larger font size */
-        margin-bottom: 0.5rem;
-        line-height: 1.4;
-    }
-    .message-box input {
-        padding: 0.6rem; /* More padding */
-        border-radius: 0.35rem;
-        border: 1px solid #5a5a8a;
-        background-color: #1a1a2e;
-        color: white;
-        font-size: 0.9rem; /* Larger font size */
-        width: 100%;
-        box-sizing: border-box;
-    }
-
-    #gameOverScreen {
-      background-color: #222244;
-      padding: 1rem; /* More padding */
-      border-radius: 0.6rem;
-      margin-top: 1rem;
-      color: #fff;
-      font-size: 0.9rem; /* Larger font size */
-      display: none;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    #gameOverScreen h2 {
-      color: #facc15;
-      font-size: 1.2rem; /* Larger font size */
-      font-family: 'Arial Black', sans-serif;
-    }
-
-    .bold {
-      font-weight: bold;
-      color: #fcd34d;
-    }
-
-    .final-art {
-      width: 100%;
-      margin-top: 0.75rem;
-      border: 2px dashed #FFD700;
-      border-radius: 8px;
-      display: block;
-      max-width: 250px;
-      height: auto;
-      object-fit: contain;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .leaderboard-display {
-        margin-top: 1rem;
-        text-align: left;
-        padding: 1rem;
-        background-color: #2a2a4a;
-        border-radius: 0.75rem;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.2);
-        color: #e0e0e0;
-        flex: 1;
-        width: 100%;
-        box-sizing: border-box;
-    }
-    .leaderboard-display h3 {
-        font-size: 1.1rem;
-        color: #fcd34d;
-        margin-bottom: 0.75rem;
-        text-align: center;
-    }
-    .leaderboard-display ol {
-        list-style: none;
-        padding: 0;
-        max-height: 120px; /* Increased max height for leaderboard list */
-        overflow-y: auto;
-    }
-    .leaderboard-display li {
-        background-color: #3a3a5a;
-        margin-bottom: 0.4rem;
-        padding: 0.4rem 0.6rem;
-        border-radius: 0.3rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 0.85rem;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-    .leaderboard-display li:nth-child(odd) {
-        background-color: #4a4a6a;
-    }
-    .leaderboard-display .leaderboard-score {
-        font-weight: bold;
-        color: #a7f3d0;
-    }
-    .loading-spinner {
-        display: none;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top: 2px solid #fff;
-        width: 20px;
-        height: 20px;
-        -webkit-animation: spin 1s linear infinite;
-        animation: spin 1s linear infinite;
-    }
-    @-webkit-keyframes spin {
-      0% { -webkit-transform: rotate(0deg); }
-      100% { -webkit-transform: rotate(360deg); }
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .user-id-display {
-        font-size: 0.7rem;
-        color: #999;
-        margin-top: 0.75rem;
-        word-break: break-all;
-    }
-
-    /* Power-up overlays */
-    .invincible-overlay, .double-points-overlay, .score-reset-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        border-radius: 0.75rem;
-        pointer-events: none;
-        z-index: 50;
-        display: none;
-        box-sizing: border-box;
-    }
-    .invincible-overlay {
-        background-color: rgba(255, 255, 0, 0.2);
-        animation: pulse-yellow 1s infinite alternate;
-    }
-    @keyframes pulse-yellow {
-        from { opacity: 0.2; }
-        to { opacity: 0.5; }
-    }
-
-    .double-points-overlay {
-        background-color: rgba(139, 92, 246, 0.2);
-        animation: pulse-purple 1s infinite alternate;
-    }
-    @keyframes pulse-purple {
-        from { opacity: 0.2; }
-        to { opacity: 0.5; }
-    }
-
-    .score-reset-overlay {
-        background-color: rgba(255, 0, 0, 0.3);
-        animation: pulse-red 0.5s infinite alternate;
-    }
-    @keyframes pulse-red {
-        from { opacity: 0.3; }
-        to { opacity: 0.6; }
-    }
-    #gameCanvas.has-background {
-        background-size: cover;
-        background-position: center;
-    }
-
-    /* Responsive adjustments for mobile to ensure stacking gracefully */
-    @media (max-width: 767px) {
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VCNEWS | Chronos Chronicles</title>
+    <!-- Load Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Supabase SDK for Database/RPC Calls and Auth -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Custom Styles for Newspaper Aesthetic and Layout */
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Merriweather:wght@300;400&display=swap');
+        
+        .newspaper-title {
+            font-family: 'Playfair Display', serif;
+            letter-spacing: -0.05em;
+            text-shadow: 2px 2px #0a0a0a;
+        }
+        .newspaper-body {
+            font-family: 'Merriweather', serif;
+        }
+        
+        /* Fixed Dark Mode Styles */
         body {
-            padding: 0.2rem; /* Less padding on very small screens */
+            background-color: #0d0d0d;
+            color: #ffffff;
+            transition: all 0.3s;
         }
-        .game-wrapper {
-            gap: 0.5rem;
+        .card {
+            background-color: #1f2937;
+            border-color: #4b5563;
         }
-        .main-ui-section {
-            flex-direction: column; /* Stack on smaller screens */
-            align-items: center;
-            gap: 0.5rem; /* More space when stacked */
-        }
-        .scoreboard-container, .art-preview-container {
-            flex: 1 1 100%; /* Take full width when stacked */
-            min-width: unset; /* Remove min-width when stacked */
-            width: 100%;
-            padding: 0.75rem; /* Slightly more padding when stacked */
-            transform: scale(1); /* Ensure no unwanted scaling */
-            transform-origin: center;
-        }
-        .game-play-area {
-            margin-top: 0.5rem; /* Reduced margin when stacked */
-            max-width: 100%; /* Ensure it doesn't overflow */
-            padding: 0.75rem;
-        }
-        .scoreboard-header {
-            font-size: 1.1rem;
-        }
-        .score-board, .instruction-board {
-            font-size: 1.1rem;
-        }
-        .stats-display {
-            font-size: 1rem;
-            gap: 0.4rem;
-        }
-        .stats-display div {
-             padding: 0.5rem;
-        }
-        .reveal-title {
-            font-size: 1.2rem;
-        }
-        .image-grid {
-            max-width: 150px; /* Adjusted for mobile to be larger */
-            gap: 0.5px;
-        }
-        .message-box-content {
-            max-width: 98%;
-            padding: 1.5rem;
-            gap: 1rem;
-        }
-        .message-box h2 {
-            font-size: 1.5rem;
-        }
-        .message-box p {
-            font-size: 1rem;
-        }
-        .message-box input {
-            font-size: 0.8rem;
-            padding: 0.4rem;
-        }
-        .final-art {
-            max-width: 180px;
-        }
-        .game-button {
-            padding: 0.4rem 0.8rem;
-            font-size: 0.8rem;
-            min-width: 70px;
-        }
-        #soundToggleButton {
-             padding: 0.4rem 0.8rem;
-             font-size: 0.8rem;
+    </style>
+</head>
+<body class="newspaper-body">
+
+    <!-- CRITICAL: Supabase Configuration -->
+    <script>
+        // --- SUPABASE CONFIGURATION ---
+        // Supabase keys for DB/RPC calls and Auth.
+        const SUPABASE_URL = 'https://glxpstrupjohubotpvkg.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdseHBzdHJ1cGpvaHVib3RwdmtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyNDEwMTIsImV4cCI6MjA3NjgxNzAxMn0.glG8liZrM-PQ8Abwi76v1iHvfwCoMRf855eGUVPE1ek';
+        
+        // Auth state toggle (default to Sign In)
+        let isRegisterMode = false;
+    </script>
+
+    <div id="app-container" class="max-w-4xl mx-auto p-4 md:p-8">
+        <!-- Message Box -->
+        <div id="message-box" class="fixed top-0 left-1/2 -translate-x-1/2 p-4 mt-2 rounded-lg z-50 transition-opacity duration-300 opacity-0 hidden"></div>
+        
+        <!-- Header / Navigation -->
+        <header class="mb-8 border-b border-sky-500 pb-4 flex flex-col sm:flex-row justify-between items-center sm:space-y-0 space-y-4">
+            <h1 class="newspaper-title text-4xl sm:text-5xl text-sky-500">VCNEWS</h1>
+            <nav id="main-nav" class="flex flex-wrap justify-center space-x-3 text-sm sm:text-base">
+                <button onclick="navigate('tge')" class="nav-button hover:text-sky-400 transition-colors">TGE</button>
+                <button onclick="navigate('login')" class="nav-button hover:text-sky-400 transition-colors text-red-400 font-bold">Login</button>
+                <button onclick="navigate('feed')" class="nav-button hover:text-sky-400 transition-colors">News Feed</button>
+                <button onclick="navigate('quests')" class="nav-button hover:text-sky-400 transition-colors">Quests</button>
+                <button onclick="navigate('profile')" class="nav-button hover:text-sky-400 transition-colors">Portfolio</button>
+                <button onclick="navigate('about')" class="nav-button hover:text-sky-400 transition-colors">About</button>
+            </nav>
+        </header>
+
+        <!-- Main Content Views -->
+        <main id="views">
+            
+            <!-- --------------------------------- -->
+            <!-- VIEW 1: LOGIN / REGISTER PAGE -->
+            <!-- --------------------------------- -->
+            <div id="view-login" class="view-content flex flex-col items-center justify-center text-center h-[70vh]">
+                <h2 class="newspaper-title text-3xl mb-4 text-sky-500">Access Chronos Chronicles</h2>
+                <p class="mb-8 text-gray-400" id="auth-subtitle">Sign in to track your points and start mining VCNEWS.</p>
+                
+                <div class="card p-6 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700">
+                    
+                    <div id="auth-forms">
+                        <h3 class="text-2xl font-bold mb-4" id="auth-form-title">Sign In</h3>
+
+                        <!-- Username is optional for Supabase but good for UX -->
+                        <div id="username-field" class="mb-3 hidden">
+                            <input id="auth-username" type="text" placeholder="Username (Optional)" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                        </div>
+                        
+                        <input id="auth-email" type="email" placeholder="Email Address" class="w-full p-3 mb-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                        <input id="auth-password" type="password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                        
+                        <!-- Supabase Action Button -->
+                        <button id="supabase-auth-button" onclick="handleSupabaseAuth()" class="bg-sky-500 hover:bg-sky-600 text-black font-bold py-3 px-6 rounded-lg w-full transition duration-300 mb-4">
+                            Sign In
+                        </button>
+                        
+                        <!-- Toggle Sign Up/Sign In -->
+                        <p class="text-xs text-gray-400 mt-4">
+                            <span id="auth-toggle-text">Don't have an account?</span>
+                            <button onclick="toggleAuthMode()" class="text-sky-400 hover:text-sky-300 font-bold transition">
+                                <span id="auth-toggle-link">Register</span>
+                            </button>
+                        </p>
+
+                    </div>
+                    
+                    <p id="user-info" class="text-sm text-gray-500 mt-4 hidden"></p>
+                    <button onclick="logout()" class="text-xs text-red-500 mt-6 hover:text-red-400 transition hidden" id="logout-link">Log Out</button>
+
+                </div>
+            </div>
+
+            <!-- --------------------------------- -->
+            <!-- VIEW 2: NEWS FEED -->
+            <!-- --------------------------------- -->
+            <div id="view-feed" class="view-content hidden">
+                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">Today's Chronos News Digest</h2>
+                <div id="news-list" class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- News cards will be inserted here by JavaScript -->
+                </div>
+                <div id="feed-loading" class="text-center text-gray-500 mt-12">
+                    <svg class="animate-spin h-6 w-6 text-sky-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Loading articles...
+                </div>
+            </div>
+
+            <!-- --------------------------------- -->
+            <!-- VIEW 3: ARTICLE DETAIL -->
+            <!-- --------------------------------- -->
+            <div id="view-article" class="view-content hidden">
+                <button onclick="navigate('feed')" class="text-sky-500 hover:text-sky-400 mb-6 flex items-center transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Back to Feed
+                </button>
+                <article class="card p-6 rounded-xl shadow-2xl border-t-4 border-sky-500">
+                    <h1 id="article-title" class="newspaper-title text-4xl mb-4 leading-none"></h1>
+                    <div class="flex justify-between text-xs text-gray-400 mb-6 border-b border-gray-700 pb-3">
+                        <span id="article-date-category"></span>
+                    </div>
+                    
+                    <div class="lg:columns-2 lg:gap-8">
+                        <img id="article-image" class="w-full h-auto mb-6 rounded-lg object-cover" src="" onerror="this.style.display='none'">
+                        <p id="article-intro" class="text-lg font-bold mb-6 italic text-gray-300"></p>
+                        <div id="article-content" class="text-gray-300 text-base leading-relaxed">
+                            <!-- Main content paragraphs inserted here -->
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 pt-6 border-t border-gray-700 flex justify-between items-center flex-wrap gap-4">
+                        <button id="claim-button" onclick="" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 text-lg">
+                            Claim <span id="claim-points">0</span> VCNEWS
+                        </button>
+                        <div id="article-sources" class="text-sm text-gray-500">
+                            <!-- Sources/Links inserted here -->
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- --------------------------------- -->
+            <!-- VIEW 4: DAILY QUESTS -->
+            <!-- --------------------------------- -->
+            <div id="view-quests" class="view-content hidden">
+                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">Daily Engagement Quests</h2>
+                <p class="text-gray-400 mb-6">Complete the active quest to earn a large boost of VCNEWS points!</p>
+                <div id="quest-card" class="card p-6 rounded-xl border-l-4 border-yellow-500">
+                    <div id="quest-loading" class="text-center text-gray-500">
+                        <svg class="animate-spin h-6 w-6 text-yellow-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Loading daily quest...
+                    </div>
+                </div>
+            </div>
+
+            <!-- --------------------------------- -->
+            <!-- VIEW 5: PORTFOLIO/DASHBOARD -->
+            <!-- --------------------------------- -->
+            <div id="view-profile" class="view-content hidden">
+                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">My VCNEWS Portfolio</h2>
+
+                <!-- Points and Status Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="card p-6 rounded-xl border-b-4 border-sky-500">
+                        <p class="text-sm text-gray-400">Total VCNEWS Points Mined</p>
+                        <p id="profile-points" class="newspaper-title text-5xl text-sky-500 mt-1 transition-transform transform hover:scale-[1.02]">0</p>
+                    </div>
+                    <div class="card p-6 rounded-xl border-b-4 border-sky-500">
+                        <p class="text-sm text-gray-400">Account Status</p>
+                        <p class="text-xl text-green-500 mt-2 font-bold">Active Miner</p>
+                        <p class="text-xs text-gray-500 mt-2">Email: <span id="profile-email">...</span></p>
+                    </div>
+                    <div class="card p-6 rounded-xl border-b-4 border-green-500 flex flex-col justify-between">
+                        <p class="text-sm text-gray-400">Token Generation Event (TGE)</p>
+                        <div class="mt-2">
+                            <p class="text-xl font-bold text-white">1 VCNEWS = 1 Real Token</p>
+                            <p class="text-xs text-gray-300 mt-1">Conversion available at TGE end date.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Leaderboard Section (REAL TIME MOCKUP) -->
+                <div class="mt-8 border-t border-gray-700 pt-6">
+                    <h3 class="text-2xl font-bold mb-4 text-sky-500">Global Leaderboard (Top 5 Miners)</h3>
+                    <div id="leaderboard-container" class="space-y-2">
+                        <!-- Leaderboard content will be dynamically loaded here -->
+                        <div class="text-center text-gray-500">Loading leaderboard...</div>
+                    </div>
+                    <!-- User's own rank card -->
+                    <div class="flex justify-between items-center card p-3 rounded-lg border-l-4 border-sky-500 mt-4">
+                        <span class="font-bold text-sky-500">#<span id="leaderboard-user-rank">...</span></span>
+                        <span class="text-lg font-bold">Your Rank</span>
+                        <span id="leaderboard-user-points" class="font-bold text-green-400">0 VCNEWS</span>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="mt-8 border-t border-gray-700 pt-6">
+                    <h3 class="text-2xl font-bold mb-4 text-sky-500">Recent Activity</h3>
+                    <div id="activity-log" class="space-y-3">
+                        <p class="text-gray-500">Activity will load here...</p>
+                    </div>
+                </div>
+
+                <button onclick="logout()" class="mt-8 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full transition duration-300">
+                    Log Out
+                </button>
+            </div>
+
+          <!-- --------------------------------- -->
+<!-- VIEW: TGE DASHBOARD -->
+<!-- --------------------------------- -->
+<div id="view-tge" class="view-content hidden">
+    <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">
+        Token Generation Event (TGE) Dashboard
+    </h2>
+
+    <!-- Countdown -->
+    <div class="card p-6 mb-8 rounded-xl border-l-4 border-green-500 text-center">
+        <p class="text-gray-400 text-sm mb-2">Countdown to Token Conversion</p>
+        <p id="tge-countdown" class="newspaper-title text-4xl text-green-400">--:--:--:--</p>
+    </div>
+
+    <!-- User’s Pending Points -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6 rounded-xl border-b-4 border-sky-500">
+            <p class="text-sm text-gray-400">Pending VCNEWS Points (To Be Converted)</p>
+            <p id="tge-pending-points" class="newspaper-title text-5xl text-sky-500 mt-2">0</p>
+        </div>
+        <div class="card p-6 rounded-xl border-b-4 border-yellow-500">
+            <p class="text-sm text-gray-400">Estimated Value (at 1:1 Token Conversion)</p>
+            <p id="tge-estimated-value" class="newspaper-title text-5xl text-yellow-400 mt-2">0 Tokens</p>
+        </div>
+    </div>
+
+    <!-- Historical Accumulation Chart Placeholder -->
+    <div class="card p-6 rounded-xl mb-8 border-l-4 border-sky-500">
+        <p class="text-lg font-bold text-sky-400 mb-3">Your Accumulation History</p>
+        <canvas id="tge-chart" height="100"></canvas>
+    </div>
+
+    <!-- Engagement CTA -->
+    <div class="text-center mt-8">
+        <button onclick="navigate('feed')" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300">
+            Read More Articles to Boost Points
+        </button>
+    </div>
+</div>
+
+<!-- --------------------------------- -->
+<!-- SCRIPT: TGE DASHBOARD LOGIC -->
+<!-- --------------------------------- -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="module">
+    // ------------------------------------------
+    // TGE DASHBOARD FUNCTIONS
+    // ------------------------------------------
+
+    async function fetchTGEDashboard() {
+        if (!supabaseClient || !userId) return;
+
+        const pendingPointsEl = document.getElementById('tge-pending-points');
+        const estimatedValueEl = document.getElementById('tge-estimated-value');
+        const countdownEl = document.getElementById('tge-countdown');
+
+        try {
+            // 1️⃣ Fetch total user points
+            const { data: balanceData, error: balanceError } = await supabaseClient
+                .from('user_balances')
+                .select('total_points')
+                .eq('user_id', userId)
+                .single();
+            
+            if (balanceError && balanceError.code !== 'PGRST116') throw balanceError;
+
+            const pendingPoints = balanceData ? balanceData.total_points : 0;
+            pendingPointsEl.textContent = pendingPoints.toLocaleString();
+            estimatedValueEl.textContent = `${pendingPoints.toLocaleString()} Tokens`;
+
+            // 2️⃣ Countdown Timer Logic
+            const TGE_DATE = new Date("2025-12-01T00:00:00Z"); // Change this to your official TGE date
+            updateCountdown(countdownEl, TGE_DATE);
+            setInterval(() => updateCountdown(countdownEl, TGE_DATE), 1000);
+
+            // 3️⃣ Fetch user accumulation history
+            const { data: historyData, error: historyError } = await supabaseClient
+                .from('user_activity_log')
+                .select('created_at, points_awarded')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: true });
+
+            if (historyError) throw historyError;
+
+            // Aggregate by day
+            const dailyTotals = {};
+            historyData.forEach(entry => {
+                const day = new Date(entry.created_at).toISOString().slice(0, 10);
+                dailyTotals[day] = (dailyTotals[day] || 0) + entry.points_awarded;
+            });
+
+            const labels = Object.keys(dailyTotals);
+            const values = Object.values(dailyTotals);
+
+            // 4️⃣ Render Chart
+            const ctx = document.getElementById('tge-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Daily Points Earned',
+                        data: values,
+                        borderColor: '#38bdf8',
+                        backgroundColor: 'rgba(56,189,248,0.2)',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: true,
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { ticks: { color: '#9ca3af' } },
+                        y: { ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+
+        } catch (error) {
+            showMessage(`Error loading TGE dashboard: ${error.message}`, 'error');
+            console.error("TGE Fetch Error:", error);
         }
     }
-  </style>
-</head>
-<body>
 
-  <div class="game-wrapper">
-    <div class="main-ui-section">
-      <div class="scoreboard-container">
-        <div class="scoreboard-header">
-          <img src="https://abs.twimg.com/icons/apple-touch-icon-192x192.png" alt="Twitter logo" />
-          @TheVanDogh
-        </div>
-        <div class="hashtag">#VVDMEMES 🎨🔥💎</div>
+    /** Countdown Utility */
+    function updateCountdown(el, targetDate) {
+        const now = new Date().getTime();
+        const distance = targetDate.getTime() - now;
 
-        <div class="score-board">𝗘𝗫𝗣𝗘𝗥𝗜𝗘𝗡𝗖𝗘: <span id="score" class="stat-value">0</span></div>
+        if (distance <= 0) {
+            el.textContent = "TGE LIVE!";
+            el.classList.add('text-green-500');
+            return;
+        }
 
-        <div class="stats-display">
-          <div>$VVD: <span id="vvdCollected" class="stat-value">0</span></div>
-          <div>Art Items: <span id="artItemsCollectedCount" class="stat-value">0</span></div>
-          <div>Accuracy: <span id="accuracy" class="stat-value">0%</span></div>
-          <div>Art Worth: $<span id="artWorthDisplay" class="stat-value">0</span></div>
-        </div>
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((distance / (1000 * 60)) % 60);
+        const seconds = Math.floor((distance / 1000) % 60);
 
-        <div class="instruction-board">🎯 Collect: <span id="requiredItem"></span></div>
-      </div>
+        el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
 
-      <div class="art-preview-container">
-        <div class="reveal-title">✨ Reveal the Masterpiece ✨</div>
-        <div class="image-grid" id="imageGrid">
-          <!-- Image pieces will be dynamically added here by JavaScript -->
-        </div>
-      </div>
+    // Attach to SPA navigation
+    if (typeof navigate === 'function') {
+        const oldNavigate = navigate;
+        navigate = function (viewId) {
+            oldNavigate(viewId);
+            if (viewId === 'tge') fetchTGEDashboard();
+        };
+    }
+</script>
+
+            <!-- --------------------------------- -->
+            <!-- VIEW 6: ABOUT / INFO PAGE -->
+            <!-- --------------------------------- -->
+            <div id="view-about" class="view-content hidden">
+                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">About VCNEWS: Chronos Chronicles</h2>
+                
+                <div class="card p-6 rounded-xl shadow-2xl space-y-6">
+                    <p class="text-lg font-bold text-sky-500">Project Overview</p>
+                    <p class="text-gray-300">
+                        VCNEWS is the official news and engagement platform for the Chronos Chronicles token project. Our mission is to incentivize community participation and knowledge acquisition through daily news consumption and interactive quests. 
+                        Users "mine" VCNEWS points by reading articles and completing tasks.
+                    </p>
+                    
+                    <p class="text-lg font-bold text-sky-500 pt-4 border-t border-gray-700">Tokenomics & Points</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-300 ml-4">
+                        <li>**1 VCNEWS Point** is equivalent to **1 Real Token** at the Token Generation Event (TGE).</li>
+                        <li>**Total Daily Budget:** Points awarded globally are capped to enforce scarcity and control supply.</li>
+                        <li>**Earning:** Points are earned by reading news articles (Article Claim) and completing Daily Quests (Quest Claim).</li>
+                    </ul>
+
+                    <p class="text-lg font-bold text-sky-500 pt-4 border-t border-gray-700">Connect with Chronos</p>
+                    <div class="flex space-x-6 text-xl">
+                        <a href="#" target="_blank" class="text-gray-400 hover:text-sky-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Whitepaper
+                        </a>
+                        <a href="#" target="_blank" class="text-gray-400 hover:text-sky-500 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2.04c-5.5 0-9.96 4.46-9.96 9.96s4.46 9.96 9.96 9.96c5.5 0 9.96-4.46 9.96-9.96s-4.46-9.96-9.96-9.96zm4.95 6.01l-1.41 1.41c.2.4.32.85.32 1.33 0 2.2-1.79 4-4 4s-4-1.8-4-4c0-.48.12-.93.32-1.33l-1.41-1.41c-.68 1.05-1.09 2.27-1.09 3.59 0 4.14 3.36 7.5 7.5 7.5s7.5-3.36 7.5-7.5c0-1.32-.41-2.54-1.09-3.59z"/>
+                            </svg>
+                            Community
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 pt-4 text-center text-xs text-gray-600 border-t border-gray-800">
+            Chronos Chronicles: VCNEWS Point Mining Platform
+        </footer>
+
     </div>
 
-    <div class="game-play-area">
-        <div class="relative w-full max-w-[500px]">
-            <canvas id="gameCanvas"></canvas>
-            <div id="invincibleOverlay" class="invincible-overlay"></div>
-            <div id="doublePointsOverlay" class="double-points-overlay"></div>
-            <div id="scoreResetOverlay" class="score-reset-overlay"></div>
-        </div>
-        <div class="buttons-container">
-            <button id="moveLeft" class="game-button">
-                <i class="fas fa-arrow-left"></i> Left
-            </button>
-            <button id="startGame" class="game-button">Start Game</button>
-            <button id="moveRight" class="game-button">
-                Right <i class="fas fa-arrow-right"></i>
-            </button>
-            <button id="soundToggleButton" class="game-button">
-                <i class="fas fa-volume-up"></i> Sound
-            </button>
-        </div>
-        <div id="userIdDisplay" class="user-id-display mt-4">User ID: Loading...</div>
-    </div>
-
-    <div class="leaderboard-display">
-        <h3>Top Art Collectors</h3>
-        <ol id="leaderboardList">
-            <li class="text-center text-gray-400">Loading Leaderboard... <div class="loading-spinner mx-auto mt-2"></div></li>
-        </ol>
-    </div>
-  </div>
-
-  <div id="messageBox" class="message-box">
-      <div class="message-box-content">
-          <h2 id="messageTitle">Welcome!</h2>
-          <p id="messageText">Collect items to draw your masterpiece! Dodge chaos and get ready to bid!</p>
-          <input type="text" id="userNameInput" placeholder="Enter your name (optional)" class="p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 hidden" />
-          <button id="messageButton" class="game-button">Start Game</button>
-          <div id="loadingSpinner" class="loading-spinner mx-auto"></div>
-
-          <!-- Game Over Screen Content (will be shown/hidden by JS) -->
-          <div id="gameOverScreen" class="hidden">
-            <h2>🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉</h2>
-            <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
-            <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
-            <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
-            <p>💰 <span class="bold">Highest Bid:</span> $<span id="highestBid">0.00</span></p>
-            <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
-            <p>💎 <span class="bold">Final Amount:</span> <span id="finalAuctionAmount">0.00 $VVD</span></p>
-            <img class="final-art" id="finalArtImage" src="" alt="Final Art" />
-          </div>
-      </div>
-  </div>
-
-  <!-- Firebase SDK (kept at the end of body as best practice) -->
-  <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection, query, where, orderBy, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Global Firebase instances and user ID
-        window.firebaseApp = null;
-        window.db = null;
-        window.auth = null;
-        window.currentUserId = null;
-        window.isAuthReady = false; // Flag to indicate auth state is determined
-
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Firebase configuration and initialization
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-
-            window.firebaseApp = initializeApp(firebaseConfig);
-            window.db = getFirestore(window.firebaseApp);
-            window.auth = getAuth(window.firebaseApp);
-
-            // Authentication Listener
-            onAuthStateChanged(window.auth, async (user) => {
-                if (user) {
-                    window.currentUserId = user.uid;
-                } else {
-                    // Sign in anonymously if no user is found
-                    try {
-                        const credential = await signInAnonymously(window.auth);
-                        window.currentUserId = credential.user.uid;
-                    } catch (error) {
-                        console.error("Anonymous sign-in failed:", error);
-                        window.currentUserId = crypto.randomUUID(); // Fallback to a random ID
-                    }
-                }
-                document.getElementById('userIdDisplay').textContent = `User ID: ${window.currentUserId}`;
-                window.isAuthReady = true;
-                console.log("Firebase Auth Ready. User ID:", window.currentUserId);
-
-                setupLeaderboardListener();
-            });
-
-            // Attempt to sign in with custom token if available
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                try {
-                    await signInWithCustomToken(window.auth, __initial_auth_token);
-                    console.log("Signed in with custom token.");
-                } catch (error) {
-                    console.error("Custom token sign-in failed:", error);
-                }
-            } else {
-                console.log("No initial auth token found, relying on anonymous sign-in.");
-            }
-        });
-
-        // Function to listen for real-time leaderboard updates
-        function setupLeaderboardListener() {
-            if (!window.db || !window.isAuthReady) {
-                console.log("Firestore or Auth not ready for leaderboard listener.");
-                return;
-            }
-
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const leaderboardCollectionRef = collection(window.db, `/artifacts/${appId}/public/data/leaderboard`);
-            const q = query(leaderboardCollectionRef, orderBy('overallScore', 'desc'), limit(10));
-
-            onSnapshot(q, (snapshot) => {
-                const leaderboardData = [];
-                snapshot.forEach((doc) => {
-                    leaderboardData.push({ id: doc.id, ...doc.data() });
-                });
-                console.log("Leaderboard updated:", leaderboardData);
-                updateLeaderboardUI(leaderboardData);
-            }, (error) => {
-                console.error("Error fetching leaderboard:", error);
-                document.getElementById('leaderboardList').innerHTML = `<li class="text-center text-red-400">Error loading leaderboard.</li>`;
-            });
-        }
-
-        // Function to update the leaderboard UI
-        function updateLeaderboardUI(data) {
-            const leaderboardList = document.getElementById('leaderboardList');
-            leaderboardList.innerHTML = '';
-
-            if (data.length === 0) {
-                leaderboardList.innerHTML = `<li class="text-center text-gray-400">No scores yet. Be the first!</li>`;
-                return;
-            }
-
-            data.forEach((entry, index) => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>${index + 1}. ${entry.userName || 'Anonymous'}</span>
-                    <span class="leaderboard-score">Score: ${entry.overallScore} | Bid: ${entry.finalAuctionAmountVVD ? entry.finalAuctionAmountVVD.toFixed(2) + ' $VVD' : 'N/A'}</span>
-                `;
-                leaderboardList.appendChild(li);
-            });
-        }
-
-        // Function to submit score to Firestore
-        window.submitScoreToFirestore = async (scoreData) => {
-            if (!window.db || !window.isAuthReady || !window.currentUserId) {
-                console.error("Firestore, Auth, or User ID not ready for submission.");
-                return false;
-            }
-
-            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-            const leaderboardCollectionRef = collection(window.db, `/artifacts/${appId}/public/data/leaderboard`);
-
-            try {
-                await addDoc(leaderboardCollectionRef, {
-                    userId: window.currentUserId,
-                    userName: scoreData.userName,
-                    overallScore: scoreData.score,
-                    vvdCollected: scoreData.vvd,
-                    artItemsCollected: scoreData.artItemsCollected,
-                    accuracy: scoreData.accuracy,
-                    finalAuctionAmount: scoreData.finalAuctionAmountUSD,
-                    finalAuctionAmountVVD: scoreData.finalAuctionAmountVVD,
-                    timestamp: serverTimestamp()
-                });
-                console.log("Score submitted successfully!");
-                return true;
-            } catch (e) {
-                console.error("Error adding document: ", e);
-                return false;
-            }
+    <!-- ----------------------------------------------------- -->
+    <!-- 2. CORE JAVASCRIPT LOGIC (SUPABASE ONLY) -->
+    <!-- ----------------------------------------------------- -->
+    <script type="module">
+        // --- Global Variables ---
+        let supabaseClient;
+        let userId = null; 
+        let userEmail = null;
+        
+        // --- DOM Elements ---
+        const views = {
+            login: document.getElementById('view-login'),
+            feed: document.getElementById('view-feed'),
+            article: document.getElementById('view-article'),
+            quests: document.getElementById('view-quests'),
+            profile: document.getElementById('view-profile'),
+            about: document.getElementById('view-about'),
         };
-  </script>
-
-  <!-- Tone.js library for background sound -->
-  <script src="https://unpkg.com/tone@14.7.77/build/Tone.js"></script>
-
-  <!-- Main Game Logic Script (NOT type="module" to ensure broader compatibility) -->
-  <script>
-        console.log("MAIN GAME SCRIPT STARTING!");
-
-        // Get canvas and context
-        const gameCanvas = document.getElementById('gameCanvas');
-        const gameCtx = gameCanvas.getContext('2d');
-
-        const scoreDisplay = document.getElementById('score');
-        const vvdCollectedDisplay = document.getElementById('vvdCollected');
-        const artItemsCollectedCountDisplay = document.getElementById('artItemsCollectedCount');
-        const accuracyDisplay = document.getElementById('accuracy');
-        const artWorthDisplay = document.getElementById('artWorthDisplay');
-        const requiredItemDisplay = document.getElementById('requiredItem');
-        const moveLeftButton = document.getElementById('moveLeft');
-        const moveRightButton = document.getElementById('moveRight');
-        const startGameButton = document.getElementById('startGame');
-        const soundToggleButton = document.getElementById('soundToggleButton'); // New sound button
-        const messageBox = document.getElementById('messageBox');
-        const messageTitle = document.getElementById('messageTitle');
-        const messageText = document.getElementById('messageText');
-        const userNameInput = document.getElementById('userNameInput');
-        const messageButton = document.getElementById('messageButton');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const invincibleOverlay = document.getElementById('invincibleOverlay');
-        const doublePointsOverlay = document.getElementById('doublePointsOverlay');
-        const scoreResetOverlay = document.getElementById('scoreResetOverlay');
-        const userIdDisplay = document.getElementById('userIdDisplay');
-
-        // Game Over Screen specific elements
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const finalArtImage = document.getElementById('finalArtImage');
-        const highestBidSpan = document.getElementById('highestBid');
-        const finalHolderSpan = document.getElementById('finalHolder');
-        const finalAuctionAmountSpan = document.getElementById('finalAuctionAmount');
-        const imageGridContainer = document.getElementById('imageGrid');
-
-        // Game variables
-        let score = 0;
-        let vvdCollected = 0;
-        let artItemsCollectedCount = 0;
-        let artWorth = 0;
-        let baseArtWorth = 1000;
-        let paintSpillsHit = 0;
-        const paintSpillPenalty = 50;
-
-        let totalCorrectActions = 1;
-        let totalOpportunities = 2;
-        const ACCURACY_INCREMENT_PER_CORRECT = 1;
-        const ACCURACY_INCREMENT_PER_OPPORTUNITY = 1;
-
-        let gameRunning = false;
-        let gameOver = false;
-        let animationFrameId;
-
-        // Character (Painter) properties
-        const characterWidth = 60;
-        const characterHeight = 60;
-        let characterX;
-        const characterSpeed = 5;
-        let movingLeft = false;
-        let movingRight = false;
-
-        // Falling items
-        const fallingItems = [];
-        const itemSize = 30;
-        const itemSpeed = 2;
-        const itemSpawnRate = 800;
-        let lastSpawnTime = 0;
-
-        // Power-up states and timers
-        let isInvincible = false;
-        let doublePoints = false;
-        let scoreTemporarilyZero = false;
-        let powerupTimer = null;
-        let jeetCoinTimer = null;
-        let actualScoreBeforeJeet = 0;
-
-        // Item definitions
-        const itemTypes = {
-            'meme': { emoji: '🎨', points: 10, type: 'collectible', name: 'Meme Scroll' },
-            'nft': { emoji: '🖼️', points: 25, type: 'collectible', name: 'NFT Canvas' },
-            'vvd': { emoji: '💎', points: 50, type: 'collectible', name: '$VVD Token' },
-            'paint_spill': { emoji: '🪣', points: -10, type: 'hazard', name: 'Paint Spill' },
-            'soap': { emoji: '🧼', points: -25, type: 'hazard', name: 'Soap' },
-            'jeet_coin': { emoji: '🐍', points: 0, type: 'hazard', name: 'Jeet Coin' },
-            'meme_brain': { emoji: '🧠', points: 0, type: 'powerup', duration: 10000, name: 'Meme Brain' },
-            'art_tornado': { emoji: '🌀', points: 0, type: 'powerup', duration: 0, name: 'Art Tornado' },
-            'viral_mode': { emoji: '🕺', points: 0, type: 'powerup', duration: 15000 } // 15 seconds
-        };
-
-        // --- Image Assets (***USING YOUR IMGUR URLS***) ---
-        const characterImage = new Image();
-        characterImage.onload = () => console.log('Character image loaded successfully:', characterImage.src, 'Complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
-        characterImage.onerror = (e) => console.error('Failed to load character image:', characterImage.src, e);
-
-        const backgroundImage = new Image();
-        backgroundImage.onload = () => {
-            console.log('Background image loaded successfully:', backgroundImage.src, 'Complete:', backgroundImage.complete, 'NaturalWidth:', backgroundImage.naturalWidth);
-            gameCanvas.classList.add('has-background');
-            gameCanvas.style.backgroundImage = `url('${backgroundImage.src}')`; // Set background via JS after load
-        };
-        backgroundImage.onerror = (e) => console.error('Failed to load background image:', backgroundImage.src, e);
-
-        const artToBeDrawnImage = new Image();
-        artToBeDrawnImage.onload = () => console.log('Masterpiece art image loaded successfully:', artToBeDrawnImage.src, 'Complete:', artToBeDrawnImage.complete, 'NaturalWidth:', artToBeDrawnImage.naturalWidth);
-        artToBeDrawnImage.onerror = (e) => console.error('Failed to load masterpiece art image:', artToBeDrawnImage.src, e);
-
-
-        // Art Drawing Variables (for the image grid)
-        const gridCols = 4;
-        const gridRows = 3;
-        const totalArtSegments = gridCols * gridRows;
-        let revealedSegments = 0;
-        let revealedPieceNumbers = new Set(); // Tracks the data-piece numbers that are revealed
-
-        let requiredItemType = null;
-        const collectibleItemNames = ['meme', 'nft', 'vvd'];
-
-        // Function to resize the game canvas. Moved to a higher scope.
-        function resizeGameCanvas() {
-            const container = gameCanvas.parentElement;
-            gameCanvas.width = container.clientWidth > 500 ? 500 : container.clientWidth;
-            gameCanvas.height = gameCanvas.width;
-            if (!gameRunning && !gameOver) {
-                characterX = (gameCanvas.width - characterWidth) / 2;
-            }
-            console.log(`Canvas resized to: ${gameCanvas.width}x${gameCanvas.height}`); // Added for debugging
-        }
-
-        // --- Tone.js Audio Setup ---
-        let backgroundLoop;
-        let isMuted = false;
-
-        // Basic synth for a low bassline
-        const bassSynth = new Tone.Synth({
-            oscillator: { type: "square" },
-            envelope: {
-                attack: 0.05,
-                decay: 0.4,
-                sustain: 0.2,
-                release: 0.8
-            }
-        }).toDestination();
-
-        // PluckSynth for a more melodic, arpeggiated sound
-        const melodySynth = new Tone.PluckSynth({
-            attackNoise: 1,
-            dampening: 4000,
-            resonance: 0.9
-        }).toDestination();
-
-        // Membrane synth for a kick-like sound
-        const kickSynth = new Tone.MembraneSynth({
-            envelope: {
-                attack: 0.001,
-                decay: 0.4,
-                sustain: 0.01,
-                release: 1.4
-            }
-        }).toDestination();
-
-        // Metal synth for a high-pitched metallic sound (like a hi-hat or cowbell)
-        const percussionSynth = new Tone.MetalSynth({
-            frequency: 200,
-            envelope: {
-                attack: 0.001,
-                decay: 0.1,
-                sustain: 0.01,
-                release: 0.05
-            },
-            harmonicity: 5.1,
-            modulationIndex: 20,
-            resonance: 4000,
-            octaves: 1
-        }).toDestination();
-
-
-        function setupBackgroundSound() {
-            // Simple melodic pattern for the melodySynth
-            const melodyPart = new Tone.Sequence((time, note) => {
-                melodySynth.triggerAttackRelease(note, "8n", time);
-            }, ["C4", ["E4", null], "G4", ["A4", null], "G4", ["E4", null], "C4", null], "4n"); // Pattern repeats every 4th note
-
-            // Drum pattern
-            const drumPart = new Tone.Sequence((time, beat) => {
-                if (beat === 0) kickSynth.triggerAttackRelease("C1", "8n", time);
-                if (beat % 2 === 1) percussionSynth.triggerAttackRelease("C5", "32n", time);
-            }, [0, 1, 2, 3], "8n"); // Repeats every 8th note, simulating 4/4 beats
-
-            // Bassline pattern
-            const bassPart = new Tone.Sequence((time, note) => {
-                bassSynth.triggerAttackRelease(note, "4n", time);
-            }, ["C2", "G1", "A1", "F1"], "1n"); // Repeats every whole note, simple chord progression
-
-            Tone.Transport.bpm.value = 120;
-            Tone.Transport.loop = true;
-            Tone.Transport.loopEnd = '4m'; // Loop over 4 measures for a longer musical phrase
-
-            melodyPart.start(0);
-            drumPart.start(0);
-            bassPart.start(0);
-
-            console.log("Background sound setup complete with musical patterns.");
-        }
-
-
-        // Function to start or stop the background sound
-        function toggleBackgroundSound() {
-            if (Tone.Transport.state === "started") {
-                Tone.Transport.pause();
-                isMuted = true;
-                soundToggleButton.innerHTML = '<i class="fas fa-volume-mute"></i> Muted';
-                console.log("Background sound paused.");
-            } else {
-                Tone.start().then(() => {
-                    Tone.Transport.start();
-                    isMuted = false;
-                    soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
-                    console.log("Background sound started.");
-                }).catch(e => console.error("Tone.js AudioContext failed to start:", e));
-            }
-        }
-
-        // This function sets up `background-position` for each grid piece
-        function setupImageGrid() {
-            console.log("Attempting to setup image grid...");
-            imageGridContainer.innerHTML = ''; // Clear existing pieces
-            revealedPieceNumbers.clear(); // Clear revealed pieces tracker
-            revealedSegments = 0; // Reset counter
-
-            // We rely on artToBeDrawnImage.onload having completed already
-            if (!artToBeDrawnImage.complete || artToBeDrawnImage.naturalWidth === 0) {
-                console.warn("Masterpiece image not fully loaded; grid pieces may be blank.");
-            }
-
-            for (let i = 0; i < totalArtSegments; i++) {
-                const piece = document.createElement('div');
-                piece.classList.add('img-piece');
-                piece.setAttribute('data-piece', i + 1);
-
-                const col = i % gridCols;
-                const row = Math.floor(i / gridCols);
-
-                const bgPosX = -(col * 100);
-                const bgPosY = -(row * 100);
-                piece.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
-                piece.style.backgroundImage = `url('${artToBeDrawnImage.src}')`; // Use the actual loaded src
-
-                imageGridContainer.appendChild(piece);
-            }
-            console.log("Image grid setup complete with background-image.");
-        }
-
-        function revealRandomArtSegment() {
-            if (revealedSegments >= totalArtSegments) {
-                console.log("All art segments already revealed.");
-                return false;
-            }
-
-            let unrevealedIndexes = [];
-            for (let i = 1; i <= totalArtSegments; i++) {
-                if (!revealedPieceNumbers.has(i)) {
-                    unrevealedIndexes.push(i);
-                }
-            }
-
-            if (unrevealedIndexes.length === 0) {
-                console.log("No unrevealed segments left, but revealedSegments count was less than total. Recalculating.");
-                revealedSegments = totalArtSegments; // Force set to total
-                return false;
-            }
-
-            const randomIndex = Math.floor(Math.random() * unrevealedIndexes.length);
-            const pieceNumberToReveal = unrevealedIndexes[randomIndex];
-
-            const pieceElement = document.querySelector(`#imageGrid .img-piece[data-piece="${pieceNumberToReveal}"]`);
-            if (pieceElement) {
-                pieceElement.classList.add('revealed');
-                revealedPieceNumbers.add(pieceNumberToReveal);
-                revealedSegments++;
-                console.log(`Revealed piece ${pieceNumberToReveal}. Total revealed: ${revealedSegments}/${totalArtSegments}`);
-                return true;
-            } else {
-                console.warn(`Could not find piece element for data-piece="${pieceNumberToReveal}".`);
-                return false;
-            }
-        }
-
-        function updateStat(id, value) {
-            const el = document.getElementById(id);
-            if (!el) {
-                console.warn(`Element with ID "${id}" not found.`);
-                return;
-            }
-            el.textContent = value;
-            el.classList.add("flash");
-            setTimeout(() => el.classList.remove("flash"), 500);
-        }
-
-        window.addEventListener('load', async function() {
-            console.log('Window loaded event fired. Starting initial setup.');
-            resizeGameCanvas();
-            characterX = (gameCanvas.width - characterWidth) / 2;
-            showMessageBox("Welcome to Van Dogh: The Art Auction!", "Collect items to draw your masterpiece! Dodge chaos and get ready to bid!", true);
-            window.addEventListener('resize', () => {
-                resizeGameCanvas();
-            });
-
-            // Set image sources using the provided Imgur URLs
-            characterImage.src = 'https://i.imgur.com/W2gHD39.png'; // Your Character Image
-            backgroundImage.src = 'https://i.imgur.com/KDlgzbI.png'; // Your Background Image
-            artToBeDrawnImage.src = 'https://i.imgur.com/3JWWYj7.png'; // Your Art To Be Drawn Image
-
-            await Promise.all([
-                new Promise(resolve => { characterImage.onload = resolve; characterImage.onerror = resolve; }),
-                new Promise(resolve => { backgroundImage.onload = resolve; backgroundImage.onerror = resolve; }),
-                new Promise(resolve => { artToBeDrawnImage.onload = resolve; artToBeDrawnImage.onerror = resolve; })
-            ]);
-            console.log("All image load/error handlers have fired. Proceeding with game setup.");
-
-            setupImageGrid();
-
-            setupBackgroundSound();
-
-            const checkAuthReady = setInterval(() => {
-                if (window.isAuthReady && window.currentUserId) {
-                    userIdDisplay.textContent = `User ID: ${window.currentUserId}`;
-                    clearInterval(checkAuthReady);
-                }
-            }, 100);
-        });
-
-        function showMessageBox(title, text, showInput = false) {
-            messageTitle.textContent = title;
-            messageText.innerHTML = text;
-            if (showInput) {
-                userNameInput.classList.remove('hidden');
-            } else {
-                userNameInput.classList.add('hidden');
-            }
-            loadingSpinner.style.display = 'none';
-            gameOverScreen.classList.add('hidden');
-            messageButton.textContent = "Start Game";
-            messageBox.style.display = 'flex';
-        }
-
-        function hideMessageBox() {
-            messageBox.style.display = 'none';
-        }
-
-        function drawCharacter() {
-            console.log('Drawing character. Image complete:', characterImage.complete, 'NaturalWidth:', characterImage.naturalWidth);
-            if (characterImage.complete && characterImage.naturalWidth > 0) {
-                gameCtx.drawImage(characterImage, characterX, gameCanvas.height - characterHeight - 10, characterWidth, characterHeight);
-            } else {
-                console.warn('Character image not ready for drawing, drawing fallback emoji.');
-                gameCtx.font = `${characterHeight}px Arial`;
-                gameCtx.textAlign = 'center';
-                gameCtx.textBaseline = 'middle';
-                gameCtx.fillText('🧑‍🎨', characterX + characterWidth / 2, gameCanvas.height - characterHeight / 2 - 10);
-            }
-        }
-
-        function drawItem(item) {
-            gameCtx.font = `${itemSize}px Arial`;
-            gameCtx.textAlign = 'center';
-            gameCtx.textBaseline = 'middle';
-            gameCtx.fillText(item.emoji, item.x + itemSize / 2, item.y + itemSize / 2);
-        }
-
-        function updateScoreValue(points) {
-            if (scoreTemporarilyZero) return;
-            let actualPoints = points;
-            if (doublePoints && points > 0) {
-                actualPoints *= 2;
-            }
-            score += actualPoints;
-            if (score < 0) score = 0;
-            updateStat("score", score);
-        }
-
-        function updateStatsValues(type) {
-            if (type === 'vvd') vvdCollected++;
-            if (itemTypes[type].type === 'collectible') {
-                artItemsCollectedCount++;
-            }
-            updateStat("vvdCollected", vvdCollected);
-            updateStat("artItemsCollectedCount", artItemsCollectedCount);
-            updateAccuracyDisplay();
-        }
-
-        function updateAccuracyDisplay() {
-            if (totalOpportunities === 0) {
-                updateStat("accuracy", '0%');
-                return;
-            }
-            const accuracy = (totalCorrectActions / totalOpportunities) * 100;
-            updateStat("accuracy", `${accuracy.toFixed(1)}%`);
-        }
-
-        function updateArtWorthDisplay() {
-            updateStat("artWorthDisplay", artWorth.toFixed(2));
-        }
-
-        function pickNewRequiredItem() {
-            requiredItemType = collectibleItemNames[Math.floor(Math.random() * collectibleItemNames.length)];
-            requiredItemDisplay.textContent = `🎯 ${itemTypes[requiredItemType].name} ${itemTypes[requiredItemType].emoji}`;
-        }
-
-        function activatePowerup(powerupType, duration) {
-            clearTimeout(powerupTimer);
-
-            if (powerupType === 'meme_brain') {
-                isInvincible = true;
-                invincibleOverlay.style.display = 'block';
-                powerupTimer = setTimeout(() => {
-                    isInvincible = false;
-                    invincibleOverlay.style.display = 'none';
-                }, duration);
-            } else if (powerupType === 'viral_mode') {
-                doublePoints = true;
-                doublePointsOverlay.style.display = 'block';
-                powerupTimer = setTimeout(() => {
-                    doublePoints = false;
-                    doublePointsOverlay.style.display = 'none';
-                }, duration);
-            } else if (powerupType === 'art_tornado') {
-                const tornadoRadius = 150;
-                for (let i = fallingItems.length - 1; i >= 0; i--) {
-                    const item = fallingItems[i];
-                    if (item.type === 'collectible') {
-                        const dx = (item.x + itemSize / 2) - (characterX + characterWidth / 2);
-                        const dy = (item.y + itemSize / 2) - (gameCanvas.height - characterHeight / 2);
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-
-                        if (distance < tornadoRadius) {
-                            updateScoreValue(item.points);
-                            updateStatsValues(item.name);
-                            if (revealRandomArtSegment()) {
-                                if (revealedSegments >= totalArtSegments) {
-                                    endGame("Masterpiece Completed!");
-                                    return;
-                                }
-                            }
-                            totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
-                            totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
-                            fallingItems.splice(i, 1);
-                        }
-                    }
-                }
-            }
-        }
-
-        function activateJeetCoinEffect() {
-            if (isInvincible) return;
-
-            clearTimeout(jeetCoinTimer);
-            if (!scoreTemporarilyZero) {
-                actualScoreBeforeJeet = score;
-            }
-            score = 0;
-            updateStat("score", score);
-            scoreTemporarilyZero = true;
-            scoreResetOverlay.style.display = 'block';
-
-            jeetCoinTimer = setTimeout(() => {
-                score = actualScoreBeforeJeet;
-                updateStat("score", score);
-                scoreTemporarilyZero = false;
-                scoreResetOverlay.style.display = 'none';
+        const messageBox = document.getElementById('message-box');
+        
+        // --- Utility Functions ---
+
+        /** Displays a temporary, dismissible message */
+        function showMessage(msg, type = 'info') {
+            let bgColor = 'bg-sky-600'; // Default info
+            if (type === 'success') bgColor = 'bg-green-600';
+            if (type === 'error') bgColor = 'bg-red-600';
+
+            messageBox.textContent = msg;
+            messageBox.className = `fixed top-0 left-1/2 -translate-x-1/2 p-4 mt-2 rounded-lg z-50 transition-opacity duration-300 ${bgColor} text-white shadow-xl`;
+            messageBox.classList.remove('hidden');
+            messageBox.classList.add('opacity-100');
+
+            setTimeout(() => {
+                messageBox.classList.remove('opacity-100');
+                messageBox.classList.add('opacity-0');
+                setTimeout(() => messageBox.classList.add('hidden'), 300);
             }, 5000);
         }
 
-        function update() {
-            if (!gameRunning || gameOver) return;
-
-            if (movingLeft && characterX > 0) {
-                characterX -= characterSpeed;
+        /** Handles SPA view switching */
+        window.navigate = function(viewId, data = null) {
+            // Protect authenticated views
+            if (!userId && viewId !== 'login' && viewId !== 'about') {
+                showMessage("Please sign in to access this page.", 'error');
+                viewId = 'login';
             }
-            if (movingRight && characterX < gameCanvas.width - characterWidth) {
-                characterX += characterSpeed;
+            
+            Object.values(views).forEach(el => el.classList.add('hidden'));
+            views[viewId].classList.remove('hidden');
+
+            // Trigger specific page load logic
+            if (viewId === 'feed') fetchNewsFeed();
+            if (viewId === 'profile') fetchUserProfile();
+            if (viewId === 'quests') fetchDailyQuest();
+            if (viewId === 'article' && data) renderArticle(data);
+            if (viewId === 'login') updateLoginUI(); 
+
+            window.scrollTo(0, 0); // Scroll to top on navigation
+        }
+
+        /** Renders complex JSONB content from Supabase as HTML */
+        function renderContentBlocks(contentJson) {
+            // Ensure contentJson is an array before trying to iterate over it
+            if (!Array.isArray(contentJson)) {
+                console.error("Article content is not an array:", contentJson);
+                return '<p class="text-red-400">Error: Article content format is invalid.</p>';
             }
-
-            for (let i = fallingItems.length - 1; i >= 0; i--) {
-                const item = fallingItems[i];
-                item.y += item.speed;
-
-                if (
-                    item.y + itemSize > gameCanvas.height - characterHeight &&
-                    item.x < characterX + characterWidth &&
-                    item.x + itemSize > characterX
-                ) {
-                    totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
-
-                    if (item.type === 'collectible') {
-                        if (item.name === requiredItemType) {
-                            updateScoreValue(item.points);
-                            updateStatsValues(item.name);
-                            if (revealRandomArtSegment()) {
-                                if (revealedSegments >= totalArtSegments) {
-                                    endGame("Masterpiece Completed!");
-                                    return;
-                                }
-                                pickNewRequiredItem();
-                            }
-                        } else {
-                            updateScoreValue(-5);
-                        }
-                    } else if (item.type === 'hazard') {
-                        if (!isInvincible) {
-                            if (item.name === 'paint_spill') {
-                                paintSpillsHit++;
-                                artWorth -= paintSpillPenalty;
-                                if (artWorth < 0) artWorth = 0;
-                                updateArtWorthDisplay();
-                            } else if (item.name === 'jeet_coin') {
-                                activateJeetCoinEffect();
-                            } else if (item.name === 'soap') {
-                                updateScoreValue(item.points);
-                            }
-                        } else {
-                            totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
-                        }
-                    } else if (item.type === 'powerup') {
-                        activatePowerup(item.name, item.duration);
-                        totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
-                    }
-                    fallingItems.splice(i, 1);
-                } else if (item.y > gameCanvas.height) {
-                    if (item.name === requiredItemType) {
-                        totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
-                    } else if (item.type === 'hazard') {
-                        totalCorrectActions += ACCURACY_INCREMENT_PER_CORRECT;
-                        totalOpportunities += ACCURACY_INCREMENT_PER_OPPORTUNITY;
-                    }
-                    fallingItems.splice(i, 1);
+            
+            let html = '';
+            contentJson.forEach(block => {
+                if (block.type === 'paragraph' && block.text) {
+                    html += `<p class="mb-4 text-gray-300">${block.text}</p>`;
                 }
+            });
+            return html;
+        }
+
+        /** Formats date to a readable string */
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+
+        // --- Authentication UI/State Management ---
+
+        /** Toggles between Sign In and Register mode */
+        window.toggleAuthMode = function() {
+            isRegisterMode = !isRegisterMode;
+            const title = document.getElementById('auth-form-title');
+            const button = document.getElementById('supabase-auth-button');
+            const toggleText = document.getElementById('auth-toggle-text');
+            const toggleLink = document.getElementById('auth-toggle-link');
+            const subtitle = document.getElementById('auth-subtitle');
+            const usernameField = document.getElementById('username-field');
+
+            if (isRegisterMode) {
+                title.textContent = 'Create Account';
+                button.textContent = 'Register';
+                toggleText.textContent = 'Already have an account?';
+                toggleLink.textContent = 'Sign In';
+                subtitle.textContent = 'Register to start your mining journey.';
+                usernameField.classList.remove('hidden');
+            } else {
+                title.textContent = 'Sign In';
+                button.textContent = 'Sign In';
+                toggleText.textContent = 'Don\'t have an account?';
+                toggleLink.textContent = 'Register';
+                subtitle.textContent = 'Sign in to track your points and start mining VCNEWS.';
+                usernameField.classList.add('hidden');
+            }
+        }
+
+        /** Updates the Login/Logout UI based on current session */
+        function updateLoginUI() {
+            const isLoggedIn = !!userId;
+            
+            document.getElementById('auth-forms').classList.toggle('hidden', isLoggedIn);
+            document.getElementById('user-info').classList.toggle('hidden', !isLoggedIn);
+            document.getElementById('logout-link').classList.toggle('hidden', !isLoggedIn);
+            
+            if (isLoggedIn) {
+                 document.getElementById('user-info').textContent = userEmail ? 
+                    `Signed in as: ${userEmail}` :
+                    `Signed in.`;
+                 document.getElementById('profile-email').textContent = userEmail;
+            }
+        }
+
+        // --- Supabase Authentication Functions ---
+
+        /** Main handler for the Supabase Sign In/Register button */
+        window.handleSupabaseAuth = async function() {
+            if (!supabaseClient) {
+                 showMessage("Supabase client is not configured/initialized. Please check console for details.", 'error');
+                 return;
+            }
+            
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const username = document.getElementById('auth-username').value;
+            
+            if (!email || !password) {
+                showMessage('Please enter both email and password.', 'error');
+                return;
             }
 
-            const currentTime = Date.now();
-            if (currentTime - lastSpawnTime > itemSpawnRate) {
-                const itemNames = Object.keys(itemTypes);
-                const randomItemName = itemNames[Math.floor(Math.random() * itemNames.length)];
-                const itemDef = itemTypes[randomItemName];
-
-                if (itemDef) {
-                    const newItem = {
-                        x: Math.random() * (gameCanvas.width - itemSize),
-                        y: -itemSize,
-                        emoji: itemDef.emoji,
-                        points: itemDef.points,
-                        type: itemDef.type,
-                        name: randomItemName,
-                        speed: itemSpeed + Math.random() * 1.5,
-                        duration: itemDef.duration
-                    };
-                    fallingItems.push(newItem);
+            const button = document.getElementById('supabase-auth-button');
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>LOADING...</span>';
+            
+            try {
+                if (isRegisterMode) {
+                    await supabaseSignUp(email, password, username);
+                } else {
+                    await supabaseSignIn(email, password);
                 }
-                lastSpawnTime = currentTime;
+            } finally {
+                button.textContent = originalText;
+                button.disabled = false;
             }
         }
 
-        function gameLoop() {
-            gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
-
-            if (backgroundImage.complete && backgroundImage.naturalWidth > 0) {
-                gameCtx.drawImage(backgroundImage, 0, 0, gameCanvas.width, gameCanvas.height);
-            } else {
-                console.warn('Background image not ready for drawing, filling with fallback color.');
-                gameCtx.fillStyle = '#3a3a5a';
-                gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
+        /** Supabase Sign Up */
+        async function supabaseSignUp(email, password, username) {
+            const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { username: username || email.split('@')[0] } } });
+            
+            if (error) {
+                showMessage(`Registration failed: ${error.message}`, 'error');
+                return;
             }
 
-            update();
-            drawCharacter();
-            fallingItems.forEach(drawItem);
-
-            if (gameRunning && !gameOver) {
-                animationFrameId = requestAnimationFrame(gameLoop);
+            if (data.user) {
+                // Supabase typically requires email confirmation. 
+                showMessage('Registration successful! Check your email to confirm your account, then sign in.', 'success');
+                toggleAuthMode(); // Switch to sign-in mode
+            } else if (data.session === null) {
+                // If the user is created but no session is returned (i.e., email confirmation required)
+                showMessage('Registration successful! A confirmation link has been sent to your email. Please click it to sign in.', 'success');
+                toggleAuthMode();
             }
         }
 
-        function startGame() {
-            if (gameRunning) return;
-            hideMessageBox();
+        /** Supabase Sign In */
+        async function supabaseSignIn(email, password) {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
-            if (Tone.context.state !== 'running') {
-                Tone.start().then(() => {
-                    console.log("AudioContext resumed after user gesture.");
-                    Tone.Transport.start();
-                    isMuted = false;
-                    soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
-                }).catch(e => console.error("Tone.js AudioContext failed to start:", e));
-            } else {
-                Tone.Transport.start();
-                isMuted = false;
-                soundToggleButton.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+            if (error) {
+                showMessage(`Login failed: ${error.message}`, 'error');
+                return;
             }
 
-            score = 0;
-            vvdCollected = 0;
-            artItemsCollectedCount = 0;
-            artWorth = baseArtWorth;
-            paintSpillsHit = 0;
-            totalCorrectActions = 1;
-            totalOpportunities = 2;
+            if (data.user) {
+                userId = data.user.id;
+                userEmail = data.user.email;
+                showMessage("Login successful! Redirecting to feed...", 'success');
+                navigate('feed');
+            }
+        }
+        
+        /** Triggered by the UI logout button */
+        window.logout = async function() {
+            try {
+                await supabaseClient.auth.signOut(); 
 
-            updateStat("score", score);
-            updateStat("vvdCollected", vvdCollected);
-            updateStat("artItemsCollectedCount", artItemsCollectedCount);
-            updateStat("accuracy", '50.0%');
-            updateArtWorthDisplay();
-            fallingItems.length = 0;
-            gameOver = false;
-            gameRunning = true;
-            characterX = (gameCanvas.width - characterWidth) / 2;
-            lastSpawnTime = Date.now();
+                userId = null;
+                userEmail = null;
 
-            clearTimeout(powerupTimer);
-            clearTimeout(jeetCoinTimer);
-            isInvincible = false;
-            doublePoints = false;
-            scoreTemporarilyZero = false;
-            invincibleOverlay.style.display = 'none';
-            doublePointsOverlay.style.display = 'none';
-            scoreResetOverlay.style.display = 'none';
-
-            setupImageGrid();
-            pickNewRequiredItem();
-
-            animationFrameId = requestAnimationFrame(gameLoop);
+                showMessage("You have been signed out.", 'info');
+                navigate('login');
+            } catch (error) {
+                showMessage("Logout failed.", 'error');
+                console.error("Logout Error:", error);
+            }
         }
 
-        async function endGame(title) {
-            gameRunning = false;
-            gameOver = true;
-            cancelAnimationFrame(animationFrameId);
+        // --- Initialization (Supabase Only) ---
 
-            Tone.Transport.pause();
+        /** Initializes Supabase client and sets up auth listener */
+        async function initApp() {
+            try {
+                // 1. Initialize Supabase Client
+                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase Client Initialized.");
+                
+                // 2. Set up Auth listener
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (session && session.user) {
+                    userId = session.user.id;
+                    userEmail = session.user.email;
+                    updateLoginUI();
+                    navigate('feed');
+                } else {
+                    // Start on the login page if not authenticated
+                    navigate('login');
+                }
 
-            clearTimeout(powerupTimer);
-            clearTimeout(jeetCoinTimer);
-            isInvincible = false;
-            doublePoints = false;
-            scoreTemporarilyZero = false;
-            invincibleOverlay.style.display = 'none';
-            doublePointsOverlay.style.display = 'none';
-            scoreResetOverlay.style.display = 'none';
-
-            let currentAccuracy = 0;
-            if (totalOpportunities > 0) {
-                currentAccuracy = (totalCorrectActions / totalOpportunities);
-            }
-
-            let finalAuctionAmountUSD = artWorth;
-            finalAuctionAmountUSD *= (1 + (currentAccuracy - 0.5));
-
-            if (finalAuctionAmountUSD < 0) finalAuctionAmountUSD = 0;
-
-            const VVD_EXCHANGE_RATE = 0.0001;
-            let finalAuctionAmountVVD = finalAuctionAmountUSD / VVD_EXCHANGE_RATE;
-
-            finalArtImage.src = artToBeDrawnImage.src;
-            finalArtImage.onload = () => {
-                console.log("Final art image loaded for game over screen.");
-            };
-            finalArtImage.onerror = () => {
-                console.error("Failed to load final art image for game over screen.");
-                finalArtImage.src = "https://placehold.co/400x400/3a3a5a/f8f8f8?text=Image+Error";
-            };
-
-            highestBidSpan.textContent = (Math.random() * 5000 + 15001).toFixed(2);
-            finalAuctionAmountSpan.textContent = `${finalAuctionAmountVVD.toFixed(2)} $VVD`;
-
-            messageTitle.textContent = "🎉 𝗚𝗔𝗠𝗘 𝗢𝗩𝗘𝗥 - 𝗔𝗥𝗧 𝗥𝗘𝗩𝗘𝗔𝗟𝗘𝗗 🎉";
-            messageText.innerHTML = `
-                <p>🖼️ <span class="bold">Name of Art:</span> 𝗖𝗢𝗠𝗠𝗨𝗡𝗜𝗧𝗬</p>
-                <p>🎨 <span class="bold">Drawn by:</span> 𝗩𝗜𝗖𝗘𝗡𝗧𝗘 𝗩𝗔𝗡 𝗗𝗢𝗚𝗛</p>
-                <p>🏦 <span class="bold">Auctioned on:</span> 𝗠𝗔𝗚𝗜𝗖𝗘𝗗𝗘𝗡</p>
-                <p>💰 <span class="bold">Highest Bid:</span> $${highestBidSpan.textContent}</p>
-                <p>🏅 <span class="bold">Final Collector:</span> 𝗙𝗔𝗩𝗜𝗚𝗔𝗟</p>
-                <p>💎 <span class="bold">Final Amount:</span> ${finalAuctionAmountSpan.textContent}</p>
-            `;
-            userNameInput.classList.remove('hidden');
-            gameOverScreen.classList.remove('hidden');
-            messageButton.textContent = "Submit & Play Again";
-            messageBox.style.display = 'flex';
-
-            messageButton.onclick = async () => {
-                loadingSpinner.style.display = 'block';
-                messageButton.disabled = true;
-                const userName = userNameInput.value.trim() || "Anonymous";
-
-                const scoreData = {
-                    userName: userName,
-                    overallScore: score,
-                    vvdCollected: vvdCollected,
-                    artItemsCollected: artItemsCollectedCount,
-                    accuracy: currentAccuracy.toFixed(3),
-                    finalAuctionAmountUSD: parseFloat(finalAuctionAmountUSD.toFixed(2)),
-                    finalAuctionAmountVVD: parseFloat(finalAuctionAmountVVD.toFixed(2))
-                };
-
-                const authReadyPromise = new Promise(resolve => {
-                    if (window.isAuthReady) {
-                        resolve();
-                    } else {
-                        const interval = setInterval(() => {
-                            if (window.isAuthReady) {
-                                clearInterval(interval);
-                                resolve();
-                            }
-                        }, 100);
+                supabaseClient.auth.onAuthStateChange((event, session) => {
+                    if (session && session.user) {
+                        userId = session.user.id;
+                        userEmail = session.user.email;
+                        updateLoginUI();
+                        if (event === 'SIGNED_IN') { navigate('feed'); } // Only navigate on fresh sign-in
+                    } else if (event === 'SIGNED_OUT') {
+                        userId = null;
+                        userEmail = null;
+                        updateLoginUI();
+                        navigate('login');
                     }
                 });
-                await authReadyPromise;
 
-                const submitted = await window.submitScoreToFirestore(scoreData);
-                if (submitted) {
-                    messageText.innerHTML = `Score submitted! Your masterpiece is now in the museum, ${userName}!<br><br>#VVDMemes #VicenteVanDogh`;
-                } else {
-                    messageText.innerHTML = "Failed to submit score. Please try again.";
-                }
-                loadingSpinner.style.display = 'none';
-                messageButton.disabled = false;
-                messageButton.textContent = "Play Again";
-                messageButton.onclick = startGame;
-            };
+            } catch (error) {
+                console.error("Initialization Error:", error);
+                showMessage(`Initialization failed: ${error.message}`, 'error');
+            }
         }
 
-        moveLeftButton.addEventListener('touchstart', (e) => { e.preventDefault(); movingLeft = true; }, { passive: false });
-        moveLeftButton.addEventListener('touchend', () => movingLeft = false);
-        moveLeftButton.addEventListener('mousedown', () => movingLeft = true);
-        moveLeftButton.addEventListener('mouseup', () => movingLeft = false);
-        moveLeftButton.addEventListener('mouseleave', () => movingLeft = false);
+        // --- Data Fetching & Rendering ---
 
-        moveRightButton.addEventListener('touchstart', (e) => { e.preventDefault(); movingRight = true; }, { passive: false });
-        moveRightButton.addEventListener('touchend', () => movingRight = false);
-        moveRightButton.addEventListener('mousedown', () => movingRight = true);
-        moveRightButton.addEventListener('mouseup', () => movingRight = false);
-        moveRightButton.addEventListener('mouseleave', () => movingRight = false);
+        async function fetchNewsFeed() {
+            if (!supabaseClient) return;
 
-        document.addEventListener('keydown', (e) => {
-            if (gameRunning && !gameOver) {
-                if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-                    movingLeft = true;
-                } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-                    movingRight = true;
+            document.getElementById('news-list').innerHTML = '';
+            document.getElementById('feed-loading').classList.remove('hidden');
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('news_articles')
+                    .select('*')
+                    .order('date_published', { ascending: false })
+                    .limit(6);
+
+                document.getElementById('feed-loading').classList.add('hidden');
+                
+                if (error) throw error;
+                
+                if (data.length === 0) {
+                    document.getElementById('news-list').innerHTML = '<p class="text-center col-span-full text-gray-500 mt-8">No articles published yet. Please seed the database.</p>';
+                    return;
                 }
-            } else if (gameOver && e.key === 'Enter') {
-                messageButton.click();
+
+                data.forEach(article => {
+                    const card = document.createElement('div');
+                    card.className = 'card p-6 rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between transform hover:scale-[1.01] border border-gray-700';
+                    card.onclick = () => navigate('article', article);
+                    
+                    const imageUrl = article.featured_image_url || `https://placehold.co/600x300/1e293b/94a3b8?text=${article.category.toUpperCase()}`;
+
+                    card.innerHTML = `
+                        <div>
+                            <img src="${imageUrl}" alt="Featured image for ${article.title}" class="rounded-lg mb-4 w-full h-48 object-cover">
+                            <span class="text-xs font-semibold text-sky-400 uppercase">${article.category}</span>
+                            <h3 class="newspaper-title text-2xl mt-1 mb-2 leading-tight">${article.title}</h3>
+                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">${article.introduction}</p>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-700">
+                            <span class="text-xs text-gray-500">${formatDate(article.date_published)}</span>
+                            <span class="text-sm font-bold text-green-400">${article.vcnews_claim_points} VCNEWS</span>
+                        </div>
+                    `;
+                    document.getElementById('news-list').appendChild(card);
+                });
+
+            } catch (error) {
+                document.getElementById('feed-loading').classList.add('hidden');
+                showMessage(`Error loading feed: ${error.message}`, 'error');
+                console.error("Feed Fetch Error:", error);
             }
-        });
+        }
+        function renderArticle(article) {
+            document.getElementById('article-title').textContent = article.title;
+            document.getElementById('article-date-category').innerHTML = `
+                <span class="uppercase font-semibold text-sky-400">${article.category}</span>
+                <span>•</span>
+                <span>${formatDate(article.date_published)}</span>
+            `;
+            document.getElementById('article-image').src = article.featured_image_url || `https://placehold.co/800x400/1e293b/94a3b8?text=${article.category.toUpperCase()}`;
+            document.getElementById('article-image').style.display = article.featured_image_url ? 'block' : 'none';
+            document.getElementById('article-intro').textContent = article.introduction;
+            
+            document.getElementById('article-content').innerHTML = renderContentBlocks(article.main_content);
 
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key.toLowerCase() === 'a') {
-                movingLeft = false;
-            } else if (e.key === 'ArrowRight' || e.key.toLowerCase() === 'd') {
-                movingRight = false;
+            document.getElementById('claim-points').textContent = article.vcnews_claim_points;
+            document.getElementById('claim-button').onclick = () => claimPoints('article_claim', article.vcnews_claim_points, article.id);
+
+            let sourceHtml = '';
+            if (article.sources && article.sources.length > 0) {
+                sourceHtml += `<p class="font-bold">Sources:</p>`;
+                article.sources.forEach(url => {
+                    try {
+                        sourceHtml += `<a href="${url}" target="_blank" class="block text-sky-400 hover:underline">${new URL(url).hostname}</a>`;
+                    } catch (e) {
+                         sourceHtml += `<span class="block text-red-400">Invalid URL: ${url}</span>`;
+                    }
+                });
             }
-        });
+            document.getElementById('article-sources').innerHTML = sourceHtml;
+        }
 
-        startGameButton.addEventListener('click', startGame);
-        messageButton.addEventListener('click', startGame);
-        soundToggleButton.addEventListener('click', toggleBackgroundSound);
+        async function fetchDailyQuest() {
+             if (!supabaseClient) return;
+
+            document.getElementById('quest-card').innerHTML = `<div id="quest-loading" class="text-center text-gray-500">Loading daily quest...</div>`;
+            try {
+                // Fetch the single active quest
+                const { data: questData, error: questError } = await supabaseClient
+                    .from('daily_quests')
+                    .select('id, title, quest_points, tweet_url')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
+
+                if (questError) throw questError;
+                
+                if (questData.length === 0) {
+                    document.getElementById('quest-card').innerHTML = `
+                        <p class="text-yellow-500 font-bold">No Active Quest Today</p>
+                        <p class="text-gray-400 mt-2">Check back tomorrow for a new quest opportunity!</p>
+                    `;
+                    return;
+                }
+
+                const quest = questData[0];
+                
+                // Check completion using the quest_id and user_id 
+                const { data: completionData, error: completionError } = await supabaseClient
+                    .from('user_quest_completion')
+                    .select('quest_id')
+                    .eq('user_id', userId)
+                    .eq('quest_id', quest.id)
+                    .eq('completed_date', new Date().toISOString().slice(0, 10)); // YYYY-MM-DD format check
+
+                if (completionError) throw completionError;
+
+                let buttonHtml;
+                if (completionData.length > 0) {
+                    buttonHtml = `
+                        <button class="bg-gray-600 text-white font-bold py-3 px-8 rounded-full cursor-not-allowed">
+                            Quest Completed Today!
+                        </button>
+                    `;
+                } else {
+                    buttonHtml = `
+                        <button onclick="claimPoints('daily_quest', ${quest.quest_points}, '${quest.id}')" class="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-[1.02]">
+                            I've Submitted My Comment (Claim ${quest.quest_points} VCNEWS)
+                        </button>
+                    `;
+                }
+
+                document.getElementById('quest-card').innerHTML = `
+                    <p class="text-sm font-bold text-yellow-500 uppercase">Active Daily Quest</p>
+                    <h3 class="newspaper-title text-3xl my-2">${quest.title}</h3>
+                    <p class="text-gray-300 mb-6">Your task is to comment on the target tweet below, then submit proof here.</p>
+                    <div class="mb-8 p-3 bg-gray-800 rounded-lg">
+                        <p class="text-sm text-gray-400 mb-2">Target Tweet URL:</p>
+                        <a href="${quest.tweet_url}" target="_blank" class="text-sky-400 hover:underline break-all text-lg">${quest.tweet_url}</a>
+                    </div>
+                    ${buttonHtml}
+                `;
+
+            } catch (error) {
+                showMessage(`Error loading quests: ${error.message}`, 'error');
+                console.error("Quest Fetch Error:", error);
+                document.getElementById('quest-card').innerHTML = `<p class="text-red-500">Failed to load quest.</p>`;
+            }
+        }
+
+        async function fetchUserProfile() {
+             if (!supabaseClient) return;
+
+            document.getElementById('activity-log').innerHTML = '<p class="text-gray-500">Loading activity...</p>';
+            document.getElementById('leaderboard-container').innerHTML = '<div class="text-center text-gray-500">Loading leaderboard...</div>';
+            
+            try {
+                // 1. Fetch User Balance (Used for point display)
+                const { data: balanceData, error: balanceError } = await supabaseClient
+                    .from('user_balances')
+                    .select('total_points')
+                    .eq('user_id', userId)
+                    .single();
+
+                if (balanceError && balanceError.code !== 'PGRST116') { 
+                    throw balanceError;
+                }
+
+                const totalPoints = balanceData ? balanceData.total_points : 0;
+                document.getElementById('profile-points').textContent = totalPoints.toLocaleString();
+                document.getElementById('leaderboard-user-points').textContent = totalPoints.toLocaleString() + ' VCNEWS';
 
 
-        let touchStartX = 0;
-        let lastTouchMoveX = 0;
-        let touchMoveThreshold = 5;
+                // 2. Fetch Leaderboard Data (Top 5 + User Rank)
+                const { data: leaderboardData, error: leaderboardError } = await supabaseClient
+                    .from('v_leaderboard')
+                    .select('user_id, total_points, rank')
+                    .limit(5); 
+                
+                if (leaderboardError) throw leaderboardError;
 
-        gameCanvas.addEventListener('touchstart', (e) => {
-            if (!gameRunning && !gameOver) return;
-            e.preventDefault();
-            touchStartX = e.touches[0].clientX;
-            lastTouchMoveX = touchStartX;
-        }, { passive: false });
+                // 2b. Find the user's specific rank 
+                const { data: userRankData } = await supabaseClient
+                    .from('v_leaderboard')
+                    .select('rank')
+                    .eq('user_id', userId)
+                    .single();
 
-        gameCanvas.addEventListener('touchmove', (e) => {
-            if (!gameRunning && !gameOver) return;
-            e.preventDefault();
-            if (e.touches.length > 0) {
-                const currentX = e.touches[0].clientX;
-                const deltaX = currentX - lastTouchMoveX;
+                const userRank = userRankData ? userRankData.rank : 'N/A';
+                document.getElementById('leaderboard-user-rank').textContent = userRank.toLocaleString();
 
-                movingLeft = false;
-                movingRight = false;
+                // 2c. Render Leaderboard
+                document.getElementById('leaderboard-container').innerHTML = leaderboardData.map((miner, index) => {
+                    const isCurrentUser = miner.user_id === userId;
+                    const rankClass = index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-400' : 'text-gray-500';
+                    const name = isCurrentUser ? 'You (Current Miner)' : `Miner ${index + 1}`;
+                    const borderClass = isCurrentUser ? 'border-l-4 border-sky-500' : 'border-l-4 border-gray-700';
 
-                if (Math.abs(deltaX) > touchMoveThreshold) {
-                    if (deltaX < 0) {
-                        movingLeft = true;
-                    } else if (deltaX > 0) {
-                        movingRight = true;
+                    return `
+                        <div class="flex justify-between items-center card p-3 rounded-lg ${borderClass}">
+                            <span class="font-bold ${rankClass}">#${miner.rank}</span>
+                            <span class="text-lg ${isCurrentUser ? 'font-bold' : ''}">${name}</span>
+                            <span class="font-bold text-green-400">${miner.total_points.toLocaleString()} VCNEWS</span>
+                        </div>
+                    `;
+                }).join('');
+
+
+                // 3. Fetch Recent Activity
+                const { data: activityData, error: activityError } = await supabaseClient
+                    .from('user_activity_log')
+                    .select('created_at, action_type, points_awarded')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(10);
+
+                if (activityError) throw activityError;
+
+                if (activityData.length === 0) {
+                    document.getElementById('activity-log').innerHTML = '<p class="text-gray-500">No activity recorded yet.</p>';
+                    return;
+                }
+
+                document.getElementById('activity-log').innerHTML = activityData.map(log => {
+                    const actionText = log.action_type.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+                    return `
+                        <div class="flex justify-between items-center card p-3 rounded-lg transition-transform transform hover:translate-x-1 border-l-4 border-green-500">
+                            <span class="text-gray-300 font-medium">${actionText}</span>
+                            <span class="font-bold text-green-400">+${log.points_awarded.toLocaleString()} VCNEWS</span>
+                            <span class="text-xs text-gray-500">${new Date(log.created_at).toLocaleDateString()}</span>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                showMessage(`Error loading portfolio: ${error.message}`, 'error');
+                console.error("Profile Fetch Error:", error);
+            }
+        }
+
+        window.claimPoints = async function(actionType, points, contextId) {
+            if (!userId) {
+                showMessage("You must be logged in to claim points.", 'error');
+                return;
+            }
+            if (!supabaseClient) return;
+
+            const button = document.activeElement;
+            const originalText = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>PROCESSING...</span>';
+
+            try {
+                // IMPORTANT: Call the Supabase RPC function
+                const { data, error } = await supabaseClient.rpc('fn_award_points', {
+                    p_user_id: userId,
+                    p_action_type: actionType,
+                    p_requested_points: points,
+                    p_context_id: contextId
+                });
+
+                if (error) throw error;
+                
+                const result = data;
+                
+                if (result.awarded_points > 0) {
+                    showMessage(`Success! ${result.message} Awarded: ${result.awarded_points.toLocaleString()} VCNEWS!`, 'success');
+                } else {
+                    showMessage(`Claim Failed: ${result.message}`, 'error');
+                }
+
+                if (actionType === 'daily_quest') {
+                    fetchDailyQuest(); // Refresh quest view to show 'Completed' status
+                }
+
+                if (actionType === 'article_claim' && result.awarded_points > 0) {
+                     // Disable the article button after successful claim
+                     button.classList.add('bg-gray-600', 'cursor-not-allowed');
+                     button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                     button.textContent = `Claimed ${result.awarded_points} VCNEWS`;
+                }
+
+            } catch (error) {
+                showMessage(`Transaction Error: ${error.message}`, 'error');
+                console.error("RPC Error:", error);
+            } finally {
+                if (button.textContent.includes('PROCESSING...')) {
+                    // Only restore the button if it wasn't permanently changed by a successful claim
+                    if (!button.classList.contains('cursor-not-allowed')) {
+                        button.innerHTML = originalText;
+                        button.disabled = false;
                     }
                 }
-                lastTouchMoveX = currentX;
+                
+                fetchUserProfile(); // Refresh profile/leaderboard
             }
-        }, { passive: false });
+        }
+        
+        // Initialize the Application on Window Load
+        window.onload = initApp;
 
-        gameCanvas.addEventListener('touchend', () => {
-            movingLeft = false;
-            movingRight = false;
-        });
-
-  </script>
+    </script>
 </body>
 </html>
