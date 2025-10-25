@@ -260,6 +260,53 @@
             Read More Articles to Boost Points
         </button>
     </div>
+</div> 
+            <!-- --------------------------------- -->
+<!-- VIEW: TGE DASHBOARD -->
+<!-- --------------------------------- -->
+<div id="view-tge" class="view-content hidden">
+    <h2 class="newspaper-title text-4xl mb-6 border-b border-sky-500 pb-4">Token Generation Event (TGE)</h2>
+
+    <!-- Intro Card -->
+    <div class="card p-6 mb-8 rounded-xl border-l-4 border-green-500 shadow-lg">
+        <p class="text-gray-300 mb-3">
+            Welcome to the <span class="text-sky-400 font-bold">VCNEWS TGE Dashboard</span>.  
+            Here you can track all your accumulated points leading up to the Token Generation Event.  
+            Once the countdown reaches zero, your points will be converted into real tokens.
+        </p>
+        <p class="text-gray-400 text-sm italic">Stay active — the more you read and engage, the more tokens you’ll earn!</p>
+    </div>
+
+    <!-- Countdown Card -->
+    <div class="card p-6 mb-8 rounded-xl border-l-4 border-yellow-500 text-center">
+        <p class="text-gray-400 text-sm mb-2 uppercase tracking-wide">Countdown to TGE</p>
+        <p id="tge-countdown" class="newspaper-title text-5xl text-yellow-400">--:--:--:--</p>
+    </div>
+
+    <!-- Points Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6 rounded-xl border-b-4 border-sky-500 shadow-md">
+            <p class="text-sm text-gray-400">Pending VCNEWS Points</p>
+            <p id="tge-pending-points" class="newspaper-title text-5xl text-sky-500 mt-2">0</p>
+        </div>
+        <div class="card p-6 rounded-xl border-b-4 border-green-500 shadow-md">
+            <p class="text-sm text-gray-400">Estimated Conversion Value</p>
+            <p id="tge-estimated-value" class="newspaper-title text-5xl text-green-400 mt-2">0 Tokens</p>
+        </div>
+    </div>
+
+    <!-- Activity Graph -->
+    <div class="card p-6 rounded-xl mb-8 border-l-4 border-sky-500 shadow-lg">
+        <p class="text-lg font-bold text-sky-400 mb-3">Your Accumulation History</p>
+        <canvas id="tge-chart" height="120"></canvas>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="text-center mt-8">
+        <button onclick="navigate('feed')" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300">
+            Read More Articles to Earn Points
+        </button>
+    </div>
 </div>
 
 <!-- --------------------------------- -->
@@ -267,10 +314,6 @@
 <!-- --------------------------------- -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module">
-    // ------------------------------------------
-    // TGE DASHBOARD FUNCTIONS
-    // ------------------------------------------
-
     async function fetchTGEDashboard() {
         if (!supabaseClient || !userId) return;
 
@@ -293,7 +336,7 @@
             estimatedValueEl.textContent = `${pendingPoints.toLocaleString()} Tokens`;
 
             // 2️⃣ Countdown Timer Logic
-            const TGE_DATE = new Date("2025-12-01T00:00:00Z"); // Change this to your official TGE date
+            const TGE_DATE = new Date("2025-12-01T00:00:00Z"); // change to your actual TGE
             updateCountdown(countdownEl, TGE_DATE);
             setInterval(() => updateCountdown(countdownEl, TGE_DATE), 1000);
 
@@ -306,7 +349,7 @@
 
             if (historyError) throw historyError;
 
-            // Aggregate by day
+            // Group by day
             const dailyTotals = {};
             historyData.forEach(entry => {
                 const day = new Date(entry.created_at).toISOString().slice(0, 10);
@@ -316,7 +359,7 @@
             const labels = Object.keys(dailyTotals);
             const values = Object.values(dailyTotals);
 
-            // 4️⃣ Render Chart
+            // 4️⃣ Draw chart
             const ctx = document.getElementById('tge-chart').getContext('2d');
             new Chart(ctx, {
                 type: 'line',
@@ -347,7 +390,6 @@
         }
     }
 
-    /** Countdown Utility */
     function updateCountdown(el, targetDate) {
         const now = new Date().getTime();
         const distance = targetDate.getTime() - now;
@@ -366,7 +408,7 @@
         el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
 
-    // Attach to SPA navigation
+    // hook into SPA navigation
     if (typeof navigate === 'function') {
         const oldNavigate = navigate;
         navigate = function (viewId) {
@@ -986,3 +1028,4 @@
     </script>
 </body>
 </html>
+
