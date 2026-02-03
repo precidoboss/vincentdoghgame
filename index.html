@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stickman Online Duel</title>
+    <title>Stickman Combat Evolved</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --p1-color: #3b82f6;
-            --p2-color: #ef4444;
-            --floor-color: #334155;
+            --bg-color: #020617;
+            --p1-color: #38bdf8;
+            --p2-color: #f43f5e;
+            --accent: #6366f1;
+            --success: #22c55e;
+            --gold: #fbbf24;
         }
 
         body {
@@ -22,22 +24,74 @@
             height: 100vh;
             background-color: var(--bg-color);
             color: white;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
             overflow: hidden;
             touch-action: none;
         }
 
+        /* Dashboard Styles */
+        #dashboard {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            max-width: 600px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .balance-pill {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .mode-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .mode-card {
+            background: #0f172a;
+            border: 2px solid #334155;
+            padding: 30px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mode-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.2);
+        }
+
+        .mode-card h3 { margin: 0; color: var(--accent); }
+        .mode-card p { margin: 0; font-size: 0.9rem; color: #94a3b8; }
+
+        /* Game UI */
         #game-container {
             position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            border: 4px solid #1e293b;
-            border-radius: 8px;
-            background: #1e293b;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8);
+            border: 2px solid #334155;
+            border-radius: 12px;
+            background: #0f172a;
+            display: none; /* Hidden by default */
         }
 
         canvas {
             display: block;
-            background: linear-gradient(to bottom, #1e293b, #0f172a);
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
 
         .ui-overlay {
@@ -46,166 +100,334 @@
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 40px;
+            padding: 0 30px;
             box-sizing: border-box;
             pointer-events: none;
         }
 
+        .status-card {
+            background: rgba(15, 23, 42, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            min-width: 180px;
+            pointer-events: auto;
+        }
+
         .health-bar-container {
-            width: 200px;
-            height: 16px;
-            background: #444;
-            border: 2px solid #fff;
-            border-radius: 10px;
+            width: 100%;
+            height: 12px;
+            background: #1e293b;
+            border-radius: 6px;
             overflow: hidden;
+            margin: 5px 0;
         }
 
         .health-bar {
             height: 100%;
             width: 100%;
-            transition: width 0.1s linear;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        #p1-health { background-color: var(--p1-color); }
-        #p2-health { background-color: var(--p2-color); }
+        #p1-health { background: var(--p1-color); box-shadow: 0 0 10px var(--p1-color); }
+        #p2-health { background: var(--p2-color); box-shadow: 0 0 10px var(--p2-color); }
 
-        #status-msg {
+        .ammo-text {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #94a3b8;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .weapon-name {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        /* Betting UI */
+        #betting-overlay {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(15, 23, 42, 0.95);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
+            border: 2px solid var(--gold);
             text-align: center;
-            z-index: 100;
+            display: none;
+            pointer-events: auto;
+            min-width: 300px;
         }
+
+        .bet-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+
+        .bet-btn { padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; border: none; }
+        .bet-p1 { background: var(--p1-color); color: #000; }
+        .bet-p2 { background: var(--p2-color); color: #fff; }
 
         .modal {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(30, 41, 59, 0.95);
-            padding: 2rem;
-            border-radius: 1rem;
+            background: #1e293b;
+            padding: 2.5rem;
+            border-radius: 1.5rem;
             text-align: center;
-            border: 2px solid #3b82f6;
+            border: 2px solid var(--accent);
             display: none;
             z-index: 101;
-        }
-
-        .controls-hint {
-            margin-top: 15px;
-            color: #94a3b8;
-            font-size: 0.85rem;
-        }
-
-        #player-id-tag {
-            position: absolute;
-            bottom: 10px;
-            font-size: 0.7rem;
-            opacity: 0.5;
+            box-shadow: 0 0 100px rgba(0,0,0,1);
         }
 
         button {
-            background: #3b82f6;
+            background: var(--accent);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            margin-top: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+
+        button:hover { transform: scale(1.05); background: #818cf8; }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 8px 16px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="status-msg">Connecting to server...</div>
+    <div id="dashboard">
+        <div class="balance-pill">$BANDS: <span id="global-balance">1000</span></div>
+        <h1>STICKMAN COMBAT</h1>
+        <div class="mode-grid">
+            <div class="mode-card" onclick="startMode('arena')">
+                <h3>THE ARENA</h3>
+                <p>Fight against a ruthless bot. Master your weapons.</p>
+            </div>
+            <div class="mode-card" onclick="startMode('bet')">
+                <h3>BOT BETTING</h3>
+                <p>Bet your $BANDS and watch the AI slaughter each other.</p>
+            </div>
+        </div>
+    </div>
+
+    <button class="back-btn" id="quit-btn" onclick="location.reload()">QUIT TO MENU</button>
 
     <div id="game-container">
+        <!-- Betting Selection Overlay -->
+        <div id="betting-overlay">
+            <h3>PLACE YOUR BET</h3>
+            <p>Winning pays 2x</p>
+            <input type="number" id="bet-amount" value="100" min="10" step="10" 
+                   style="background: #1e293b; border: 1px solid #334155; color: white; padding: 10px; border-radius: 8px; width: 80%; text-align: center; font-size: 1.2rem;">
+            <div class="bet-buttons">
+                <button class="bet-btn bet-p1" onclick="placeBet(1)">BET BLUE</button>
+                <button class="bet-btn bet-p2" onclick="placeBet(2)">BET RED</button>
+            </div>
+        </div>
+
         <div class="ui-overlay">
-            <div>
-                <div id="p1-label" style="margin-bottom: 5px; font-weight: bold; color: var(--p1-color)">PLAYER 1</div>
+            <div class="status-card" id="p1-card">
+                <div class="weapon-name" id="p1-weapon">Pistol</div>
                 <div class="health-bar-container">
                     <div id="p1-health" class="health-bar"></div>
                 </div>
+                <div class="ammo-text">
+                    <span>HP: <span id="p1-hp-val">100</span></span>
+                    <span id="p1-ammo">12 / 12</span>
+                </div>
             </div>
-            <div style="text-align: center; font-size: 0.8rem; color: #94a3b8;">ONLINE MULTIPLAYER</div>
-            <div>
-                <div id="p2-label" style="margin-bottom: 5px; text-align: right; font-weight: bold; color: var(--p2-color)">PLAYER 2</div>
+            <div class="status-card" id="p2-card" style="text-align: right;">
+                <div class="weapon-name" id="p2-weapon">Super Bot</div>
                 <div class="health-bar-container">
                     <div id="p2-health" class="health-bar" style="float: right;"></div>
+                </div>
+                <div class="ammo-text" style="flex-direction: row-reverse; align-items: center;">
+                    <span>HP: <span id="p2-hp-val">100</span></span>
+                    <span id="p2-ammo-bot" style="font-size: 0.6rem; opacity: 0.5;">Auto-Combat</span>
                 </div>
             </div>
         </div>
         <canvas id="gameCanvas"></canvas>
     </div>
 
-    <div class="controls-hint">
-        WASD/Arrows to Move • V/M to Shoot • First two people to join are P1 and P2
-    </div>
-
     <div id="winModal" class="modal">
-        <h1 id="winText">WINS!</h1>
-        <button onclick="location.reload()">PLAY AGAIN</button>
+        <h1 id="winText">VICTORY</h1>
+        <p id="bet-result-text" style="color: var(--gold); font-weight: bold;"></p>
+        <button onclick="location.reload()">CONTINUE</button>
     </div>
-
-    <div id="player-id-tag"></div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        // --- STATE MANAGEMENT ---
+        let balance = parseInt(localStorage.getItem('stickman_bands')) || 1000;
+        let currentMode = 'arena'; // 'arena' or 'bet'
+        let currentBet = { amount: 0, side: 0 }; // side: 1 (Blue), 2 (Red)
+        
+        document.getElementById('global-balance').innerText = balance;
 
-        // Global Variables
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'stickman-duel';
+        window.startMode = (mode) => {
+            currentMode = mode;
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            document.getElementById('quit-btn').style.display = 'block';
+            
+            if (mode === 'bet') {
+                document.getElementById('betting-overlay').style.display = 'block';
+                gameActive = false; // Pause until bet placed
+            } else {
+                gameActive = true;
+                requestAnimationFrame(gameLoop);
+            }
+        };
 
-        // Constants
-        const GRAVITY = 0.5;
-        const FRICTION = 0.8;
-        const JUMP_STRENGTH = -12;
-        const SPEED = 0.8;
-        const MAX_SPEED = 6;
-        const BULLET_SPEED = 12;
+        window.placeBet = (side) => {
+            const amt = parseInt(document.getElementById('bet-amount').value);
+            if (amt > balance) {
+                alert("NOT ENOUGH $BANDS!");
+                return;
+            }
+            if (amt <= 0) return;
+
+            balance -= amt;
+            localStorage.setItem('stickman_bands', balance);
+            document.getElementById('global-balance').innerText = balance;
+            
+            currentBet = { amount: amt, side: side };
+            document.getElementById('betting-overlay').style.display = 'none';
+            
+            gameActive = true;
+            requestAnimationFrame(gameLoop);
+        };
+
+        // --- AUDIO ENGINE ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(freq, type, duration, volume = 0.1) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + duration);
+                gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        // --- CONSTANTS ---
+        const GRAVITY = 0.55;
+        const FRICTION = 0.85;
+        const JUMP_STRENGTH = -13;
+        const SPEED = 0.9;
+        const SUPER_RUN_SPEED = 1.8;
+        const MAX_SPEED = 7;
+        const SUPER_RUN_MAX_SPEED = 14;
+        const SLIDE_FRICTION = 0.96;
+
+        const WEAPONS = {
+            pistol: { name: 'Pistol', damage: 15, cooldown: 400, ammo: 12, reloadTime: 1200, speed: 14, scatter: 0, count: 1, type: 'bullet' },
+            machinegun: { name: 'Machine Gun', damage: 8, cooldown: 100, ammo: 40, reloadTime: 2000, speed: 16, scatter: 0.05, count: 1, type: 'bullet' },
+            shotgun: { name: 'Shotgun', damage: 10, cooldown: 800, ammo: 6, reloadTime: 1500, speed: 12, scatter: 0.15, count: 6, type: 'bullet' },
+            grenade: { name: 'Grenade', damage: 45, cooldown: 1200, ammo: 3, reloadTime: 2500, speed: 10, scatter: 0, count: 1, type: 'grenade' }
+        };
 
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = 1000;
         canvas.height = 500;
 
-        // State
-        let myPlayerNum = null;
-        let user = null;
         let gameActive = false;
         let bullets = [];
+        let particles = [];
         const keys = {};
 
-        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keydown', e => {
+            keys[e.code] = true;
+            if (currentMode === 'arena') {
+                if(e.code === 'Digit1') p1.switchWeapon('pistol');
+                if(e.code === 'Digit2') p1.switchWeapon('machinegun');
+                if(e.code === 'Digit3') p1.switchWeapon('shotgun');
+                if(e.code === 'Digit4') p1.switchWeapon('grenade');
+                if(e.code === 'KeyR') p1.reload();
+            }
+        });
         window.addEventListener('keyup', e => keys[e.code] = false);
 
-        class Bullet {
-            constructor(x, y, dir, owner) {
-                this.x = x;
-                this.y = y;
-                this.vx = dir * BULLET_SPEED;
-                this.owner = owner;
-                this.radius = 4;
+        class Particle {
+            constructor(x, y, color, vx, vy, life, size = 3) {
+                this.x = x; this.y = y; this.color = color;
+                this.vx = vx; this.vy = vy; this.life = life; this.maxLife = life;
+                this.size = size;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy; this.vy += 0.1; this.life--;
+            }
+            draw() {
+                ctx.globalAlpha = this.life / this.maxLife;
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class Projectile {
+            constructor(x, y, vx, vy, owner, type, damage) {
+                this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+                this.owner = owner; this.type = type; this.damage = damage;
                 this.active = true;
+                this.timer = type === 'grenade' ? 60 : 200;
             }
             update() {
                 this.x += this.vx;
-                if (this.x < 0 || this.x > canvas.width) this.active = false;
+                this.y += this.vy;
+                if(this.type === 'grenade') this.vy += 0.3;
+                this.timer--;
+                if(this.timer <= 0) this.explode();
+                if(this.x < 0 || this.x > canvas.width) this.active = false;
+                if(this.y > canvas.height - 40) {
+                    if(this.type === 'grenade') { this.vy *= -0.5; this.vx *= 0.8; }
+                    else this.active = false;
+                }
+            }
+            explode() {
+                this.active = false;
+                if(this.type === 'grenade') {
+                    playSound(100, 'sawtooth', 0.5, 0.3);
+                    for(let i=0; i<25; i++) particles.push(new Particle(this.x, this.y, '#f59e0b', (Math.random()-0.5)*12, (Math.random()-0.5)*12, 40, 4));
+                    [p1, p2].forEach(p => {
+                        const d = Math.sqrt((p.x-this.x)**2 + (p.y-30-this.y)**2);
+                        if(d < 90) p.takeDamage(this.damage * (1 - d/110));
+                    });
+                }
             }
             draw() {
-                ctx.fillStyle = this.owner === 1 ? '#60a5fa' : '#f87171';
+                ctx.fillStyle = this.type === 'grenade' ? '#10b981' : (this.owner === 1 ? '#38bdf8' : '#f43f5e');
                 ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.arc(this.x, this.y, this.type === 'grenade' ? 6 : 3, 0, Math.PI*2);
                 ctx.fill();
             }
         }
@@ -215,158 +437,185 @@
                 this.id = id;
                 this.x = x;
                 this.y = canvas.height - 40;
-                this.vx = 0;
-                this.vy = 0;
+                this.vx = 0; this.vy = 0;
                 this.color = color;
                 this.health = 100;
                 this.facing = id === 1 ? 1 : -1;
-                this.canShoot = true;
                 this.isJumping = false;
+                this.isSliding = false;
+                this.isSuperRunning = false;
+                this.weapon = WEAPONS.pistol;
+                this.ammo = WEAPONS.pistol.ammo;
+                this.reloading = false;
+                this.cooldown = 0;
+                this.recoil = 0;
+                this.animFrame = 0;
             }
 
-            updateLocal() {
-                const left = keys['KeyA'] || keys['ArrowLeft'];
-                const right = keys['KeyD'] || keys['ArrowRight'];
-                const jump = keys['KeyW'] || keys['ArrowUp'] || keys['Space'];
-                const shoot = keys['KeyV'] || keys['KeyM'];
+            switchWeapon(key) {
+                if(this.reloading) return;
+                this.weapon = WEAPONS[key];
+                this.ammo = this.weapon.ammo;
+                document.getElementById(`p${this.id}-weapon`).innerText = this.weapon.name;
+                this.updateUI();
+            }
 
-                if (left) { this.vx -= SPEED; this.facing = -1; }
-                if (right) { this.vx += SPEED; this.facing = 1; }
-                if (jump && !this.isJumping) { this.vy = JUMP_STRENGTH; this.isJumping = true; }
+            reload() {
+                if(this.ammo === this.weapon.ammo || this.reloading) return;
+                this.reloading = true;
+                setTimeout(() => {
+                    this.ammo = this.weapon.ammo;
+                    this.reloading = false;
+                    this.updateUI();
+                }, this.weapon.reloadTime);
+            }
+
+            shoot() {
+                if(this.cooldown > 0 || this.reloading) return;
+                if(this.ammo <= 0) { this.reload(); return; }
+
+                this.ammo--;
+                this.cooldown = this.weapon.cooldown;
+                this.recoil = 18;
                 
-                if (shoot && this.canShoot) {
-                    this.canShoot = false;
-                    bullets.push(new Bullet(this.x + (this.facing * 20), this.y - 30, this.facing, this.id));
-                    setTimeout(() => this.canShoot = true, 300);
+                playSound(this.weapon.name === 'Grenade' ? 200 : 800, 'square', 0.05);
+
+                for(let i=0; i<this.weapon.count; i++) {
+                    const angle = (Math.random() - 0.5) * this.weapon.scatter;
+                    const vx = Math.cos(angle) * this.weapon.speed * this.facing;
+                    const vy = Math.sin(angle) * this.weapon.speed;
+                    bullets.push(new Projectile(this.x + (this.facing * 25), this.y - 30, vx, vy, this.id, this.weapon.type, this.weapon.damage));
+                }
+                this.updateUI();
+            }
+
+            takeDamage(dmg) {
+                this.health -= dmg;
+                this.x += (Math.random()-0.5)*10;
+                for(let i=0; i<5; i++) particles.push(new Particle(this.x, this.y-30, this.color, (Math.random()-0.5)*8, -Math.random()*8, 20));
+                this.updateUI();
+            }
+
+            updateUI() {
+                const hpText = document.getElementById(`p${this.id}-hp-val`);
+                const hpBar = document.getElementById(`p${this.id}-health`);
+                if(hpText) hpText.innerText = Math.max(0, Math.round(this.health));
+                if(hpBar) hpBar.style.width = this.health + '%';
+                
+                if (this.id === 1 && currentMode === 'arena') {
+                    const ammoBar = document.getElementById('p1-ammo');
+                    if(ammoBar) ammoBar.innerText = this.reloading ? 'RELOADING...' : `${this.ammo} / ${this.weapon.ammo}`;
+                }
+            }
+
+            runAI(target) {
+                const dist = target.x - this.x;
+                const absDist = Math.abs(dist);
+                this.facing = dist > 0 ? 1 : -1;
+
+                if (absDist > 300) this.vx += (dist > 0 ? SPEED : -SPEED);
+                else if (absDist < 150) this.vx += (dist > 0 ? -SPEED : SPEED);
+
+                if (Math.random() > 0.98 && !this.isJumping) {
+                    this.vy = JUMP_STRENGTH;
+                    this.isJumping = true;
+                }
+
+                if (Math.random() > 0.96) this.shoot();
+                
+                if (this.ammo <= 0 && !this.reloading) {
+                    const wkeys = ['pistol', 'machinegun', 'shotgun', 'grenade'];
+                    this.switchWeapon(wkeys[Math.floor(Math.random() * wkeys.length)]);
+                }
+            }
+
+            update() {
+                if(this.id === 1 && currentMode === 'arena') {
+                    const left = keys['KeyA'] || keys['ArrowLeft'];
+                    const right = keys['KeyD'] || keys['ArrowRight'];
+                    const jump = keys['KeyW'] || keys['ArrowUp'];
+                    const slide = keys['KeyS'] || keys['ArrowDown'];
+                    const superRun = keys['ShiftLeft'] || keys['ShiftRight'];
+                    const shoot = keys['KeyV'] || keys['Space'];
+
+                    this.isSuperRunning = superRun && (left || right);
+                    const currentAccel = this.isSuperRunning ? SUPER_RUN_SPEED : SPEED;
+                    const currentMax = this.isSuperRunning ? SUPER_RUN_MAX_SPEED : MAX_SPEED;
+
+                    if (slide && !this.isJumping) {
+                        this.isSliding = true;
+                        this.vx *= SLIDE_FRICTION;
+                    } else {
+                        this.isSliding = false;
+                        if (left) { this.vx -= currentAccel; this.facing = -1; }
+                        if (right) { this.vx += currentAccel; this.facing = 1; }
+                    }
+
+                    if (jump && !this.isJumping) {
+                        this.vy = JUMP_STRENGTH;
+                        this.isJumping = true;
+                    }
+                    if (shoot) this.shoot();
+                    if (Math.abs(this.vx) > currentMax) this.vx = Math.sign(this.vx) * currentMax;
+                } else {
+                    this.runAI(this.id === 1 ? p2 : p1);
                 }
 
                 this.vy += GRAVITY;
                 this.vx *= FRICTION;
-                if (Math.abs(this.vx) > MAX_SPEED) this.vx = Math.sign(this.vx) * MAX_SPEED;
-
                 this.x += this.vx;
                 this.y += this.vy;
+                if(this.cooldown > 0) this.cooldown -= 16.6;
+                this.recoil *= 0.8;
+                this.animFrame += Math.abs(this.vx) * 0.15;
 
                 if (this.y > canvas.height - 40) {
                     this.y = canvas.height - 40;
                     this.vy = 0;
                     this.isJumping = false;
                 }
-                if (this.x < 20) this.x = 20;
-                if (this.x > canvas.width - 20) this.x = canvas.width - 20;
+                this.x = Math.max(20, Math.min(canvas.width - 20, this.x));
             }
 
             draw() {
+                const x = this.x;
+                const y = this.isSliding ? this.y + 15 : this.y;
+                const f = this.facing;
+                const r = this.recoil * f;
+
+                if(this.isSuperRunning) {
+                    ctx.globalAlpha = 0.3;
+                    this.drawBody(x - this.vx, y, f, r);
+                    ctx.globalAlpha = 1;
+                }
+                this.drawBody(x, y, f, r);
+            }
+
+            drawBody(x, y, f, r) {
                 ctx.strokeStyle = this.color;
                 ctx.lineWidth = 4;
                 ctx.lineCap = 'round';
-                const x = this.x;
-                const y = this.y;
-
-                ctx.beginPath(); ctx.arc(x, y - 50, 8, 0, Math.PI * 2); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x, y - 42); ctx.lineTo(x, y - 20); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x, y - 35); ctx.lineTo(x + (this.facing * 15), y - 30); ctx.stroke();
-                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x + (this.facing * 12), y - 34, this.facing * 10, 5);
+                ctx.beginPath(); ctx.arc(x - r*0.2, y - 50, 8, 0, Math.PI * 2); ctx.stroke(); // Head
+                ctx.beginPath(); ctx.moveTo(x - r*0.1, y - 42); ctx.lineTo(x, y - 20); ctx.stroke(); // Torso
+                ctx.beginPath(); ctx.moveTo(x, y - 35); ctx.lineTo(x + (f * 25) - r, y - 32); ctx.stroke(); // Arms
                 
-                const legWalk = Math.sin(Date.now() / 100) * (Math.abs(this.vx) * 2);
-                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x - 8 + legWalk, y); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 8 - legWalk, y); ctx.stroke();
+                // Weapon
+                ctx.fillStyle = '#64748b';
+                ctx.save();
+                ctx.translate(x + (f * 20) - r, y - 32);
+                ctx.rotate(this.recoil * -0.05 * f);
+                ctx.fillRect(0, -3, f * 15, 6);
+                ctx.restore();
+
+                // Legs
+                const legScale = this.isJumping || this.isSliding ? 0 : Math.sin(this.animFrame) * 18;
+                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x - 10 + legScale, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 10 - legScale, y); ctx.stroke();
             }
         }
 
-        let p1 = new Stickman(1, 150, '#3b82f6');
-        let p2 = new Stickman(2, 850, '#ef4444');
-
-        async function initGame() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-                onAuthStateChanged(auth, (u) => {
-                    if (u) {
-                        user = u;
-                        document.getElementById('player-id-tag').innerText = `Your ID: ${u.uid}`;
-                        joinLobby();
-                    }
-                });
-            } catch (err) {
-                document.getElementById('status-msg').innerText = "Auth Error. Please refresh.";
-            }
-        }
-
-        function joinLobby() {
-            // RULE 1: Even number of segments required for doc reference
-            const lobbyDoc = doc(db, 'artifacts', appId, 'public', 'data', 'lobby', 'room1');
-            
-            onSnapshot(lobbyDoc, async (snap) => {
-                const data = snap.data() || { p1: null, p2: null };
-                
-                if (!myPlayerNum) {
-                    if (!data.p1 || data.p1 === user.uid) {
-                        myPlayerNum = 1;
-                        await setDoc(lobbyDoc, { ...data, p1: user.uid }, { merge: true });
-                        document.getElementById('p1-label').innerText = "PLAYER 1 (YOU)";
-                    } else if (!data.p2 || data.p2 === user.uid) {
-                        myPlayerNum = 2;
-                        await setDoc(lobbyDoc, { ...data, p2: user.uid }, { merge: true });
-                        document.getElementById('p2-label').innerText = "PLAYER 2 (YOU)";
-                    } else {
-                        document.getElementById('status-msg').innerText = "Room Full. Spectating...";
-                        myPlayerNum = 0; 
-                    }
-                }
-
-                if (data.p1 && data.p2) {
-                    document.getElementById('status-msg').style.display = 'none';
-                    if (!gameActive) {
-                        gameActive = true;
-                        gameLoop();
-                        syncState();
-                    }
-                } else {
-                    document.getElementById('status-msg').innerText = "Waiting for opponent...";
-                }
-            }, (err) => {
-                document.getElementById('status-msg').innerText = "Lobby Error: " + err.message;
-            });
-        }
-
-        function syncState() {
-            if (myPlayerNum === 0 || !user) return;
-            
-            // Fixed path to ensure even segments (6 segments total)
-            const playerDoc = doc(db, 'artifacts', appId, 'public', 'data', 'players', `p${myPlayerNum}`);
-            
-            setInterval(async () => {
-                const myStickman = myPlayerNum === 1 ? p1 : p2;
-                await setDoc(playerDoc, {
-                    x: myStickman.x,
-                    y: myStickman.y,
-                    facing: myStickman.facing,
-                    vx: myStickman.vx,
-                    health: myStickman.health,
-                    lastUpdate: Date.now()
-                });
-            }, 60);
-
-            const opponentNum = myPlayerNum === 1 ? 2 : 1;
-            const opponentDoc = doc(db, 'artifacts', appId, 'public', 'data', 'players', `p${opponentNum}`);
-            
-            onSnapshot(opponentDoc, (snap) => {
-                const data = snap.data();
-                if (data) {
-                    const opponent = myPlayerNum === 1 ? p2 : p1;
-                    opponent.x = data.x;
-                    opponent.y = data.y;
-                    opponent.facing = data.facing;
-                    opponent.vx = data.vx;
-                    opponent.health = data.health;
-                    document.getElementById(`p${opponentNum}-health`).style.width = opponent.health + '%';
-                }
-            }, (err) => console.error("Sync Error:", err));
-        }
+        const p1 = new Stickman(1, 200, '#38bdf8');
+        const p2 = new Stickman(2, 800, '#f43f5e');
 
         function checkCollision(b, p) {
             const dx = b.x - p.x;
@@ -376,51 +625,67 @@
 
         function gameLoop() {
             if (!gameActive) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Floor
-            ctx.fillStyle = '#334155';
+            
+            // Background Elements
+            ctx.fillStyle = '#1e293b';
             ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
 
-            if (myPlayerNum === 1) p1.updateLocal();
-            if (myPlayerNum === 2) p2.updateLocal();
+            p1.update();
+            p2.update();
 
             for (let i = bullets.length - 1; i >= 0; i--) {
                 const b = bullets[i];
                 b.update();
-                
-                const opponent = myPlayerNum === 1 ? p2 : p1;
-                if (b.owner === myPlayerNum && checkCollision(b, opponent)) {
-                    opponent.health -= 5;
+                const target = b.owner === 1 ? p2 : p1;
+                if (b.type === 'bullet' && checkCollision(b, target)) {
+                    target.takeDamage(b.damage);
                     b.active = false;
                 }
-
                 if (!b.active) bullets.splice(i, 1);
                 else b.draw();
             }
 
+            particles.forEach((p, i) => {
+                p.update();
+                if(p.life <= 0) particles.splice(i, 1);
+                else p.draw();
+            });
+
             p1.draw();
             p2.draw();
 
-            if (myPlayerNum !== 0) {
-                const me = myPlayerNum === 1 ? p1 : p2;
-                document.getElementById(`p${myPlayerNum}-health`).style.width = me.health + '%';
-            }
-
             if (p1.health <= 0 || p2.health <= 0) {
-                gameActive = false;
-                const modal = document.getElementById('winModal');
-                const text = document.getElementById('winText');
-                modal.style.display = 'block';
-                text.innerText = p1.health <= 0 ? "PLAYER 2 WINS!" : "PLAYER 1 WINS!";
-                text.style.color = p1.health <= 0 ? '#ef4444' : '#3b82f6';
+                handleGameOver();
+                return;
             }
-
             requestAnimationFrame(gameLoop);
         }
 
-        window.onload = initGame;
+        function handleGameOver() {
+            gameActive = false;
+            const winner = p1.health > 0 ? 1 : 2;
+            const modal = document.getElementById('winModal');
+            const winText = document.getElementById('winText');
+            const betResult = document.getElementById('bet-result-text');
+            
+            modal.style.display = 'block';
+            winText.innerText = winner === 1 ? "BLUE WINS!" : "RED WINS!";
+            winText.style.color = winner === 1 ? '#38bdf8' : '#f43f5e';
+
+            if (currentMode === 'bet' && currentBet.side !== 0) {
+                if (currentBet.side === winner) {
+                    const winnings = currentBet.amount * 2;
+                    balance += winnings;
+                    betResult.innerText = `YOU WON $${winnings} BANDS!`;
+                    playSound(1000, 'sine', 0.5, 0.2);
+                } else {
+                    betResult.innerText = `YOU LOST $${currentBet.amount} BANDS.`;
+                }
+                localStorage.setItem('stickman_bands', balance);
+                document.getElementById('global-balance').innerText = balance;
+            }
+        }
     </script>
 </body>
 </html>
