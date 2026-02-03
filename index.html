@@ -3,1029 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VCNEWS | Chronos Chronicles</title>
-    <!-- Load Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Supabase SDK for Database/RPC Calls and Auth -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Stickman Online Duel</title>
     <style>
-        /* Custom Styles for Newspaper Aesthetic and Layout */
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Merriweather:wght@300;400&display=swap');
-        
-        .newspaper-title {
-            font-family: 'Playfair Display', serif;
-            letter-spacing: -0.05em;
-            text-shadow: 2px 2px #0a0a0a;
+        :root {
+            --bg-color: #0f172a;
+            --p1-color: #3b82f6;
+            --p2-color: #ef4444;
+            --floor-color: #334155;
         }
-        .newspaper-body {
-            font-family: 'Merriweather', serif;
-        }
-        
-        /* Fixed Dark Mode Styles */
+
         body {
-            background-color: #0d0d0d;
-            color: #ffffff;
-            transition: all 0.3s;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            touch-action: none;
         }
-        .card {
-            background-color: #1f2937;
-            border-color: #4b5563;
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border: 4px solid #1e293b;
+            border-radius: 8px;
+            background: #1e293b;
+        }
+
+        canvas {
+            display: block;
+            background: linear-gradient(to bottom, #1e293b, #0f172a);
+        }
+
+        .ui-overlay {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+
+        .health-bar-container {
+            width: 200px;
+            height: 16px;
+            background: #444;
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .health-bar {
+            height: 100%;
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
+        #p1-health { background-color: var(--p1-color); }
+        #p2-health { background-color: var(--p2-color); }
+
+        #status-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(30, 41, 59, 0.95);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            border: 2px solid #3b82f6;
+            display: none;
+            z-index: 101;
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        #player-id-tag {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.7rem;
+            opacity: 0.5;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
         }
     </style>
 </head>
-<body class="newspaper-body">
+<body>
 
-    <!-- CRITICAL: Supabase Configuration -->
-    <script>
-        // --- SUPABASE CONFIGURATION ---
-        // Supabase keys for DB/RPC calls and Auth.
-        const SUPABASE_URL = 'https://glxpstrupjohubotpvkg.supabase.co'; 
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdseHBzdHJ1cGpvaHVib3RwdmtnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyNDEwMTIsImV4cCI6MjA3NjgxNzAxMn0.glG8liZrM-PQ8Abwi76v1iHvfwCoMRf855eGUVPE1ek';
-        
-        // Auth state toggle (default to Sign In)
-        let isRegisterMode = false;
-    </script>
+    <div id="status-msg">Connecting to server...</div>
 
-    <div id="app-container" class="max-w-4xl mx-auto p-4 md:p-8">
-        <!-- Message Box -->
-        <div id="message-box" class="fixed top-0 left-1/2 -translate-x-1/2 p-4 mt-2 rounded-lg z-50 transition-opacity duration-300 opacity-0 hidden"></div>
-        
-        <!-- Header / Navigation -->
-        <header class="mb-8 border-b border-sky-500 pb-4 flex flex-col sm:flex-row justify-between items-center sm:space-y-0 space-y-4">
-            <h1 class="newspaper-title text-4xl sm:text-5xl text-sky-500">VCNEWS</h1>
-            <nav id="main-nav" class="flex flex-wrap justify-center space-x-3 text-sm sm:text-base">
-                <button onclick="navigate('tge')" class="nav-button hover:text-sky-400 transition-colors">TGE</button>
-                <button onclick="navigate('login')" class="nav-button hover:text-sky-400 transition-colors text-red-400 font-bold">Login</button>
-                <button onclick="navigate('feed')" class="nav-button hover:text-sky-400 transition-colors">News Feed</button>
-                <button onclick="navigate('quests')" class="nav-button hover:text-sky-400 transition-colors">Quests</button>
-                <button onclick="navigate('profile')" class="nav-button hover:text-sky-400 transition-colors">Portfolio</button>
-                <button onclick="navigate('about')" class="nav-button hover:text-sky-400 transition-colors">About</button>
-            </nav>
-        </header>
-
-        <!-- Main Content Views -->
-        <main id="views">
-            
-            <!-- --------------------------------- -->
-            <!-- VIEW 1: LOGIN / REGISTER PAGE -->
-            <!-- --------------------------------- -->
-            <div id="view-login" class="view-content flex flex-col items-center justify-center text-center h-[70vh]">
-                <h2 class="newspaper-title text-3xl mb-4 text-sky-500">Access Chronos Chronicles</h2>
-                <p class="mb-8 text-gray-400" id="auth-subtitle">Sign in to track your points and start mining VCNEWS.</p>
-                
-                <div class="card p-6 rounded-xl shadow-2xl w-full max-w-sm border border-gray-700">
-                    
-                    <div id="auth-forms">
-                        <h3 class="text-2xl font-bold mb-4" id="auth-form-title">Sign In</h3>
-
-                        <!-- Username is optional for Supabase but good for UX -->
-                        <div id="username-field" class="mb-3 hidden">
-                            <input id="auth-username" type="text" placeholder="Username (Optional)" class="w-full p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
-                        </div>
-                        
-                        <input id="auth-email" type="email" placeholder="Email Address" class="w-full p-3 mb-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
-                        <input id="auth-password" type="password" placeholder="Password (min 6 chars)" class="w-full p-3 mb-4 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-sky-500" />
-                        
-                        <!-- Supabase Action Button -->
-                        <button id="supabase-auth-button" onclick="handleSupabaseAuth()" class="bg-sky-500 hover:bg-sky-600 text-black font-bold py-3 px-6 rounded-lg w-full transition duration-300 mb-4">
-                            Sign In
-                        </button>
-                        
-                        <!-- Toggle Sign Up/Sign In -->
-                        <p class="text-xs text-gray-400 mt-4">
-                            <span id="auth-toggle-text">Don't have an account?</span>
-                            <button onclick="toggleAuthMode()" class="text-sky-400 hover:text-sky-300 font-bold transition">
-                                <span id="auth-toggle-link">Register</span>
-                            </button>
-                        </p>
-
-                    </div>
-                    
-                    <p id="user-info" class="text-sm text-gray-500 mt-4 hidden"></p>
-                    <button onclick="logout()" class="text-xs text-red-500 mt-6 hover:text-red-400 transition hidden" id="logout-link">Log Out</button>
-
+    <div id="game-container">
+        <div class="ui-overlay">
+            <div>
+                <div id="p1-label" style="margin-bottom: 5px; font-weight: bold; color: var(--p1-color)">PLAYER 1</div>
+                <div class="health-bar-container">
+                    <div id="p1-health" class="health-bar"></div>
                 </div>
             </div>
-
-            <!-- --------------------------------- -->
-            <!-- VIEW 2: NEWS FEED -->
-            <!-- --------------------------------- -->
-            <div id="view-feed" class="view-content hidden">
-                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">Today's Chronos News Digest</h2>
-                <div id="news-list" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- News cards will be inserted here by JavaScript -->
-                </div>
-                <div id="feed-loading" class="text-center text-gray-500 mt-12">
-                    <svg class="animate-spin h-6 w-6 text-sky-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Loading articles...
+            <div style="text-align: center; font-size: 0.8rem; color: #94a3b8;">ONLINE MULTIPLAYER</div>
+            <div>
+                <div id="p2-label" style="margin-bottom: 5px; text-align: right; font-weight: bold; color: var(--p2-color)">PLAYER 2</div>
+                <div class="health-bar-container">
+                    <div id="p2-health" class="health-bar" style="float: right;"></div>
                 </div>
             </div>
-
-            <!-- --------------------------------- -->
-            <!-- VIEW 3: ARTICLE DETAIL -->
-            <!-- --------------------------------- -->
-            <div id="view-article" class="view-content hidden">
-                <button onclick="navigate('feed')" class="text-sky-500 hover:text-sky-400 mb-6 flex items-center transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                    Back to Feed
-                </button>
-                <article class="card p-6 rounded-xl shadow-2xl border-t-4 border-sky-500">
-                    <h1 id="article-title" class="newspaper-title text-4xl mb-4 leading-none"></h1>
-                    <div class="flex justify-between text-xs text-gray-400 mb-6 border-b border-gray-700 pb-3">
-                        <span id="article-date-category"></span>
-                    </div>
-                    
-                    <div class="lg:columns-2 lg:gap-8">
-                        <img id="article-image" class="w-full h-auto mb-6 rounded-lg object-cover" src="" onerror="this.style.display='none'">
-                        <p id="article-intro" class="text-lg font-bold mb-6 italic text-gray-300"></p>
-                        <div id="article-content" class="text-gray-300 text-base leading-relaxed">
-                            <!-- Main content paragraphs inserted here -->
-                        </div>
-                    </div>
-                    
-                    <div class="mt-8 pt-6 border-t border-gray-700 flex justify-between items-center flex-wrap gap-4">
-                        <button id="claim-button" onclick="" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 text-lg">
-                            Claim <span id="claim-points">0</span> VCNEWS
-                        </button>
-                        <div id="article-sources" class="text-sm text-gray-500">
-                            <!-- Sources/Links inserted here -->
-                        </div>
-                    </div>
-                </article>
-            </div>
-
-            <!-- --------------------------------- -->
-            <!-- VIEW 4: DAILY QUESTS -->
-            <!-- --------------------------------- -->
-            <div id="view-quests" class="view-content hidden">
-                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">Daily Engagement Quests</h2>
-                <p class="text-gray-400 mb-6">Complete the active quest to earn a large boost of VCNEWS points!</p>
-                <div id="quest-card" class="card p-6 rounded-xl border-l-4 border-yellow-500">
-                    <div id="quest-loading" class="text-center text-gray-500">
-                        <svg class="animate-spin h-6 w-6 text-yellow-500 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Loading daily quest...
-                    </div>
-                </div>
-            </div>
-
-            <!-- --------------------------------- -->
-            <!-- VIEW 5: PORTFOLIO/DASHBOARD -->
-            <!-- --------------------------------- -->
-            <div id="view-profile" class="view-content hidden">
-                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">My VCNEWS Portfolio</h2>
-
-                <!-- Points and Status Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="card p-6 rounded-xl border-b-4 border-sky-500">
-                        <p class="text-sm text-gray-400">Total VCNEWS Points Mined</p>
-                        <p id="profile-points" class="newspaper-title text-5xl text-sky-500 mt-1 transition-transform transform hover:scale-[1.02]">0</p>
-                    </div>
-                    <div class="card p-6 rounded-xl border-b-4 border-sky-500">
-                        <p class="text-sm text-gray-400">Account Status</p>
-                        <p class="text-xl text-green-500 mt-2 font-bold">Active Miner</p>
-                        <p class="text-xs text-gray-500 mt-2">Email: <span id="profile-email">...</span></p>
-                    </div>
-                    <div class="card p-6 rounded-xl border-b-4 border-green-500 flex flex-col justify-between">
-                        <p class="text-sm text-gray-400">Token Generation Event (TGE)</p>
-                        <div class="mt-2">
-                            <p class="text-xl font-bold text-white">1 VCNEWS = 1 Real Token</p>
-                            <p class="text-xs text-gray-300 mt-1">Conversion available at TGE end date.</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Leaderboard Section (REAL TIME MOCKUP) -->
-                <div class="mt-8 border-t border-gray-700 pt-6">
-                    <h3 class="text-2xl font-bold mb-4 text-sky-500">Global Leaderboard (Top 5 Miners)</h3>
-                    <div id="leaderboard-container" class="space-y-2">
-                        <!-- Leaderboard content will be dynamically loaded here -->
-                        <div class="text-center text-gray-500">Loading leaderboard...</div>
-                    </div>
-                    <!-- User's own rank card -->
-                    <div class="flex justify-between items-center card p-3 rounded-lg border-l-4 border-sky-500 mt-4">
-                        <span class="font-bold text-sky-500">#<span id="leaderboard-user-rank">...</span></span>
-                        <span class="text-lg font-bold">Your Rank</span>
-                        <span id="leaderboard-user-points" class="font-bold text-green-400">0 VCNEWS</span>
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="mt-8 border-t border-gray-700 pt-6">
-                    <h3 class="text-2xl font-bold mb-4 text-sky-500">Recent Activity</h3>
-                    <div id="activity-log" class="space-y-3">
-                        <p class="text-gray-500">Activity will load here...</p>
-                    </div>
-                </div>
-
-                <button onclick="logout()" class="mt-8 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full transition duration-300">
-                    Log Out
-                </button>
-            </div>
-
-          <!-- --------------------------------- -->
-<!-- VIEW: TGE DASHBOARD -->
-<!-- --------------------------------- -->
-<div id="view-tge" class="view-content hidden">
-    <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">
-        Token Generation Event (TGE) Dashboard
-    </h2>
-
-    <!-- Countdown -->
-    <div class="card p-6 mb-8 rounded-xl border-l-4 border-green-500 text-center">
-        <p class="text-gray-400 text-sm mb-2">Countdown to Token Conversion</p>
-        <p id="tge-countdown" class="newspaper-title text-4xl text-green-400">--:--:--:--</p>
-    </div>
-
-    <!-- User’s Pending Points -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="card p-6 rounded-xl border-b-4 border-sky-500">
-            <p class="text-sm text-gray-400">Pending VCNEWS Points (To Be Converted)</p>
-            <p id="tge-pending-points" class="newspaper-title text-5xl text-sky-500 mt-2">0</p>
         </div>
-        <div class="card p-6 rounded-xl border-b-4 border-yellow-500">
-            <p class="text-sm text-gray-400">Estimated Value (at 1:1 Token Conversion)</p>
-            <p id="tge-estimated-value" class="newspaper-title text-5xl text-yellow-400 mt-2">0 Tokens</p>
-        </div>
+        <canvas id="gameCanvas"></canvas>
     </div>
 
-    <!-- Historical Accumulation Chart Placeholder -->
-    <div class="card p-6 rounded-xl mb-8 border-l-4 border-sky-500">
-        <p class="text-lg font-bold text-sky-400 mb-3">Your Accumulation History</p>
-        <canvas id="tge-chart" height="100"></canvas>
+    <div class="controls-hint">
+        WASD/Arrows to Move • V/M to Shoot • First two people to join are P1 and P2
     </div>
 
-    <!-- Engagement CTA -->
-    <div class="text-center mt-8">
-        <button onclick="navigate('feed')" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300">
-            Read More Articles to Boost Points
-        </button>
-    </div>
-</div> 
-            <!-- --------------------------------- -->
-<!-- VIEW: TGE DASHBOARD -->
-<!-- --------------------------------- -->
-<div id="view-tge" class="view-content hidden">
-    <h2 class="newspaper-title text-4xl mb-6 border-b border-sky-500 pb-4">Token Generation Event (TGE)</h2>
-
-    <!-- Intro Card -->
-    <div class="card p-6 mb-8 rounded-xl border-l-4 border-green-500 shadow-lg">
-        <p class="text-gray-300 mb-3">
-            Welcome to the <span class="text-sky-400 font-bold">VCNEWS TGE Dashboard</span>.  
-            Here you can track all your accumulated points leading up to the Token Generation Event.  
-            Once the countdown reaches zero, your points will be converted into real tokens.
-        </p>
-        <p class="text-gray-400 text-sm italic">Stay active — the more you read and engage, the more tokens you’ll earn!</p>
+    <div id="winModal" class="modal">
+        <h1 id="winText">WINS!</h1>
+        <button onclick="location.reload()">PLAY AGAIN</button>
     </div>
 
-    <!-- Countdown Card -->
-    <div class="card p-6 mb-8 rounded-xl border-l-4 border-yellow-500 text-center">
-        <p class="text-gray-400 text-sm mb-2 uppercase tracking-wide">Countdown to TGE</p>
-        <p id="tge-countdown" class="newspaper-title text-5xl text-yellow-400">--:--:--:--</p>
-    </div>
+    <div id="player-id-tag"></div>
 
-    <!-- Points Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div class="card p-6 rounded-xl border-b-4 border-sky-500 shadow-md">
-            <p class="text-sm text-gray-400">Pending VCNEWS Points</p>
-            <p id="tge-pending-points" class="newspaper-title text-5xl text-sky-500 mt-2">0</p>
-        </div>
-        <div class="card p-6 rounded-xl border-b-4 border-green-500 shadow-md">
-            <p class="text-sm text-gray-400">Estimated Conversion Value</p>
-            <p id="tge-estimated-value" class="newspaper-title text-5xl text-green-400 mt-2">0 Tokens</p>
-        </div>
-    </div>
-
-    <!-- Activity Graph -->
-    <div class="card p-6 rounded-xl mb-8 border-l-4 border-sky-500 shadow-lg">
-        <p class="text-lg font-bold text-sky-400 mb-3">Your Accumulation History</p>
-        <canvas id="tge-chart" height="120"></canvas>
-    </div>
-
-    <!-- Call to Action -->
-    <div class="text-center mt-8">
-        <button onclick="navigate('feed')" class="bg-green-600 hover:bg-green-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300">
-            Read More Articles to Earn Points
-        </button>
-    </div>
-</div>
-
-<!-- --------------------------------- -->
-<!-- SCRIPT: TGE DASHBOARD LOGIC -->
-<!-- --------------------------------- -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script type="module">
-    async function fetchTGEDashboard() {
-        if (!supabaseClient || !userId) return;
-
-        const pendingPointsEl = document.getElementById('tge-pending-points');
-        const estimatedValueEl = document.getElementById('tge-estimated-value');
-        const countdownEl = document.getElementById('tge-countdown');
-
-        try {
-            // 1️⃣ Fetch total user points
-            const { data: balanceData, error: balanceError } = await supabaseClient
-                .from('user_balances')
-                .select('total_points')
-                .eq('user_id', userId)
-                .single();
-            
-            if (balanceError && balanceError.code !== 'PGRST116') throw balanceError;
-
-            const pendingPoints = balanceData ? balanceData.total_points : 0;
-            pendingPointsEl.textContent = pendingPoints.toLocaleString();
-            estimatedValueEl.textContent = `${pendingPoints.toLocaleString()} Tokens`;
-
-            // 2️⃣ Countdown Timer Logic
-            const TGE_DATE = new Date("2025-12-01T00:00:00Z"); // change to your actual TGE
-            updateCountdown(countdownEl, TGE_DATE);
-            setInterval(() => updateCountdown(countdownEl, TGE_DATE), 1000);
-
-            // 3️⃣ Fetch user accumulation history
-            const { data: historyData, error: historyError } = await supabaseClient
-                .from('user_activity_log')
-                .select('created_at, points_awarded')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: true });
-
-            if (historyError) throw historyError;
-
-            // Group by day
-            const dailyTotals = {};
-            historyData.forEach(entry => {
-                const day = new Date(entry.created_at).toISOString().slice(0, 10);
-                dailyTotals[day] = (dailyTotals[day] || 0) + entry.points_awarded;
-            });
-
-            const labels = Object.keys(dailyTotals);
-            const values = Object.values(dailyTotals);
-
-            // 4️⃣ Draw chart
-            const ctx = document.getElementById('tge-chart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Daily Points Earned',
-                        data: values,
-                        borderColor: '#38bdf8',
-                        backgroundColor: 'rgba(56,189,248,0.2)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        fill: true,
-                    }]
-                },
-                options: {
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { ticks: { color: '#9ca3af' } },
-                        y: { ticks: { color: '#9ca3af' } }
-                    }
-                }
-            });
-
-        } catch (error) {
-            showMessage(`Error loading TGE dashboard: ${error.message}`, 'error');
-            console.error("TGE Fetch Error:", error);
-        }
-    }
-
-    function updateCountdown(el, targetDate) {
-        const now = new Date().getTime();
-        const distance = targetDate.getTime() - now;
-
-        if (distance <= 0) {
-            el.textContent = "TGE LIVE!";
-            el.classList.add('text-green-500');
-            return;
-        }
-
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
-        const minutes = Math.floor((distance / (1000 * 60)) % 60);
-        const seconds = Math.floor((distance / 1000) % 60);
-
-        el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-    }
-
-    // hook into SPA navigation
-    if (typeof navigate === 'function') {
-        const oldNavigate = navigate;
-        navigate = function (viewId) {
-            oldNavigate(viewId);
-            if (viewId === 'tge') fetchTGEDashboard();
-        };
-    }
-</script>
-
-            <!-- --------------------------------- -->
-            <!-- VIEW 6: ABOUT / INFO PAGE -->
-            <!-- --------------------------------- -->
-            <div id="view-about" class="view-content hidden">
-                <h2 class="newspaper-title text-3xl mb-6 border-b border-gray-700 pb-3">About VCNEWS: Chronos Chronicles</h2>
-                
-                <div class="card p-6 rounded-xl shadow-2xl space-y-6">
-                    <p class="text-lg font-bold text-sky-500">Project Overview</p>
-                    <p class="text-gray-300">
-                        VCNEWS is the official news and engagement platform for the Chronos Chronicles token project. Our mission is to incentivize community participation and knowledge acquisition through daily news consumption and interactive quests. 
-                        Users "mine" VCNEWS points by reading articles and completing tasks.
-                    </p>
-                    
-                    <p class="text-lg font-bold text-sky-500 pt-4 border-t border-gray-700">Tokenomics & Points</p>
-                    <ul class="list-disc list-inside space-y-2 text-gray-300 ml-4">
-                        <li>**1 VCNEWS Point** is equivalent to **1 Real Token** at the Token Generation Event (TGE).</li>
-                        <li>**Total Daily Budget:** Points awarded globally are capped to enforce scarcity and control supply.</li>
-                        <li>**Earning:** Points are earned by reading news articles (Article Claim) and completing Daily Quests (Quest Claim).</li>
-                    </ul>
-
-                    <p class="text-lg font-bold text-sky-500 pt-4 border-t border-gray-700">Connect with Chronos</p>
-                    <div class="flex space-x-6 text-xl">
-                        <a href="#" target="_blank" class="text-gray-400 hover:text-sky-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            Whitepaper
-                        </a>
-                        <a href="#" target="_blank" class="text-gray-400 hover:text-sky-500 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2.04c-5.5 0-9.96 4.46-9.96 9.96s4.46 9.96 9.96 9.96c5.5 0 9.96-4.46 9.96-9.96s-4.46-9.96-9.96-9.96zm4.95 6.01l-1.41 1.41c.2.4.32.85.32 1.33 0 2.2-1.79 4-4 4s-4-1.8-4-4c0-.48.12-.93.32-1.33l-1.41-1.41c-.68 1.05-1.09 2.27-1.09 3.59 0 4.14 3.36 7.5 7.5 7.5s7.5-3.36 7.5-7.5c0-1.32-.41-2.54-1.09-3.59z"/>
-                            </svg>
-                            Community
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-        <!-- Footer -->
-        <footer class="mt-12 pt-4 text-center text-xs text-gray-600 border-t border-gray-800">
-            Chronos Chronicles: VCNEWS Point Mining Platform
-        </footer>
-
-    </div>
-
-    <!-- ----------------------------------------------------- -->
-    <!-- 2. CORE JAVASCRIPT LOGIC (SUPABASE ONLY) -->
-    <!-- ----------------------------------------------------- -->
     <script type="module">
-        // --- Global Variables ---
-        let supabaseClient;
-        let userId = null; 
-        let userEmail = null;
-        
-        // --- DOM Elements ---
-        const views = {
-            login: document.getElementById('view-login'),
-            feed: document.getElementById('view-feed'),
-            article: document.getElementById('view-article'),
-            quests: document.getElementById('view-quests'),
-            profile: document.getElementById('view-profile'),
-            about: document.getElementById('view-about'),
-        };
-        const messageBox = document.getElementById('message-box');
-        
-        // --- Utility Functions ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, updateDoc, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        /** Displays a temporary, dismissible message */
-        function showMessage(msg, type = 'info') {
-            let bgColor = 'bg-sky-600'; // Default info
-            if (type === 'success') bgColor = 'bg-green-600';
-            if (type === 'error') bgColor = 'bg-red-600';
+        // Global Variables
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'stickman-duel';
 
-            messageBox.textContent = msg;
-            messageBox.className = `fixed top-0 left-1/2 -translate-x-1/2 p-4 mt-2 rounded-lg z-50 transition-opacity duration-300 ${bgColor} text-white shadow-xl`;
-            messageBox.classList.remove('hidden');
-            messageBox.classList.add('opacity-100');
+        // Constants
+        const GRAVITY = 0.5;
+        const FRICTION = 0.8;
+        const JUMP_STRENGTH = -12;
+        const SPEED = 0.8;
+        const MAX_SPEED = 6;
+        const BULLET_SPEED = 12;
 
-            setTimeout(() => {
-                messageBox.classList.remove('opacity-100');
-                messageBox.classList.add('opacity-0');
-                setTimeout(() => messageBox.classList.add('hidden'), 300);
-            }, 5000);
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 1000;
+        canvas.height = 500;
+
+        // State
+        let myPlayerNum = null;
+        let user = null;
+        let gameActive = false;
+        let bullets = [];
+        const keys = {};
+
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        class Bullet {
+            constructor(x, y, dir, owner) {
+                this.x = x;
+                this.y = y;
+                this.vx = dir * BULLET_SPEED;
+                this.owner = owner;
+                this.radius = 4;
+                this.active = true;
+            }
+            update() {
+                this.x += this.vx;
+                if (this.x < 0 || this.x > canvas.width) this.active = false;
+            }
+            draw() {
+                ctx.fillStyle = this.owner === 1 ? '#60a5fa' : '#f87171';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
-        /** Handles SPA view switching */
-        window.navigate = function(viewId, data = null) {
-            // Protect authenticated views
-            if (!userId && viewId !== 'login' && viewId !== 'about') {
-                showMessage("Please sign in to access this page.", 'error');
-                viewId = 'login';
+        class Stickman {
+            constructor(id, x, color) {
+                this.id = id;
+                this.x = x;
+                this.y = canvas.height - 40;
+                this.vx = 0;
+                this.vy = 0;
+                this.color = color;
+                this.health = 100;
+                this.facing = id === 1 ? 1 : -1;
+                this.canShoot = true;
+                this.isJumping = false;
             }
-            
-            Object.values(views).forEach(el => el.classList.add('hidden'));
-            views[viewId].classList.remove('hidden');
 
-            // Trigger specific page load logic
-            if (viewId === 'feed') fetchNewsFeed();
-            if (viewId === 'profile') fetchUserProfile();
-            if (viewId === 'quests') fetchDailyQuest();
-            if (viewId === 'article' && data) renderArticle(data);
-            if (viewId === 'login') updateLoginUI(); 
+            updateLocal() {
+                const left = keys['KeyA'] || keys['ArrowLeft'];
+                const right = keys['KeyD'] || keys['ArrowRight'];
+                const jump = keys['KeyW'] || keys['ArrowUp'] || keys['Space'];
+                const shoot = keys['KeyV'] || keys['KeyM'];
 
-            window.scrollTo(0, 0); // Scroll to top on navigation
-        }
-
-        /** Renders complex JSONB content from Supabase as HTML */
-        function renderContentBlocks(contentJson) {
-            // Ensure contentJson is an array before trying to iterate over it
-            if (!Array.isArray(contentJson)) {
-                console.error("Article content is not an array:", contentJson);
-                return '<p class="text-red-400">Error: Article content format is invalid.</p>';
-            }
-            
-            let html = '';
-            contentJson.forEach(block => {
-                if (block.type === 'paragraph' && block.text) {
-                    html += `<p class="mb-4 text-gray-300">${block.text}</p>`;
+                if (left) { this.vx -= SPEED; this.facing = -1; }
+                if (right) { this.vx += SPEED; this.facing = 1; }
+                if (jump && !this.isJumping) { this.vy = JUMP_STRENGTH; this.isJumping = true; }
+                
+                if (shoot && this.canShoot) {
+                    this.canShoot = false;
+                    bullets.push(new Bullet(this.x + (this.facing * 20), this.y - 30, this.facing, this.id));
+                    setTimeout(() => this.canShoot = true, 300);
                 }
+
+                this.vy += GRAVITY;
+                this.vx *= FRICTION;
+                if (Math.abs(this.vx) > MAX_SPEED) this.vx = Math.sign(this.vx) * MAX_SPEED;
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.y > canvas.height - 40) {
+                    this.y = canvas.height - 40;
+                    this.vy = 0;
+                    this.isJumping = false;
+                }
+                if (this.x < 20) this.x = 20;
+                if (this.x > canvas.width - 20) this.x = canvas.width - 20;
+            }
+
+            draw() {
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                const x = this.x;
+                const y = this.y;
+
+                ctx.beginPath(); ctx.arc(x, y - 50, 8, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y - 42); ctx.lineTo(x, y - 20); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y - 35); ctx.lineTo(x + (this.facing * 15), y - 30); ctx.stroke();
+                ctx.fillStyle = '#94a3b8'; ctx.fillRect(x + (this.facing * 12), y - 34, this.facing * 10, 5);
+                
+                const legWalk = Math.sin(Date.now() / 100) * (Math.abs(this.vx) * 2);
+                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x - 8 + legWalk, y); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x, y - 20); ctx.lineTo(x + 8 - legWalk, y); ctx.stroke();
+            }
+        }
+
+        let p1 = new Stickman(1, 150, '#3b82f6');
+        let p2 = new Stickman(2, 850, '#ef4444');
+
+        async function initGame() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                onAuthStateChanged(auth, (u) => {
+                    if (u) {
+                        user = u;
+                        document.getElementById('player-id-tag').innerText = `Your ID: ${u.uid}`;
+                        joinLobby();
+                    }
+                });
+            } catch (err) {
+                document.getElementById('status-msg').innerText = "Auth Error. Please refresh.";
+            }
+        }
+
+        function joinLobby() {
+            // RULE 1: Even number of segments required for doc reference
+            const lobbyDoc = doc(db, 'artifacts', appId, 'public', 'data', 'lobby', 'room1');
+            
+            onSnapshot(lobbyDoc, async (snap) => {
+                const data = snap.data() || { p1: null, p2: null };
+                
+                if (!myPlayerNum) {
+                    if (!data.p1 || data.p1 === user.uid) {
+                        myPlayerNum = 1;
+                        await setDoc(lobbyDoc, { ...data, p1: user.uid }, { merge: true });
+                        document.getElementById('p1-label').innerText = "PLAYER 1 (YOU)";
+                    } else if (!data.p2 || data.p2 === user.uid) {
+                        myPlayerNum = 2;
+                        await setDoc(lobbyDoc, { ...data, p2: user.uid }, { merge: true });
+                        document.getElementById('p2-label').innerText = "PLAYER 2 (YOU)";
+                    } else {
+                        document.getElementById('status-msg').innerText = "Room Full. Spectating...";
+                        myPlayerNum = 0; 
+                    }
+                }
+
+                if (data.p1 && data.p2) {
+                    document.getElementById('status-msg').style.display = 'none';
+                    if (!gameActive) {
+                        gameActive = true;
+                        gameLoop();
+                        syncState();
+                    }
+                } else {
+                    document.getElementById('status-msg').innerText = "Waiting for opponent...";
+                }
+            }, (err) => {
+                document.getElementById('status-msg').innerText = "Lobby Error: " + err.message;
             });
-            return html;
         }
 
-        /** Formats date to a readable string */
-        function formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return new Date(dateString).toLocaleDateString(undefined, options);
-        }
-
-        // --- Authentication UI/State Management ---
-
-        /** Toggles between Sign In and Register mode */
-        window.toggleAuthMode = function() {
-            isRegisterMode = !isRegisterMode;
-            const title = document.getElementById('auth-form-title');
-            const button = document.getElementById('supabase-auth-button');
-            const toggleText = document.getElementById('auth-toggle-text');
-            const toggleLink = document.getElementById('auth-toggle-link');
-            const subtitle = document.getElementById('auth-subtitle');
-            const usernameField = document.getElementById('username-field');
-
-            if (isRegisterMode) {
-                title.textContent = 'Create Account';
-                button.textContent = 'Register';
-                toggleText.textContent = 'Already have an account?';
-                toggleLink.textContent = 'Sign In';
-                subtitle.textContent = 'Register to start your mining journey.';
-                usernameField.classList.remove('hidden');
-            } else {
-                title.textContent = 'Sign In';
-                button.textContent = 'Sign In';
-                toggleText.textContent = 'Don\'t have an account?';
-                toggleLink.textContent = 'Register';
-                subtitle.textContent = 'Sign in to track your points and start mining VCNEWS.';
-                usernameField.classList.add('hidden');
-            }
-        }
-
-        /** Updates the Login/Logout UI based on current session */
-        function updateLoginUI() {
-            const isLoggedIn = !!userId;
+        function syncState() {
+            if (myPlayerNum === 0 || !user) return;
             
-            document.getElementById('auth-forms').classList.toggle('hidden', isLoggedIn);
-            document.getElementById('user-info').classList.toggle('hidden', !isLoggedIn);
-            document.getElementById('logout-link').classList.toggle('hidden', !isLoggedIn);
+            // Fixed path to ensure even segments (6 segments total)
+            const playerDoc = doc(db, 'artifacts', appId, 'public', 'data', 'players', `p${myPlayerNum}`);
             
-            if (isLoggedIn) {
-                 document.getElementById('user-info').textContent = userEmail ? 
-                    `Signed in as: ${userEmail}` :
-                    `Signed in.`;
-                 document.getElementById('profile-email').textContent = userEmail;
-            }
-        }
-
-        // --- Supabase Authentication Functions ---
-
-        /** Main handler for the Supabase Sign In/Register button */
-        window.handleSupabaseAuth = async function() {
-            if (!supabaseClient) {
-                 showMessage("Supabase client is not configured/initialized. Please check console for details.", 'error');
-                 return;
-            }
-            
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
-            const username = document.getElementById('auth-username').value;
-            
-            if (!email || !password) {
-                showMessage('Please enter both email and password.', 'error');
-                return;
-            }
-
-            const button = document.getElementById('supabase-auth-button');
-            const originalText = button.textContent;
-            button.disabled = true;
-            button.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>LOADING...</span>';
-            
-            try {
-                if (isRegisterMode) {
-                    await supabaseSignUp(email, password, username);
-                } else {
-                    await supabaseSignIn(email, password);
-                }
-            } finally {
-                button.textContent = originalText;
-                button.disabled = false;
-            }
-        }
-
-        /** Supabase Sign Up */
-        async function supabaseSignUp(email, password, username) {
-            const { data, error } = await supabaseClient.auth.signUp({ email, password, options: { data: { username: username || email.split('@')[0] } } });
-            
-            if (error) {
-                showMessage(`Registration failed: ${error.message}`, 'error');
-                return;
-            }
-
-            if (data.user) {
-                // Supabase typically requires email confirmation. 
-                showMessage('Registration successful! Check your email to confirm your account, then sign in.', 'success');
-                toggleAuthMode(); // Switch to sign-in mode
-            } else if (data.session === null) {
-                // If the user is created but no session is returned (i.e., email confirmation required)
-                showMessage('Registration successful! A confirmation link has been sent to your email. Please click it to sign in.', 'success');
-                toggleAuthMode();
-            }
-        }
-
-        /** Supabase Sign In */
-        async function supabaseSignIn(email, password) {
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                showMessage(`Login failed: ${error.message}`, 'error');
-                return;
-            }
-
-            if (data.user) {
-                userId = data.user.id;
-                userEmail = data.user.email;
-                showMessage("Login successful! Redirecting to feed...", 'success');
-                navigate('feed');
-            }
-        }
-        
-        /** Triggered by the UI logout button */
-        window.logout = async function() {
-            try {
-                await supabaseClient.auth.signOut(); 
-
-                userId = null;
-                userEmail = null;
-
-                showMessage("You have been signed out.", 'info');
-                navigate('login');
-            } catch (error) {
-                showMessage("Logout failed.", 'error');
-                console.error("Logout Error:", error);
-            }
-        }
-
-        // --- Initialization (Supabase Only) ---
-
-        /** Initializes Supabase client and sets up auth listener */
-        async function initApp() {
-            try {
-                // 1. Initialize Supabase Client
-                supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                console.log("Supabase Client Initialized.");
-                
-                // 2. Set up Auth listener
-                const { data: { session } } = await supabaseClient.auth.getSession();
-                
-                if (session && session.user) {
-                    userId = session.user.id;
-                    userEmail = session.user.email;
-                    updateLoginUI();
-                    navigate('feed');
-                } else {
-                    // Start on the login page if not authenticated
-                    navigate('login');
-                }
-
-                supabaseClient.auth.onAuthStateChange((event, session) => {
-                    if (session && session.user) {
-                        userId = session.user.id;
-                        userEmail = session.user.email;
-                        updateLoginUI();
-                        if (event === 'SIGNED_IN') { navigate('feed'); } // Only navigate on fresh sign-in
-                    } else if (event === 'SIGNED_OUT') {
-                        userId = null;
-                        userEmail = null;
-                        updateLoginUI();
-                        navigate('login');
-                    }
+            setInterval(async () => {
+                const myStickman = myPlayerNum === 1 ? p1 : p2;
+                await setDoc(playerDoc, {
+                    x: myStickman.x,
+                    y: myStickman.y,
+                    facing: myStickman.facing,
+                    vx: myStickman.vx,
+                    health: myStickman.health,
+                    lastUpdate: Date.now()
                 });
+            }, 60);
 
-            } catch (error) {
-                console.error("Initialization Error:", error);
-                showMessage(`Initialization failed: ${error.message}`, 'error');
-            }
-        }
-
-        // --- Data Fetching & Rendering ---
-
-        async function fetchNewsFeed() {
-            if (!supabaseClient) return;
-
-            document.getElementById('news-list').innerHTML = '';
-            document.getElementById('feed-loading').classList.remove('hidden');
-
-            try {
-                const { data, error } = await supabaseClient
-                    .from('news_articles')
-                    .select('*')
-                    .order('date_published', { ascending: false })
-                    .limit(6);
-
-                document.getElementById('feed-loading').classList.add('hidden');
-                
-                if (error) throw error;
-                
-                if (data.length === 0) {
-                    document.getElementById('news-list').innerHTML = '<p class="text-center col-span-full text-gray-500 mt-8">No articles published yet. Please seed the database.</p>';
-                    return;
-                }
-
-                data.forEach(article => {
-                    const card = document.createElement('div');
-                    card.className = 'card p-6 rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer flex flex-col justify-between transform hover:scale-[1.01] border border-gray-700';
-                    card.onclick = () => navigate('article', article);
-                    
-                    const imageUrl = article.featured_image_url || `https://placehold.co/600x300/1e293b/94a3b8?text=${article.category.toUpperCase()}`;
-
-                    card.innerHTML = `
-                        <div>
-                            <img src="${imageUrl}" alt="Featured image for ${article.title}" class="rounded-lg mb-4 w-full h-48 object-cover">
-                            <span class="text-xs font-semibold text-sky-400 uppercase">${article.category}</span>
-                            <h3 class="newspaper-title text-2xl mt-1 mb-2 leading-tight">${article.title}</h3>
-                            <p class="text-gray-400 text-sm mb-4 line-clamp-3">${article.introduction}</p>
-                        </div>
-                        <div class="flex justify-between items-center pt-2 border-t border-gray-700">
-                            <span class="text-xs text-gray-500">${formatDate(article.date_published)}</span>
-                            <span class="text-sm font-bold text-green-400">${article.vcnews_claim_points} VCNEWS</span>
-                        </div>
-                    `;
-                    document.getElementById('news-list').appendChild(card);
-                });
-
-            } catch (error) {
-                document.getElementById('feed-loading').classList.add('hidden');
-                showMessage(`Error loading feed: ${error.message}`, 'error');
-                console.error("Feed Fetch Error:", error);
-            }
-        }
-        function renderArticle(article) {
-            document.getElementById('article-title').textContent = article.title;
-            document.getElementById('article-date-category').innerHTML = `
-                <span class="uppercase font-semibold text-sky-400">${article.category}</span>
-                <span>•</span>
-                <span>${formatDate(article.date_published)}</span>
-            `;
-            document.getElementById('article-image').src = article.featured_image_url || `https://placehold.co/800x400/1e293b/94a3b8?text=${article.category.toUpperCase()}`;
-            document.getElementById('article-image').style.display = article.featured_image_url ? 'block' : 'none';
-            document.getElementById('article-intro').textContent = article.introduction;
+            const opponentNum = myPlayerNum === 1 ? 2 : 1;
+            const opponentDoc = doc(db, 'artifacts', appId, 'public', 'data', 'players', `p${opponentNum}`);
             
-            document.getElementById('article-content').innerHTML = renderContentBlocks(article.main_content);
-
-            document.getElementById('claim-points').textContent = article.vcnews_claim_points;
-            document.getElementById('claim-button').onclick = () => claimPoints('article_claim', article.vcnews_claim_points, article.id);
-
-            let sourceHtml = '';
-            if (article.sources && article.sources.length > 0) {
-                sourceHtml += `<p class="font-bold">Sources:</p>`;
-                article.sources.forEach(url => {
-                    try {
-                        sourceHtml += `<a href="${url}" target="_blank" class="block text-sky-400 hover:underline">${new URL(url).hostname}</a>`;
-                    } catch (e) {
-                         sourceHtml += `<span class="block text-red-400">Invalid URL: ${url}</span>`;
-                    }
-                });
-            }
-            document.getElementById('article-sources').innerHTML = sourceHtml;
+            onSnapshot(opponentDoc, (snap) => {
+                const data = snap.data();
+                if (data) {
+                    const opponent = myPlayerNum === 1 ? p2 : p1;
+                    opponent.x = data.x;
+                    opponent.y = data.y;
+                    opponent.facing = data.facing;
+                    opponent.vx = data.vx;
+                    opponent.health = data.health;
+                    document.getElementById(`p${opponentNum}-health`).style.width = opponent.health + '%';
+                }
+            }, (err) => console.error("Sync Error:", err));
         }
 
-        async function fetchDailyQuest() {
-             if (!supabaseClient) return;
-
-            document.getElementById('quest-card').innerHTML = `<div id="quest-loading" class="text-center text-gray-500">Loading daily quest...</div>`;
-            try {
-                // Fetch the single active quest
-                const { data: questData, error: questError } = await supabaseClient
-                    .from('daily_quests')
-                    .select('id, title, quest_points, tweet_url')
-                    .eq('is_active', true)
-                    .order('created_at', { ascending: false })
-                    .limit(1);
-
-                if (questError) throw questError;
-                
-                if (questData.length === 0) {
-                    document.getElementById('quest-card').innerHTML = `
-                        <p class="text-yellow-500 font-bold">No Active Quest Today</p>
-                        <p class="text-gray-400 mt-2">Check back tomorrow for a new quest opportunity!</p>
-                    `;
-                    return;
-                }
-
-                const quest = questData[0];
-                
-                // Check completion using the quest_id and user_id 
-                const { data: completionData, error: completionError } = await supabaseClient
-                    .from('user_quest_completion')
-                    .select('quest_id')
-                    .eq('user_id', userId)
-                    .eq('quest_id', quest.id)
-                    .eq('completed_date', new Date().toISOString().slice(0, 10)); // YYYY-MM-DD format check
-
-                if (completionError) throw completionError;
-
-                let buttonHtml;
-                if (completionData.length > 0) {
-                    buttonHtml = `
-                        <button class="bg-gray-600 text-white font-bold py-3 px-8 rounded-full cursor-not-allowed">
-                            Quest Completed Today!
-                        </button>
-                    `;
-                } else {
-                    buttonHtml = `
-                        <button onclick="claimPoints('daily_quest', ${quest.quest_points}, '${quest.id}')" class="bg-yellow-600 hover:bg-yellow-700 text-black font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-[1.02]">
-                            I've Submitted My Comment (Claim ${quest.quest_points} VCNEWS)
-                        </button>
-                    `;
-                }
-
-                document.getElementById('quest-card').innerHTML = `
-                    <p class="text-sm font-bold text-yellow-500 uppercase">Active Daily Quest</p>
-                    <h3 class="newspaper-title text-3xl my-2">${quest.title}</h3>
-                    <p class="text-gray-300 mb-6">Your task is to comment on the target tweet below, then submit proof here.</p>
-                    <div class="mb-8 p-3 bg-gray-800 rounded-lg">
-                        <p class="text-sm text-gray-400 mb-2">Target Tweet URL:</p>
-                        <a href="${quest.tweet_url}" target="_blank" class="text-sky-400 hover:underline break-all text-lg">${quest.tweet_url}</a>
-                    </div>
-                    ${buttonHtml}
-                `;
-
-            } catch (error) {
-                showMessage(`Error loading quests: ${error.message}`, 'error');
-                console.error("Quest Fetch Error:", error);
-                document.getElementById('quest-card').innerHTML = `<p class="text-red-500">Failed to load quest.</p>`;
-            }
+        function checkCollision(b, p) {
+            const dx = b.x - p.x;
+            const dy = b.y - (p.y - 30);
+            return Math.sqrt(dx*dx + dy*dy) < 25;
         }
 
-        async function fetchUserProfile() {
-             if (!supabaseClient) return;
+        function gameLoop() {
+            if (!gameActive) return;
 
-            document.getElementById('activity-log').innerHTML = '<p class="text-gray-500">Loading activity...</p>';
-            document.getElementById('leaderboard-container').innerHTML = '<div class="text-center text-gray-500">Loading leaderboard...</div>';
-            
-            try {
-                // 1. Fetch User Balance (Used for point display)
-                const { data: balanceData, error: balanceError } = await supabaseClient
-                    .from('user_balances')
-                    .select('total_points')
-                    .eq('user_id', userId)
-                    .single();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (balanceError && balanceError.code !== 'PGRST116') { 
-                    throw balanceError;
-                }
+            // Floor
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(0, canvas.height - 40, canvas.width, 40);
 
-                const totalPoints = balanceData ? balanceData.total_points : 0;
-                document.getElementById('profile-points').textContent = totalPoints.toLocaleString();
-                document.getElementById('leaderboard-user-points').textContent = totalPoints.toLocaleString() + ' VCNEWS';
+            if (myPlayerNum === 1) p1.updateLocal();
+            if (myPlayerNum === 2) p2.updateLocal();
 
-
-                // 2. Fetch Leaderboard Data (Top 5 + User Rank)
-                const { data: leaderboardData, error: leaderboardError } = await supabaseClient
-                    .from('v_leaderboard')
-                    .select('user_id, total_points, rank')
-                    .limit(5); 
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                const b = bullets[i];
+                b.update();
                 
-                if (leaderboardError) throw leaderboardError;
-
-                // 2b. Find the user's specific rank 
-                const { data: userRankData } = await supabaseClient
-                    .from('v_leaderboard')
-                    .select('rank')
-                    .eq('user_id', userId)
-                    .single();
-
-                const userRank = userRankData ? userRankData.rank : 'N/A';
-                document.getElementById('leaderboard-user-rank').textContent = userRank.toLocaleString();
-
-                // 2c. Render Leaderboard
-                document.getElementById('leaderboard-container').innerHTML = leaderboardData.map((miner, index) => {
-                    const isCurrentUser = miner.user_id === userId;
-                    const rankClass = index === 0 ? 'text-yellow-500' : index === 1 ? 'text-gray-400' : index === 2 ? 'text-orange-400' : 'text-gray-500';
-                    const name = isCurrentUser ? 'You (Current Miner)' : `Miner ${index + 1}`;
-                    const borderClass = isCurrentUser ? 'border-l-4 border-sky-500' : 'border-l-4 border-gray-700';
-
-                    return `
-                        <div class="flex justify-between items-center card p-3 rounded-lg ${borderClass}">
-                            <span class="font-bold ${rankClass}">#${miner.rank}</span>
-                            <span class="text-lg ${isCurrentUser ? 'font-bold' : ''}">${name}</span>
-                            <span class="font-bold text-green-400">${miner.total_points.toLocaleString()} VCNEWS</span>
-                        </div>
-                    `;
-                }).join('');
-
-
-                // 3. Fetch Recent Activity
-                const { data: activityData, error: activityError } = await supabaseClient
-                    .from('user_activity_log')
-                    .select('created_at, action_type, points_awarded')
-                    .eq('user_id', userId)
-                    .order('created_at', { ascending: false })
-                    .limit(10);
-
-                if (activityError) throw activityError;
-
-                if (activityData.length === 0) {
-                    document.getElementById('activity-log').innerHTML = '<p class="text-gray-500">No activity recorded yet.</p>';
-                    return;
+                const opponent = myPlayerNum === 1 ? p2 : p1;
+                if (b.owner === myPlayerNum && checkCollision(b, opponent)) {
+                    opponent.health -= 5;
+                    b.active = false;
                 }
 
-                document.getElementById('activity-log').innerHTML = activityData.map(log => {
-                    const actionText = log.action_type.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-                    return `
-                        <div class="flex justify-between items-center card p-3 rounded-lg transition-transform transform hover:translate-x-1 border-l-4 border-green-500">
-                            <span class="text-gray-300 font-medium">${actionText}</span>
-                            <span class="font-bold text-green-400">+${log.points_awarded.toLocaleString()} VCNEWS</span>
-                            <span class="text-xs text-gray-500">${new Date(log.created_at).toLocaleDateString()}</span>
-                        </div>
-                    `;
-                }).join('');
-
-            } catch (error) {
-                showMessage(`Error loading portfolio: ${error.message}`, 'error');
-                console.error("Profile Fetch Error:", error);
+                if (!b.active) bullets.splice(i, 1);
+                else b.draw();
             }
+
+            p1.draw();
+            p2.draw();
+
+            if (myPlayerNum !== 0) {
+                const me = myPlayerNum === 1 ? p1 : p2;
+                document.getElementById(`p${myPlayerNum}-health`).style.width = me.health + '%';
+            }
+
+            if (p1.health <= 0 || p2.health <= 0) {
+                gameActive = false;
+                const modal = document.getElementById('winModal');
+                const text = document.getElementById('winText');
+                modal.style.display = 'block';
+                text.innerText = p1.health <= 0 ? "PLAYER 2 WINS!" : "PLAYER 1 WINS!";
+                text.style.color = p1.health <= 0 ? '#ef4444' : '#3b82f6';
+            }
+
+            requestAnimationFrame(gameLoop);
         }
 
-        window.claimPoints = async function(actionType, points, contextId) {
-            if (!userId) {
-                showMessage("You must be logged in to claim points.", 'error');
-                return;
-            }
-            if (!supabaseClient) return;
-
-            const button = document.activeElement;
-            const originalText = button.innerHTML;
-            button.disabled = true;
-            button.innerHTML = '<span class="flex items-center justify-center"><svg class="animate-spin h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>PROCESSING...</span>';
-
-            try {
-                // IMPORTANT: Call the Supabase RPC function
-                const { data, error } = await supabaseClient.rpc('fn_award_points', {
-                    p_user_id: userId,
-                    p_action_type: actionType,
-                    p_requested_points: points,
-                    p_context_id: contextId
-                });
-
-                if (error) throw error;
-                
-                const result = data;
-                
-                if (result.awarded_points > 0) {
-                    showMessage(`Success! ${result.message} Awarded: ${result.awarded_points.toLocaleString()} VCNEWS!`, 'success');
-                } else {
-                    showMessage(`Claim Failed: ${result.message}`, 'error');
-                }
-
-                if (actionType === 'daily_quest') {
-                    fetchDailyQuest(); // Refresh quest view to show 'Completed' status
-                }
-
-                if (actionType === 'article_claim' && result.awarded_points > 0) {
-                     // Disable the article button after successful claim
-                     button.classList.add('bg-gray-600', 'cursor-not-allowed');
-                     button.classList.remove('bg-green-600', 'hover:bg-green-700');
-                     button.textContent = `Claimed ${result.awarded_points} VCNEWS`;
-                }
-
-            } catch (error) {
-                showMessage(`Transaction Error: ${error.message}`, 'error');
-                console.error("RPC Error:", error);
-            } finally {
-                if (button.textContent.includes('PROCESSING...')) {
-                    // Only restore the button if it wasn't permanently changed by a successful claim
-                    if (!button.classList.contains('cursor-not-allowed')) {
-                        button.innerHTML = originalText;
-                        button.disabled = false;
-                    }
-                }
-                
-                fetchUserProfile(); // Refresh profile/leaderboard
-            }
-        }
-        
-        // Initialize the Application on Window Load
-        window.onload = initApp;
-
+        window.onload = initGame;
     </script>
 </body>
 </html>
-
