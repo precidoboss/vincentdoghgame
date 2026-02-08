@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EROL Balance | Martian Chain</title>
+    <title>EROL Balance | Avalanche & Martian</title>
     <!-- Ethers.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
@@ -13,6 +13,7 @@
             --black: #0D0D0D;
             --gray: #1A1A1A;
             --text: #E0E0E0;
+            --blue: #0088ff;
         }
 
         body {
@@ -27,7 +28,6 @@
             overflow: hidden;
         }
 
-        /* Martian Landscape Background Effect */
         body::before {
             content: "";
             position: absolute;
@@ -44,7 +44,7 @@
             border-radius: 16px;
             padding: 2rem;
             width: 100%;
-            max-width: 400px;
+            max-width: 420px;
             text-align: center;
             box-shadow: 0 0 30px rgba(255, 102, 0, 0.2);
             z-index: 10;
@@ -65,7 +65,7 @@
             font-size: 0.75rem;
             background: #222;
             border: 1px solid #444;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
         }
 
         .status-online { border-color: #00FF00; color: #00FF00; }
@@ -75,14 +75,15 @@
             background: rgba(0,0,0,0.3);
             border-radius: 12px;
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             border-left: 4px solid var(--orange);
         }
 
         .label {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             color: #888;
             margin-bottom: 0.5rem;
+            text-transform: uppercase;
         }
 
         #balance {
@@ -98,56 +99,62 @@
             margin-left: 5px;
         }
 
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
         button {
             background-color: var(--orange);
             color: var(--black);
             border: none;
             padding: 12px 24px;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-weight: bold;
             border-radius: 8px;
             cursor: pointer;
-            width: 100%;
             transition: all 0.3s ease;
             text-transform: uppercase;
         }
 
         button:hover {
             background-color: var(--dark-orange);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 102, 0, 0.4);
+            transform: translateY(-1px);
         }
 
-        button:disabled {
-            background-color: #444;
-            color: #888;
-            cursor: not-allowed;
-        }
-
-        .info-link {
-            display: block;
-            margin-top: 1.5rem;
+        .btn-alt {
+            background-color: transparent;
             color: var(--orange);
-            text-decoration: none;
-            font-size: 0.8rem;
-            opacity: 0.7;
+            border: 1px solid var(--orange);
         }
 
-        .info-link:hover { opacity: 1; }
+        .btn-alt:hover {
+            background-color: rgba(255, 102, 0, 0.1);
+        }
 
         #address-display {
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #666;
             margin-top: 10px;
             word-break: break-all;
         }
 
         .error-msg {
+            background: rgba(255, 68, 68, 0.1);
             color: #ff4444;
+            padding: 10px;
+            border-radius: 6px;
             font-size: 0.8rem;
-            margin-top: 10px;
+            margin-top: 15px;
             display: none;
+        }
+
+        .network-indicator {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 15px;
         }
     </style>
 </head>
@@ -158,44 +165,65 @@
         <div id="connection-status" class="status-badge status-offline">Disconnected</div>
 
         <div class="balance-card">
-            <div class="label">EROL ASSET BALANCE</div>
+            <div class="label" id="token-label">EROL (AVAX C-CHAIN)</div>
             <div id="balance-container">
                 <span id="balance">0.00</span><span class="symbol">EROL</span>
             </div>
             <div id="address-display">No wallet detected</div>
         </div>
 
-        <button id="btn-connect">Connect Wallet</button>
+        <div class="button-group">
+            <button id="btn-connect">Connect & Refresh</button>
+            <button id="btn-switch" class="btn-alt">Switch to Martian L1</button>
+        </div>
+
         <div id="error-display" class="error-msg"></div>
 
-        <a href="https://explorer.martianchain.com/" target="_blank" class="info-link">View on Martian Explorer</a>
+        <div class="network-indicator">
+            Current Target: <span id="target-network">Avalanche C-Chain</span>
+        </div>
+        
+        <a href="https://snowtrace.io/" id="explorer-link" target="_blank" class="info-link" style="display:block; margin-top:15px; color:var(--orange); font-size:0.8rem; text-decoration:none;">View Explorer</a>
     </div>
 
     <script>
-        // CONFIGURATION
-        const MARTIAN_CONFIG = {
-            chainId: "0x7EB", // 2027 in Hex
-            chainName: "Martian Chain",
-            rpcUrl: "https://martian-rpc1.amichain.org/",
-            symbol: "EROL", 
-            explorer: "https://explorer.martianchain.com/",
-            tokenAddress: "0x963718ea6eb08553c1eb9376c0fe265bba6619a9"
+        const CONFIGS = {
+            AVAX: {
+                chainId: "0xA86A", // 43114
+                chainName: "Avalanche C-Chain",
+                rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+                symbol: "EROL",
+                explorer: "https://snowtrace.io/",
+                tokenAddress: "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037"
+            },
+            MARTIAN: {
+                chainId: "0x7EB", // 2027
+                chainName: "Martian Chain",
+                rpcUrl: "https://martian-rpc1.amichain.org/",
+                symbol: "EROL",
+                explorer: "https://explorer.martianchain.com/",
+                tokenAddress: "0x963718ea6eb08553c1eb9376c0fe265bba6619a9"
+            }
         };
 
         const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+        
+        let currentMode = 'AVAX';
+        let provider, signer, account;
 
         const btnConnect = document.getElementById('btn-connect');
+        const btnSwitch = document.getElementById('btn-switch');
         const balanceText = document.getElementById('balance');
         const statusBadge = document.getElementById('connection-status');
         const addressDisplay = document.getElementById('address-display');
         const errorDisplay = document.getElementById('error-display');
-
-        let provider, signer, account;
+        const targetLabel = document.getElementById('target-network');
+        const tokenLabel = document.getElementById('token-label');
+        const explorerLink = document.getElementById('explorer-link');
 
         async function init() {
             if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
-                
                 window.ethereum.on('accountsChanged', (accounts) => {
                     if (accounts.length > 0) {
                         account = accounts[0];
@@ -204,16 +232,13 @@
                         location.reload();
                     }
                 });
-
                 window.ethereum.on('chainChanged', () => location.reload());
             } else {
-                showError("MetaMask not found. Please install a Web3 wallet.");
-                btnConnect.innerText = "Wallet Required";
+                showError("MetaMask not found.");
             }
         }
 
         async function connect() {
-            // Check if window.ethereum exists to prevent "reading 'request' of undefined"
             if (!window.ethereum) {
                 showError("No wallet found. Please install MetaMask.");
                 return;
@@ -221,30 +246,28 @@
 
             try {
                 errorDisplay.style.display = "none";
-                
-                // Request accounts
                 const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 account = accounts[0];
 
-                // Check and Switch Network
+                const activeConfig = CONFIGS[currentMode];
                 const chainId = await window.ethereum.request({ method: 'eth_chainId' });
                 
-                if (chainId !== MARTIAN_CONFIG.chainId) {
+                if (chainId.toLowerCase() !== activeConfig.chainId.toLowerCase()) {
                     try {
                         await window.ethereum.request({
                             method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: MARTIAN_CONFIG.chainId }],
+                            params: [{ chainId: activeConfig.chainId }],
                         });
                     } catch (switchError) {
                         if (switchError.code === 4902) {
                             await window.ethereum.request({
                                 method: 'wallet_addEthereumChain',
                                 params: [{
-                                    chainId: MARTIAN_CONFIG.chainId,
-                                    chainName: MARTIAN_CONFIG.chainName,
-                                    rpcUrls: [MARTIAN_CONFIG.rpcUrl],
-                                    blockExplorerUrls: [MARTIAN_CONFIG.explorer],
-                                    nativeCurrency: { name: "EROL", symbol: "EROL", decimals: 18 }
+                                    chainId: activeConfig.chainId,
+                                    chainName: activeConfig.chainName,
+                                    rpcUrls: [activeConfig.rpcUrl],
+                                    blockExplorerUrls: [activeConfig.explorer],
+                                    nativeCurrency: { name: activeConfig.symbol, symbol: activeConfig.symbol, decimals: 18 }
                                 }],
                             });
                         } else {
@@ -252,24 +275,25 @@
                         }
                     }
                 }
-
                 updateUI();
             } catch (err) {
-                console.error(err);
-                showError("Connection failed: " + (err.message || "User rejected"));
+                showError("Failed: " + (err.message || "User rejected"));
             }
         }
 
         async function updateUI() {
             if (!account || !provider) return;
 
-            statusBadge.innerText = "Connected: Martian-L1";
+            const config = CONFIGS[currentMode];
+            statusBadge.innerText = `Connected: ${config.chainName}`;
             statusBadge.className = "status-badge status-online";
             addressDisplay.innerText = account;
-            btnConnect.innerText = "Refresh Balance";
+            tokenLabel.innerText = `EROL (${currentMode} NETWORK)`;
+            targetLabel.innerText = config.chainName;
+            explorerLink.href = config.explorer;
 
             try {
-                const contract = new ethers.Contract(MARTIAN_CONFIG.tokenAddress, ERC20_ABI, provider);
+                const contract = new ethers.Contract(config.tokenAddress, ERC20_ABI, provider);
                 const rawBalance = await contract.balanceOf(account);
                 const formatted = ethers.formatUnits(rawBalance, 18);
                 
@@ -279,7 +303,21 @@
                 });
             } catch (err) {
                 console.error(err);
-                showError("Error fetching balance. Verify your wallet is on the Martian Chain.");
+                showError("Balance Check Failed. Ensure your wallet is on the correct network.");
+                balanceText.innerText = "0.00";
+            }
+        }
+
+        function toggleMode() {
+            currentMode = currentMode === 'AVAX' ? 'MARTIAN' : 'AVAX';
+            btnSwitch.innerText = currentMode === 'AVAX' ? 'Switch to Martian L1' : 'Switch to Avalanche C';
+            errorDisplay.style.display = "none";
+            
+            if (account) {
+                connect(); // Re-trigger connection/switch logic
+            } else {
+                targetLabel.innerText = CONFIGS[currentMode].chainName;
+                tokenLabel.innerText = `EROL (${currentMode} TARGET)`;
             }
         }
 
@@ -289,12 +327,11 @@
         }
 
         btnConnect.addEventListener('click', () => {
-            if (!account) {
-                connect();
-            } else {
-                updateUI();
-            }
+            if (!account) connect();
+            else updateUI();
         });
+
+        btnSwitch.addEventListener('click', toggleMode);
 
         window.addEventListener('load', init);
     </script>
