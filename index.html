@@ -479,8 +479,82 @@
                 updateProfileUI();
                 return null;
             }
+        } 
+        
+        async function syncProfile() {
+            if (!userWallet) return null;
+            const addr = userWallet.toLowerCase();
+            try {
+                // Upsert handles both creation and retrieval in one atomic step
+                // We use onConflict to ensure we don't create duplicates and always get the ID back
+                const { data, error } = await sb.from('profiles')
+                    .upsert({ 
+                        wallet_address: addr 
+                    }, { 
+                        onConflict: 'wallet_address',
+                        ignoreDuplicates: false 
+                    })
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error("Supabase Sync Error:", error);
+                    throw error;
+                }
+
+                userProfile = data;
+                updateProfileUI();
+                console.log("Profile Synced:", userProfile.username, "ID:", userProfile.id);
+                return data;
+            } catch (e) {
+                console.error("Critical Sync Profile Error:", e);
+                // Fallback UI state but this will block hosting/joining
+                userProfile = { wallet_address: addr, username: 'RECON_PILOT', id: null };
+                updateProfileUI();
+                return null;
+            }
         }
 
+        async function hostGame() {
+            if (!userWallet) return connect();
+            
+            showLoading("VERIFYING_IDENT...");
+            // Ensure we have a fresh sync with a valid DB ID
+            const profile = await syncProfile();
+            
+            if (!profile || !profile.id) {
+                hideLoading();
+                console.error("Sync failed to return a valid UUID from Supabase.");
+                return showToast("PROFILE_SYNC_FAILED: RETRYING...", true);
+            }
+
+            const wagerInput = document.getElementById('wagerInput');
+            const wager = parseFloat(wagerInput.value);
+            
+            if (isNaN(wager) || wager <= 0) {
+                hideLoading();
+                return showToast("INVALID_WAGER", true);
+            }
+
+            showLoading("DEPLOYING_SIGNAL...");
+            try {
+                const { data, error } = await sb.from('matches').insert({
+                    host_id: profile.id,
+                    wager_amount: wager,
+                    status: 'waiting'
+                }).select().single();
+
+                if (error) throw error;
+                
+                currentMatchId = data.id;
+                document.getElementById('hostingStatus').classList.remove('hidden');
+                showToast("SIGNAL_DEPLOYED");
+                subscribeToMatch(data.id);
+            } catch (e) {
+                console.error("Match Deployment Error:", e);
+                showToast("DEPLOY_ERR: DATABASE_REJECTED", true);
+            } finally { hideLoading(); }
+        }
         async function hostGame() {
             if (!userWallet) return connect();
             showLoading("VERIFYING_IDENT...");
@@ -763,3 +837,4 @@
     </script>
 </body>
 </html>
+
