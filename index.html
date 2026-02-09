@@ -428,13 +428,12 @@
             const addr = userWallet.toLowerCase();
             
             try {
-                const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).maybeSingle();
+                // Force a selection to check if profile exists
+                let { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).maybeSingle();
                 
                 if (error) throw error;
 
-                if (data) {
-                    userProfile = data;
-                } else {
+                if (!data) {
                     const fallbackName = `PILOT_${addr.slice(2, 6).toUpperCase()}`;
                     const { data: newUser, error: upsertErr } = await sb.from('profiles').upsert({
                         wallet_address: addr,
@@ -442,15 +441,17 @@
                     }, { onConflict: 'wallet_address' }).select().single();
                     
                     if (upsertErr) throw upsertErr;
-                    userProfile = newUser;
+                    data = newUser;
                 }
                 
+                userProfile = data;
                 updateProfileUI();
+                return data;
             } catch (e) {
                 console.error("Sync Profile Error:", e);
-                // Assign temporary profile object to avoid crashes
                 userProfile = { wallet_address: addr, username: 'RECON_PILOT', id: null };
                 updateProfileUI();
+                return null;
             }
         }
 
@@ -471,15 +472,26 @@
 
         async function hostGame() {
             if (!userWallet) return connect();
-            if (!userProfile) await syncProfile();
             
+            // Re-sync profile to ensure host_id is valid for RLS
+            showLoading("VERIFYING_IDENT...");
+            const profile = await syncProfile();
+            
+            if (!profile || !profile.id) {
+                hideLoading();
+                return showToast("PROFILE_SYNC_FAILED", true);
+            }
+
             const wager = parseFloat(document.getElementById('wagerInput').value);
-            if (isNaN(wager) || wager <= 0) return showToast("INVALID_WAGER", true);
+            if (isNaN(wager) || wager <= 0) {
+                hideLoading();
+                return showToast("INVALID_WAGER", true);
+            }
 
             showLoading("PREPARING_SIGNAL...");
             try {
                 const { data, error } = await sb.from('matches').insert({
-                    host_id: userProfile?.id,
+                    host_id: profile.id,
                     wager_amount: wager,
                     status: 'waiting'
                 }).select().single();
@@ -490,7 +502,8 @@
                 showToast("SIGNAL_DEPLOYED");
                 subscribeToMatch(data.id);
             } catch (e) {
-                showToast("DEPLOY_ERR: " + e.message, true);
+                console.error("Deploy Error:", e);
+                showToast("DEPLOY_ERR: Check RLS or Balance", true);
             } finally {
                 hideLoading();
             }
@@ -498,12 +511,14 @@
 
         async function joinGame(matchId, wager) {
             if (!userWallet) return connect();
-            if (!userProfile) await syncProfile();
+            const profile = await syncProfile();
+            
+            if (!profile || !profile.id) return showToast("PROFILE_SYNC_FAILED", true);
 
             showLoading("JOINING_ENGAGEMENT...");
             try {
                 const { error } = await sb.from('matches').update({
-                    opponent_id: userProfile?.id,
+                    opponent_id: profile.id,
                     status: 'in_progress'
                 }).eq('id', matchId);
 
@@ -547,8 +562,9 @@
                 const match = await getMatch(currentMatchId);
                 const roleKey = userProfile.id === match.host_id ? 'host_move' : 'challenger_move';
                 
-                await sb.from('matches').update({ [roleKey]: selectedMoveIdx }).eq('id', currentMatchId);
-                
+                const { error } = await sb.from('matches').update({ [roleKey]: selectedMoveIdx }).eq('id', currentMatchId);
+                if (error) throw error;
+
                 document.getElementById('lockMoveBtn').disabled = true;
                 document.querySelectorAll('.move-card').forEach(c => c.classList.add('locked', 'opacity-50'));
                 document.getElementById('moveStatus').innerText = "Move Locked. Waiting for Revelation...";
