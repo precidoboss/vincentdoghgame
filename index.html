@@ -3,338 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EROL Balance | Avalanche & Martian</title>
-    <!-- Ethers.js library -->
+    <title>EROL Balance | Martian Chain</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-        :root {
-            --orange: #FF6600;
-            --dark-orange: #CC5200;
-            --black: #0D0D0D;
-            --gray: #1A1A1A;
-            --text: #E0E0E0;
-            --blue: #0088ff;
-        }
-
         body {
-            background-color: var(--black);
-            color: var(--text);
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
-
-        body::before {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 30%;
-            background: linear-gradient(to top, rgba(255, 102, 0, 0.1), transparent);
-            pointer-events: none;
+        .orange-glow {
+            box-shadow: 0 0 15px rgba(255, 126, 0, 0.3);
         }
-
-        .container {
-            background-color: var(--gray);
-            border: 1px solid var(--orange);
-            border-radius: 16px;
-            padding: 2rem;
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-            box-shadow: 0 0 30px rgba(255, 102, 0, 0.2);
-            z-index: 10;
-        }
-
-        h1 {
-            color: var(--orange);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            background: #222;
-            border: 1px solid #444;
-            margin-bottom: 1.5rem;
-        }
-
-        .status-online { border-color: #00FF00; color: #00FF00; }
-        .status-offline { border-color: #FF0000; color: #FF0000; }
-
-        .balance-card {
-            background: rgba(0,0,0,0.3);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            border-left: 4px solid var(--orange);
-        }
-
-        .label {
-            font-size: 0.75rem;
-            color: #888;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-        }
-
-        #balance {
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #FFF;
-            margin: 0;
-        }
-
-        .symbol {
-            color: var(--orange);
-            font-size: 1rem;
-            margin-left: 5px;
-        }
-
-        .button-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        button {
-            background-color: var(--orange);
-            color: var(--black);
-            border: none;
-            padding: 12px 24px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
+        .btn-orange {
+            background-color: #ff7e00;
             transition: all 0.3s ease;
-            text-transform: uppercase;
         }
-
-        button:hover {
-            background-color: var(--dark-orange);
+        .btn-orange:hover {
+            background-color: #e67200;
             transform: translateY(-1px);
         }
-
-        .btn-alt {
-            background-color: transparent;
-            color: var(--orange);
-            border: 1px solid var(--orange);
+        .card-bg {
+            background-color: #1a1a1a;
+            border: 1px solid #333;
         }
-
-        .btn-alt:hover {
-            background-color: rgba(255, 102, 0, 0.1);
+        .input-dark {
+            background-color: #000;
+            border: 1px solid #444;
+            color: white;
         }
-
-        #address-display {
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 10px;
-            word-break: break-all;
+        .input-dark:focus {
+            border-color: #ff7e00;
+            outline: none;
         }
-
-        .error-msg {
-            background: rgba(255, 68, 68, 0.1);
-            color: #ff4444;
-            padding: 10px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            margin-top: 15px;
-            display: none;
+        .text-orange {
+            color: #ff7e00;
         }
-
-        .network-indicator {
-            font-size: 0.7rem;
-            color: #555;
-            margin-top: 15px;
+        .loader {
+            border: 3px solid #333;
+            border-top: 3px solid #ff7e00;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(3600deg); }
         }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
 
-    <div class="container">
-        <h1>Martian Terminal</h1>
-        <div id="connection-status" class="status-badge status-offline">Disconnected</div>
+    <!-- Header -->
+    <div class="mb-8 text-center">
+        <h1 class="text-5xl font-black italic tracking-tighter text-orange mb-2">EROL</h1>
+        <p class="text-gray-400 uppercase tracking-widest text-xs">Martian Chain Portfolio</p>
+    </div>
 
-        <div class="balance-card">
-            <div class="label" id="token-label">EROL (AVAX C-CHAIN)</div>
-            <div id="balance-container">
-                <span id="balance">0.00</span><span class="symbol">EROL</span>
-            </div>
-            <div id="address-display">No wallet detected</div>
-        </div>
-
-        <div class="button-group">
-            <button id="btn-connect">Connect & Refresh</button>
-            <button id="btn-switch" class="btn-alt">Switch to Martian L1</button>
-        </div>
-
-        <div id="error-display" class="error-msg"></div>
-
-        <div class="network-indicator">
-            Current Target: <span id="target-network">Avalanche C-Chain</span>
-        </div>
+    <!-- Main Card -->
+    <div class="card-bg p-8 rounded-2xl w-full max-w-md orange-glow">
         
-        <a href="https://snowtrace.io/" id="explorer-link" target="_blank" class="info-link" style="display:block; margin-top:15px; color:var(--orange); font-size:0.8rem; text-decoration:none;">View Explorer</a>
+        <!-- Wallet Connection Section -->
+        <div id="walletSection" class="mb-6">
+            <button id="connectBtn" class="w-full btn-orange text-black font-bold py-3 rounded-xl mb-4">
+                Connect Wallet
+            </button>
+            <div class="relative flex items-center mb-4">
+                <div class="flex-grow border-t border-gray-700"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR SEARCH ADDRESS</span>
+                <div class="flex-grow border-t border-gray-700"></div>
+            </div>
+        </div>
+
+        <!-- Manual Input -->
+        <div class="mb-6">
+            <input type="text" id="addressInput" placeholder="0x..." class="w-full p-4 rounded-xl input-dark text-sm mb-3" />
+            <button id="checkBtn" class="w-full border border-gray-600 hover:border-orange-500 py-3 rounded-xl font-medium transition-colors">
+                Check Balance
+            </button>
+        </div>
+
+        <!-- Results Display -->
+        <div id="resultArea" class="hidden">
+            <div class="border-t border-gray-800 pt-6 mt-4">
+                <p class="text-gray-500 text-xs mb-1">EROL BALANCE</p>
+                <div class="flex items-baseline gap-2">
+                    <span id="balanceText" class="text-4xl font-bold text-white">0.00</span>
+                    <span class="text-orange font-bold">EROL</span>
+                </div>
+                <div id="addressLabel" class="text-[10px] text-gray-500 mt-4 break-all"></div>
+            </div>
+        </div>
+
+        <!-- Status / Messages -->
+        <div id="statusMsg" class="mt-4 text-center text-sm text-gray-500"></div>
+    </div>
+
+    <!-- Info Footer -->
+    <div class="mt-8 grid grid-cols-2 gap-4 text-center text-[10px] text-gray-600">
+        <div>
+            <p>RPC URL</p>
+            <p class="text-gray-400">martian-rpc1.amichain.org</p>
+        </div>
+        <div>
+            <p>CHAIN ID</p>
+            <p class="text-gray-400">2027</p>
+        </div>
     </div>
 
     <script>
-        const CONFIGS = {
-            AVAX: {
-                chainId: "0xA86A", // 43114
-                chainName: "Avalanche C-Chain",
-                rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
-                symbol: "EROL",
-                explorer: "https://snowtrace.io/",
-                tokenAddress: "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037"
-            },
-            MARTIAN: {
-                chainId: "0x7EB", // 2027
-                chainName: "Martian Chain",
-                rpcUrl: "https://martian-rpc1.amichain.org/",
-                symbol: "EROL",
-                explorer: "https://explorer.martianchain.com/",
-                tokenAddress: "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037"
-            }
-        };
+        const RPC_URL = "https://martian-rpc1.amichain.org/";
+        const TOKEN_ADDRESS = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
+        const TOKEN_ABI = ["function balanceOf(address) view returns (uint256)"];
+        const DEFAULT_DECIMALS = 18;
 
-        const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
-        
-        let currentMode = 'AVAX';
-        let provider, signer, account;
+        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
 
-        const btnConnect = document.getElementById('btn-connect');
-        const btnSwitch = document.getElementById('btn-switch');
-        const balanceText = document.getElementById('balance');
-        const statusBadge = document.getElementById('connection-status');
-        const addressDisplay = document.getElementById('address-display');
-        const errorDisplay = document.getElementById('error-display');
-        const targetLabel = document.getElementById('target-network');
-        const tokenLabel = document.getElementById('token-label');
-        const explorerLink = document.getElementById('explorer-link');
+        const connectBtn = document.getElementById('connectBtn');
+        const checkBtn = document.getElementById('checkBtn');
+        const addressInput = document.getElementById('addressInput');
+        const resultArea = document.getElementById('resultArea');
+        const balanceText = document.getElementById('balanceText');
+        const statusMsg = document.getElementById('statusMsg');
+        const addressLabel = document.getElementById('addressLabel');
 
-        async function init() {
-            if (window.ethereum) {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                window.ethereum.on('accountsChanged', (accounts) => {
-                    if (accounts.length > 0) {
-                        account = accounts[0];
-                        updateUI();
-                    } else {
-                        location.reload();
-                    }
-                });
-                window.ethereum.on('chainChanged', () => location.reload());
-            } else {
-                showError("MetaMask not found.");
-            }
-        }
-
-        async function connect() {
-            if (!window.ethereum) {
-                showError("No wallet found. Please install MetaMask.");
+        async function getBalance(address) {
+            if (!ethers.isAddress(address)) {
+                showStatus("Invalid EVM Address", true);
                 return;
             }
 
-            try {
-                errorDisplay.style.display = "none";
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                account = accounts[0];
+            showStatus("Checking Martian Chain...");
+            resultArea.classList.add('hidden');
 
-                const activeConfig = CONFIGS[currentMode];
-                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            try {
+                // The "0x" error usually means the address is NOT a contract on this specific chain.
+                // On some L1s/Subnets, the main token (EROL) might be the NATIVE gas token.
+                // We check both Native balance and Contract balance to be safe.
                 
-                if (chainId.toLowerCase() !== activeConfig.chainId.toLowerCase()) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: activeConfig.chainId }],
-                        });
-                    } catch (switchError) {
-                        if (switchError.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: activeConfig.chainId,
-                                    chainName: activeConfig.chainName,
-                                    rpcUrls: [activeConfig.rpcUrl],
-                                    blockExplorerUrls: [activeConfig.explorer],
-                                    nativeCurrency: { name: activeConfig.symbol, symbol: activeConfig.symbol, decimals: 18 }
-                                }],
-                            });
-                        } else {
-                            throw switchError;
-                        }
-                    }
+                let balance;
+                const code = await provider.getCode(TOKEN_ADDRESS);
+                
+                if (code === "0x") {
+                    // If no contract code is found at the address, EROL might be the native chain currency.
+                    balance = await provider.getBalance(address);
+                } else {
+                    // Otherwise, try to call the contract function.
+                    balance = await contract.balanceOf(address);
                 }
-                updateUI();
-            } catch (err) {
-                showError("Failed: " + (err.message || "User rejected"));
-            }
-        }
 
-        async function updateUI() {
-            if (!account || !provider) return;
-
-            const config = CONFIGS[currentMode];
-            statusBadge.innerText = `Connected: ${config.chainName}`;
-            statusBadge.className = "status-badge status-online";
-            addressDisplay.innerText = account;
-            tokenLabel.innerText = `EROL (${currentMode} NETWORK)`;
-            targetLabel.innerText = config.chainName;
-            explorerLink.href = config.explorer;
-
-            try {
-                const contract = new ethers.Contract(config.tokenAddress, ERC20_ABI, provider);
-                const rawBalance = await contract.balanceOf(account);
-                const formatted = ethers.formatUnits(rawBalance, 18);
+                const formattedBalance = ethers.formatUnits(balance, DEFAULT_DECIMALS);
                 
-                balanceText.innerText = parseFloat(formatted).toLocaleString(undefined, {
+                balanceText.innerText = parseFloat(formattedBalance).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 4
                 });
+                
+                addressLabel.innerText = "Wallet: " + address;
+                resultArea.classList.remove('hidden');
+                showStatus("");
             } catch (err) {
                 console.error(err);
-                showError("Balance Check Failed. Ensure your wallet is on the correct network.");
-                balanceText.innerText = "0.00";
+                showStatus("Error: Unable to fetch balance. The RPC might be restricted or the address is incorrect.", true);
             }
         }
 
-        function toggleMode() {
-            currentMode = currentMode === 'AVAX' ? 'MARTIAN' : 'AVAX';
-            btnSwitch.innerText = currentMode === 'AVAX' ? 'Switch to Martian L1' : 'Switch to Avalanche C';
-            errorDisplay.style.display = "none";
-            
-            if (account) {
-                connect(); // Re-trigger connection/switch logic
+        function showStatus(msg, isError = false) {
+            statusMsg.innerText = msg;
+            statusMsg.className = isError ? "mt-4 text-center text-sm text-red-500" : "mt-4 text-center text-sm text-gray-500";
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            if (window.ethereum) {
+                try {
+                    showStatus("Requesting wallet access...");
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    addressInput.value = accounts[0];
+                    getBalance(accounts[0]);
+                } catch (err) {
+                    showStatus("Wallet connection rejected", true);
+                }
             } else {
-                targetLabel.innerText = CONFIGS[currentMode].chainName;
-                tokenLabel.innerText = `EROL (${currentMode} TARGET)`;
+                showStatus("No Web3 wallet detected. Please enter address manually.", true);
             }
-        }
-
-        function showError(msg) {
-            errorDisplay.innerText = msg;
-            errorDisplay.style.display = "block";
-        }
-
-        btnConnect.addEventListener('click', () => {
-            if (!account) connect();
-            else updateUI();
         });
 
-        btnSwitch.addEventListener('click', toggleMode);
+        checkBtn.addEventListener('click', () => {
+            getBalance(addressInput.value.trim());
+        });
 
-        window.addEventListener('load', init);
+        addressInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') getBalance(addressInput.value.trim());
+        });
     </script>
 </body>
 </html>
-
