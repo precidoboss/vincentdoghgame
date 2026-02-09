@@ -5,252 +5,247 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Erol's Martian Gambit | Martian Chain</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@200;400;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --m-orange: #ff6b00;
-            --m-orange-glow: rgba(255, 107, 0, 0.4);
-            --m-bg: #08080a;
-            --m-card: rgba(18, 18, 22, 0.7);
-            --m-border: rgba(255, 255, 255, 0.08);
+            --mars-red: #ff4d00;
+            --habitat-bg: #060608;
+            --panel-bg: rgba(20, 20, 25, 0.95);
+            --tier-max: #ffd700;
+            --tier-explorer: #00f2ff;
+            --tier-scout: #adff2f;
         }
 
         body {
-            background-color: var(--m-bg);
+            background-color: var(--habitat-bg);
+            color: #e0e0e0;
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            margin: 0;
             background-image: 
-                radial-gradient(circle at 0% 0%, rgba(255, 107, 0, 0.05) 0%, transparent 50%),
-                radial-gradient(circle at 100% 100%, rgba(255, 50, 0, 0.03) 0%, transparent 50%);
-            color: #f0f0f0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            letter-spacing: -0.01em;
+                radial-gradient(circle at 2px 2px, rgba(255, 77, 0, 0.05) 1px, transparent 0);
+            background-size: 40px 40px;
         }
 
-        .glass {
-            background: var(--m-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--m-border);
-            transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        .mars-glass {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 77, 0, 0.2);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
 
-        .glass:hover {
-            border-color: rgba(255, 107, 0, 0.3);
-            background: rgba(22, 22, 28, 0.8);
+        .btn-mars {
+            background: var(--mars-red);
+            color: black;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
         }
 
-        .btn-martian {
-            background: #fff;
-            color: #000;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
+        .btn-mars:hover {
+            background: transparent;
+            color: var(--mars-red);
+            border-color: var(--mars-red);
+            box-shadow: 0 0 20px rgba(255, 77, 0, 0.4);
         }
 
-        .btn-martian:hover {
-            background: var(--m-orange);
+        .input-mars {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 77, 0, 0.3);
             color: #fff;
-            box-shadow: 0 0 30px var(--m-orange-glow);
-            transform: translateY(-2px);
+            font-family: 'Share Tech Mono', monospace;
         }
 
-        .orange-gradient-text {
-            background: linear-gradient(135deg, #fff 30%, #ff6b00 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .input-martian {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--m-border);
-            color: white;
-            transition: all 0.3s ease;
-        }
-
-        .input-martian:focus {
-            border-color: var(--m-orange);
-            box-shadow: 0 0 15px rgba(255, 107, 0, 0.1);
+        .input-mars:focus {
+            border-color: var(--mars-red);
             outline: none;
+            box-shadow: 0 0 10px rgba(255, 77, 0, 0.2);
         }
 
-        /* Custom Scrollbar */
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 77, 0, 0.1);
+            position: absolute;
+            animation: scan 8s linear infinite;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        .mars-border-glow {
+            border: 1px solid var(--mars-red);
+            box-shadow: inset 0 0 10px rgba(255, 77, 0, 0.2), 0 0 10px rgba(255, 77, 0, 0.2);
+        }
+
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--m-border); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--m-orange); }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .floating { animation: float 6s ease-in-out infinite; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: var(--mars-red); }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen">
+    <div class="scanline"></div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center hidden bg-black bg-opacity-90 backdrop-blur-xl">
-        <div class="w-16 h-16 border-2 border-white/10 border-t-orange-500 rounded-full animate-spin"></div>
-        <p id="loadingText" class="mt-6 font-bold tracking-[0.3em] text-white uppercase text-xs opacity-60">Syncing Satellite...</p>
+    <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center hidden bg-black">
+        <div class="w-12 h-12 border-2 border-orange-900 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+        <p id="loadingText" class="orbitron text-xs tracking-widest text-orange-500 uppercase">Syncing Martian Core...</p>
     </div>
 
-    <!-- Navigation -->
-    <nav class="sticky top-0 z-50 border-b border-white/5 bg-black/60 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-4 cursor-pointer group" onclick="switchView('lobby')">
-                <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center transition-transform group-hover:rotate-12">
-                    <i class="fas fa-bolt text-black"></i>
+    <!-- Navbar -->
+    <nav class="mars-glass border-b border-orange-500/20 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('lobby')">
+                <div class="w-8 h-8 bg-orange-600 flex items-center justify-center rounded-sm">
+                    <i class="fas fa-radiation text-black text-sm"></i>
                 </div>
-                <h1 class="text-xl font-extrabold tracking-tighter">EROL <span class="text-orange-500">GAMBIT</span></h1>
+                <span class="orbitron font-bold text-lg tracking-tighter text-white">EROL<span class="text-orange-500">GAMBIT</span></span>
             </div>
             
             <div class="flex items-center gap-4">
-                <div id="connectionStatus" class="hidden px-4 py-2 rounded-full bg-white/5 border border-white/5 text-[10px] font-bold uppercase tracking-widest text-green-500 items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                    Encrypted
+                <div id="connectionStatus" class="hidden px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-sm text-[10px] orbitron text-orange-500 items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
+                    SECURE_UPLINK
                 </div>
-                <button id="connectBtn" class="btn-martian px-6 py-2.5 rounded-xl text-xs uppercase tracking-widest">
-                    Connect Wallet
+                <button id="connectBtn" class="btn-mars px-4 py-1.5 text-xs rounded-sm orbitron">
+                    Connect_System
                 </button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 mt-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
+    <main class="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- Sidebar -->
+        <!-- Left Sidebar -->
         <div class="lg:col-span-3 space-y-6">
-            <div id="miniProfile" class="glass rounded-[2rem] p-8 hidden border-white/5">
-                <div class="flex items-center gap-4 mb-8">
-                    <div class="w-14 h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center text-black text-xl font-black">
-                        <i class="fas fa-user-ninja"></i>
+            <div id="miniProfile" class="mars-glass p-6 hidden">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-orange-500/20 border border-orange-500/50 flex items-center justify-center text-orange-500">
+                        <i class="fas fa-user-shield text-xl"></i>
                     </div>
                     <div>
-                        <p id="navUserName" class="font-bold text-lg">Rover</p>
-                        <p class="text-[10px] uppercase font-black tracking-widest text-orange-500/60">Commander</p>
+                        <p id="navUserName" class="orbitron font-bold text-sm text-white">COMMANDER</p>
+                        <p class="text-[9px] text-orange-500/60 uppercase">Identity Verified</p>
                     </div>
                 </div>
 
-                <div class="space-y-4">
-                    <div class="bg-white/5 rounded-2xl p-5 border border-white/5 cursor-pointer hover:bg-white/10 transition-colors" onclick="fetchBalance()">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-black uppercase text-white/40 tracking-widest">Liquid Assets</span>
-                            <i class="fas fa-redo-alt text-[10px] text-white/20"></i>
-                        </div>
+                <div class="space-y-3">
+                    <div class="bg-black/50 p-4 border-l-2 border-orange-500 cursor-pointer" onclick="fetchBalance()">
+                        <p class="text-[10px] text-orange-500/40 uppercase mb-1">EROL_RESERVES</p>
                         <div class="flex items-baseline gap-2">
-                            <span id="navBalance" class="text-2xl font-bold tracking-tighter">0.00</span>
-                            <span class="text-xs font-black text-orange-500">EROL</span>
+                            <span id="navBalance" class="text-xl font-bold text-white">0.00</span>
                         </div>
                     </div>
-                    <button onclick="switchView('profile')" class="w-full py-4 text-[10px] font-black uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors">
-                        Command Center <i class="fas fa-arrow-right ml-2"></i>
+                    <button onclick="switchView('profile')" class="w-full text-left text-[10px] text-orange-500/50 hover:text-orange-500 transition-colors py-2">
+                        [ ACCESS_COMMAND_CENTER ]
                     </button>
                 </div>
             </div>
 
-            <!-- Chat -->
-            <div class="glass rounded-[2rem] p-6 flex flex-col h-[500px]">
-                <div class="flex items-center gap-3 mb-6 px-2">
-                    <div class="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_10px_#ff6b00]"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest opacity-40">Frequency Alpha</span>
+            <!-- Comms -->
+            <div class="mars-glass p-4 flex flex-col h-[450px]">
+                <div class="flex items-center gap-2 mb-4 border-b border-orange-500/20 pb-2">
+                    <i class="fas fa-terminal text-[10px] text-orange-500"></i>
+                    <span class="text-[10px] orbitron uppercase text-orange-500/80">Comms_Channel_01</span>
                 </div>
-                <div id="chatBox" class="flex-grow overflow-y-auto space-y-4 pr-2 mb-6 scrollbar-hidden">
-                    <p class="text-[11px] opacity-20 italic text-center py-10">Searching for signals...</p>
+                <div id="chatBox" class="flex-grow overflow-y-auto space-y-3 mb-4 text-[12px]">
+                    <p class="opacity-20 text-center italic mt-10">Listening for signals...</p>
                 </div>
-                <div class="relative">
-                    <input type="text" id="chatInput" placeholder="Transmit..." class="w-full input-martian rounded-2xl px-5 py-4 text-sm" />
-                    <button id="sendChat" class="absolute right-3 top-2.5 w-10 h-10 bg-white/5 hover:bg-orange-500 hover:text-black rounded-xl transition-all flex items-center justify-center">
+                <div class="flex gap-2">
+                    <input type="text" id="chatInput" placeholder="Enter transmission..." class="flex-grow input-mars px-3 py-2 text-xs" />
+                    <button id="sendChat" class="bg-orange-500/10 hover:bg-orange-500 hover:text-black border border-orange-500/30 px-3 transition-all">
                         <i class="fas fa-paper-plane text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Content -->
-        <div id="lobbySection" class="lg:col-span-9 space-y-12">
-            <!-- Hero Card -->
-            <div class="relative group">
-                <div class="absolute -inset-1 bg-gradient-to-r from-orange-600 to-red-600 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                <div class="relative glass rounded-[3rem] p-12 overflow-hidden">
-                    <div class="max-w-xl relative z-10">
-                        <h2 class="text-6xl font-black tracking-tighter mb-6 orange-gradient-text leading-tight">HOST THE NEXT<br>GAMBIT</h2>
-                        <p class="text-white/40 text-lg mb-10 font-medium">Deploy your EROL tokens into the Martian Vault to challenge other commanders. Winner takes the pool.</p>
-                        
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <div class="flex items-center bg-black/40 border border-white/5 rounded-2xl px-6 py-3">
-                                <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-2xl font-bold w-20 outline-none text-orange-500" />
-                                <span class="ml-2 font-black text-xs opacity-40 uppercase tracking-widest">EROL</span>
+        <!-- Main Workspace -->
+        <div id="lobbySection" class="lg:col-span-9 space-y-8">
+            <!-- Deployment Panel -->
+            <div class="mars-glass p-8 relative overflow-hidden">
+                <div class="relative z-10">
+                    <h2 class="orbitron text-4xl font-bold text-white mb-2 uppercase tracking-tighter italic">Initiate_Gambit</h2>
+                    <p class="text-orange-500/60 text-sm mb-8 max-w-md uppercase">Stake your claim in the Martian economy. Deploy EROL and challenge the grid.</p>
+                    
+                    <div class="flex flex-wrap gap-4 items-end">
+                        <div class="flex flex-col gap-1">
+                            <label class="text-[10px] text-orange-500/40 uppercase">Stake_Amount</label>
+                            <div class="flex items-center bg-black border border-orange-500/30 px-4 py-2">
+                                <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-xl font-bold w-24 outline-none text-orange-500" />
+                                <span class="text-[10px] opacity-40">EROL</span>
                             </div>
-                            <button id="hostGameBtn" class="btn-martian px-10 py-5 rounded-2xl text-sm uppercase tracking-widest font-black">
-                                Launch Match
-                            </button>
                         </div>
-                    </div>
-                    <div class="absolute right-0 top-0 w-1/3 h-full opacity-10 flex items-center justify-center">
-                        <i class="fas fa-satellite-dish text-[15rem] rotate-12"></i>
+                        <button id="hostGameBtn" class="btn-mars px-8 py-3 orbitron text-sm">
+                            Deploy_Signal
+                        </button>
                     </div>
                 </div>
+                <i class="fas fa-globe-africa absolute -right-10 -bottom-10 text-[15rem] text-orange-500/5 rotate-12"></i>
             </div>
 
-            <!-- Matches -->
-            <div class="space-y-8">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-xs font-black uppercase tracking-[0.4em] opacity-40">Available Signals</h3>
-                    <div class="h-[1px] flex-grow mx-8 bg-white/5"></div>
+            <!-- Active Signals -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <h3 class="orbitron text-xs font-bold text-orange-500 uppercase tracking-[0.3em]">Active_Signals</h3>
+                    <div class="h-px bg-orange-500/20 flex-grow"></div>
                 </div>
                 
-                <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Matches -->
+                <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Matches go here -->
                 </div>
             </div>
         </div>
 
-        <!-- Profile -->
-        <div id="profileSection" class="lg:col-span-9 space-y-10 hidden">
-            <div class="flex items-center justify-between">
-                <button onclick="switchView('lobby')" class="group flex items-center gap-3 text-xs font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity">
-                    <i class="fas fa-arrow-left transition-transform group-hover:-translate-x-1"></i> Return to Orbit
+        <!-- Command Center View -->
+        <div id="profileSection" class="lg:col-span-9 space-y-6 hidden">
+            <div class="flex items-center justify-between border-b border-orange-500/20 pb-4">
+                <button onclick="switchView('lobby')" class="text-[10px] text-orange-500/50 hover:text-orange-500 orbitron">
+                    <i class="fas fa-chevron-left mr-1"></i> BACK_TO_ORBIT
                 </button>
-                <h2 class="text-2xl font-extrabold tracking-tighter italic">COMMAND CENTER</h2>
+                <h2 class="orbitron text-xl font-bold text-white uppercase italic">Command_Center</h2>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="glass rounded-[2.5rem] p-10 text-center border-white/5">
-                    <div class="w-32 h-32 bg-white/5 border border-white/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                        <i class="fas fa-user-astronaut text-5xl text-orange-500"></i>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                <div class="md:col-span-4 mars-glass p-8 text-center">
+                    <div class="w-24 h-24 border-2 border-orange-500/30 flex items-center justify-center mx-auto mb-6 bg-orange-500/5">
+                        <i class="fas fa-id-badge text-4xl text-orange-500"></i>
                     </div>
-                    <div class="space-y-6">
-                        <input id="editUsername" type="text" class="w-full input-martian text-center py-4 rounded-2xl font-bold text-lg" placeholder="Rover" />
-                        <p id="fullWalletAddress" class="text-[9px] font-mono opacity-20 break-all px-4"></p>
-                        <button onclick="updateProfile()" class="w-full btn-martian py-4 rounded-2xl text-[10px] uppercase tracking-widest">Sync Identity</button>
+                    <div class="space-y-4">
+                        <input id="editUsername" type="text" class="w-full input-mars text-center py-2 text-sm font-bold" placeholder="Commander" />
+                        <p id="fullWalletAddress" class="text-[9px] opacity-30 break-all bg-black p-2 font-mono"></p>
+                        <button onclick="updateProfile()" class="w-full btn-mars py-2 text-xs orbitron">Sync_Identity</button>
                     </div>
                 </div>
 
-                <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <div class="glass rounded-[2.5rem] p-10 flex flex-col justify-between">
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Vault Balance</p>
-                        <div>
-                            <p id="profileBalance" class="text-5xl font-bold tracking-tighter mb-2">0.00</p>
-                            <p class="text-xs font-black text-orange-500 uppercase tracking-widest">EROL Assets</p>
-                        </div>
+                <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div class="mars-glass p-6 border-l-4 border-orange-500">
+                        <p class="text-[10px] text-orange-500/40 uppercase mb-4">Account_Liquidity</p>
+                        <p id="profileBalance" class="orbitron text-4xl font-bold text-white">0.00</p>
+                        <p class="text-[10px] text-orange-500 mt-2 italic">Units: EROL</p>
                     </div>
-                    <div class="glass rounded-[2.5rem] p-10 flex flex-col justify-between">
-                        <p class="text-[10px] font-black uppercase tracking-widest opacity-40">Total Victories</p>
-                        <div>
-                            <p id="profileWins" class="text-5xl font-bold tracking-tighter mb-2">0</p>
-                            <p class="text-xs font-black text-orange-500 uppercase tracking-widest">Confirmed Kills</p>
-                        </div>
+                    <div class="mars-glass p-6 border-l-4 border-orange-500">
+                        <p class="text-[10px] text-orange-500/40 uppercase mb-4">Combat_Stats</p>
+                        <p id="profileWins" class="orbitron text-4xl font-bold text-white">0</p>
+                        <p class="text-[10px] text-orange-500 mt-2 italic">Status: Confirmed_Victories</p>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div id="statusToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-2xl hidden z-[110] backdrop-blur-xl border"></div>
+    <div id="statusToast" class="fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron hidden z-[110] bg-black/90 backdrop-blur-md shadow-2xl"></div>
 
     <script>
         const GAME_CONTRACT = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
@@ -266,36 +261,41 @@
         let provider, signer;
 
         async function connect() {
-            if (!window.ethereum) return toast("MetaMask required for uplink.", true);
-            showLoading("Establishing Secure Uplink...");
+            if (!window.ethereum) return toast("SYSTEM_ERROR: MetaMask required", true);
+            showLoading("LINKING_SATELLITE...");
             try {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 const network = await provider.getNetwork();
+                
                 if (network.chainId !== BigInt(2027)) {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: CHAIN_ID }],
                     });
                 }
+                
                 const accounts = await provider.send("eth_requestAccounts", []);
                 userWallet = accounts[0];
                 signer = await provider.getSigner();
 
-                // ENSURE PROFILE EXISTS IMMEDIATELY
-                await syncProfile();
-                
-                // If it failed to sync (unlikely with auto-create), try one more time
-                if (!userProfile) {
-                    await new Promise(r => setTimeout(r, 1000));
+                // Robust profile sync
+                let retryCount = 0;
+                while (retryCount < 3) {
                     await syncProfile();
+                    if (userProfile) break;
+                    retryCount++;
+                    await new Promise(r => setTimeout(r, 1000));
                 }
+
+                if (!userProfile) throw new Error("IDENTITY_SYNC_FAILED");
 
                 await fetchBalance();
                 updateUI();
                 setupRealtime();
                 switchView('lobby');
+                toast("UPLINK_ESTABLISHED");
             } catch (err) {
-                toast("Uplink failed: " + err.message, true);
+                toast("UPLINK_ERROR: " + err.message, true);
             } finally {
                 hideLoading();
             }
@@ -305,47 +305,55 @@
             if (!userWallet) return;
             const addr = userWallet.toLowerCase();
             
-            // Try fetching
-            const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).single();
+            // Try fetching existing
+            const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).maybeSingle();
             
             if (data) {
                 userProfile = data;
             } else {
-                // AUTO-CREATE WITH RETRY LOGIC
-                const { data: newUser, error: createError } = await sb.from('profiles').insert({
+                // Creation attempt
+                const { data: newUser, error: createError } = await sb.from('profiles').upsert({
                     wallet_address: addr,
-                    username: `Pilot_${addr.slice(2,6)}`
-                }).select().single();
+                    username: `PILOT_${addr.slice(2,6).toUpperCase()}`
+                }, { onConflict: 'wallet_address' }).select().single();
                 
                 if (newUser) userProfile = newUser;
+                if (createError) console.error("Profile Create Error:", createError);
             }
 
             if (userProfile) {
-                document.getElementById('navUserName').innerText = userProfile.username || "Pilot";
+                document.getElementById('navUserName').innerText = (userProfile.username || "COMMANDER").toUpperCase();
                 document.getElementById('editUsername').value = userProfile.username || "";
                 document.getElementById('fullWalletAddress').innerText = userWallet;
                 document.getElementById('profileWins').innerText = userProfile.games_won || 0;
                 document.getElementById('miniProfile').classList.remove('hidden');
-                document.getElementById('connectionStatus').classList.remove('hidden');
                 document.getElementById('connectionStatus').style.display = 'flex';
             }
         }
 
+        async function updateProfile() {
+            if (!userProfile) return;
+            const newName = document.getElementById('editUsername').value;
+            showLoading("UPDATING_ID...");
+            const { data, error } = await sb.from('profiles').update({ username: newName }).eq('id', userProfile.id).select().single();
+            if (data) {
+                userProfile = data;
+                document.getElementById('navUserName').innerText = data.username.toUpperCase();
+                toast("IDENTITY_UPDATED");
+            } else {
+                toast("UPDATE_FAILED", true);
+            }
+            hideLoading();
+        }
+
         async function hostGame() {
             if (!userWallet) return connect();
-            
-            // Extra safety check for profile
-            if (!userProfile) {
-                showLoading("Syncing Identity...");
-                await syncProfile();
-                hideLoading();
-                if (!userProfile) return toast("Identity sync failed. Refreshing...", true);
-            }
+            if (!userProfile) await syncProfile();
 
             const wager = parseInt(document.getElementById('wagerInput').value);
-            if (wager < MIN_WAGER) return toast(`Min stake: ${MIN_WAGER} EROL`, true);
+            if (wager < MIN_WAGER) return toast(`MIN_STAKE: ${MIN_WAGER}_EROL`, true);
 
-            showLoading("Transmitting Gambit Signal...");
+            showLoading("DEPLOYING_SIGNAL...");
             try {
                 const { error } = await sb.from('matches').insert({
                     host_id: userProfile.id,
@@ -353,10 +361,10 @@
                     status: 'waiting'
                 });
                 if (error) throw error;
-                toast("Gambit Signal Live.");
+                toast("GAMBIT_SIGNAL_BROADCASTED");
                 fetchBalance();
             } catch (e) {
-                toast(e.message, true);
+                toast("DEPLOY_FAILED: " + e.message, true);
             } finally {
                 hideLoading();
             }
@@ -373,7 +381,7 @@
                 const displayVal = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 document.getElementById('navBalance').innerText = displayVal;
                 document.getElementById('profileBalance').innerText = displayVal;
-            } catch (err) { console.error(err); }
+            } catch (err) { console.error("Balance Error:", err); }
         }
 
         function switchView(view) {
@@ -390,23 +398,23 @@
             const { data: matches } = await sb.from('matches').select('*, profiles!host_id(username)').eq('status', 'waiting').order('created_at', { ascending: false });
             const grid = document.getElementById('matchGrid');
             if (!matches || matches.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-20 glass rounded-[2.5rem] opacity-30"><p class="text-[10px] font-black uppercase tracking-[0.3em]">No signals detected in this sector</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-12 mars-glass border-dashed opacity-30 orbitron text-[10px] tracking-widest uppercase">No_Active_Signals_In_Range</div>`;
                 return;
             }
             grid.innerHTML = matches.map(m => `
-                <div class="glass rounded-[2rem] p-8 group relative">
-                    <div class="flex justify-between items-start mb-10">
+                <div class="mars-glass p-5 flex flex-col justify-between group">
+                    <div class="flex justify-between items-start mb-6">
                         <div>
-                            <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-2">Commander</p>
-                            <p class="text-xl font-bold">${m.profiles?.username || 'Pilot'}</p>
+                            <p class="text-[9px] text-orange-500/40 uppercase mb-1">Source</p>
+                            <p class="orbitron font-bold text-white text-sm tracking-widest">${(m.profiles?.username || 'PILOT').toUpperCase()}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[9px] font-black uppercase tracking-widest opacity-30 mb-1">Pool</p>
-                            <p class="text-2xl font-bold text-orange-500">${m.wager_amount} <span class="text-[10px] opacity-40">EROL</span></p>
+                            <p class="text-[9px] text-orange-500/40 uppercase mb-1">Pool</p>
+                            <p class="orbitron font-bold text-orange-500 text-lg">${m.wager_amount} <span class="text-[8px] opacity-40">EROL</span></p>
                         </div>
                     </div>
-                    <button class="w-full py-4 bg-white/5 border border-white/5 hover:bg-white hover:text-black rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all">
-                        Accept Challenge
+                    <button class="w-full py-2 bg-orange-500/5 border border-orange-500/30 hover:bg-orange-500 hover:text-black orbitron text-[10px] transition-all uppercase">
+                        Accept_Challenge
                     </button>
                 </div>
             `).join('');
@@ -427,8 +435,8 @@
         function appendMessage(m) {
             const box = document.getElementById('chatBox');
             const div = document.createElement('div');
-            div.className = "flex flex-col gap-1 px-2";
-            div.innerHTML = `<span class="text-[9px] font-black text-orange-500/60 uppercase tracking-widest">${m.username}</span><span class="text-[13px] opacity-80 leading-relaxed font-medium">${m.message}</span>`;
+            div.className = "border-l border-orange-500/20 pl-3 py-1";
+            div.innerHTML = `<span class="text-[9px] orbitron text-orange-500/80 uppercase tracking-tighter">[${m.username}]</span><br><span class="opacity-70">${m.message}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -450,16 +458,16 @@
         function toast(msg, err = false) {
             const t = document.getElementById('statusToast');
             t.innerText = msg;
-            t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-2xl z-[110] backdrop-blur-xl border ${err ? 'bg-red-500/20 text-red-500 border-red-500/20' : 'bg-white text-black border-white/10'}`;
+            t.className = `fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron z-[110] bg-black shadow-2xl ${err ? 'border-red-600 text-red-500' : 'border-orange-500 text-orange-500'}`;
             t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 3000);
+            setTimeout(() => t.classList.add('hidden'), 4000);
         }
 
         function updateUI() {
             const btn = document.getElementById('connectBtn');
             if (userWallet) {
-                btn.innerHTML = `<i class="fas fa-check-circle mr-2"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
-                btn.className = "bg-white/5 border border-white/10 text-white/60 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest";
+                btn.innerHTML = `<i class="fas fa-terminal mr-2"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
+                btn.className = "px-4 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 orbitron text-[10px]";
             }
         }
 
