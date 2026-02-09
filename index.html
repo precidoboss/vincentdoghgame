@@ -104,6 +104,11 @@
             color: var(--mars-red);
         }
 
+        .spin-on-click:active i {
+            transform: rotate(360deg);
+            transition: transform 0.5s ease-in-out;
+        }
+
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: var(--mars-red); }
@@ -137,9 +142,16 @@
             </div>
             
             <div class="flex items-center gap-6">
-                <div id="walletDisplay" class="hidden flex flex-col items-end">
-                    <p id="navBalance" class="orbitron text-orange-500 text-sm font-bold">0.00 EROL</p>
-                    <p id="navAddr" class="text-[9px] opacity-40 font-mono"></p>
+                <div id="walletDisplay" class="hidden flex items-center gap-4">
+                    <div class="flex flex-col items-end">
+                        <div class="flex items-center gap-2">
+                            <p id="navBalance" class="orbitron text-orange-500 text-sm font-bold">0.00 EROL</p>
+                            <button onclick="fetchErolBalance()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
+                                <i class="fas fa-sync-alt text-[10px]"></i>
+                            </button>
+                        </div>
+                        <p id="navAddr" class="text-[9px] opacity-40 font-mono"></p>
+                    </div>
                 </div>
                 <button id="connectBtn" class="btn-mars px-6 py-2 text-xs rounded-sm orbitron">
                     Uplink_Wallet
@@ -209,7 +221,12 @@
                 <div class="space-y-6">
                     <div class="flex items-center justify-between">
                         <h3 class="orbitron text-xs font-bold text-orange-500 uppercase tracking-[0.4em]">Broadcasts_In_Sector</h3>
-                        <span id="matchCount" class="text-[9px] opacity-30 uppercase font-mono">Scanning...</span>
+                        <div class="flex items-center gap-4">
+                            <span id="matchCount" class="text-[9px] opacity-30 uppercase font-mono">Scanning...</span>
+                            <button onclick="refreshLobby()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
+                                <i class="fas fa-sync-alt text-[10px]"></i>
+                            </button>
+                        </div>
                     </div>
                     <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
                 </div>
@@ -251,7 +268,6 @@
 
                 <div id="gameplayInterface" class="space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Moves -->
                         <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(1)">
                             <div class="w-24 h-24 rounded-full flex items-center justify-center bg-orange-500/10 border-2 border-orange-500/20 group-hover:scale-110 transition-all duration-500">
                                 <i class="fas fa-sun text-5xl text-orange-500"></i>
@@ -259,7 +275,6 @@
                             <h3 class="orbitron font-bold text-white text-lg tracking-widest">Solar_Flare</h3>
                             <p class="text-[9px] text-orange-500/40 uppercase leading-loose">Destroys O2_Siphon</p>
                         </div>
-
                         <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(2)">
                             <div class="w-24 h-24 rounded-full flex items-center justify-center bg-blue-500/10 border-2 border-blue-500/20 group-hover:scale-110 transition-all duration-500">
                                 <i class="fas fa-wind text-5xl text-blue-500"></i>
@@ -267,7 +282,6 @@
                             <h3 class="orbitron font-bold text-white text-lg tracking-widest">O2_Siphon</h3>
                             <p class="text-[9px] text-blue-500/40 uppercase leading-loose">Clears Dust_Storm</p>
                         </div>
-
                         <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(3)">
                             <div class="w-24 h-24 rounded-full flex items-center justify-center bg-yellow-500/10 border-2 border-yellow-500/20 group-hover:scale-110 transition-all duration-500">
                                 <i class="fas fa-cloud-showers-heavy text-5xl text-yellow-500"></i>
@@ -292,7 +306,12 @@
             <!-- VIEW: LEADERBOARD -->
             <div id="view-leaderboard" class="space-y-6 hidden">
                 <div class="mars-glass p-8">
-                    <h2 class="orbitron text-2xl font-bold text-white uppercase italic border-b border-orange-500/20 pb-4 mb-6">Sector_Rankings</h2>
+                    <div class="flex justify-between items-center border-b border-orange-500/20 pb-4 mb-6">
+                        <h2 class="orbitron text-2xl font-bold text-white uppercase italic">Sector_Rankings</h2>
+                        <button onclick="fetchLeaderboard()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
+                            <i class="fas fa-sync-alt text-xs"></i>
+                        </button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm font-mono">
                             <thead>
@@ -328,7 +347,10 @@
                     
                     <div class="md:col-span-8 space-y-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div class="mars-glass p-8 border-l-4 border-orange-500">
+                            <div class="mars-glass p-8 border-l-4 border-orange-500 relative">
+                                <button onclick="fetchErolBalance()" class="absolute top-4 right-4 text-orange-500/40 hover:text-orange-500 spin-on-click">
+                                    <i class="fas fa-sync-alt text-[10px]"></i>
+                                </button>
                                 <p class="text-[10px] text-orange-500/40 uppercase mb-4 tracking-[0.2em]">Live_Liquidity</p>
                                 <p id="profBalance" class="orbitron text-4xl font-bold text-white">0.00</p>
                                 <p class="text-[10px] text-orange-500 mt-3 italic font-mono uppercase">Currency: EROL</p>
@@ -346,27 +368,22 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </main>
 
-    <div id="toast" class="fixed bottom-10 right-10 px-8 py-4 border-l-4 font-bold text-xs uppercase orbitron hidden z-[250] bg-black/95 backdrop-blur-xl shadow-[0_0_50px_rgba(0,0,0,1)]"></div>
+    <div id="toast" class="fixed bottom-10 right-10 px-8 py-4 border-l-4 font-bold text-xs uppercase orbitron hidden z-[250] bg-black/95 backdrop-blur-xl shadow-2xl"></div>
 
     <script>
-        // CONFIGURATION
         const CHAIN_ID = "0x7EB"; 
         const RPC_URL = "https://martian-rpc1.amichain.org/";
         const EROL_TOKEN_ADDR = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
-        const GAMBIT_CONTRACT_ADDR = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
-
+        
         const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
         
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let provider, signer, userWallet, userProfile, currentMatchId, selectedMoveIdx;
-
-        function toChecksum(addr) { return ethers.getAddress(addr); }
 
         async function init() {
             if (window.ethereum) {
@@ -386,13 +403,11 @@
             try {
                 const network = await provider.getNetwork();
                 if (network.chainId !== BigInt(2027)) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: CHAIN_ID }],
-                        });
-                    } catch (switchError) {
-                        if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CHAIN_ID }],
+                    }).catch(async (err) => {
+                        if (err.code === 4902) {
                             await window.ethereum.request({
                                 method: 'wallet_addEthereumChain',
                                 params: [{
@@ -404,11 +419,11 @@
                                 }],
                             });
                         }
-                    }
+                    });
                 }
 
                 const accounts = await provider.send("eth_requestAccounts", []);
-                userWallet = toChecksum(accounts[0]);
+                userWallet = ethers.getAddress(accounts[0]);
                 signer = await provider.getSigner();
                 
                 await syncProfile();
@@ -417,33 +432,44 @@
                 showToast("UPLINK_SECURE");
             } catch (err) {
                 console.error(err);
-                showToast("UPLINK_FAILED: " + err.message, true);
-            } finally {
-                hideLoading();
+                showToast("UPLINK_FAILED", true);
+            } finally { hideLoading(); }
+        }
+
+        async function fetchErolBalance() {
+            if (!userWallet) return;
+            try {
+                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
+                const contract = new ethers.Contract(EROL_TOKEN_ADDR, abi, provider);
+                const bal = await contract.balanceOf(userWallet);
+                const dec = await contract.decimals();
+                const formatted = ethers.formatUnits(bal, dec);
+                
+                const display = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('navBalance').innerText = `${display} EROL`;
+                document.getElementById('profBalance').innerText = display;
+                console.log("Balance Sync Complete:", display);
+            } catch (e) { 
+                console.error("Balance Fetch Err:", e);
+                showToast("LIQUIDITY_SYNC_ERR", true);
             }
         }
 
         async function syncProfile() {
             if (!userWallet) return;
             const addr = userWallet.toLowerCase();
-            
             try {
-                // Force a selection to check if profile exists
                 let { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).maybeSingle();
-                
                 if (error) throw error;
-
                 if (!data) {
                     const fallbackName = `PILOT_${addr.slice(2, 6).toUpperCase()}`;
                     const { data: newUser, error: upsertErr } = await sb.from('profiles').upsert({
                         wallet_address: addr,
                         username: fallbackName
                     }, { onConflict: 'wallet_address' }).select().single();
-                    
                     if (upsertErr) throw upsertErr;
                     data = newUser;
                 }
-                
                 userProfile = data;
                 updateProfileUI();
                 return data;
@@ -455,28 +481,10 @@
             }
         }
 
-        async function fetchErolBalance() {
-            if (!userWallet) return;
-            try {
-                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
-                const contract = new ethers.Contract(toChecksum(EROL_TOKEN_ADDR), abi, provider);
-                const bal = await contract.balanceOf(userWallet);
-                const dec = await contract.decimals();
-                const formatted = ethers.formatUnits(bal, dec);
-                
-                const display = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                document.getElementById('navBalance').innerText = `${display} EROL`;
-                document.getElementById('profBalance').innerText = display;
-            } catch (e) { console.error("Balance Fetch Err:", e); }
-        }
-
         async function hostGame() {
             if (!userWallet) return connect();
-            
-            // Re-sync profile to ensure host_id is valid for RLS
             showLoading("VERIFYING_IDENT...");
             const profile = await syncProfile();
-            
             if (!profile || !profile.id) {
                 hideLoading();
                 return showToast("PROFILE_SYNC_FAILED", true);
@@ -488,7 +496,6 @@
                 return showToast("INVALID_WAGER", true);
             }
 
-            showLoading("PREPARING_SIGNAL...");
             try {
                 const { data, error } = await sb.from('matches').insert({
                     host_id: profile.id,
@@ -502,17 +509,13 @@
                 showToast("SIGNAL_DEPLOYED");
                 subscribeToMatch(data.id);
             } catch (e) {
-                console.error("Deploy Error:", e);
-                showToast("DEPLOY_ERR: Check RLS or Balance", true);
-            } finally {
-                hideLoading();
-            }
+                showToast("DEPLOY_ERR", true);
+            } finally { hideLoading(); }
         }
 
         async function joinGame(matchId, wager) {
             if (!userWallet) return connect();
             const profile = await syncProfile();
-            
             if (!profile || !profile.id) return showToast("PROFILE_SYNC_FAILED", true);
 
             showLoading("JOINING_ENGAGEMENT...");
@@ -523,11 +526,10 @@
                 }).eq('id', matchId);
 
                 if (error) throw error;
-                
                 enterGameView(matchId, wager, 'challenger');
                 subscribeToMatch(matchId);
             } catch (e) {
-                showToast("ENGAGE_ERR: " + e.message, true);
+                showToast("ENGAGE_ERR", true);
             } finally { hideLoading(); }
         }
 
@@ -559,24 +561,15 @@
             if (!userProfile?.id) return showToast("PROFILE_SYNC_REQ", true);
             showLoading("COMMITTING_MOVE...");
             try {
-                const match = await getMatch(currentMatchId);
+                const { data: match } = await sb.from('matches').select('*').eq('id', currentMatchId).single();
                 const roleKey = userProfile.id === match.host_id ? 'host_move' : 'challenger_move';
-                
                 const { error } = await sb.from('matches').update({ [roleKey]: selectedMoveIdx }).eq('id', currentMatchId);
                 if (error) throw error;
-
                 document.getElementById('lockMoveBtn').disabled = true;
                 document.querySelectorAll('.move-card').forEach(c => c.classList.add('locked', 'opacity-50'));
                 document.getElementById('moveStatus').innerText = "Move Locked. Waiting for Revelation...";
                 document.getElementById('moveWaitMsg').classList.remove('hidden');
-            } catch (e) {
-                showToast("COMMIT_ERR", true);
-            } finally { hideLoading(); }
-        }
-
-        async function getMatch(id) {
-            const { data } = await sb.from('matches').select('*').eq('id', id).single();
-            return data;
+            } catch (e) { showToast("COMMIT_ERR", true); } finally { hideLoading(); }
         }
 
         function resolveLocal(match) {
@@ -589,12 +582,10 @@
                 if ((h === 1 && c === 2) || (h === 2 && c === 3) || (h === 3 && c === 1)) result = "HOST_WINS";
                 else result = "CHALLENGER_WINS";
             }
-
             const iAmHost = userProfile?.id === match.host_id;
             let finalState = "draw";
             if (result === "HOST_WINS") finalState = iAmHost ? "win" : "lose";
             else if (result === "CHALLENGER_WINS") finalState = iAmHost ? "lose" : "win";
-
             displayResolution(finalState, h, c);
         }
 
@@ -612,26 +603,23 @@
             ];
 
             const iAmHost = userProfile && currentMatchId && (userProfile.id === currentMatchId.host_id);
-            
             document.getElementById('myFinalMove').innerHTML = icons[(iAmHost ? hMove : cMove) - 1] || "?";
             document.getElementById('enemyFinalMove').innerHTML = icons[(iAmHost ? cMove : hMove) - 1] || "?";
 
             if (state === 'win') {
                 title.innerText = "VICTORY";
-                title.className = "orbitron text-6xl font-black italic uppercase text-green-500";
+                title.style.color = "#22c55e";
                 desc.innerText = "Pool Captured. Credits Transferred.";
-                res.style.borderColor = "#22c55e";
             } else if (state === 'lose') {
                 title.innerText = "DEFEAT";
-                title.className = "orbitron text-6xl font-black italic uppercase text-red-600";
+                title.style.color = "#dc2626";
                 desc.innerText = "Liquidity Lost. System Rebooting.";
-                res.style.borderColor = "#dc2626";
             } else {
                 title.innerText = "STALEMATE";
-                title.className = "orbitron text-6xl font-black italic uppercase text-yellow-500";
+                title.style.color = "#eab308";
                 desc.innerText = "Equal Strategy. Stakes Returned.";
-                res.style.borderColor = "#eab308";
             }
+            fetchErolBalance(); // Update balance after game
         }
 
         function switchView(view) {
@@ -641,35 +629,18 @@
             });
             document.getElementById('view-' + view).classList.remove('hidden');
             document.getElementById('nav-' + view)?.classList.add('active');
-            
             if (view === 'leaderboard') fetchLeaderboard();
             if (view === 'profile') fetchErolBalance();
-        }
-
-        async function fetchLeaderboard() {
-            const { data } = await sb.from('leaderboard').select('*');
-            const list = document.getElementById('leaderboardList');
-            if (!data) return;
-            list.innerHTML = data.map((row, i) => `
-                <tr class="border-b border-orange-500/10 hover:bg-orange-500/5 transition-colors">
-                    <td class="py-4 px-2 opacity-40">#${i+1}</td>
-                    <td class="py-4 px-2 font-bold text-white">${row.username || 'UNKNOWN'}</td>
-                    <td class="py-4 px-2 text-orange-500">${row.games_won || 0}</td>
-                    <td class="py-4 px-2 text-xs opacity-60">${row.total_erol_gambled || 0} EROL</td>
-                </tr>
-            `).join('');
         }
 
         async function refreshLobby() {
             const { data, count } = await sb.from('matches').select('*, profiles!host_id(username)', { count: 'exact' }).eq('status', 'waiting').order('created_at', { ascending: false });
             const grid = document.getElementById('matchGrid');
             document.getElementById('matchCount').innerText = `${count || 0} SIGNALS_FOUND`;
-            
             if (!data?.length) {
                 grid.innerHTML = `<div class="col-span-full py-20 text-center opacity-20 orbitron text-xs tracking-[0.5em]">No Broadcasts Detected</div>`;
                 return;
             }
-
             grid.innerHTML = data.map(m => `
                 <div class="mars-glass p-6 flex flex-col justify-between group hover:border-orange-500 transition-all duration-300">
                     <div class="flex justify-between items-start mb-8">
@@ -689,10 +660,23 @@
             `).join('');
         }
 
+        async function fetchLeaderboard() {
+            const { data } = await sb.from('leaderboard').select('*');
+            const list = document.getElementById('leaderboardList');
+            if (!data) return;
+            list.innerHTML = data.map((row, i) => `
+                <tr class="border-b border-orange-500/10 hover:bg-orange-500/5 transition-colors">
+                    <td class="py-4 px-2 opacity-40">#${i+1}</td>
+                    <td class="py-4 px-2 font-bold text-white">${row.username || 'UNKNOWN'}</td>
+                    <td class="py-4 px-2 text-orange-500">${row.games_won || 0}</td>
+                    <td class="py-4 px-2 text-xs opacity-60">${row.total_erol_gambled || 0} EROL</td>
+                </tr>
+            `).join('');
+        }
+
         function setupRealtime() {
             sb.channel('lobby').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
             sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendChat(p.new)).subscribe();
-            
             sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(30).then(({ data }) => {
                 if (data) data.reverse().forEach(appendChat);
             });
@@ -704,9 +688,7 @@
                 if (match.status === 'in_progress' && userProfile?.id === match.host_id && document.getElementById('view-game').classList.contains('hidden')) {
                     enterGameView(match.id, match.wager_amount, 'host');
                 }
-                if (match.host_move && match.challenger_move) {
-                    resolveLocal(match);
-                }
+                if (match.host_move && match.challenger_move) resolveLocal(match);
             }).subscribe();
         }
 
@@ -751,7 +733,7 @@
             if (newName.length < 3) return showToast("NAME_TOO_SHORT", true);
             showLoading("SYNCING_PROFILE...");
             const { error } = await sb.from('profiles').update({ username: newName }).eq('id', userProfile.id);
-            if (error) showToast("SYNC_FAILED: " + error.message, true);
+            if (error) showToast("SYNC_FAILED", true);
             else {
                 userProfile.username = newName;
                 showToast("PROFILE_UPDATED");
