@@ -3,319 +3,390 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erol's Martian Gambit | Martian Chain</title>
+    <title>Erol's Martian Gambit</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mars-red: #ff4d00;
-            --habitat-bg: #060608;
-            --panel-bg: rgba(20, 20, 25, 0.95);
+            --mars-red: #ff4d4d;
+            --mars-dark: #1a0a0a;
+            --mars-glow: rgba(255, 77, 77, 0.3);
         }
-
         body {
-            background-color: var(--habitat-bg);
+            background-color: var(--mars-dark);
             color: #e0e0e0;
-            font-family: 'Share Tech Mono', monospace;
-            background-image: radial-gradient(circle at 2px 2px, rgba(255, 77, 0, 0.05) 1px, transparent 0);
-            background-size: 40px 40px;
+            font-family: 'Rajdhani', sans-serif;
+            background-image: radial-gradient(circle at 50% 50%, #2c1010 0%, #000 100%);
         }
-
         .orbitron { font-family: 'Orbitron', sans-serif; }
-        
-        .mars-glass {
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 77, 0, 0.2);
-        }
-
-        .btn-mars {
-            background: var(--mars-red);
-            color: black;
-            font-weight: bold;
+        .mars-border { border: 1px solid var(--mars-red); }
+        .mars-button {
+            background: linear-gradient(45deg, #8b0000, #ff4d4d);
+            transition: all 0.3s ease;
             text-transform: uppercase;
-            transition: all 0.2s ease;
+            letter-spacing: 1px;
         }
-
-        .btn-mars:hover:not(:disabled) {
-            background: transparent;
-            color: var(--mars-red);
-            border: 1px solid var(--mars-red);
-            box-shadow: 0 0 20px rgba(255, 77, 0, 0.4);
+        .mars-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px var(--mars-glow);
         }
-
-        .input-mars {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 77, 0, 0.3);
-            color: #fff;
+        .mars-button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .card {
+            background: rgba(40, 10, 10, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 77, 77, 0.2);
+            border-radius: 12px;
         }
-
-        .move-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            border: 1px solid rgba(255, 77, 0, 0.1);
+        .move-btn {
+            border: 2px solid transparent;
+            transition: all 0.2s;
         }
-
-        .move-card.selected {
+        .move-btn.selected {
             border-color: var(--mars-red);
-            background: rgba(255, 77, 0, 0.2);
-            box-shadow: 0 0 30px rgba(255, 77, 0, 0.2);
+            background: rgba(255, 77, 77, 0.2);
         }
-
-        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
-        .scanline {
-            width: 100%; height: 2px;
-            background: rgba(255, 77, 0, 0.1);
-            position: absolute;
-            animation: scan 8s linear infinite;
-            pointer-events: none;
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
         }
     </style>
 </head>
-<body class="min-h-screen">
-    <div class="scanline"></div>
+<body class="min-h-screen p-4 md:p-8">
 
-    <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center hidden bg-black/90">
-        <div class="w-12 h-12 border-2 border-orange-900 border-t-orange-500 rounded-full animate-spin mb-4"></div>
-        <p id="loadingText" class="orbitron text-xs tracking-widest text-orange-500 uppercase">Processing...</p>
-    </div>
-
-    <nav class="mars-glass border-b border-orange-500/20 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
-            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('lobby')">
-                <i class="fas fa-radiation text-orange-500 text-xl"></i>
-                <span class="orbitron font-bold text-lg tracking-tighter text-white uppercase italic">EROL<span class="text-orange-500 font-normal">GAMBIT</span></span>
-            </div>
-            <button id="connectBtn" class="btn-mars px-4 py-1.5 text-xs rounded-sm orbitron">Connect_System</button>
+    <!-- Header & Wallet -->
+    <header class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-12">
+        <div class="text-center md:text-left mb-6 md:mb-0">
+            <h1 class="orbitron text-4xl font-bold text-red-500 tracking-tighter">EROL'S MARTIAN GAMBIT</h1>
+            <p class="text-gray-400 text-sm italic">High-Stakes Tactical Strategy on Martian L1</p>
         </div>
-    </nav>
-
-    <main class="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
-        <!-- Sidebar -->
-        <div class="lg:col-span-3 space-y-6">
-            <div id="miniProfile" class="mars-glass p-6 hidden">
-                <p id="navUserName" class="orbitron font-bold text-xs text-orange-500 mb-4">IDENT_PENDING</p>
-                <div class="bg-black/50 p-4 border-l-2 border-orange-500">
-                    <p class="text-[10px] text-orange-500/40 uppercase mb-1">RESERVES</p>
-                    <span id="navBalance" class="text-xl font-bold text-white">0.00</span>
-                </div>
-            </div>
-
-            <div class="mars-glass p-4 flex flex-col h-[400px]">
-                <div class="text-[10px] orbitron text-orange-500 mb-4 uppercase border-b border-orange-500/20 pb-2">Comms_Feed</div>
-                <div id="chatBox" class="flex-grow overflow-y-auto space-y-2 mb-4 text-[11px]"></div>
-                <div class="flex gap-2">
-                    <input type="text" id="chatInput" placeholder="MSG..." class="flex-grow input-mars px-2 py-1 text-xs" />
-                    <button id="sendChat" class="bg-orange-500/20 px-3"><i class="fas fa-paper-plane text-[10px]"></i></button>
-                </div>
+        <div id="wallet-section" class="flex flex-col items-end">
+            <button id="connect-btn" class="mars-button orbitron px-6 py-2 rounded-full font-bold">Connect Uplink</button>
+            <div id="account-info" class="hidden text-right">
+                <p id="user-address" class="text-xs text-red-400 font-mono"></p>
+                <p id="user-balance" class="text-lg font-bold">0.00 $EROL</p>
             </div>
         </div>
+    </header>
 
-        <!-- Content -->
-        <div class="lg:col-span-9">
-            <div id="lobbySection" class="space-y-8">
-                <div class="mars-glass p-8">
-                    <h2 class="orbitron text-3xl font-bold text-white mb-2 uppercase italic">Initiate_Gambit</h2>
-                    <p class="text-orange-500/60 text-[10px] mb-6 uppercase tracking-[0.2em]">Deploy EROL liquidity and challenge the Martian Grid.</p>
-                    <div class="flex flex-wrap gap-4 items-end">
-                        <div class="flex flex-col gap-1">
-                            <label class="text-[9px] text-orange-500/40 uppercase">Stake_Amount</label>
-                            <input type="number" id="wagerInput" value="50" class="input-mars px-4 py-2 text-xl font-bold w-32 outline-none" />
-                        </div>
-                        <button onclick="hostGame()" class="btn-mars px-8 py-3 orbitron text-sm">Deploy_Signal</button>
-                    </div>
+    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Create Game Section -->
+        <section class="lg:col-span-4 flex flex-col gap-6">
+            <div class="card p-6">
+                <h2 class="orbitron text-xl mb-4 text-white border-b border-red-900 pb-2">Initialize Signal</h2>
+                
+                <label class="block text-xs uppercase text-gray-400 mb-1">Select Tactical Move</label>
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <button onclick="selectMove(1)" id="move-1" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
+                        <span class="text-2xl">☀️</span>
+                        <span class="text-[10px] mt-1 uppercase">Solar Flare</span>
+                    </button>
+                    <button onclick="selectMove(2)" id="move-2" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
+                        <span class="text-2xl">🌬️</span>
+                        <span class="text-[10px] mt-1 uppercase">Oxygen Siphon</span>
+                    </button>
+                    <button onclick="selectMove(3)" id="move-3" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
+                        <span class="text-2xl">🌪️</span>
+                        <span class="text-[10px] mt-1 uppercase">Dust Storm</span>
+                    </button>
                 </div>
 
-                <div class="space-y-4">
-                    <h3 class="orbitron text-[10px] font-bold text-orange-500 uppercase tracking-widest">Active_Broadcasts</h3>
-                    <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                </div>
+                <label class="block text-xs uppercase text-gray-400 mb-1">Wager Amount ($EROL)</label>
+                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black/60 border border-red-900 rounded p-2 mb-6 text-white focus:outline-none focus:border-red-500">
+                
+                <button id="create-btn" onclick="handleCreateGame()" class="mars-button w-full py-3 rounded font-bold orbitron">Deploy Signal</button>
             </div>
 
-            <!-- Game View -->
-            <div id="gameSection" class="space-y-6 hidden">
-                <div class="mars-glass p-6 flex justify-between items-center">
-                    <h2 class="orbitron text-lg font-bold text-white uppercase italic">TACTICAL_ENGAGEMENT</h2>
-                    <div class="text-right">
-                        <p class="text-[10px] text-orange-500/40 uppercase">Pool</p>
-                        <p id="matchPool" class="orbitron text-xl text-orange-500">0.00 EROL</p>
-                    </div>
-                </div>
+            <div class="card p-4 text-xs text-gray-400">
+                <h3 class="text-red-400 font-bold mb-2 uppercase">The Tactical Triangle</h3>
+                <p>☀️ Solar Flare evaporates 🌬️ Oxygen Siphon</p>
+                <p>🌬️ Oxygen Siphon clears 🌪️ Dust Storm</p>
+                <p>🌪️ Dust Storm blocks ☀️ Solar Flare</p>
+            </div>
+        </section>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="move-card mars-glass p-6 text-center" onclick="selectMove('solar_flare')">
-                        <i class="fas fa-sun text-3xl text-orange-500 mb-2"></i>
-                        <p class="orbitron text-xs font-bold">SOLAR_FLARE</p>
-                    </div>
-                    <div class="move-card mars-glass p-6 text-center" onclick="selectMove('oxygen_siphon')">
-                        <i class="fas fa-wind text-3xl text-blue-500 mb-2"></i>
-                        <p class="orbitron text-xs font-bold">O2_SIPHON</p>
-                    </div>
-                    <div class="move-card mars-glass p-6 text-center" onclick="selectMove('dust_storm')">
-                        <i class="fas fa-cloud-showers-heavy text-3xl text-yellow-500 mb-2"></i>
-                        <p class="orbitron text-xs font-bold">DUST_STORM</p>
-                    </div>
+        <!-- Active Lobby -->
+        <section class="lg:col-span-8">
+            <div class="card p-6 min-h-[400px]">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="orbitron text-xl text-white">Active Signals</h2>
+                    <button onclick="refreshLobby()" class="text-xs text-red-400 hover:text-white transition">⟳ Sync Lobby</button>
                 </div>
-
-                <div class="mars-glass p-6 text-center">
-                    <p id="moveStatus" class="orbitron text-[10px] text-orange-500 mb-4 uppercase">Select Your Tactical Gambit</p>
-                    <button id="lockMoveBtn" disabled onclick="lockMove()" class="btn-mars px-12 py-3 orbitron text-sm">Lock_Tactical_Move</button>
+                
+                <div id="lobby-list" class="space-y-4">
+                    <!-- Dynamic Game Items -->
+                    <div class="text-center py-10 text-gray-500 italic">Scanning Martian frequencies for signals...</div>
                 </div>
             </div>
-        </div>
+        </section>
     </main>
 
-    <div id="statusToast" class="fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-[10px] uppercase orbitron hidden z-[110] bg-black shadow-2xl"></div>
+    <!-- UI Feedback Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded shadow-2xl transform translate-y-20 transition-transform duration-300 pointer-events-none">
+        Message Here
+    </div>
 
     <script>
-        const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
-        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3";
+        const CHAIN_ID = "0x7EB"; // 2027
+        const RPC_URL = "https://martian-rpc1.amichain.org/";
+        const CONTRACT_ADDR = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
+        const TOKEN_ADDR = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
 
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        let userWallet, provider, currentMatchId, selectedMove;
+        const ABI = [
+            "function createGame(bytes32 _hash) external payable",
+            "function challengeGame(uint256 _gameId, uint8 _move) external payable",
+            "function resolveGame(uint256 _gameId, uint8 _move, string calldata _salt) external",
+            "function forceForfeit(uint256 _gameId) external",
+            "function refundUnchallenged(uint256 _gameId) external",
+            "function gameCounter() public view returns (uint256)",
+            "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timestamp, uint8 status)",
+            "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager)",
+            "event GameChallenged(uint256 indexed gameId, address indexed challenger)",
+            "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)"
+        ];
 
-        async function connect() {
-            if (!window.ethereum) return toast("METAMASK_NOT_FOUND", true);
-            showLoading("LINKING...");
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                userWallet = accounts[0].toLowerCase();
+        let provider, signer, contract, userAddress;
+        let selectedMoveIdx = 0;
+
+        // Initialize
+        async function init() {
+            if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
-                
-                document.getElementById('connectBtn').innerText = `${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
-                document.getElementById('miniProfile').classList.remove('hidden');
-                document.getElementById('navUserName').innerText = `PILOT_${userWallet.slice(2,8).toUpperCase()}`;
-                
-                fetchBalance();
-                setupRealtime();
-                toast("UPLINK_SECURE");
-            } catch (e) { toast("LINK_FAILED", true); }
-            finally { hideLoading(); }
+                document.getElementById('connect-btn').addEventListener('click', connectWallet);
+                refreshLobby();
+            } else {
+                showToast("Install MetaMask to access Martian Chain.");
+            }
         }
 
-        async function hostGame() {
-            if (!userWallet) return connect();
-            const wager = parseFloat(document.getElementById('wagerInput').value);
-            if (!wager || wager < 1) return toast("INVALID_STAKE", true);
-
-            showLoading("BROADCASTING_SIGNAL...");
+        async function connectWallet() {
             try {
-                // We use wallet address directly in the 'host_id' slot or a meta field
-                // Ensure your DB schema handles wallet strings if UUID fails
-                const { data, error } = await sb.from('matches').insert({
-                    host_wallet: userWallet, // New field or fallback
-                    wager_amount: wager,
-                    status: 'waiting'
-                }).select().single();
+                // Request Network Switch
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CHAIN_ID }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: CHAIN_ID,
+                                chainName: 'Martian Chain',
+                                nativeCurrency: { name: 'EROL', symbol: 'EROL', decimals: 18 },
+                                rpcUrls: [RPC_URL],
+                                blockExplorerUrls: ['https://explorer.martianchain.com/']
+                            }],
+                        });
+                    }
+                }
 
-                if (error) throw error;
-                currentMatchId = data.id;
-                toast("SIGNAL_LIVE_IN_SECTOR");
-            } catch (e) {
-                console.error(e);
-                toast("SIGNAL_INTERRUPTED", true);
-            } finally { hideLoading(); }
-        }
+                const accounts = await provider.send("eth_requestAccounts", []);
+                userAddress = accounts[0];
+                signer = await provider.getSigner();
+                contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
 
-        async function joinGame(matchId, wager) {
-            if (!userWallet) return connect();
-            showLoading("JOINING_GAMBIT...");
-            try {
-                const { error } = await sb.from('matches').update({
-                    opponent_wallet: userWallet,
-                    status: 'in_progress'
-                }).eq('id', matchId);
-
-                if (error) throw error;
-                currentMatchId = matchId;
-                document.getElementById('matchPool').innerText = `${(wager * 2).toFixed(2)} EROL`;
-                switchView('game');
-            } catch (e) { toast("LINK_FAILED", true); }
-            finally { hideLoading(); }
-        }
-
-        async function lockMove() {
-            if (!selectedMove) return;
-            showLoading("COMMITTING...");
-            try {
-                // Determine if we are host or opponent based on wallet
-                const { data: match } = await sb.from('matches').select('*').eq('id', currentMatchId).single();
-                const updateData = (match.host_wallet === userWallet) 
-                    ? { host_move: selectedMove } 
-                    : { opponent_move: selectedMove };
-
-                const { error } = await sb.from('matches').update(updateData).eq('id', currentMatchId);
-                if (error) throw error;
+                document.getElementById('connect-btn').classList.add('hidden');
+                document.getElementById('account-info').classList.remove('hidden');
+                document.getElementById('user-address').innerText = userAddress;
                 
-                document.getElementById('lockMoveBtn').disabled = true;
-                document.getElementById('moveStatus').innerText = "MOVE_ENCRYPTED_WAITING_FOR_REVEAL";
-                toast("TACTIC_LOCKED");
-            } catch (e) { toast("TX_ERROR", true); }
-            finally { hideLoading(); }
+                updateBalance();
+                refreshLobby();
+            } catch (err) {
+                console.error(err);
+                showToast("Connection Failed");
+            }
         }
 
-        function selectMove(move) {
-            selectedMove = move;
-            document.querySelectorAll('.move-card').forEach(c => c.classList.remove('selected'));
-            event.currentTarget.classList.add('selected');
-            document.getElementById('moveStatus').innerText = `READY: ${move.toUpperCase()}`;
-            document.getElementById('lockMoveBtn').disabled = false;
+        async function updateBalance() {
+            const balance = await provider.getBalance(userAddress);
+            document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $EROL`;
+        }
+
+        function selectMove(idx) {
+            selectedMoveIdx = idx;
+            document.querySelectorAll('.move-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById(`move-${idx}`).classList.add('selected');
+        }
+
+        function generateSalt() {
+            return ethers.hexlify(ethers.randomBytes(16));
+        }
+
+        async function handleCreateGame() {
+            if (!signer) return showToast("Connect wallet first!");
+            if (selectedMoveIdx === 0) return showToast("Select a move!");
+            
+            const wager = document.getElementById('wager-amount').value;
+            if (!wager || wager <= 0) return showToast("Enter valid wager");
+
+            const salt = generateSalt();
+            // Hash: keccak256(abi.encodePacked(_move, _salt, game.host))
+            // We use Solitidy-tight packing logic via ethers
+            const moveValue = selectedMoveIdx;
+            
+            // Note: The contract expects keccak256(abi.encodePacked(move, salt, msg.sender))
+            const hash = ethers.solidityPackedKeccak256(
+                ["uint8", "string", "address"],
+                [moveValue, salt, userAddress]
+            );
+
+            try {
+                showToast("Broadcasting Signal...");
+                const tx = await contract.createGame(hash, { value: ethers.parseEther(wager) });
+                
+                // Store local secret
+                const pendingGames = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+                // We'll map the TX hash temporarily until we get the ID from logs
+                pendingGames[tx.hash] = { move: moveValue, salt: salt };
+                localStorage.setItem('martian_gambits', JSON.stringify(pendingGames));
+
+                await tx.wait();
+                showToast("Signal Deployed!");
+                updateBalance();
+                refreshLobby();
+            } catch (err) {
+                console.error(err);
+                showToast("Deployment Failed");
+            }
         }
 
         async function refreshLobby() {
-            const { data: matches } = await sb.from('matches').select('*').eq('status', 'waiting').order('created_at', { ascending: false });
-            const grid = document.getElementById('matchGrid');
-            grid.innerHTML = matches?.length ? matches.map(m => `
-                <div class="mars-glass p-4 border-l-2 border-orange-500 flex justify-between items-center">
-                    <div>
-                        <p class="text-[8px] text-orange-500/50 uppercase">Broadcaster</p>
-                        <p class="orbitron text-[10px] text-white">${(m.host_wallet || 'ANON').slice(0,10)}...</p>
-                        <p class="orbitron text-lg text-orange-500">${m.wager_amount} EROL</p>
-                    </div>
-                    <button onclick="joinGame('${m.id}', ${m.wager_amount})" class="btn-mars px-4 py-2 text-[10px] orbitron">Accept</button>
-                </div>
-            `).join('') : '<p class="col-span-full text-center py-10 opacity-20 orbitron text-[10px]">SCANNING_EMPTY_SECTOR...</p>';
-        }
+            if (!contract) return;
+            const lobby = document.getElementById('lobby-list');
+            lobby.innerHTML = '<div class="text-center py-10 animate-pulse text-red-400">Scanning for signals...</div>';
 
-        async function fetchBalance() {
-            if (!userWallet) return;
             try {
-                const abi = ["function balanceOf(address) view returns (uint256)"];
-                const contract = new ethers.Contract(EROL_TOKEN, abi, provider);
-                const bal = await contract.balanceOf(userWallet);
-                document.getElementById('navBalance').innerText = parseFloat(ethers.formatUnits(bal, 18)).toFixed(2);
-            } catch (e) {}
+                const counter = await contract.gameCounter();
+                const gamePromises = [];
+                // Load last 10 games for the demo
+                const start = Number(counter) > 10 ? Number(counter) - 9 : 1;
+                for (let i = Number(counter); i >= start; i--) {
+                    gamePromises.push(contract.games(i).then(g => ({ ...g, id: i })));
+                }
+
+                const games = await Promise.all(gamePromises);
+                lobby.innerHTML = "";
+
+                if (games.length === 0) {
+                    lobby.innerHTML = '<div class="text-center py-10 text-gray-500">Silence on all frequencies.</div>';
+                    return;
+                }
+
+                games.forEach(game => {
+                    if (game.status > 1 && game.host.toLowerCase() !== userAddress?.toLowerCase() && game.challenger.toLowerCase() !== userAddress?.toLowerCase()) return;
+                    
+                    const div = document.createElement('div');
+                    div.className = "card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 " + getStatusColor(game.status);
+                    
+                    const wager = ethers.formatEther(game.wager);
+                    const isHost = userAddress && game.host.toLowerCase() === userAddress.toLowerCase();
+                    const isChallenger = userAddress && game.challenger.toLowerCase() === userAddress.toLowerCase();
+                    
+                    div.innerHTML = `
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="status-badge ${getStatusBg(game.status)}">${getStatusText(game.status)}</span>
+                                <span class="text-xs text-gray-500">#${game.id}</span>
+                            </div>
+                            <p class="text-sm font-bold text-white">${wager} $EROL Pool</p>
+                            <p class="text-[10px] text-gray-500 font-mono">${game.host.substring(0,12)}...</p>
+                        </div>
+                        <div class="flex gap-2">
+                            ${getActionButtons(game, isHost, isChallenger)}
+                        </div>
+                    `;
+                    lobby.appendChild(div);
+                });
+
+            } catch (err) {
+                console.error(err);
+                lobby.innerHTML = '<div class="text-center py-10 text-red-500">Error syncing with Martian Chain.</div>';
+            }
         }
 
-        function setupRealtime() {
-            sb.channel('matches').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, refreshLobby).subscribe();
-            refreshLobby();
+        function getActionButtons(game, isHost, isChallenger) {
+            // Status: 0:Open, 1:Challenged, 2:Resolved, 3:Refunded, 4:Forfeited
+            if (game.status == 0) {
+                if (isHost) return `<button onclick="handleRefund(${game.id})" class="text-[10px] border border-gray-600 px-3 py-1 rounded hover:bg-white/10">Reclaim</button>`;
+                return `<button onclick="handleChallenge(${game.id})" class="mars-button text-[10px] px-4 py-2 rounded font-bold">Accept Gambit</button>`;
+            }
+            if (game.status == 1) {
+                if (isHost) return `<button onclick="handleResolve(${game.id})" class="bg-green-600 text-white text-[10px] px-4 py-2 rounded font-bold animate-bounce">Reveal Move</button>`;
+                if (isChallenger) return `<span class="text-[10px] text-yellow-500 italic">Waiting for Reveal...</span>`;
+                return `<span class="text-[10px] text-gray-600">Locked Combat</span>`;
+            }
+            return `<span class="text-[10px] text-gray-500">Archived</span>`;
         }
 
-        function switchView(view) {
-            document.getElementById('lobbySection').classList.toggle('hidden', view !== 'lobby');
-            document.getElementById('gameSection').classList.toggle('hidden', view !== 'game');
+        async function handleChallenge(id) {
+            if (!signer) return showToast("Connect wallet");
+            const move = prompt("Enter Move: 1 (Solar Flare), 2 (Oxygen Siphon), 3 (Dust Storm)");
+            if (![1, 2, 3].includes(Number(move))) return showToast("Invalid Move");
+
+            try {
+                const g = await contract.games(id);
+                showToast("Entering the Gambit...");
+                const tx = await contract.challengeGame(id, move, { value: g.wager });
+                await tx.wait();
+                showToast("Challenge Accepted!");
+                refreshLobby();
+            } catch (err) {
+                showToast("Challenge Failed");
+            }
         }
 
-        function showLoading(text) {
-            document.getElementById('loadingText').innerText = text;
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-        }
-        function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+        async function handleResolve(id) {
+            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+            // This is a simplified lookup. In production, we'd index the local storage by gameId
+            // For now, we look for the most recent compatible secret or prompt the user.
+            let mySecret = Object.values(secrets)[0]; // Placeholder logic
+            
+            if (!mySecret) {
+                const move = prompt("Recovery: What was your move? (1, 2, or 3)");
+                const salt = prompt("Recovery: Enter your Salt (found in local storage)");
+                mySecret = { move, salt };
+            }
 
-        function toast(msg, err = false) {
-            const t = document.getElementById('statusToast');
+            try {
+                showToast("Revealing Truth...");
+                const tx = await contract.resolveGame(id, mySecret.move, mySecret.salt);
+                await tx.wait();
+                showToast("Game Resolved!");
+                refreshLobby();
+            } catch (err) {
+                showToast("Reveal Error - Check salt/move");
+            }
+        }
+
+        async function handleRefund(id) {
+            try {
+                const tx = await contract.refundUnchallenged(id);
+                await tx.wait();
+                showToast("Funds Returned");
+                refreshLobby();
+            } catch (err) {
+                showToast("Timeout not reached?");
+            }
+        }
+
+        // Helper UI functions
+        function getStatusText(s) { return ["Open", "Challenged", "Resolved", "Refunded", "Forfeited"][s]; }
+        function getStatusBg(s) { return ["bg-blue-900", "bg-yellow-900", "bg-green-900", "bg-gray-800", "bg-red-900"][s]; }
+        function getStatusColor(s) { return ["border-blue-500", "border-yellow-500", "border-green-500", "border-gray-500", "border-red-500"][s]; }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
             t.innerText = msg;
-            t.className = `fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-[10px] uppercase orbitron z-[110] bg-black shadow-2xl ${err ? 'border-red-600 text-red-500' : 'border-orange-500 text-orange-500'}`;
-            t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 3000);
+            t.classList.remove('translate-y-20');
+            setTimeout(() => t.classList.add('translate-y-20'), 3000);
         }
 
-        document.getElementById('connectBtn').addEventListener('click', connect);
+        window.onload = init;
     </script>
 </body>
 </html>
