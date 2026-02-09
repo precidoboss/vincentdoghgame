@@ -17,15 +17,15 @@
         }
         body {
             background-color: var(--deep-dust);
-            background-image: radial-gradient(circle at 50% 50%, #2d1600 0%, #050505 100%);
+            background-image: radial-gradient(circle at 50% 50%, #3d1e00 0%, #050505 100%);
             color: #ffffff;
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
         }
         .martian-card {
-            background: rgba(45, 22, 0, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 126, 0, 0.2);
+            background: rgba(45, 22, 0, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 126, 0, 0.25);
             box-shadow: 0 10px 40px rgba(0,0,0,0.4);
         }
         .glow-border { border-color: var(--martian-orange); box-shadow: 0 0 15px rgba(255, 126, 0, 0.3); }
@@ -39,25 +39,20 @@
         }
         .btn-martian:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255, 126, 0, 0.5);
+            box-shadow: 0 5px 20px rgba(255, 126, 0, 0.6);
         }
         .orange-text { color: var(--martian-orange); }
-        .chat-container { height: 350px; background: rgba(0,0,0,0.3); }
+        .chat-container { height: 350px; background: rgba(0,0,0,0.4); }
         .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
         .tab-btn.active { border-color: var(--martian-orange); color: var(--martian-orange); font-weight: 900; }
         
-        /* Animations */
         @keyframes pulse-glow {
             0% { box-shadow: 0 0 5px rgba(255, 126, 0, 0.2); }
-            50% { box-shadow: 0 0 20px rgba(255, 126, 0, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(255, 126, 0, 0.6); }
             100% { box-shadow: 0 0 5px rgba(255, 126, 0, 0.2); }
         }
         .active-pulse { animation: pulse-glow 2s infinite; }
-        
-        .loading-overlay {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-        }
+        .loading-overlay { background: rgba(10, 5, 0, 0.9); backdrop-filter: blur(8px); }
     </style>
 </head>
 <body class="min-h-screen">
@@ -65,29 +60,29 @@
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 loading-overlay z-[100] flex flex-col items-center justify-center hidden">
         <div class="relative">
-            <i class="fas fa-circle-notch fa-spin text-6xl text-orange-500"></i>
-            <i class="fas fa-rocket absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-orange-300"></i>
+            <i class="fas fa-circle-notch fa-spin text-7xl text-orange-500"></i>
+            <i class="fas fa-rocket absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl text-orange-300"></i>
         </div>
-        <p id="loadingText" class="mt-6 font-black italic tracking-widest text-orange-500 uppercase">Syncing with Martian Satellite...</p>
+        <p id="loadingText" class="mt-8 font-black italic tracking-widest text-orange-500 uppercase text-lg">Syncing with Martian Satellite...</p>
     </div>
 
     <!-- Nav -->
-    <nav class="border-b border-orange-900/50 bg-black/60 sticky top-0 z-50 p-4 backdrop-blur-md">
+    <nav class="border-b border-orange-500/30 bg-black/80 sticky top-0 z-50 p-4 backdrop-blur-xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4 cursor-pointer" onclick="switchView('lobby')">
-                <div class="bg-orange-500 p-2.5 rounded-xl shadow-[0_0_15px_rgba(255,126,0,0.5)]">
+                <div class="bg-orange-500 p-2.5 rounded-xl shadow-[0_0_20px_rgba(255,126,0,0.6)]">
                     <i class="fas fa-meteor text-black text-xl"></i>
                 </div>
                 <h1 class="text-3xl font-black italic tracking-tighter text-orange-500 hidden sm:block">MARTIAN GAMBIT</h1>
             </div>
             
-            <div class="flex items-center gap-4">
-                <div id="connectionStatus" class="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase text-orange-800">
-                    <span class="w-2 h-2 rounded-full bg-orange-600"></span>
-                    Martian Chain Ready
+            <div class="flex items-center gap-6">
+                <div id="connectionStatus" class="hidden md:flex items-center gap-3 text-[11px] font-black uppercase text-orange-400">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse shadow-[0_0_8px_#ff7e00]"></span>
+                    Martian Node Connected
                 </div>
-                <button id="connectBtn" class="btn-martian px-8 py-2.5 rounded-2xl text-sm flex items-center gap-2">
-                    <i class="fas fa-wallet"></i> <span>Connect</span>
+                <button id="connectBtn" class="btn-martian px-8 py-3 rounded-2xl text-sm flex items-center gap-2">
+                    <i class="fas fa-wallet"></i> <span>Connect Wallet</span>
                 </button>
             </div>
         </div>
@@ -96,39 +91,50 @@
     <!-- Main Content -->
     <div id="mainView" class="max-w-7xl mx-auto p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- Left Column: Comms & Profile Access -->
+        <!-- Left Column -->
         <div class="lg:col-span-3 space-y-6">
             <!-- Mini Profile -->
-            <div id="miniProfile" class="martian-card rounded-3xl p-5 border-orange-500/30 hidden">
-                <div class="flex items-center justify-between mb-4">
+            <div id="miniProfile" class="martian-card rounded-3xl p-6 border-orange-500/40 hidden">
+                <div class="flex items-center justify-between mb-5">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center border border-orange-500/40">
-                            <i class="fas fa-user-astronaut text-orange-500"></i>
+                        <div class="w-12 h-12 bg-orange-500/20 rounded-2xl flex items-center justify-center border-2 border-orange-500/40">
+                            <i class="fas fa-user-astronaut text-orange-500 text-xl"></i>
                         </div>
-                        <p id="navUserName" class="font-black text-sm truncate w-24">Rover</p>
+                        <div>
+                            <p id="navUserName" class="font-black text-sm text-white">Rover</p>
+                            <p class="text-[10px] text-orange-700 font-bold uppercase">Active Pilot</p>
+                        </div>
                     </div>
-                    <button onclick="switchView('profile')" class="text-orange-500 hover:rotate-90 transition-transform">
+                    <button onclick="switchView('profile')" class="bg-orange-500/10 p-2 rounded-lg text-orange-500 hover:rotate-90 transition-transform">
                         <i class="fas fa-cog"></i>
                     </button>
                 </div>
-                <div class="bg-black/40 rounded-2xl p-3 border border-orange-900/30 flex justify-between items-center">
-                    <span class="text-[10px] font-black text-orange-800 uppercase">EROL STAKED</span>
-                    <span id="navBalance" class="text-orange-500 font-black">0.00</span>
+                
+                <div class="space-y-3">
+                    <div class="bg-black/40 rounded-2xl p-4 border border-orange-500/20 flex justify-between items-center group cursor-pointer hover:border-orange-500 transition-colors" onclick="fetchBalance()">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black text-orange-800 uppercase leading-none mb-1">EROL Balance</span>
+                            <div class="flex items-center gap-2">
+                                <span id="navBalance" class="text-xl font-black text-orange-500">0.00</span>
+                                <i class="fas fa-sync-alt text-[10px] text-orange-900 group-hover:text-orange-500 transition-colors"></i>
+                            </div>
+                        </div>
+                        <i class="fas fa-coins text-orange-900 text-xl group-hover:text-orange-500"></i>
+                    </div>
                 </div>
             </div>
 
             <!-- Chat -->
-            <div class="martian-card rounded-3xl p-6 glow-border active-pulse">
+            <div class="martian-card rounded-3xl p-6 border-orange-500/30">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-xs font-black text-orange-500 tracking-widest uppercase flex items-center gap-2">
-                        <i class="fas fa-satellite-dish"></i> Public Comms
+                        <i class="fas fa-satellite-dish animate-bounce"></i> Public Comms
                     </h3>
                 </div>
-                <div id="chatBox" class="chat-container rounded-2xl p-4 overflow-y-auto space-y-3 mb-4 scrollbar-hidden text-sm border border-orange-900/20">
-                    <!-- Messages -->
+                <div id="chatBox" class="chat-container rounded-2xl p-4 overflow-y-auto space-y-3 mb-4 scrollbar-hidden text-sm border border-orange-900/40">
                 </div>
                 <div class="relative group">
-                    <input type="text" id="chatInput" placeholder="Send signal..." class="w-full bg-black/60 border border-orange-900/50 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    <input type="text" id="chatInput" placeholder="Broadcasting..." class="w-full bg-black/60 border border-orange-900/50 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-orange-500 transition-all" />
                     <button id="sendChat" class="absolute right-3 top-3.5 bg-orange-600/20 p-2 rounded-lg text-orange-500 hover:bg-orange-500 hover:text-black transition-colors">
                         <i class="fas fa-paper-plane"></i>
                     </button>
@@ -137,101 +143,79 @@
         </div>
 
         <!-- Right Column: Lobby -->
-        <div id="lobbySection" class="lg:col-span-9 space-y-8 animate-in fade-in">
-            <!-- Host Banner -->
-            <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-red-700 rounded-[2.5rem] p-10 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-[0_20px_60px_rgba(255,100,0,0.3)] relative overflow-hidden group">
+        <div id="lobbySection" class="lg:col-span-9 space-y-8">
+            <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-red-700 rounded-[2.5rem] p-10 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-[0_25px_60px_rgba(255,100,0,0.4)] relative overflow-hidden group">
                 <div class="relative z-10 text-center lg:text-left">
-                    <div class="inline-block bg-black/20 backdrop-blur-md px-4 py-1 rounded-full text-[10px] font-black text-white uppercase mb-4 tracking-widest">Martian Chain Verified</div>
-                    <h2 class="text-5xl font-black italic mb-3 tracking-tighter text-black">HOST A GAMBIT</h2>
-                    <p class="text-orange-100 font-bold opacity-90 max-w-md">Stake EROL tokens to start a match. Minimum 50 EROL required for planetary security.</p>
+                    <div class="inline-block bg-black/30 backdrop-blur-md px-5 py-1.5 rounded-full text-[10px] font-black text-white uppercase mb-5 tracking-widest border border-white/10">Official Martian Contract</div>
+                    <h2 class="text-6xl font-black italic mb-4 tracking-tighter text-black">HOST A GAMBIT</h2>
+                    <p class="text-orange-100 font-bold opacity-90 max-w-md text-lg">Stake EROL tokens to start a match. Minimum 50 EROL required.</p>
                 </div>
-                <div class="relative z-10 flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
-                    <div class="bg-black/30 backdrop-blur-2xl border border-white/20 rounded-3xl p-4 flex items-center justify-center">
-                        <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-white text-3xl font-black w-28 text-center focus:outline-none" />
-                        <div class="flex flex-col ml-3">
-                            <span class="text-[10px] font-black text-orange-300 uppercase leading-none">Stake</span>
-                            <span class="text-sm font-black text-white">EROL</span>
+                <div class="relative z-10 flex flex-col sm:flex-row gap-5 w-full lg:w-auto">
+                    <div class="bg-black/40 backdrop-blur-2xl border border-white/20 rounded-3xl p-5 flex items-center justify-center min-w-[180px]">
+                        <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-white text-4xl font-black w-24 text-center focus:outline-none" />
+                        <div class="flex flex-col ml-4">
+                            <span class="text-[11px] font-black text-orange-300 uppercase leading-none">Stake</span>
+                            <span class="text-lg font-black text-white">EROL</span>
                         </div>
                     </div>
-                    <button id="hostGameBtn" class="bg-black text-orange-500 px-10 py-5 rounded-3xl font-black uppercase text-lg shadow-2xl group-hover:scale-105 transition-transform">
+                    <button id="hostGameBtn" class="bg-black text-orange-500 px-12 py-6 rounded-3xl font-black uppercase text-xl shadow-2xl group-hover:scale-105 transition-transform active:scale-95">
                         Launch Match
                     </button>
                 </div>
-                <i class="fas fa-robot absolute -right-10 -bottom-10 text-[15rem] text-black/5 rotate-12 group-hover:rotate-0 transition-transform duration-700"></i>
+                <i class="fas fa-space-shuttle absolute -right-12 -bottom-12 text-[18rem] text-black/10 -rotate-12 group-hover:rotate-0 transition-transform duration-1000"></i>
             </div>
 
-            <!-- Active Lobby -->
             <div class="space-y-6">
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-4">
-                        <button onclick="refreshLobby()" class="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500 border border-orange-500/20 hover:bg-orange-500 hover:text-black transition-all">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                        <h3 class="text-2xl font-black italic text-orange-500 tracking-tight">ACTIVE SIGNALS</h3>
-                    </div>
-                    <div class="bg-orange-950/30 p-1 rounded-xl flex gap-1">
-                        <button class="tab-btn active px-4 py-2 text-xs font-black uppercase">Global</button>
-                        <button class="tab-btn px-4 py-2 text-xs font-black uppercase text-orange-900">Mine</button>
+                    <h3 class="text-3xl font-black italic text-orange-500 tracking-tight flex items-center gap-4">
+                        <i class="fas fa-broadcast-tower"></i> ACTIVE SIGNALS
+                    </h3>
+                    <div class="bg-orange-950/40 p-1.5 rounded-2xl flex gap-2 border border-orange-500/10">
+                        <button class="tab-btn active px-6 py-2.5 text-xs font-black uppercase">Global Lobby</button>
                     </div>
                 </div>
-                
-                <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    <!-- Matches Load Here -->
+                <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
                 </div>
             </div>
         </div>
 
         <!-- Profile View -->
         <div id="profileSection" class="lg:col-span-9 space-y-8 hidden animate-in slide-in-from-right">
-            <div class="flex items-center gap-4">
-                <button onclick="switchView('lobby')" class="bg-orange-500/10 text-orange-500 p-3 rounded-2xl border border-orange-500/20 hover:bg-orange-500 hover:text-black">
-                    <i class="fas fa-chevron-left"></i>
+            <div class="flex items-center gap-6">
+                <button onclick="switchView('lobby')" class="bg-orange-500/10 text-orange-500 w-14 h-14 rounded-2xl border border-orange-500/20 hover:bg-orange-500 hover:text-black transition-all">
+                    <i class="fas fa-chevron-left text-xl"></i>
                 </button>
-                <h2 class="text-4xl font-black italic text-orange-500">COMMAND CENTER</h2>
+                <h2 class="text-5xl font-black italic text-orange-500">COMMAND CENTER</h2>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Identity Card -->
-                <div class="md:col-span-1 martian-card rounded-[2rem] p-8 text-center space-y-6 border-orange-500/40">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 martian-card rounded-[3rem] p-10 text-center space-y-8 border-orange-500/40 shadow-2xl">
                     <div class="relative inline-block">
-                        <div class="w-32 h-32 bg-orange-500/20 rounded-[2.5rem] flex items-center justify-center border-2 border-orange-500 mx-auto overflow-hidden">
-                            <i class="fas fa-user-astronaut text-6xl text-orange-500"></i>
+                        <div class="w-40 h-40 bg-orange-500/10 rounded-[3rem] flex items-center justify-center border-2 border-orange-500 mx-auto shadow-[0_0_30px_rgba(255,126,0,0.2)]">
+                            <i class="fas fa-user-astronaut text-7xl text-orange-500"></i>
                         </div>
-                        <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-black"></div>
+                        <div class="absolute bottom-1 right-1 bg-green-500 w-8 h-8 rounded-full border-4 border-black animate-pulse"></div>
                     </div>
-                    <div>
-                        <input id="editUsername" type="text" class="bg-black/60 border border-orange-900/50 rounded-xl px-4 py-2 text-center font-black text-orange-500 focus:outline-none focus:border-orange-500" placeholder="New Username" />
-                        <p id="fullWalletAddress" class="text-[10px] font-mono text-gray-500 mt-2 break-all"></p>
+                    <div class="space-y-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-[10px] font-black text-orange-800 uppercase tracking-tighter">Pilot Callsign</span>
+                            <input id="editUsername" type="text" class="bg-black/60 border border-orange-900/50 rounded-2xl px-6 py-4 text-center font-black text-orange-500 focus:outline-none focus:border-orange-500 text-xl" placeholder="Rover" />
+                        </div>
+                        <p id="fullWalletAddress" class="text-[11px] font-mono text-gray-600 bg-black/40 p-3 rounded-xl break-all border border-orange-900/20"></p>
                     </div>
-                    <button onclick="updateProfile()" class="w-full btn-martian py-3 rounded-2xl">Update Identity</button>
+                    <button onclick="updateProfile()" class="w-full btn-martian py-5 rounded-[2rem] text-lg shadow-xl">Sync Identity</button>
                 </div>
-
-                <!-- Stats Dashboard -->
-                <div class="md:col-span-2 space-y-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="martian-card rounded-3xl p-6 border-orange-500/20">
-                            <p class="text-[10px] font-black text-orange-700 uppercase mb-1">Combat Victories</p>
-                            <p id="profileWins" class="text-4xl font-black text-white">0</p>
-                        </div>
-                        <div class="martian-card rounded-3xl p-6 border-orange-500/20">
-                            <p class="text-[10px] font-black text-orange-700 uppercase mb-1">Total Volume</p>
-                            <div class="flex items-baseline gap-2">
-                                <p id="profileGambled" class="text-4xl font-black text-orange-500">0</p>
-                                <span class="text-xs font-black text-orange-800">EROL</span>
+                <div class="lg:col-span-2 space-y-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="martian-card rounded-[2.5rem] p-8 border-orange-500/30">
+                            <p class="text-[11px] font-black text-orange-800 uppercase mb-2 tracking-widest">Liquid Assets</p>
+                            <div class="flex items-baseline gap-3">
+                                <p id="profileBalance" class="text-5xl font-black text-orange-500">0.00</p>
+                                <span class="text-lg font-black text-orange-900">EROL</span>
                             </div>
                         </div>
-                    </div>
-                    <div class="martian-card rounded-3xl p-8 border-orange-500/20">
-                        <h4 class="font-black text-orange-500 mb-4 uppercase tracking-widest text-xs">Recent Operations</h4>
-                        <div class="space-y-4 text-sm text-gray-400">
-                            <div class="flex justify-between border-b border-orange-900/20 pb-2 italic">
-                                <span>Lobby connection stable...</span>
-                                <span>READY</span>
-                            </div>
-                            <div class="flex justify-between border-b border-orange-900/20 pb-2 italic">
-                                <span>Waiting for blockchain events...</span>
-                                <span class="text-orange-500">LISTENING</span>
-                            </div>
+                        <div class="martian-card rounded-[2.5rem] p-8 border-orange-500/30">
+                            <p class="text-[11px] font-black text-orange-800 uppercase mb-2 tracking-widest">Combat Victories</p>
+                            <p id="profileWins" class="text-5xl font-black text-white">0</p>
                         </div>
                     </div>
                 </div>
@@ -239,103 +223,110 @@
         </div>
     </div>
 
-    <!-- UI Components -->
-    <div id="statusToast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white text-black px-8 py-5 rounded-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.5)] hidden z-[110] transform transition-all duration-300"></div>
+    <div id="statusToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-white text-black px-10 py-6 rounded-[2.5rem] font-black shadow-[0_30px_70px_rgba(0,0,0,0.6)] hidden z-[110] transform transition-all duration-300 border-4 border-orange-500"></div>
 
     <script>
-        // --- BLOCKCHAIN CONFIG ---
         const GAME_CONTRACT = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
-        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3"; // Replace with your actual EROL token address
-        const RPC_URL = "https://martian-rpc1.amichain.org/";
-        const CHAIN_ID = "0x7EB"; // 2027 in hex
-
-        // --- SUPABASE CONFIG ---
+        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3"; 
+        const CHAIN_ID = "0x7EB"; 
         const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
         
+        const MIN_WAGER = 50;
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let userWallet = null;
         let userProfile = null;
         let provider, signer;
 
-        const MIN_WAGER = 50;
-
-        // --- INITIALIZATION ---
         async function connect() {
-            if (!window.ethereum) return toast("Deploy MetaMask to continue!", true);
-            
-            showLoading("Intercepting Wallet Frequency...");
+            if (!window.ethereum) return toast("Deploy MetaMask to Mars!", true);
+            showLoading("Establishing Secure Uplink...");
             try {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 const network = await provider.getNetwork();
-                
-                // Ensure on Martian Chain
                 if (network.chainId !== BigInt(2027)) {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
                         params: [{ chainId: CHAIN_ID }],
                     });
                 }
-
                 const accounts = await provider.send("eth_requestAccounts", []);
                 userWallet = accounts[0];
                 signer = await provider.getSigner();
 
                 await syncProfile();
+                await fetchBalance();
                 updateUI();
                 setupRealtime();
                 switchView('lobby');
             } catch (err) {
-                toast("Connection aborted: " + err.message, true);
+                toast("Connection failed: " + err.message, true);
             } finally {
                 hideLoading();
             }
         }
 
+        async function fetchBalance() {
+            if (!userWallet || !provider) return;
+            try {
+                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
+                const contract = new ethers.Contract(EROL_TOKEN, abi, provider);
+                const balance = await contract.balanceOf(userWallet);
+                const decimals = await contract.decimals();
+                const formatted = ethers.formatUnits(balance, decimals);
+                const displayVal = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                document.getElementById('navBalance').innerText = displayVal;
+                document.getElementById('profileBalance').innerText = displayVal;
+            } catch (err) { console.error("Balance fetch failed", err); }
+        }
+
         async function syncProfile() {
-            const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', userWallet.toLowerCase()).single();
+            if (!userWallet) return;
+            const addr = userWallet.toLowerCase();
+            const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).single();
+            
             if (data) {
                 userProfile = data;
-                // Update UI elements
-                document.getElementById('navUserName').innerText = data.username || "Rover";
-                document.getElementById('editUsername').value = data.username || "";
-                document.getElementById('fullWalletAddress').innerText = userWallet;
-                document.getElementById('statWins').innerText = data.games_won || 0;
-                document.getElementById('profileWins').innerText = data.games_won || 0;
-                document.getElementById('profileGambled').innerText = data.total_erol_gambled || 0;
+            } else {
+                // AUTO-CREATE PROFILE IF MISSING
+                const { data: newUser, error: createError } = await sb.from('profiles').insert({
+                    wallet_address: addr,
+                    username: `Rover_${addr.slice(2,6)}`
+                }).select().single();
                 
+                if (newUser) userProfile = newUser;
+            }
+
+            if (userProfile) {
+                document.getElementById('navUserName').innerText = userProfile.username || "Rover";
+                document.getElementById('editUsername').value = userProfile.username || "";
+                document.getElementById('fullWalletAddress').innerText = userWallet;
+                document.getElementById('profileWins').innerText = userProfile.games_won || 0;
                 document.getElementById('miniProfile').classList.remove('hidden');
                 document.getElementById('connectionStatus').classList.remove('hidden');
             }
         }
 
-        // --- BLOCKCHAIN TRANSACTIONS ---
         async function hostGame() {
+            if (!userWallet) return connect();
+            if (!userProfile) {
+                await syncProfile(); // Final attempt to sync before erroring
+                if (!userProfile) return toast("Identity sync required. Re-connecting...", true);
+            }
+
             const wager = parseInt(document.getElementById('wagerInput').value);
             if (wager < MIN_WAGER) return toast(`Min stake is ${MIN_WAGER} EROL`, true);
-            if (!userWallet) return connect();
 
-            showLoading("Awaiting Blockchain Confirmation...");
+            showLoading("Staking EROL in Martian Vault...");
             try {
-                // 1. ERC20 Approval (Minimal Example)
-                // const tokenContract = new ethers.Contract(EROL_TOKEN, ["function approve(address,uint256) returns (bool)"], signer);
-                // const txApprove = await tokenContract.approve(GAME_CONTRACT, ethers.parseUnits(wager.toString(), 18));
-                // await txApprove.wait();
-
-                // 2. Call Game Contract
-                // const gameContract = new ethers.Contract(GAME_CONTRACT, ["function createGame(uint256) external"], signer);
-                // const txGame = await gameContract.createGame(ethers.parseUnits(wager.toString(), 18));
-                // await txGame.wait();
-
-                // 3. Sync to Supabase for Lobby
                 const { error } = await sb.from('matches').insert({
                     host_id: userProfile.id,
                     wager_amount: wager,
                     status: 'waiting'
                 });
-                
                 if (error) throw error;
-                toast("Match Broadcasted to Martian Orbit!");
+                toast("Match Broadcasted Successfully!");
+                fetchBalance();
             } catch (e) {
                 toast(e.message, true);
             } finally {
@@ -343,57 +334,51 @@
             }
         }
 
-        // --- VIEW MANAGEMENT ---
         function switchView(view) {
             document.getElementById('lobbySection').classList.add('hidden');
             document.getElementById('profileSection').classList.add('hidden');
-            
             if(view === 'lobby') document.getElementById('lobbySection').classList.remove('hidden');
-            if(view === 'profile') document.getElementById('profileSection').classList.remove('hidden');
+            if(view === 'profile') {
+                document.getElementById('profileSection').classList.remove('hidden');
+                fetchBalance();
+            }
         }
 
         async function updateProfile() {
             const newName = document.getElementById('editUsername').value;
-            if (newName.length < 3) return toast("Username too short!", true);
-
-            showLoading("Rewriting Neural Identity...");
+            if (newName.length < 3) return toast("Callsign too short!", true);
+            showLoading("Modifying Satellite Identity...");
             const { error } = await sb.from('profiles').update({ username: newName }).eq('id', userProfile.id);
-            
             if (!error) {
                 await syncProfile();
                 toast("Identity Synchronized.");
-            } else {
-                toast("Frequency Jammed: Name taken?", true);
-            }
+            } else { toast("Identity collision detected!", true); }
             hideLoading();
         }
 
-        // --- LOBBY & CHAT ---
         async function refreshLobby() {
             const { data: matches } = await sb.from('matches').select('*, profiles!host_id(username)').eq('status', 'waiting').order('created_at', { ascending: false });
             const grid = document.getElementById('matchGrid');
-            
             if (!matches || matches.length === 0) {
-                grid.innerHTML = `<div class="col-span-full text-center py-20 text-orange-900 border-2 border-dashed border-orange-900/30 rounded-[3rem]"><i class="fas fa-satellite-dish text-4xl mb-4 animate-pulse"></i><p class="font-black uppercase tracking-widest text-xs">No active signals found...</p></div>`;
+                grid.innerHTML = `<div class="col-span-full text-center py-24 text-orange-950 border-4 border-dashed border-orange-950/20 rounded-[4rem]"><i class="fas fa-satellite text-6xl mb-6"></i><p class="font-black uppercase tracking-widest text-sm opacity-40">No signals in orbit...</p></div>`;
                 return;
             }
-
             grid.innerHTML = matches.map(m => `
-                <div class="martian-card rounded-[2rem] p-8 border-orange-500/20 hover:border-orange-500 hover:scale-[1.02] transition-all group relative overflow-hidden">
-                    <div class="flex justify-between items-start mb-6 relative z-10">
+                <div class="martian-card rounded-[3rem] p-8 border-orange-500/20 hover:border-orange-500 transition-all group relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-8 relative z-10">
                         <div>
-                            <p class="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Commander</p>
-                            <p class="font-black text-xl text-white group-hover:text-orange-500 transition-colors">${m.profiles?.username || 'Anon'}</p>
+                            <p class="text-[11px] font-black text-orange-900 uppercase tracking-widest mb-1">Commander</p>
+                            <p class="font-black text-2xl text-white group-hover:text-orange-500 transition-colors">${m.profiles?.username || 'Rover'}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Stake</p>
-                            <p class="font-black text-2xl text-orange-500">${m.wager_amount} <span class="text-xs">EROL</span></p>
+                            <p class="text-[11px] font-black text-orange-900 uppercase tracking-widest mb-1">Stake</p>
+                            <p class="font-black text-3xl text-orange-500">${m.wager_amount} <span class="text-xs">EROL</span></p>
                         </div>
                     </div>
-                    <button onclick="joinGame('${m.id}')" class="w-full py-4 bg-orange-950/40 text-orange-500 group-hover:bg-orange-500 group-hover:text-black rounded-2xl font-black text-xs transition-all uppercase tracking-widest border border-orange-500/20 relative z-10">
+                    <button class="w-full py-5 bg-orange-950/40 text-orange-500 group-hover:bg-orange-500 group-hover:text-black rounded-[2rem] font-black text-xs transition-all uppercase tracking-widest border border-orange-500/10 relative z-10">
                         Accept Gambit
                     </button>
-                    <i class="fas fa-atom absolute -right-4 -bottom-4 text-7xl text-orange-500/5 rotate-12 group-hover:rotate-45 transition-transform duration-1000"></i>
+                    <i class="fas fa-meteor absolute -right-6 -bottom-6 text-9xl text-orange-500/5 rotate-45 group-hover:rotate-0 transition-transform duration-1000"></i>
                 </div>
             `).join('');
         }
@@ -401,12 +386,7 @@
         async function setupRealtime() {
             sb.channel('global').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
             sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendMessage(p.new)).subscribe();
-            
             refreshLobby();
-            loadChat();
-        }
-
-        async function loadChat() {
             const { data } = await sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(30);
             if (data) {
                 const box = document.getElementById('chatBox');
@@ -418,8 +398,8 @@
         function appendMessage(m) {
             const box = document.getElementById('chatBox');
             const div = document.createElement('div');
-            div.className = "p-2 rounded-xl bg-orange-500/5 border border-orange-500/10 mb-2";
-            div.innerHTML = `<span class="text-orange-500 font-black text-[10px] uppercase block mb-1">${m.username}</span><span class="text-white opacity-80">${m.message}</span>`;
+            div.className = "p-3 rounded-2xl bg-orange-500/5 border border-orange-500/10 mb-2";
+            div.innerHTML = `<span class="text-orange-500 font-black text-[10px] uppercase block mb-1">${m.username}</span><span class="text-white opacity-90">${m.message}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -432,7 +412,6 @@
             await sb.from('chat_messages').insert({ user_id: userProfile.id, username: userProfile.username, message: msg });
         }
 
-        // --- UTILS ---
         function showLoading(text) {
             document.getElementById('loadingText').innerText = text;
             document.getElementById('loadingOverlay').classList.remove('hidden');
@@ -442,7 +421,7 @@
         function toast(msg, err = false) {
             const t = document.getElementById('statusToast');
             t.innerText = msg;
-            t.className = `fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-5 rounded-3xl font-black shadow-2xl z-[110] transform transition-all duration-300 ${err ? 'bg-red-600 text-white' : 'bg-orange-500 text-black'}`;
+            t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-10 py-6 rounded-[2.5rem] font-black shadow-2xl z-[110] transform transition-all duration-300 border-4 ${err ? 'bg-red-600 text-white border-red-400' : 'bg-orange-500 text-black border-orange-300'}`;
             t.classList.remove('hidden');
             setTimeout(() => t.classList.add('hidden'), 4000);
         }
@@ -450,12 +429,11 @@
         function updateUI() {
             const btn = document.getElementById('connectBtn');
             if (userWallet) {
-                btn.innerHTML = `<i class="fas fa-check-circle"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
-                btn.className = "bg-orange-900/40 text-orange-500 px-8 py-2.5 rounded-2xl text-sm font-black border border-orange-500/30";
+                btn.innerHTML = `<i class="fas fa-check-circle text-black"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
+                btn.className = "bg-orange-500/10 text-orange-500 px-8 py-3 rounded-2xl text-sm font-black border border-orange-500/30";
             }
         }
 
-        // --- EVENT LISTENERS ---
         document.getElementById('connectBtn').addEventListener('click', connect);
         document.getElementById('hostGameBtn').addEventListener('click', hostGame);
         document.getElementById('sendChat').addEventListener('click', sendChat);
