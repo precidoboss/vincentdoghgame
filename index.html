@@ -13,7 +13,8 @@
         :root {
             --mars-red: #ff4d00;
             --habitat-bg: #060608;
-            --panel-bg: rgba(15, 15, 20, 0.98);
+            --panel-bg: rgba(20, 20, 25, 0.95);
+            --tier-max: #ffd700;
         }
 
         body {
@@ -32,7 +33,7 @@
             background: var(--panel-bg);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 77, 0, 0.2);
-            box-shadow: 0 0 25px rgba(0,0,0,0.7);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
 
         .btn-mars {
@@ -41,7 +42,7 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s ease;
             border: 1px solid transparent;
         }
 
@@ -50,64 +51,46 @@
             color: var(--mars-red);
             border-color: var(--mars-red);
             box-shadow: 0 0 20px rgba(255, 77, 0, 0.4);
-            transform: scale(1.02);
         }
 
-        .btn-mars:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-mars:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .input-mars {
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255, 77, 0, 0.3);
             color: #fff;
-            font-family: 'Share Tech Mono', monospace;
         }
 
         .scanline {
             width: 100%; height: 2px;
-            background: rgba(255, 77, 0, 0.05);
-            position: fixed;
-            top: 0; left: 0;
-            animation: scan 10s linear infinite;
-            z-index: 100; pointer-events: none;
+            background: rgba(255, 77, 0, 0.1);
+            position: absolute;
+            animation: scan 8s linear infinite;
+            z-index: 10; pointer-events: none;
         }
 
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
         .move-card {
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             border: 1px solid rgba(255, 77, 0, 0.1);
         }
 
-        .move-card:hover:not(.locked) {
+        .move-card:hover {
             border-color: var(--mars-red);
             background: rgba(255, 77, 0, 0.05);
-            transform: translateY(-8px);
+            transform: translateY(-5px);
         }
 
         .move-card.selected {
             border-color: var(--mars-red);
             background: rgba(255, 77, 0, 0.2);
-            box-shadow: 0 0 40px rgba(255, 77, 0, 0.3);
+            box-shadow: 0 0 30px rgba(255, 77, 0, 0.2);
         }
 
-        .nav-link {
-            font-size: 10px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: rgba(255, 77, 0, 0.5);
-            transition: 0.3s;
-            cursor: pointer;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: var(--mars-red);
-        }
-
-        .spin-on-click:active i {
-            transform: rotate(360deg);
-            transition: transform 0.5s ease-in-out;
-        }
+        .glitch-text { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
 
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #000; }
@@ -118,414 +101,302 @@
     <div class="scanline"></div>
 
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center hidden bg-black/90 backdrop-blur-md">
-        <div class="w-16 h-16 border-4 border-orange-900 border-t-orange-500 rounded-full animate-spin mb-6"></div>
-        <p id="loadingText" class="orbitron text-xs tracking-[0.5em] text-orange-500 uppercase">Synchronizing Systems</p>
+    <div id="loadingOverlay" class="fixed inset-0 z-[100] flex flex-col items-center justify-center hidden bg-black">
+        <div class="w-12 h-12 border-2 border-orange-900 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+        <p id="loadingText" class="orbitron text-xs tracking-widest text-orange-500 uppercase">Syncing Martian Core...</p>
     </div>
 
-    <!-- Navigation -->
+    <!-- Navbar -->
     <nav class="mars-glass border-b border-orange-500/20 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
-            <div class="flex items-center gap-8">
-                <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('lobby')">
-                    <div class="w-10 h-10 bg-orange-600 flex items-center justify-center rounded-sm shadow-[0_0_15px_rgba(255,77,0,0.4)]">
-                        <i class="fas fa-radiation text-black text-lg"></i>
-                    </div>
-                    <span class="orbitron font-bold text-xl tracking-tighter text-white uppercase italic">EROL<span class="text-orange-500 font-normal">GAMBIT</span></span>
+        <div class="max-w-7xl mx-auto px-6 h-16 flex justify-between items-center">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchView('lobby')">
+                <div class="w-8 h-8 bg-orange-600 flex items-center justify-center rounded-sm">
+                    <i class="fas fa-radiation text-black text-sm"></i>
                 </div>
-                
-                <div class="hidden md:flex gap-6">
-                    <span onclick="switchView('lobby')" class="nav-link orbitron active" id="nav-lobby">Lobby</span>
-                    <span onclick="switchView('leaderboard')" class="nav-link orbitron" id="nav-leaderboard">Leaderboard</span>
-                    <span onclick="switchView('profile')" class="nav-link orbitron" id="nav-profile">Profile</span>
-                </div>
+                <span class="orbitron font-bold text-lg tracking-tighter text-white uppercase italic">EROL<span class="text-orange-500 font-normal">GAMBIT</span></span>
             </div>
             
-            <div class="flex items-center gap-6">
-                <div id="walletDisplay" class="hidden flex items-center gap-4">
-                    <div class="flex flex-col items-end">
-                        <div class="flex items-center gap-2">
-                            <p id="navBalance" class="orbitron text-orange-500 text-sm font-bold">0.00 EROL</p>
-                            <button onclick="fetchErolBalance()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
-                                <i class="fas fa-sync-alt text-[10px]"></i>
-                            </button>
-                        </div>
-                        <p id="navAddr" class="text-[9px] opacity-40 font-mono"></p>
-                    </div>
+            <div class="flex items-center gap-4">
+                <div id="connectionStatus" class="hidden px-3 py-1 bg-orange-500/10 border border-orange-500/20 rounded-sm text-[10px] orbitron text-orange-500 items-center gap-2">
+                    <span class="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse"></span>
+                    UPLINK_SECURE
                 </div>
-                <button id="connectBtn" class="btn-mars px-6 py-2 text-xs rounded-sm orbitron">
-                    Uplink_Wallet
+                <button id="connectBtn" class="btn-mars px-4 py-1.5 text-xs rounded-sm orbitron">
+                    Connect_System
                 </button>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto px-6 mt-10 grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
+    <main class="max-w-7xl mx-auto px-6 mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
         
-        <!-- Sidebar: Comms -->
+        <!-- Left Sidebar (Always Visible) -->
         <div class="lg:col-span-3 space-y-6">
-            <div class="mars-glass p-5 flex flex-col h-[500px]">
-                <div class="flex justify-between items-center mb-4 border-b border-orange-500/20 pb-2">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-satellite-dish text-[10px] text-orange-500"></i>
-                        <span class="text-[10px] orbitron uppercase text-orange-500">Comms_Feed</span>
+            <div id="miniProfile" class="mars-glass p-6 hidden">
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-orange-500/20 border border-orange-500/50 flex items-center justify-center text-orange-500">
+                        <i class="fas fa-user-astronaut text-xl"></i>
                     </div>
-                    <span class="text-[8px] opacity-30 animate-pulse">LIVE_FREQ</span>
+                    <div>
+                        <p id="navUserName" class="orbitron font-bold text-sm text-white">COMMANDER</p>
+                        <p class="text-[9px] text-orange-500/60 uppercase">Tier: Explorer</p>
+                    </div>
                 </div>
-                <div id="chatBox" class="flex-grow overflow-y-auto space-y-3 mb-4 pr-2 text-[11px] font-mono scroll-smooth"></div>
+
+                <div class="space-y-3">
+                    <div class="bg-black/50 p-4 border-l-2 border-orange-500 cursor-pointer" onclick="fetchBalance()">
+                        <p class="text-[10px] text-orange-500/40 uppercase mb-1">EROL_RESERVES</p>
+                        <div class="flex items-baseline gap-2">
+                            <span id="navBalance" class="text-xl font-bold text-white">0.00</span>
+                        </div>
+                    </div>
+                    <button onclick="switchView('profile')" class="w-full text-left text-[10px] text-orange-500/50 hover:text-orange-500 transition-colors py-2 uppercase">
+                        [ Command_Center ]
+                    </button>
+                </div>
+            </div>
+
+            <!-- Comms -->
+            <div class="mars-glass p-4 flex flex-col h-[400px]">
+                <div class="flex items-center gap-2 mb-4 border-b border-orange-500/20 pb-2">
+                    <i class="fas fa-satellite-dish text-[10px] text-orange-500"></i>
+                    <span class="text-[10px] orbitron uppercase text-orange-500/80">Comms_Uplink</span>
+                </div>
+                <div id="chatBox" class="flex-grow overflow-y-auto space-y-3 mb-4 text-[12px] font-mono">
+                    <p class="opacity-20 text-center italic mt-10 uppercase text-[9px]">Scanning frequencies...</p>
+                </div>
                 <div class="flex gap-2">
-                    <input type="text" id="chatInput" placeholder="TRANSMIT..." class="flex-grow input-mars px-3 py-2 text-xs uppercase" maxlength="100" />
-                    <button id="sendChat" class="bg-orange-500/10 hover:bg-orange-500 border border-orange-500/30 px-3 text-orange-500 hover:text-black transition-all">
+                    <input type="text" id="chatInput" placeholder="TRANSMIT..." class="flex-grow input-mars px-3 py-2 text-xs uppercase" />
+                    <button id="sendChat" class="bg-orange-500/10 hover:bg-orange-500 hover:text-black border border-orange-500/30 px-3 transition-all">
                         <i class="fas fa-chevron-right text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Content Area -->
+        <!-- Main Content Area -->
         <div class="lg:col-span-9">
             
-            <!-- VIEW: LOBBY -->
-            <div id="view-lobby" class="space-y-8 animate-in fade-in duration-500">
-                <div class="mars-glass p-10 relative overflow-hidden group">
+            <!-- Lobby View -->
+            <div id="lobbySection" class="space-y-8">
+                <div class="mars-glass p-8 relative overflow-hidden">
                     <div class="relative z-10">
                         <h2 class="orbitron text-4xl font-bold text-white mb-2 uppercase tracking-tighter italic">Initiate_Gambit</h2>
-                        <p class="text-orange-500/60 text-xs mb-8 max-w-md uppercase tracking-[0.2em] font-bold">Staked 1v1 on Martian Chain Layer 1.</p>
+                        <p class="text-orange-500/60 text-xs mb-8 max-w-md uppercase tracking-widest font-bold">Deploy EROL liquidity and challenge the Martian Grid.</p>
                         
-                        <div class="flex flex-wrap gap-6 items-end">
-                            <div class="flex flex-col gap-2">
-                                <label class="text-[10px] text-orange-500/40 uppercase orbitron tracking-widest">Wager_Amount (EROL)</label>
-                                <div class="flex items-center bg-black/80 border border-orange-500/30 px-5 py-3 group-hover:border-orange-500/60 transition-all">
-                                    <input type="number" id="wagerInput" value="100" min="1" class="bg-transparent text-2xl font-bold w-32 outline-none text-orange-500" />
-                                    <span class="text-xs opacity-40 ml-2 orbitron">EROL</span>
+                        <div class="flex flex-wrap gap-4 items-end">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-[10px] text-orange-500/40 uppercase">Stake_Amount</label>
+                                <div class="flex items-center bg-black border border-orange-500/30 px-4 py-2">
+                                    <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-xl font-bold w-24 outline-none text-orange-500" />
+                                    <span class="text-[10px] opacity-40">EROL</span>
                                 </div>
                             </div>
-                            <button onclick="hostGame()" class="btn-mars px-10 py-4 orbitron text-sm shadow-lg shadow-orange-500/10">
+                            <button id="hostGameBtn" onclick="hostGame()" class="btn-mars px-8 py-3 orbitron text-sm">
                                 Deploy_Signal
                             </button>
                         </div>
                     </div>
-                    <div class="absolute -right-10 -bottom-10 opacity-[0.03] pointer-events-none transition-transform group-hover:scale-110 duration-1000">
-                        <i class="fas fa-globe-africa text-[20rem]"></i>
-                    </div>
+                    <i class="fas fa-meteor absolute -right-10 -bottom-10 text-[15rem] text-orange-500/5 -rotate-12"></i>
                 </div>
 
-                <div id="hostingStatus" class="hidden mars-glass p-6 border-orange-500/50 animate-pulse flex justify-between items-center">
+                <div class="space-y-4">
                     <div class="flex items-center gap-4">
-                        <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <span class="orbitron text-xs text-orange-500 uppercase tracking-widest">Broadcasting Active... Awaiting Challenger</span>
+                        <h3 class="orbitron text-xs font-bold text-orange-500 uppercase tracking-[0.3em]">Broadcasts_In_Range</h3>
+                        <div class="h-px bg-orange-500/20 flex-grow"></div>
                     </div>
-                    <button onclick="cancelMatch()" class="text-[10px] text-red-500 hover:text-white transition-colors border border-red-500/20 px-3 py-1 rounded">CANCEL_SIGNAL</button>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="flex items-center justify-between">
-                        <h3 class="orbitron text-xs font-bold text-orange-500 uppercase tracking-[0.4em]">Broadcasts_In_Sector</h3>
-                        <div class="flex items-center gap-4">
-                            <span id="matchCount" class="text-[9px] opacity-30 uppercase font-mono">Scanning...</span>
-                            <button onclick="refreshLobby()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
-                                <i class="fas fa-sync-alt text-[10px]"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+                    <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
                 </div>
             </div>
 
-            <!-- VIEW: ACTIVE GAME -->
-            <div id="view-game" class="space-y-6 hidden">
-                <div class="mars-glass p-8 flex justify-between items-center border-b-4 border-orange-500">
-                    <div class="flex items-center gap-6">
-                        <div class="w-14 h-14 bg-orange-500/10 flex items-center justify-center border border-orange-500/30">
-                            <i class="fas fa-shield-virus text-2xl text-orange-500 animate-pulse"></i>
+            <!-- Game View (Active Match) -->
+            <div id="gameSection" class="space-y-6 hidden">
+                <div class="mars-glass p-6 flex justify-between items-center border-b-2 border-orange-500">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-orange-500/20 flex items-center justify-center border border-orange-500/40">
+                            <i class="fas fa-shield-alt text-orange-500"></i>
                         </div>
                         <div>
-                            <p class="text-[10px] text-orange-500/40 uppercase orbitron tracking-widest">Tactical_Engagement</p>
-                            <h2 id="matchTitle" class="orbitron text-xl font-bold text-white uppercase tracking-tighter">Active Protocol</h2>
+                            <p class="text-[10px] text-orange-500/40 uppercase">Active_Engagment</p>
+                            <h2 id="opponentName" class="orbitron text-lg font-bold text-white tracking-widest uppercase">WAITING...</h2>
                         </div>
                     </div>
                     <div class="text-right">
-                        <p class="text-[10px] text-orange-500/40 uppercase orbitron">Escrow_Pot</p>
-                        <p id="matchPool" class="orbitron text-3xl font-bold text-orange-500">0.00 EROL</p>
+                        <p class="text-[10px] text-orange-500/40 uppercase">Contract_Pool</p>
+                        <p id="matchPool" class="orbitron text-2xl font-bold text-orange-500">0.00 EROL</p>
                     </div>
                 </div>
 
-                <div id="resolutionDisplay" class="hidden mars-glass p-12 text-center space-y-6 border-2">
-                    <h2 id="resultTitle" class="orbitron text-6xl font-black italic uppercase">RESULT</h2>
-                    <p id="resultDesc" class="text-sm tracking-[0.8em] text-orange-500 uppercase"></p>
-                    <div class="flex justify-center gap-10 py-6">
-                        <div class="text-center">
-                            <p class="text-[10px] opacity-40 uppercase mb-2">Your Move</p>
-                            <div id="myFinalMove" class="w-16 h-16 border border-orange-500/30 rounded-full flex items-center justify-center bg-orange-500/5"></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Solar Flare -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('solar_flare')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-orange-500/10 border-2 border-orange-500/20 group-hover:border-orange-500 transition-all">
+                            <i class="fas fa-sun text-4xl text-orange-500"></i>
                         </div>
-                        <div class="text-center">
-                            <p class="text-[10px] opacity-40 uppercase mb-2">Enemy Move</p>
-                            <div id="enemyFinalMove" class="w-16 h-16 border border-orange-500/30 rounded-full flex items-center justify-center bg-orange-500/5"></div>
-                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">Solar_Flare</h3>
+                        <p class="text-[9px] text-orange-500/40 uppercase leading-relaxed">High-energy radiation.<br>Beats Oxygen Siphon.</p>
                     </div>
-                    <button onclick="switchView('lobby')" class="btn-mars px-12 py-3 text-sm orbitron">Dismiss_Record</button>
+
+                    <!-- Oxygen Siphon -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('oxygen_siphon')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-blue-500/10 border-2 border-blue-500/20 group-hover:border-blue-500 transition-all">
+                            <i class="fas fa-wind text-4xl text-blue-500"></i>
+                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">O2_Siphon</h3>
+                        <p class="text-[9px] text-blue-500/40 uppercase leading-relaxed">Atmospheric capture.<br>Beats Dust Storm.</p>
+                    </div>
+
+                    <!-- Dust Storm -->
+                    <div class="move-card mars-glass p-8 text-center flex flex-col items-center gap-4 group" onclick="selectMove('dust_storm')">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center bg-yellow-500/10 border-2 border-yellow-500/20 group-hover:border-yellow-500 transition-all">
+                            <i class="fas fa-cloud-showers-heavy text-4xl text-yellow-500"></i>
+                        </div>
+                        <h3 class="orbitron font-bold text-white uppercase tracking-widest">Dust_Storm</h3>
+                        <p class="text-[9px] text-yellow-500/40 uppercase leading-relaxed">Visual obstruction.<br>Beats Solar Flare.</p>
+                    </div>
                 </div>
 
-                <div id="gameplayInterface" class="space-y-8">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(1)">
-                            <div class="w-24 h-24 rounded-full flex items-center justify-center bg-orange-500/10 border-2 border-orange-500/20 group-hover:scale-110 transition-all duration-500">
-                                <i class="fas fa-sun text-5xl text-orange-500"></i>
-                            </div>
-                            <h3 class="orbitron font-bold text-white text-lg tracking-widest">Solar_Flare</h3>
-                            <p class="text-[9px] text-orange-500/40 uppercase leading-loose">Destroys O2_Siphon</p>
+                <div class="mars-glass p-6 flex flex-col items-center gap-4">
+                    <p id="moveStatus" class="orbitron text-xs text-orange-500 uppercase tracking-widest animate-pulse">Select Your Tactical Gambit</p>
+                    <button id="lockMoveBtn" disabled class="btn-mars px-12 py-3 orbitron text-sm w-full md:w-auto">
+                        Commit_Tactical_Move
+                    </button>
+                </div>
+            </div>
+
+            <!-- Command Center View -->
+            <div id="profileSection" class="space-y-6 hidden">
+                <div class="flex items-center justify-between border-b border-orange-500/20 pb-4">
+                    <button onclick="switchView('lobby')" class="text-[10px] text-orange-500/50 hover:text-orange-500 orbitron uppercase tracking-widest">
+                        <i class="fas fa-chevron-left mr-1"></i> Return_to_Sector
+                    </button>
+                    <h2 class="orbitron text-xl font-bold text-white uppercase italic">Command_Center</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <div class="md:col-span-4 mars-glass p-8 text-center">
+                        <div class="w-24 h-24 border-2 border-orange-500/30 flex items-center justify-center mx-auto mb-6 bg-orange-500/5">
+                            <i class="fas fa-id-badge text-4xl text-orange-500"></i>
                         </div>
-                        <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(2)">
-                            <div class="w-24 h-24 rounded-full flex items-center justify-center bg-blue-500/10 border-2 border-blue-500/20 group-hover:scale-110 transition-all duration-500">
-                                <i class="fas fa-wind text-5xl text-blue-500"></i>
-                            </div>
-                            <h3 class="orbitron font-bold text-white text-lg tracking-widest">O2_Siphon</h3>
-                            <p class="text-[9px] text-blue-500/40 uppercase leading-loose">Clears Dust_Storm</p>
-                        </div>
-                        <div class="move-card mars-glass p-10 text-center flex flex-col items-center gap-5 group" onclick="selectMove(3)">
-                            <div class="w-24 h-24 rounded-full flex items-center justify-center bg-yellow-500/10 border-2 border-yellow-500/20 group-hover:scale-110 transition-all duration-500">
-                                <i class="fas fa-cloud-showers-heavy text-5xl text-yellow-500"></i>
-                            </div>
-                            <h3 class="orbitron font-bold text-white text-lg tracking-widest">Dust_Storm</h3>
-                            <p class="text-[9px] text-yellow-500/40 uppercase leading-loose">Blocks Solar_Flare</p>
+                        <div class="space-y-4">
+                            <input id="editUsername" type="text" class="w-full input-mars text-center py-2 text-sm font-bold uppercase" placeholder="COMMANDER" />
+                            <p id="fullWalletAddress" class="text-[9px] opacity-30 break-all bg-black p-2 font-mono"></p>
+                            <button onclick="updateProfile()" class="w-full btn-mars py-2 text-xs orbitron">Sync_Identity</button>
                         </div>
                     </div>
-
-                    <div class="mars-glass p-8 flex flex-col items-center gap-6">
-                        <div class="text-center">
-                            <p id="moveStatus" class="orbitron text-xs text-orange-500 uppercase tracking-[0.4em] animate-pulse">Awaiting Tactical Selection</p>
-                            <p id="moveWaitMsg" class="hidden text-[10px] opacity-30 mt-2 italic">Waiting for opponent to reveal their hand...</p>
+                    <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div class="mars-glass p-6 border-l-4 border-orange-500">
+                            <p class="text-[10px] text-orange-500/40 uppercase mb-4">Account_Liquidity</p>
+                            <p id="profileBalance" class="orbitron text-4xl font-bold text-white">0.00</p>
+                            <p class="text-[10px] text-orange-500 mt-2 italic">Units: EROL</p>
                         </div>
-                        <button id="lockMoveBtn" disabled onclick="handleMoveSubmission()" class="btn-mars px-16 py-4 orbitron text-sm w-full md:w-auto shadow-2xl">
-                            Commit_Tactical_Move
-                        </button>
+                        <div class="mars-glass p-6 border-l-4 border-orange-500">
+                            <p class="text-[10px] text-orange-500/40 uppercase mb-4">Tactical_Victories</p>
+                            <p id="profileWins" class="orbitron text-4xl font-bold text-white">0</p>
+                            <p class="text-[10px] text-orange-500 mt-2 italic">Status: Verified_on_Chain</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VIEW: LEADERBOARD -->
-            <div id="view-leaderboard" class="space-y-6 hidden">
-                <div class="mars-glass p-8">
-                    <div class="flex justify-between items-center border-b border-orange-500/20 pb-4 mb-6">
-                        <h2 class="orbitron text-2xl font-bold text-white uppercase italic">Sector_Rankings</h2>
-                        <button onclick="fetchLeaderboard()" class="text-orange-500/40 hover:text-orange-500 spin-on-click">
-                            <i class="fas fa-sync-alt text-xs"></i>
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm font-mono">
-                            <thead>
-                                <tr class="text-orange-500/40 uppercase text-[10px] orbitron tracking-widest">
-                                    <th class="py-4 px-2">Rank</th>
-                                    <th class="py-4 px-2">Pilot</th>
-                                    <th class="py-4 px-2">Victories</th>
-                                    <th class="py-4 px-2">Vol_EROL</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaderboardList"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VIEW: PROFILE -->
-            <div id="view-profile" class="space-y-8 hidden">
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                    <div class="md:col-span-4 mars-glass p-10 text-center flex flex-col items-center">
-                        <div class="w-32 h-32 border-2 border-orange-500/30 flex items-center justify-center bg-orange-500/5 mb-8 relative">
-                            <i class="fas fa-user-astronaut text-5xl text-orange-500"></i>
-                            <div class="absolute -bottom-2 -right-2 bg-orange-500 text-black px-2 py-1 text-[8px] orbitron font-bold">L1_PILOT</div>
-                        </div>
-                        <div class="space-y-6 w-full">
-                            <div>
-                                <label class="text-[9px] text-orange-500/40 uppercase tracking-widest block mb-2">Call_Sign</label>
-                                <input id="editUsername" type="text" class="w-full input-mars text-center py-3 text-lg font-bold uppercase tracking-widest" placeholder="PILOT_ID" />
-                            </div>
-                            <button onclick="updateProfile()" class="w-full btn-mars py-3 text-xs orbitron">Sync_Identity</button>
-                        </div>
-                    </div>
-                    
-                    <div class="md:col-span-8 space-y-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div class="mars-glass p-8 border-l-4 border-orange-500 relative">
-                                <button onclick="fetchErolBalance()" class="absolute top-4 right-4 text-orange-500/40 hover:text-orange-500 spin-on-click">
-                                    <i class="fas fa-sync-alt text-[10px]"></i>
-                                </button>
-                                <p class="text-[10px] text-orange-500/40 uppercase mb-4 tracking-[0.2em]">Live_Liquidity</p>
-                                <p id="profBalance" class="orbitron text-4xl font-bold text-white">0.00</p>
-                                <p class="text-[10px] text-orange-500 mt-3 italic font-mono uppercase">Currency: EROL</p>
-                            </div>
-                            <div class="mars-glass p-8 border-l-4 border-orange-500">
-                                <p class="text-[10px] text-orange-500/40 uppercase mb-4 tracking-[0.2em]">Engagements_Won</p>
-                                <p id="profWins" class="orbitron text-4xl font-bold text-white">0</p>
-                                <p class="text-[10px] text-orange-500 mt-3 italic font-mono uppercase">Verified_on_Chain</p>
-                            </div>
-                        </div>
-                        <div class="mars-glass p-8">
-                            <h4 class="orbitron text-[10px] text-orange-500/40 uppercase tracking-widest mb-4">Uplink_Identity_Data</h4>
-                            <div class="bg-black/50 p-4 border border-orange-500/20 font-mono text-[10px] break-all opacity-60" id="profAddress"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </main>
 
-    <div id="toast" class="fixed bottom-10 right-10 px-8 py-4 border-l-4 font-bold text-xs uppercase orbitron hidden z-[250] bg-black/95 backdrop-blur-xl shadow-2xl"></div>
+    <div id="statusToast" class="fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron hidden z-[110] bg-black/90 backdrop-blur-md shadow-2xl"></div>
 
     <script>
+        const GAME_CONTRACT = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
+        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3"; 
         const CHAIN_ID = "0x7EB"; 
-        const RPC_URL = "https://martian-rpc1.amichain.org/";
-        const EROL_TOKEN_ADDR = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
-        
         const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
         
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
-        let provider, signer, userWallet, userProfile, currentMatchId, selectedMoveIdx;
-
-        async function init() {
-            if (window.ethereum) {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                setupRealtime();
-                refreshLobby();
-                fetchLeaderboard();
-                
-                window.ethereum.on('accountsChanged', (acc) => acc.length > 0 ? connect() : location.reload());
-                window.ethereum.on('chainChanged', () => location.reload());
-            }
-        }
+        let userWallet, userProfile, provider, signer, currentMatchId, selectedTacticalMove;
 
         async function connect() {
-            if (!window.ethereum) return showToast("METAMASK_NOT_FOUND", true);
-            showLoading("LINKING_UPLINK...");
+            if (!window.ethereum) return toast("SYSTEM_ERROR: MetaMask required", true);
+            showLoading("LINKING_SATELLITE...");
             try {
+                provider = new ethers.BrowserProvider(window.ethereum);
                 const network = await provider.getNetwork();
                 if (network.chainId !== BigInt(2027)) {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: CHAIN_ID }],
-                    }).catch(async (err) => {
-                        if (err.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: CHAIN_ID,
-                                    chainName: 'Martian Chain',
-                                    nativeCurrency: { name: 'Martian', symbol: 'MARS', decimals: 18 },
-                                    rpcUrls: [RPC_URL],
-                                    blockExplorerUrls: ['https://explorer.martianchain.com/']
-                                }],
-                            });
-                        }
-                    });
+                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: CHAIN_ID }] });
                 }
-
                 const accounts = await provider.send("eth_requestAccounts", []);
-                userWallet = ethers.getAddress(accounts[0]);
+                userWallet = accounts[0].toLowerCase();
                 signer = await provider.getSigner();
                 
-                await syncProfile();
-                await fetchErolBalance();
-                updateNavUI();
-                showToast("UPLINK_SECURE");
-            } catch (err) {
-                console.error(err);
-                showToast("UPLINK_FAILED", true);
-            } finally { hideLoading(); }
-        }
-
-        async function fetchErolBalance() {
-            if (!userWallet) return;
-            try {
-                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
-                const contract = new ethers.Contract(EROL_TOKEN_ADDR, abi, provider);
-                const bal = await contract.balanceOf(userWallet);
-                const dec = await contract.decimals();
-                const formatted = ethers.formatUnits(bal, dec);
+                // Initialize a temporary local profile even if sync fails
+                userProfile = { 
+                    wallet_address: userWallet, 
+                    username: `PILOT_${userWallet.slice(2, 6).toUpperCase()}`,
+                    id: null 
+                };
                 
-                const display = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                document.getElementById('navBalance').innerText = `${display} EROL`;
-                document.getElementById('profBalance').innerText = display;
-                console.log("Balance Sync Complete:", display);
-            } catch (e) { 
-                console.error("Balance Fetch Err:", e);
-                showToast("LIQUIDITY_SYNC_ERR", true);
-            }
+                await syncProfile();
+                await fetchBalance();
+                setupRealtime();
+                updateUI();
+                toast("UPLINK_ESTABLISHED");
+            } catch (err) { toast("UPLINK_ERROR: " + err.message, true); }
+            finally { hideLoading(); }
         }
 
-        async function syncProfile() {
-            if (!userWallet) return;
-            const addr = userWallet.toLowerCase();
-            try {
-                let { data, error } = await sb.from('profiles').select('*').eq('wallet_address', addr).maybeSingle();
-                if (error) throw error;
-                if (!data) {
-                    const fallbackName = `PILOT_${addr.slice(2, 6).toUpperCase()}`;
-                    const { data: newUser, error: upsertErr } = await sb.from('profiles').upsert({
-                        wallet_address: addr,
-                        username: fallbackName
-                    }, { onConflict: 'wallet_address' }).select().single();
-                    if (upsertErr) throw upsertErr;
-                    data = newUser;
-                }
-                userProfile = data;
-                updateProfileUI();
-                return data;
-            } catch (e) {
-                console.error("Sync Profile Error:", e);
-                userProfile = { wallet_address: addr, username: 'RECON_PILOT', id: null };
-                updateProfileUI();
-                return null;
-            }
-        } 
-        
         async function syncProfile() {
             if (!userWallet) return null;
-            const addr = userWallet.toLowerCase();
             try {
-                // Upsert handles both creation and retrieval in one atomic step
-                // We use onConflict to ensure we don't create duplicates and always get the ID back
+                // We use the wallet address as the primary key for the profiles
                 const { data, error } = await sb.from('profiles')
-                    .upsert({ 
-                        wallet_address: addr 
-                    }, { 
-                        onConflict: 'wallet_address',
-                        ignoreDuplicates: false 
-                    })
+                    .upsert({ wallet_address: userWallet }, { onConflict: 'wallet_address' })
                     .select()
                     .single();
 
-                if (error) {
-                    console.error("Supabase Sync Error:", error);
-                    throw error;
+                if (error) throw error;
+                if (data) {
+                    userProfile = data;
+                    updateProfileUI();
                 }
-
-                userProfile = data;
-                updateProfileUI();
-                console.log("Profile Synced:", userProfile.username, "ID:", userProfile.id);
                 return data;
             } catch (e) {
-                console.error("Critical Sync Profile Error:", e);
-                // Fallback UI state but this will block hosting/joining
-                userProfile = { wallet_address: addr, username: 'RECON_PILOT', id: null };
+                console.warn("Profile sync bypassed. Using wallet-only mode.", e);
+                // We don't throw here to allow game mechanics to function
                 updateProfileUI();
-                return null;
+                return userProfile;
             }
+        }
+
+        function updateProfileUI() {
+            if (!userProfile) return;
+            document.getElementById('navUserName').innerText = userProfile.username.toUpperCase();
+            document.getElementById('editUsername').value = userProfile.username;
+            document.getElementById('fullWalletAddress').innerText = userProfile.wallet_address;
+            document.getElementById('profileWins').innerText = userProfile.games_won || 0;
+            document.getElementById('miniProfile').classList.remove('hidden');
+            document.getElementById('connectionStatus').classList.remove('hidden');
+            document.getElementById('connectionStatus').style.display = 'flex';
         }
 
         async function hostGame() {
             if (!userWallet) return connect();
             
             showLoading("VERIFYING_IDENT...");
-            // Ensure we have a fresh sync with a valid DB ID
+            
+            // Try one last sync but proceed regardless
             const profile = await syncProfile();
             
-            if (!profile || !profile.id) {
+            // If the database didn't give us a UUID (id), we try to find the profile by wallet
+            let finalId = profile?.id;
+            
+            if (!finalId) {
+                // Emergency fetch if upsert didn't return data
+                const { data } = await sb.from('profiles').select('id').eq('wallet_address', userWallet).maybeSingle();
+                finalId = data?.id;
+            }
+
+            if (!finalId) {
                 hideLoading();
-                console.error("Sync failed to return a valid UUID from Supabase.");
-                return showToast("PROFILE_SYNC_FAILED: RETRYING...", true);
+                return toast("PROFILE_NOT_READY: RETRYING...", true);
             }
 
             const wagerInput = document.getElementById('wagerInput');
@@ -533,13 +404,13 @@
             
             if (isNaN(wager) || wager <= 0) {
                 hideLoading();
-                return showToast("INVALID_WAGER", true);
+                return toast("INVALID_WAGER", true);
             }
 
             showLoading("DEPLOYING_SIGNAL...");
             try {
                 const { data, error } = await sb.from('matches').insert({
-                    host_id: profile.id,
+                    host_id: finalId,
                     wager_amount: wager,
                     status: 'waiting'
                 }).select().single();
@@ -547,230 +418,149 @@
                 if (error) throw error;
                 
                 currentMatchId = data.id;
-                document.getElementById('hostingStatus').classList.remove('hidden');
-                showToast("SIGNAL_DEPLOYED");
-                subscribeToMatch(data.id);
+                toast("SIGNAL_DEPLOYED");
+                // In a real app, you'd show a "waiting for opponent" screen here
             } catch (e) {
                 console.error("Match Deployment Error:", e);
-                showToast("DEPLOY_ERR: DATABASE_REJECTED", true);
+                toast("DEPLOY_ERR: CHECK_DATABASE", true);
             } finally { hideLoading(); }
         }
-        async function hostGame() {
-            if (!userWallet) return connect();
-            showLoading("VERIFYING_IDENT...");
-            const profile = await syncProfile();
-            if (!profile || !profile.id) {
-                hideLoading();
-                return showToast("PROFILE_SYNC_FAILED", true);
-            }
 
-            const wager = parseFloat(document.getElementById('wagerInput').value);
-            if (isNaN(wager) || wager <= 0) {
-                hideLoading();
-                return showToast("INVALID_WAGER", true);
-            }
-
+        async function fetchBalance() {
+            if (!userWallet || !provider) return;
             try {
-                const { data, error } = await sb.from('matches').insert({
-                    host_id: profile.id,
-                    wager_amount: wager,
-                    status: 'waiting'
-                }).select().single();
+                const abi = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)"];
+                const contract = new ethers.Contract(EROL_TOKEN, abi, provider);
+                const balance = await contract.balanceOf(userWallet);
+                const decimals = await contract.decimals();
+                const formatted = ethers.formatUnits(balance, decimals);
+                const display = parseFloat(formatted).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                document.getElementById('navBalance').innerText = display;
+                document.getElementById('profileBalance').innerText = display;
+            } catch (err) { console.error("Balance fetch error:", err); }
+        }
+
+        function selectMove(move) {
+            selectedTacticalMove = move;
+            document.querySelectorAll('.move-card').forEach(c => c.classList.remove('selected'));
+            const target = event.currentTarget;
+            target.classList.add('selected');
+            document.getElementById('moveStatus').innerText = `READY_TO_LOCK: ${move.replace('_', ' ').toUpperCase()}`;
+            document.getElementById('lockMoveBtn').disabled = false;
+        }
+
+        async function lockMove() {
+            if (!selectedTacticalMove || !currentMatchId) return;
+            showLoading("ENCRYPTING_MOVE...");
+            
+            try {
+                // Determine if we are host or challenger (logic would be more complex in prod)
+                // For testing, we just update the match
+                const { error } = await sb.from('matches').update({
+                    host_move: selectedTacticalMove 
+                }).eq('id', currentMatchId);
 
                 if (error) throw error;
-                currentMatchId = data.id;
-                document.getElementById('hostingStatus').classList.remove('hidden');
-                showToast("SIGNAL_DEPLOYED");
-                subscribeToMatch(data.id);
+                
+                toast("MOVE_LOCKED_IN_VAULT");
+                document.getElementById('lockMoveBtn').disabled = true;
+                document.getElementById('moveStatus').innerText = "WAITING_FOR_OPPONENT_REVEAL...";
             } catch (e) {
-                showToast("DEPLOY_ERR", true);
+                toast("TX_FAILED", true);
             } finally { hideLoading(); }
         }
 
         async function joinGame(matchId, wager) {
             if (!userWallet) return connect();
-            const profile = await syncProfile();
-            if (!profile || !profile.id) return showToast("PROFILE_SYNC_FAILED", true);
-
-            showLoading("JOINING_ENGAGEMENT...");
+            showLoading("STAKING_EROL...");
             try {
+                const profile = await syncProfile();
+                if (!profile?.id) throw new Error("No Profile ID");
+
                 const { error } = await sb.from('matches').update({
                     opponent_id: profile.id,
                     status: 'in_progress'
                 }).eq('id', matchId);
 
                 if (error) throw error;
-                enterGameView(matchId, wager, 'challenger');
-                subscribeToMatch(matchId);
-            } catch (e) {
-                showToast("ENGAGE_ERR", true);
+                
+                currentMatchId = matchId;
+                startMatchUI(wager);
+            } catch (e) { 
+                console.error(e);
+                toast("JOIN_FAILED", true); 
             } finally { hideLoading(); }
         }
 
-        function enterGameView(matchId, wager, role) {
-            currentMatchId = matchId;
+        function startMatchUI(wager) {
             switchView('game');
-            document.getElementById('matchPool').innerText = (wager * 2).toFixed(2) + " EROL";
-            document.getElementById('gameplayInterface').classList.remove('hidden');
-            document.getElementById('resolutionDisplay').classList.add('hidden');
-            document.getElementById('lockMoveBtn').disabled = true;
-            document.getElementById('moveStatus').innerText = "Select Tactical Gambit";
-            selectedMoveIdx = null;
-            document.querySelectorAll('.move-card').forEach(c => c.classList.remove('selected', 'locked', 'opacity-50'));
-        }
-
-        function selectMove(idx) {
-            if (document.getElementById('lockMoveBtn').disabled && selectedMoveIdx !== null) return;
-            selectedMoveIdx = idx;
-            document.querySelectorAll('.move-card').forEach((c, i) => {
-                c.classList.remove('selected');
-                if (i + 1 === idx) c.classList.add('selected');
-            });
-            const names = ["SOLAR_FLARE", "O2_SIPHON", "DUST_STORM"];
-            document.getElementById('moveStatus').innerText = `READY: ${names[idx-1]}`;
-            document.getElementById('lockMoveBtn').disabled = false;
-        }
-
-        async function handleMoveSubmission() {
-            if (!userProfile?.id) return showToast("PROFILE_SYNC_REQ", true);
-            showLoading("COMMITTING_MOVE...");
-            try {
-                const { data: match } = await sb.from('matches').select('*').eq('id', currentMatchId).single();
-                const roleKey = userProfile.id === match.host_id ? 'host_move' : 'challenger_move';
-                const { error } = await sb.from('matches').update({ [roleKey]: selectedMoveIdx }).eq('id', currentMatchId);
-                if (error) throw error;
-                document.getElementById('lockMoveBtn').disabled = true;
-                document.querySelectorAll('.move-card').forEach(c => c.classList.add('locked', 'opacity-50'));
-                document.getElementById('moveStatus').innerText = "Move Locked. Waiting for Revelation...";
-                document.getElementById('moveWaitMsg').classList.remove('hidden');
-            } catch (e) { showToast("COMMIT_ERR", true); } finally { hideLoading(); }
-        }
-
-        function resolveLocal(match) {
-            const h = parseInt(match.host_move);
-            const c = parseInt(match.challenger_move);
-            if (!h || !c) return;
-
-            let result = "DRAW";
-            if (h !== c) {
-                if ((h === 1 && c === 2) || (h === 2 && c === 3) || (h === 3 && c === 1)) result = "HOST_WINS";
-                else result = "CHALLENGER_WINS";
-            }
-            const iAmHost = userProfile?.id === match.host_id;
-            let finalState = "draw";
-            if (result === "HOST_WINS") finalState = iAmHost ? "win" : "lose";
-            else if (result === "CHALLENGER_WINS") finalState = iAmHost ? "lose" : "win";
-            displayResolution(finalState, h, c);
-        }
-
-        function displayResolution(state, hMove, cMove) {
-            document.getElementById('gameplayInterface').classList.add('hidden');
-            const res = document.getElementById('resolutionDisplay');
-            const title = document.getElementById('resultTitle');
-            const desc = document.getElementById('resultDesc');
-            res.classList.remove('hidden');
-
-            const icons = [
-                '<i class="fas fa-sun text-2xl text-orange-500"></i>',
-                '<i class="fas fa-wind text-2xl text-blue-500"></i>',
-                '<i class="fas fa-cloud-showers-heavy text-2xl text-yellow-500"></i>'
-            ];
-
-            const iAmHost = userProfile && currentMatchId && (userProfile.id === currentMatchId.host_id);
-            document.getElementById('myFinalMove').innerHTML = icons[(iAmHost ? hMove : cMove) - 1] || "?";
-            document.getElementById('enemyFinalMove').innerHTML = icons[(iAmHost ? cMove : hMove) - 1] || "?";
-
-            if (state === 'win') {
-                title.innerText = "VICTORY";
-                title.style.color = "#22c55e";
-                desc.innerText = "Pool Captured. Credits Transferred.";
-            } else if (state === 'lose') {
-                title.innerText = "DEFEAT";
-                title.style.color = "#dc2626";
-                desc.innerText = "Liquidity Lost. System Rebooting.";
-            } else {
-                title.innerText = "STALEMATE";
-                title.style.color = "#eab308";
-                desc.innerText = "Equal Strategy. Stakes Returned.";
-            }
-            fetchErolBalance(); // Update balance after game
+            document.getElementById('matchPool').innerText = `${(wager * 2).toFixed(2)} EROL`;
+            document.getElementById('opponentName').innerText = "CALCULATING_TRAJECTORY...";
         }
 
         function switchView(view) {
-            ['lobby', 'game', 'leaderboard', 'profile'].forEach(v => {
-                document.getElementById('view-' + v).classList.add('hidden');
-                document.getElementById('nav-' + v)?.classList.remove('active');
-            });
-            document.getElementById('view-' + view).classList.remove('hidden');
-            document.getElementById('nav-' + view)?.classList.add('active');
-            if (view === 'leaderboard') fetchLeaderboard();
-            if (view === 'profile') fetchErolBalance();
+            ['lobbySection', 'profileSection', 'gameSection'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            if(view === 'lobby') document.getElementById('lobbySection').classList.remove('hidden');
+            if(view === 'profile') document.getElementById('profileSection').classList.remove('hidden');
+            if(view === 'game') document.getElementById('gameSection').classList.remove('hidden');
         }
 
         async function refreshLobby() {
-            const { data, count } = await sb.from('matches').select('*, profiles!host_id(username)', { count: 'exact' }).eq('status', 'waiting').order('created_at', { ascending: false });
-            const grid = document.getElementById('matchGrid');
-            document.getElementById('matchCount').innerText = `${count || 0} SIGNALS_FOUND`;
-            if (!data?.length) {
-                grid.innerHTML = `<div class="col-span-full py-20 text-center opacity-20 orbitron text-xs tracking-[0.5em]">No Broadcasts Detected</div>`;
-                return;
-            }
-            grid.innerHTML = data.map(m => `
-                <div class="mars-glass p-6 flex flex-col justify-between group hover:border-orange-500 transition-all duration-300">
-                    <div class="flex justify-between items-start mb-8">
-                        <div>
-                            <p class="text-[9px] text-orange-500/40 uppercase orbitron tracking-widest mb-1">Commander</p>
-                            <p class="orbitron font-bold text-white text-sm tracking-widest">${(m.profiles?.username || 'PILOT').toUpperCase()}</p>
+            try {
+                const { data: matches } = await sb.from('matches')
+                    .select('*, profiles!host_id(username)')
+                    .eq('status', 'waiting')
+                    .order('created_at', { ascending: false });
+                
+                const grid = document.getElementById('matchGrid');
+                if (!matches?.length) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-12 mars-glass border-dashed opacity-20 orbitron text-[9px] uppercase tracking-[0.4em]">No_Signals_Found_In_Sector</div>`;
+                    return;
+                }
+                grid.innerHTML = matches.map(m => `
+                    <div class="mars-glass p-5 flex flex-col justify-between group hover:border-orange-500/50 transition-all">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <p class="text-[9px] text-orange-500/40 uppercase mb-1">Commander</p>
+                                <p class="orbitron font-bold text-white text-sm tracking-widest">${(m.profiles?.username || 'UNKNOWN').toUpperCase()}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[9px] text-orange-500/40 uppercase mb-1">Stake</p>
+                                <p class="orbitron font-bold text-orange-500 text-lg">${m.wager_amount} <span class="text-[8px] opacity-40">EROL</span></p>
+                            </div>
                         </div>
-                        <div class="text-right">
-                            <p class="text-[9px] text-orange-500/40 uppercase orbitron tracking-widest mb-1">Stake</p>
-                            <p class="orbitron font-bold text-orange-500 text-lg">${m.wager_amount} <span class="text-[10px] opacity-40">EROL</span></p>
-                        </div>
+                        <button onclick="joinGame('${m.id}', ${m.wager_amount})" class="w-full py-2 bg-orange-500/5 border border-orange-500/30 hover:bg-orange-500 hover:text-black orbitron text-[10px] transition-all uppercase">
+                            Accept_Gambit
+                        </button>
                     </div>
-                    <button onclick="joinGame('${m.id}', ${m.wager_amount})" class="w-full py-3 bg-orange-500/5 border border-orange-500/20 hover:bg-orange-500 hover:text-black orbitron text-[10px] transition-all uppercase tracking-[0.2em] font-bold">
-                        Intercept_Signal
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        async function fetchLeaderboard() {
-            const { data } = await sb.from('leaderboard').select('*');
-            const list = document.getElementById('leaderboardList');
-            if (!data) return;
-            list.innerHTML = data.map((row, i) => `
-                <tr class="border-b border-orange-500/10 hover:bg-orange-500/5 transition-colors">
-                    <td class="py-4 px-2 opacity-40">#${i+1}</td>
-                    <td class="py-4 px-2 font-bold text-white">${row.username || 'UNKNOWN'}</td>
-                    <td class="py-4 px-2 text-orange-500">${row.games_won || 0}</td>
-                    <td class="py-4 px-2 text-xs opacity-60">${row.total_erol_gambled || 0} EROL</td>
-                </tr>
-            `).join('');
+                `).join('');
+            } catch (e) { console.error("Lobby refresh error:", e); }
         }
 
         function setupRealtime() {
-            sb.channel('lobby').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
-            sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendChat(p.new)).subscribe();
-            sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(30).then(({ data }) => {
-                if (data) data.reverse().forEach(appendChat);
-            });
+            sb.channel('global').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
+            sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendMessage(p.new)).subscribe();
+            refreshLobby();
+            fetchInitialChat();
         }
 
-        function subscribeToMatch(id) {
-            sb.channel(`match_${id}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'matches', filter: `id=eq.${id}` }, payload => {
-                const match = payload.new;
-                if (match.status === 'in_progress' && userProfile?.id === match.host_id && document.getElementById('view-game').classList.contains('hidden')) {
-                    enterGameView(match.id, match.wager_amount, 'host');
+        async function fetchInitialChat() {
+            try {
+                const { data } = await sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(20);
+                if (data) {
+                    const box = document.getElementById('chatBox');
+                    box.innerHTML = "";
+                    data.reverse().forEach(appendMessage);
                 }
-                if (match.host_move && match.challenger_move) resolveLocal(match);
-            }).subscribe();
+            } catch (e) {}
         }
 
-        function appendChat(m) {
+        function appendMessage(m) {
             const box = document.getElementById('chatBox');
+            if (!box) return;
             const div = document.createElement('div');
-            div.className = "group border-l border-orange-500/10 pl-3 py-1 mb-1 hover:border-orange-500/40 transition-colors";
-            div.innerHTML = `<span class="text-[9px] orbitron text-orange-500/50 uppercase group-hover:text-orange-500">${m.username || 'ANON'}</span><br><span class="opacity-80">${m.message}</span>`;
+            div.className = "border-l border-orange-500/20 pl-3 py-1 mb-2";
+            div.innerHTML = `<span class="text-[8px] orbitron text-orange-500/60 uppercase">[${m.username || 'ANON'}]</span><br><span class="opacity-80">${m.message}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
         }
@@ -781,38 +571,10 @@
             const msg = input.value;
             input.value = "";
             await sb.from('chat_messages').insert({ 
-                user_id: userProfile?.id, 
-                username: userProfile?.username || 'PILOT', 
+                user_id: userProfile.id, 
+                username: userProfile.username, 
                 message: msg 
             });
-        }
-
-        function updateNavUI() {
-            if (!userWallet) return;
-            document.getElementById('walletDisplay').classList.remove('hidden');
-            document.getElementById('navAddr').innerText = `${userWallet.slice(0, 6)}...${userWallet.slice(-4)}`;
-            document.getElementById('connectBtn').classList.add('hidden');
-        }
-
-        function updateProfileUI() {
-            if (!userProfile) return;
-            document.getElementById('editUsername').value = userProfile.username || '';
-            document.getElementById('profWins').innerText = userProfile.games_won || 0;
-            document.getElementById('profAddress').innerText = userWallet || 'NOT_CONNECTED';
-        }
-
-        async function updateProfile() {
-            if (!userProfile?.id) return showToast("SYNC_REQUIRED", true);
-            const newName = document.getElementById('editUsername').value.trim();
-            if (newName.length < 3) return showToast("NAME_TOO_SHORT", true);
-            showLoading("SYNCING_PROFILE...");
-            const { error } = await sb.from('profiles').update({ username: newName }).eq('id', userProfile.id);
-            if (error) showToast("SYNC_FAILED", true);
-            else {
-                userProfile.username = newName;
-                showToast("PROFILE_UPDATED");
-            }
-            hideLoading();
         }
 
         function showLoading(text) {
@@ -821,20 +583,34 @@
         }
         function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
         
-        function showToast(msg, isErr = false) {
-            const t = document.getElementById('toast');
+        function toast(msg, err = false) {
+            const t = document.getElementById('statusToast');
             t.innerText = msg;
-            t.className = `fixed bottom-10 right-10 px-8 py-4 border-l-4 font-bold text-xs uppercase orbitron z-[250] bg-black/95 backdrop-blur-xl shadow-2xl ${isErr ? 'border-red-600 text-red-500' : 'border-orange-500 text-orange-500'}`;
+            t.className = `fixed bottom-6 right-6 px-6 py-3 border-l-4 font-bold text-xs uppercase orbitron z-[110] bg-black shadow-2xl ${err ? 'border-red-600 text-red-500' : 'border-orange-500 text-orange-500'}`;
             t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), 5000);
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('connectBtn');
+            if (userWallet) {
+                btn.innerHTML = `<i class="fas fa-terminal mr-2"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
+                btn.className = "px-4 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 orbitron text-[10px]";
+            }
         }
 
         document.getElementById('connectBtn').addEventListener('click', connect);
+        document.getElementById('lockMoveBtn').addEventListener('click', lockMove);
         document.getElementById('sendChat').addEventListener('click', sendChat);
         document.getElementById('chatInput').addEventListener('keypress', e => e.key === 'Enter' && sendChat());
 
-        init();
+        // Check if MetaMask is already connected
+        window.addEventListener('load', async () => {
+            if (window.ethereum) {
+                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+                if (accounts.length > 0) connect();
+            }
+        });
     </script>
 </body>
 </html>
-
