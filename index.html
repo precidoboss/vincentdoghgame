@@ -3,201 +3,465 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EROL Balance | Martian Chain</title>
+    <title>Erol's Martian Gambit | Martian Chain</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
+        :root {
+            --martian-orange: #ff7e00;
+            --martian-glow: #ffaa00;
+            --deep-dust: #1a0d00;
+            --surface-orange: #2d1600;
+        }
         body {
-            background-color: #0a0a0a;
+            background-color: var(--deep-dust);
+            background-image: radial-gradient(circle at 50% 50%, #2d1600 0%, #050505 100%);
             color: #ffffff;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
-        .orange-glow {
-            box-shadow: 0 0 15px rgba(255, 126, 0, 0.3);
+        .martian-card {
+            background: rgba(45, 22, 0, 0.4);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 126, 0, 0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
         }
-        .btn-orange {
-            background-color: #ff7e00;
-            transition: all 0.3s ease;
+        .glow-border { border-color: var(--martian-orange); box-shadow: 0 0 15px rgba(255, 126, 0, 0.3); }
+        .btn-martian {
+            background: linear-gradient(135deg, #ff9d00, #ff5e00);
+            color: #000;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .btn-orange:hover {
-            background-color: #e67200;
-            transform: translateY(-1px);
+        .btn-martian:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 126, 0, 0.5);
         }
-        .card-bg {
-            background-color: #1a1a1a;
-            border: 1px solid #333;
+        .orange-text { color: var(--martian-orange); }
+        .chat-container { height: 350px; background: rgba(0,0,0,0.3); }
+        .tab-btn { transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .tab-btn.active { border-color: var(--martian-orange); color: var(--martian-orange); font-weight: 900; }
+        
+        /* Animations */
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(255, 126, 0, 0.2); }
+            50% { box-shadow: 0 0 20px rgba(255, 126, 0, 0.5); }
+            100% { box-shadow: 0 0 5px rgba(255, 126, 0, 0.2); }
         }
-        .input-dark {
-            background-color: #000;
-            border: 1px solid #444;
-            color: white;
-        }
-        .input-dark:focus {
-            border-color: #ff7e00;
-            outline: none;
-        }
-        .text-orange {
-            color: #ff7e00;
-        }
-        .loader {
-            border: 3px solid #333;
-            border-top: 3px solid #ff7e00;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(3600deg); }
+        .active-pulse { animation: pulse-glow 2s infinite; }
+        
+        .loading-overlay {
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center p-4">
+<body class="min-h-screen">
 
-    <!-- Header -->
-    <div class="mb-8 text-center">
-        <h1 class="text-5xl font-black italic tracking-tighter text-orange mb-2">EROL</h1>
-        <p class="text-gray-400 uppercase tracking-widest text-xs">Martian Chain Portfolio</p>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 loading-overlay z-[100] flex flex-col items-center justify-center hidden">
+        <div class="relative">
+            <i class="fas fa-circle-notch fa-spin text-6xl text-orange-500"></i>
+            <i class="fas fa-rocket absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-orange-300"></i>
+        </div>
+        <p id="loadingText" class="mt-6 font-black italic tracking-widest text-orange-500 uppercase">Syncing with Martian Satellite...</p>
     </div>
 
-    <!-- Main Card -->
-    <div class="card-bg p-8 rounded-2xl w-full max-w-md orange-glow">
-        
-        <!-- Wallet Connection Section -->
-        <div id="walletSection" class="mb-6">
-            <button id="connectBtn" class="w-full btn-orange text-black font-bold py-3 rounded-xl mb-4">
-                Connect Wallet
-            </button>
-            <div class="relative flex items-center mb-4">
-                <div class="flex-grow border-t border-gray-700"></div>
-                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR SEARCH ADDRESS</span>
-                <div class="flex-grow border-t border-gray-700"></div>
-            </div>
-        </div>
-
-        <!-- Manual Input -->
-        <div class="mb-6">
-            <input type="text" id="addressInput" placeholder="0x..." class="w-full p-4 rounded-xl input-dark text-sm mb-3" />
-            <button id="checkBtn" class="w-full border border-gray-600 hover:border-orange-500 py-3 rounded-xl font-medium transition-colors">
-                Check Balance
-            </button>
-        </div>
-
-        <!-- Results Display -->
-        <div id="resultArea" class="hidden">
-            <div class="border-t border-gray-800 pt-6 mt-4">
-                <p class="text-gray-500 text-xs mb-1">EROL BALANCE</p>
-                <div class="flex items-baseline gap-2">
-                    <span id="balanceText" class="text-4xl font-bold text-white">0.00</span>
-                    <span class="text-orange font-bold">EROL</span>
+    <!-- Nav -->
+    <nav class="border-b border-orange-900/50 bg-black/60 sticky top-0 z-50 p-4 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-4 cursor-pointer" onclick="switchView('lobby')">
+                <div class="bg-orange-500 p-2.5 rounded-xl shadow-[0_0_15px_rgba(255,126,0,0.5)]">
+                    <i class="fas fa-meteor text-black text-xl"></i>
                 </div>
-                <div id="addressLabel" class="text-[10px] text-gray-500 mt-4 break-all"></div>
+                <h1 class="text-3xl font-black italic tracking-tighter text-orange-500 hidden sm:block">MARTIAN GAMBIT</h1>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="connectionStatus" class="hidden sm:flex items-center gap-2 text-[10px] font-black uppercase text-orange-800">
+                    <span class="w-2 h-2 rounded-full bg-orange-600"></span>
+                    Martian Chain Ready
+                </div>
+                <button id="connectBtn" class="btn-martian px-8 py-2.5 rounded-2xl text-sm flex items-center gap-2">
+                    <i class="fas fa-wallet"></i> <span>Connect</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="mainView" class="max-w-7xl mx-auto p-4 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Comms & Profile Access -->
+        <div class="lg:col-span-3 space-y-6">
+            <!-- Mini Profile -->
+            <div id="miniProfile" class="martian-card rounded-3xl p-5 border-orange-500/30 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center border border-orange-500/40">
+                            <i class="fas fa-user-astronaut text-orange-500"></i>
+                        </div>
+                        <p id="navUserName" class="font-black text-sm truncate w-24">Rover</p>
+                    </div>
+                    <button onclick="switchView('profile')" class="text-orange-500 hover:rotate-90 transition-transform">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                <div class="bg-black/40 rounded-2xl p-3 border border-orange-900/30 flex justify-between items-center">
+                    <span class="text-[10px] font-black text-orange-800 uppercase">EROL STAKED</span>
+                    <span id="navBalance" class="text-orange-500 font-black">0.00</span>
+                </div>
+            </div>
+
+            <!-- Chat -->
+            <div class="martian-card rounded-3xl p-6 glow-border active-pulse">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xs font-black text-orange-500 tracking-widest uppercase flex items-center gap-2">
+                        <i class="fas fa-satellite-dish"></i> Public Comms
+                    </h3>
+                </div>
+                <div id="chatBox" class="chat-container rounded-2xl p-4 overflow-y-auto space-y-3 mb-4 scrollbar-hidden text-sm border border-orange-900/20">
+                    <!-- Messages -->
+                </div>
+                <div class="relative group">
+                    <input type="text" id="chatInput" placeholder="Send signal..." class="w-full bg-black/60 border border-orange-900/50 rounded-2xl px-5 py-4 text-sm focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all" />
+                    <button id="sendChat" class="absolute right-3 top-3.5 bg-orange-600/20 p-2 rounded-lg text-orange-500 hover:bg-orange-500 hover:text-black transition-colors">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Status / Messages -->
-        <div id="statusMsg" class="mt-4 text-center text-sm text-gray-500"></div>
+        <!-- Right Column: Lobby -->
+        <div id="lobbySection" class="lg:col-span-9 space-y-8 animate-in fade-in">
+            <!-- Host Banner -->
+            <div class="bg-gradient-to-br from-orange-500 via-orange-600 to-red-700 rounded-[2.5rem] p-10 flex flex-col lg:flex-row items-center justify-between gap-8 shadow-[0_20px_60px_rgba(255,100,0,0.3)] relative overflow-hidden group">
+                <div class="relative z-10 text-center lg:text-left">
+                    <div class="inline-block bg-black/20 backdrop-blur-md px-4 py-1 rounded-full text-[10px] font-black text-white uppercase mb-4 tracking-widest">Martian Chain Verified</div>
+                    <h2 class="text-5xl font-black italic mb-3 tracking-tighter text-black">HOST A GAMBIT</h2>
+                    <p class="text-orange-100 font-bold opacity-90 max-w-md">Stake EROL tokens to start a match. Minimum 50 EROL required for planetary security.</p>
+                </div>
+                <div class="relative z-10 flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                    <div class="bg-black/30 backdrop-blur-2xl border border-white/20 rounded-3xl p-4 flex items-center justify-center">
+                        <input type="number" id="wagerInput" value="50" min="50" class="bg-transparent text-white text-3xl font-black w-28 text-center focus:outline-none" />
+                        <div class="flex flex-col ml-3">
+                            <span class="text-[10px] font-black text-orange-300 uppercase leading-none">Stake</span>
+                            <span class="text-sm font-black text-white">EROL</span>
+                        </div>
+                    </div>
+                    <button id="hostGameBtn" class="bg-black text-orange-500 px-10 py-5 rounded-3xl font-black uppercase text-lg shadow-2xl group-hover:scale-105 transition-transform">
+                        Launch Match
+                    </button>
+                </div>
+                <i class="fas fa-robot absolute -right-10 -bottom-10 text-[15rem] text-black/5 rotate-12 group-hover:rotate-0 transition-transform duration-700"></i>
+            </div>
+
+            <!-- Active Lobby -->
+            <div class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <button onclick="refreshLobby()" class="w-10 h-10 bg-orange-500/10 rounded-full flex items-center justify-center text-orange-500 border border-orange-500/20 hover:bg-orange-500 hover:text-black transition-all">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <h3 class="text-2xl font-black italic text-orange-500 tracking-tight">ACTIVE SIGNALS</h3>
+                    </div>
+                    <div class="bg-orange-950/30 p-1 rounded-xl flex gap-1">
+                        <button class="tab-btn active px-4 py-2 text-xs font-black uppercase">Global</button>
+                        <button class="tab-btn px-4 py-2 text-xs font-black uppercase text-orange-900">Mine</button>
+                    </div>
+                </div>
+                
+                <div id="matchGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Matches Load Here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile View -->
+        <div id="profileSection" class="lg:col-span-9 space-y-8 hidden animate-in slide-in-from-right">
+            <div class="flex items-center gap-4">
+                <button onclick="switchView('lobby')" class="bg-orange-500/10 text-orange-500 p-3 rounded-2xl border border-orange-500/20 hover:bg-orange-500 hover:text-black">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <h2 class="text-4xl font-black italic text-orange-500">COMMAND CENTER</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Identity Card -->
+                <div class="md:col-span-1 martian-card rounded-[2rem] p-8 text-center space-y-6 border-orange-500/40">
+                    <div class="relative inline-block">
+                        <div class="w-32 h-32 bg-orange-500/20 rounded-[2.5rem] flex items-center justify-center border-2 border-orange-500 mx-auto overflow-hidden">
+                            <i class="fas fa-user-astronaut text-6xl text-orange-500"></i>
+                        </div>
+                        <div class="absolute -bottom-2 -right-2 bg-green-500 w-6 h-6 rounded-full border-4 border-black"></div>
+                    </div>
+                    <div>
+                        <input id="editUsername" type="text" class="bg-black/60 border border-orange-900/50 rounded-xl px-4 py-2 text-center font-black text-orange-500 focus:outline-none focus:border-orange-500" placeholder="New Username" />
+                        <p id="fullWalletAddress" class="text-[10px] font-mono text-gray-500 mt-2 break-all"></p>
+                    </div>
+                    <button onclick="updateProfile()" class="w-full btn-martian py-3 rounded-2xl">Update Identity</button>
+                </div>
+
+                <!-- Stats Dashboard -->
+                <div class="md:col-span-2 space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="martian-card rounded-3xl p-6 border-orange-500/20">
+                            <p class="text-[10px] font-black text-orange-700 uppercase mb-1">Combat Victories</p>
+                            <p id="profileWins" class="text-4xl font-black text-white">0</p>
+                        </div>
+                        <div class="martian-card rounded-3xl p-6 border-orange-500/20">
+                            <p class="text-[10px] font-black text-orange-700 uppercase mb-1">Total Volume</p>
+                            <div class="flex items-baseline gap-2">
+                                <p id="profileGambled" class="text-4xl font-black text-orange-500">0</p>
+                                <span class="text-xs font-black text-orange-800">EROL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="martian-card rounded-3xl p-8 border-orange-500/20">
+                        <h4 class="font-black text-orange-500 mb-4 uppercase tracking-widest text-xs">Recent Operations</h4>
+                        <div class="space-y-4 text-sm text-gray-400">
+                            <div class="flex justify-between border-b border-orange-900/20 pb-2 italic">
+                                <span>Lobby connection stable...</span>
+                                <span>READY</span>
+                            </div>
+                            <div class="flex justify-between border-b border-orange-900/20 pb-2 italic">
+                                <span>Waiting for blockchain events...</span>
+                                <span class="text-orange-500">LISTENING</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Info Footer -->
-    <div class="mt-8 grid grid-cols-2 gap-4 text-center text-[10px] text-gray-600">
-        <div>
-            <p>RPC URL</p>
-            <p class="text-gray-400">martian-rpc1.amichain.org</p>
-        </div>
-        <div>
-            <p>CHAIN ID</p>
-            <p class="text-gray-400">2027</p>
-        </div>
-    </div>
+    <!-- UI Components -->
+    <div id="statusToast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-white text-black px-8 py-5 rounded-3xl font-black shadow-[0_20px_50px_rgba(0,0,0,0.5)] hidden z-[110] transform transition-all duration-300"></div>
 
     <script>
+        // --- BLOCKCHAIN CONFIG ---
+        const GAME_CONTRACT = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
+        const EROL_TOKEN = "0x56a42099309E022513a070e17978280fBeD42aA3"; // Replace with your actual EROL token address
         const RPC_URL = "https://martian-rpc1.amichain.org/";
-        const TOKEN_ADDRESS = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
-        const TOKEN_ABI = ["function balanceOf(address) view returns (uint256)"];
-        const DEFAULT_DECIMALS = 18;
+        const CHAIN_ID = "0x7EB"; // 2027 in hex
 
-        const provider = new ethers.JsonRpcProvider(RPC_URL);
-        const contract = new ethers.Contract(TOKEN_ADDRESS, TOKEN_ABI, provider);
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = "https://pcbrvtldeqhqllsilonl.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjYnJ2dGxkZXFocWxsc2lsb25sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA2NTMyODUsImV4cCI6MjA4NjIyOTI4NX0.XtRbmbVqPT-7IrtsxmyMKbn_Ii_M1t_aGfCMnTVXu18";
+        
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let userWallet = null;
+        let userProfile = null;
+        let provider, signer;
 
-        const connectBtn = document.getElementById('connectBtn');
-        const checkBtn = document.getElementById('checkBtn');
-        const addressInput = document.getElementById('addressInput');
-        const resultArea = document.getElementById('resultArea');
-        const balanceText = document.getElementById('balanceText');
-        const statusMsg = document.getElementById('statusMsg');
-        const addressLabel = document.getElementById('addressLabel');
+        const MIN_WAGER = 50;
 
-        async function getBalance(address) {
-            if (!ethers.isAddress(address)) {
-                showStatus("Invalid EVM Address", true);
+        // --- INITIALIZATION ---
+        async function connect() {
+            if (!window.ethereum) return toast("Deploy MetaMask to continue!", true);
+            
+            showLoading("Intercepting Wallet Frequency...");
+            try {
+                provider = new ethers.BrowserProvider(window.ethereum);
+                const network = await provider.getNetwork();
+                
+                // Ensure on Martian Chain
+                if (network.chainId !== BigInt(2027)) {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CHAIN_ID }],
+                    });
+                }
+
+                const accounts = await provider.send("eth_requestAccounts", []);
+                userWallet = accounts[0];
+                signer = await provider.getSigner();
+
+                await syncProfile();
+                updateUI();
+                setupRealtime();
+                switchView('lobby');
+            } catch (err) {
+                toast("Connection aborted: " + err.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        async function syncProfile() {
+            const { data, error } = await sb.from('profiles').select('*').eq('wallet_address', userWallet.toLowerCase()).single();
+            if (data) {
+                userProfile = data;
+                // Update UI elements
+                document.getElementById('navUserName').innerText = data.username || "Rover";
+                document.getElementById('editUsername').value = data.username || "";
+                document.getElementById('fullWalletAddress').innerText = userWallet;
+                document.getElementById('statWins').innerText = data.games_won || 0;
+                document.getElementById('profileWins').innerText = data.games_won || 0;
+                document.getElementById('profileGambled').innerText = data.total_erol_gambled || 0;
+                
+                document.getElementById('miniProfile').classList.remove('hidden');
+                document.getElementById('connectionStatus').classList.remove('hidden');
+            }
+        }
+
+        // --- BLOCKCHAIN TRANSACTIONS ---
+        async function hostGame() {
+            const wager = parseInt(document.getElementById('wagerInput').value);
+            if (wager < MIN_WAGER) return toast(`Min stake is ${MIN_WAGER} EROL`, true);
+            if (!userWallet) return connect();
+
+            showLoading("Awaiting Blockchain Confirmation...");
+            try {
+                // 1. ERC20 Approval (Minimal Example)
+                // const tokenContract = new ethers.Contract(EROL_TOKEN, ["function approve(address,uint256) returns (bool)"], signer);
+                // const txApprove = await tokenContract.approve(GAME_CONTRACT, ethers.parseUnits(wager.toString(), 18));
+                // await txApprove.wait();
+
+                // 2. Call Game Contract
+                // const gameContract = new ethers.Contract(GAME_CONTRACT, ["function createGame(uint256) external"], signer);
+                // const txGame = await gameContract.createGame(ethers.parseUnits(wager.toString(), 18));
+                // await txGame.wait();
+
+                // 3. Sync to Supabase for Lobby
+                const { error } = await sb.from('matches').insert({
+                    host_id: userProfile.id,
+                    wager_amount: wager,
+                    status: 'waiting'
+                });
+                
+                if (error) throw error;
+                toast("Match Broadcasted to Martian Orbit!");
+            } catch (e) {
+                toast(e.message, true);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // --- VIEW MANAGEMENT ---
+        function switchView(view) {
+            document.getElementById('lobbySection').classList.add('hidden');
+            document.getElementById('profileSection').classList.add('hidden');
+            
+            if(view === 'lobby') document.getElementById('lobbySection').classList.remove('hidden');
+            if(view === 'profile') document.getElementById('profileSection').classList.remove('hidden');
+        }
+
+        async function updateProfile() {
+            const newName = document.getElementById('editUsername').value;
+            if (newName.length < 3) return toast("Username too short!", true);
+
+            showLoading("Rewriting Neural Identity...");
+            const { error } = await sb.from('profiles').update({ username: newName }).eq('id', userProfile.id);
+            
+            if (!error) {
+                await syncProfile();
+                toast("Identity Synchronized.");
+            } else {
+                toast("Frequency Jammed: Name taken?", true);
+            }
+            hideLoading();
+        }
+
+        // --- LOBBY & CHAT ---
+        async function refreshLobby() {
+            const { data: matches } = await sb.from('matches').select('*, profiles!host_id(username)').eq('status', 'waiting').order('created_at', { ascending: false });
+            const grid = document.getElementById('matchGrid');
+            
+            if (!matches || matches.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-20 text-orange-900 border-2 border-dashed border-orange-900/30 rounded-[3rem]"><i class="fas fa-satellite-dish text-4xl mb-4 animate-pulse"></i><p class="font-black uppercase tracking-widest text-xs">No active signals found...</p></div>`;
                 return;
             }
 
-            showStatus("Checking Martian Chain...");
-            resultArea.classList.add('hidden');
+            grid.innerHTML = matches.map(m => `
+                <div class="martian-card rounded-[2rem] p-8 border-orange-500/20 hover:border-orange-500 hover:scale-[1.02] transition-all group relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-6 relative z-10">
+                        <div>
+                            <p class="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Commander</p>
+                            <p class="font-black text-xl text-white group-hover:text-orange-500 transition-colors">${m.profiles?.username || 'Anon'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Stake</p>
+                            <p class="font-black text-2xl text-orange-500">${m.wager_amount} <span class="text-xs">EROL</span></p>
+                        </div>
+                    </div>
+                    <button onclick="joinGame('${m.id}')" class="w-full py-4 bg-orange-950/40 text-orange-500 group-hover:bg-orange-500 group-hover:text-black rounded-2xl font-black text-xs transition-all uppercase tracking-widest border border-orange-500/20 relative z-10">
+                        Accept Gambit
+                    </button>
+                    <i class="fas fa-atom absolute -right-4 -bottom-4 text-7xl text-orange-500/5 rotate-12 group-hover:rotate-45 transition-transform duration-1000"></i>
+                </div>
+            `).join('');
+        }
 
-            try {
-                // The "0x" error usually means the address is NOT a contract on this specific chain.
-                // On some L1s/Subnets, the main token (EROL) might be the NATIVE gas token.
-                // We check both Native balance and Contract balance to be safe.
-                
-                let balance;
-                const code = await provider.getCode(TOKEN_ADDRESS);
-                
-                if (code === "0x") {
-                    // If no contract code is found at the address, EROL might be the native chain currency.
-                    balance = await provider.getBalance(address);
-                } else {
-                    // Otherwise, try to call the contract function.
-                    balance = await contract.balanceOf(address);
-                }
+        async function setupRealtime() {
+            sb.channel('global').on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => refreshLobby()).subscribe();
+            sb.channel('chat').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, p => appendMessage(p.new)).subscribe();
+            
+            refreshLobby();
+            loadChat();
+        }
 
-                const formattedBalance = ethers.formatUnits(balance, DEFAULT_DECIMALS);
-                
-                balanceText.innerText = parseFloat(formattedBalance).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 4
-                });
-                
-                addressLabel.innerText = "Wallet: " + address;
-                resultArea.classList.remove('hidden');
-                showStatus("");
-            } catch (err) {
-                console.error(err);
-                showStatus("Error: Unable to fetch balance. The RPC might be restricted or the address is incorrect.", true);
+        async function loadChat() {
+            const { data } = await sb.from('chat_messages').select('*').order('created_at', { ascending: false }).limit(30);
+            if (data) {
+                const box = document.getElementById('chatBox');
+                box.innerHTML = "";
+                data.reverse().forEach(appendMessage);
             }
         }
 
-        function showStatus(msg, isError = false) {
-            statusMsg.innerText = msg;
-            statusMsg.className = isError ? "mt-4 text-center text-sm text-red-500" : "mt-4 text-center text-sm text-gray-500";
+        function appendMessage(m) {
+            const box = document.getElementById('chatBox');
+            const div = document.createElement('div');
+            div.className = "p-2 rounded-xl bg-orange-500/5 border border-orange-500/10 mb-2";
+            div.innerHTML = `<span class="text-orange-500 font-black text-[10px] uppercase block mb-1">${m.username}</span><span class="text-white opacity-80">${m.message}</span>`;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        connectBtn.addEventListener('click', async () => {
-            if (window.ethereum) {
-                try {
-                    showStatus("Requesting wallet access...");
-                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    addressInput.value = accounts[0];
-                    getBalance(accounts[0]);
-                } catch (err) {
-                    showStatus("Wallet connection rejected", true);
-                }
-            } else {
-                showStatus("No Web3 wallet detected. Please enter address manually.", true);
+        async function sendChat() {
+            const input = document.getElementById('chatInput');
+            if (!input.value || !userProfile) return;
+            const msg = input.value;
+            input.value = "";
+            await sb.from('chat_messages').insert({ user_id: userProfile.id, username: userProfile.username, message: msg });
+        }
+
+        // --- UTILS ---
+        function showLoading(text) {
+            document.getElementById('loadingText').innerText = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+        function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+        
+        function toast(msg, err = false) {
+            const t = document.getElementById('statusToast');
+            t.innerText = msg;
+            t.className = `fixed bottom-8 left-1/2 -translate-x-1/2 px-8 py-5 rounded-3xl font-black shadow-2xl z-[110] transform transition-all duration-300 ${err ? 'bg-red-600 text-white' : 'bg-orange-500 text-black'}`;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 4000);
+        }
+
+        function updateUI() {
+            const btn = document.getElementById('connectBtn');
+            if (userWallet) {
+                btn.innerHTML = `<i class="fas fa-check-circle"></i> ${userWallet.slice(0,6)}...${userWallet.slice(-4)}`;
+                btn.className = "bg-orange-900/40 text-orange-500 px-8 py-2.5 rounded-2xl text-sm font-black border border-orange-500/30";
             }
-        });
+        }
 
-        checkBtn.addEventListener('click', () => {
-            getBalance(addressInput.value.trim());
-        });
+        // --- EVENT LISTENERS ---
+        document.getElementById('connectBtn').addEventListener('click', connect);
+        document.getElementById('hostGameBtn').addEventListener('click', hostGame);
+        document.getElementById('sendChat').addEventListener('click', sendChat);
+        document.getElementById('chatInput').addEventListener('keypress', e => e.key === 'Enter' && sendChat());
 
-        addressInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') getBalance(addressInput.value.trim());
-        });
+        if (window.ethereum && window.ethereum.selectedAddress) connect();
     </script>
 </body>
 </html>
