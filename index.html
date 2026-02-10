@@ -989,18 +989,20 @@
                     console.warn("Log parsing failed:", e); 
                 }
 
+                // Use composite key: chainId_gameId for uniqueness
+                const compositeGameId = `${currentChain}_${gameId}`;
+                
                 const { error: sbError } = await _supabase.from('games')
-                    .upsert([{
+                    .insert([{
                         game_id: gameId,
                         host: userAddress.toLowerCase(),
                         wager: wagerInput,
                         timeout: parseInt(timeoutValue),
                         status: 0,
                         commit_hash: hash,
-                        chain: currentChain
-                    }], {
-                        onConflict: 'game_id,chain'
-                    });
+                        chain: currentChain,
+                        composite_id: compositeGameId
+                    }]);
 
                 if (sbError) {
                     console.error("Supabase error:", sbError);
@@ -1192,14 +1194,15 @@
                 showToast("CONFIRMING...");
                 await tx.wait();
                 
+                const compositeGameId = `${currentChain}_${id}`;
+                
                 await _supabase.from('games')
                     .update({ 
                         status: 1, 
                         challenger: userAddress.toLowerCase(),
                         challenger_move: parseInt(move)
                     })
-                    .eq('game_id', id)
-                    .eq('chain', currentChain);
+                    .eq('composite_id', compositeGameId);
                 
                 showToast("✓ SIGNAL INTERCEPTED");
                 setTimeout(refreshLobby, 1500);
@@ -1263,11 +1266,13 @@
                     resultMsg = "💥 DEFEAT";
                 }
                 
+                const compositeGameId = `${currentChain}_${id}`;
+                
                 await _supabase.from('games').update({ 
                     status: 2,
                     host_move: hostMove,
                     challenger_move: challengerMove
-                }).eq('game_id', id).eq('chain', currentChain);
+                }).eq('composite_id', compositeGameId);
                 
                 setTimeout(refreshLobby, 1000);
                 updateBalance();
@@ -1287,7 +1292,9 @@
                 const tx = await contract.refundUnchallenged(id);
                 await tx.wait();
                 
-                await _supabase.from('games').update({ status: 3 }).eq('game_id', id).eq('chain', currentChain);
+                const compositeGameId = `${currentChain}_${id}`;
+                await _supabase.from('games').update({ status: 3 }).eq('composite_id', compositeGameId);
+                
                 refreshLobby();
                 updateBalance();
                 showToast("FUNDS RETRACTED");
@@ -1306,7 +1313,9 @@
                 const tx = await contract.forceForfeit(gameId);
                 await tx.wait();
                 
-                await _supabase.from('games').update({ status: 4 }).eq('game_id', gameId).eq('chain', currentChain);
+                const compositeGameId = `${currentChain}_${gameId}`;
+                await _supabase.from('games').update({ status: 4 }).eq('composite_id', compositeGameId);
+                
                 refreshLobby();
                 updateBalance();
                 showToast("🏆 VICTORY BY FORFEIT!");
