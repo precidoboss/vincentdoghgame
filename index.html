@@ -3,168 +3,729 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erol's Martian Gambit</title>
+    <title>Erol's Martian Gambit | Mission Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mars-red: #ff4d4d;
-            --mars-dark: #1a0a0a;
-            --mars-glow: rgba(255, 77, 77, 0.3);
+            --mars-orange: #ff4d00;
+            --habitat-bg: #060608;
+            --panel-bg: rgba(20, 20, 25, 0.95);
+            --glow: rgba(255, 77, 0, 0.3);
         }
+
         body {
-            background-color: var(--mars-dark);
+            background-color: var(--habitat-bg);
             color: #e0e0e0;
-            font-family: 'Rajdhani', sans-serif;
-            background-image: radial-gradient(circle at 50% 50%, #2c1010 0%, #000 100%);
+            font-family: 'Share Tech Mono', monospace;
+            background-image: 
+                linear-gradient(rgba(255, 77, 0, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 77, 0, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            margin: 0;
         }
+
         .orbitron { font-family: 'Orbitron', sans-serif; }
-        .mars-border { border: 1px solid var(--mars-red); }
-        .mars-button {
-            background: linear-gradient(45deg, #8b0000, #ff4d4d);
-            transition: all 0.3s ease;
+        
+        .mars-glass {
+            background: var(--panel-bg);
+            border: 1px solid rgba(255, 77, 0, 0.2);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .mars-border-glow {
+            border: 1px solid var(--mars-orange);
+            box-shadow: 0 0 10px var(--glow);
+        }
+
+        .btn-mars {
+            background: var(--mars-orange);
+            color: black;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            transition: all 0.2s;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
         }
-        .mars-button:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px var(--mars-glow);
+
+        .btn-mars:hover:not(:disabled) {
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px var(--glow);
+            transform: scale(1.02);
         }
-        .mars-button:disabled { opacity: 0.5; cursor: not-allowed; }
-        .card {
-            background: rgba(40, 10, 10, 0.6);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 77, 77, 0.2);
-            border-radius: 12px;
+
+        .btn-mars:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
-        .move-btn {
-            border: 2px solid transparent;
+
+        .move-select {
+            border: 1px solid #333;
+            filter: grayscale(1);
+            transition: all 0.3s;
+        }
+
+        .move-select.selected {
+            border-color: var(--mars-orange);
+            filter: grayscale(0);
+            background: rgba(255, 77, 0, 0.1);
+            box-shadow: inset 0 0 10px var(--glow);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 2px;
+            background: rgba(255, 77, 0, 0.1);
+            position: fixed;
+            top: 0;
+            z-index: 100;
+            pointer-events: none;
+            animation: scan 4s linear infinite;
+        }
+
+        @keyframes scan {
+            from { top: 0; }
+            to { top: 100%; }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--habitat-bg); }
+        ::-webkit-scrollbar-thumb { background: var(--mars-orange); }
+
+        .tab-btn {
+            color: #666;
+            background: transparent;
+        }
+
+        .tab-btn:hover {
+            color: var(--mars-orange);
+        }
+
+        .tab-btn.active {
+            color: var(--mars-orange);
+            background: rgba(255, 77, 0, 0.1);
+            border-bottom: 2px solid var(--mars-orange);
+        }
+
+        .lobby-filter {
+            color: #666;
+            background: transparent;
+        }
+
+        .lobby-filter:hover {
+            color: var(--mars-orange);
+        }
+
+        .lobby-filter.active {
+            color: var(--mars-orange);
+            background: rgba(255, 77, 0, 0.1);
+        }
+
+        .page-section {
+            display: none;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        .copy-btn {
+            cursor: pointer;
             transition: all 0.2s;
         }
-        .move-btn.selected {
-            border-color: var(--mars-red);
-            background: rgba(255, 77, 77, 0.2);
+
+        .copy-btn:hover {
+            color: var(--mars-orange);
+            transform: scale(1.1);
         }
-        .status-badge {
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            text-transform: uppercase;
+
+        .header-banner {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 2px solid var(--mars-orange);
+        }
+
+        .game-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+
+        .chat-messages {
+            height: 400px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .activity-feed {
+            height: 500px;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .header-banner {
+                height: 120px;
+            }
+            .game-logo {
+                width: 45px;
+                height: 45px;
+            }
+            .chat-messages {
+                height: 300px;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-4">
+    <div class="scanline"></div>
 
-    <!-- Header & Wallet -->
-    <header class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center mb-12">
-        <div class="text-center md:text-left mb-6 md:mb-0">
-            <h1 class="orbitron text-4xl font-bold text-red-500 tracking-tighter">EROL'S MARTIAN GAMBIT</h1>
-            <p class="text-gray-400 text-sm italic">High-Stakes Tactical Strategy on Martian L1</p>
-        </div>
-        <div id="wallet-section" class="flex flex-col items-end">
-            <button id="connect-btn" class="mars-button orbitron px-6 py-2 rounded-full font-bold">Connect Uplink</button>
-            <div id="account-info" class="hidden text-right">
-                <p id="user-address" class="text-xs text-red-400 font-mono"></p>
-                <p id="user-balance" class="text-lg font-bold">0.00 $EROL</p>
-            </div>
-        </div>
-    </header>
-
-    <main class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- Create Game Section -->
-        <section class="lg:col-span-4 flex flex-col gap-6">
-            <div class="card p-6">
-                <h2 class="orbitron text-xl mb-4 text-white border-b border-red-900 pb-2">Initialize Signal</h2>
-                
-                <label class="block text-xs uppercase text-gray-400 mb-1">Select Tactical Move</label>
-                <div class="grid grid-cols-3 gap-2 mb-4">
-                    <button onclick="selectMove(1)" id="move-1" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
-                        <span class="text-2xl">☀️</span>
-                        <span class="text-[10px] mt-1 uppercase">Solar Flare</span>
-                    </button>
-                    <button onclick="selectMove(2)" id="move-2" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
-                        <span class="text-2xl">🌬️</span>
-                        <span class="text-[10px] mt-1 uppercase">Oxygen Siphon</span>
-                    </button>
-                    <button onclick="selectMove(3)" id="move-3" class="move-btn p-3 bg-black/40 rounded flex flex-col items-center">
-                        <span class="text-2xl">🌪️</span>
-                        <span class="text-[10px] mt-1 uppercase">Dust Storm</span>
-                    </button>
-                </div>
-
-                <label class="block text-xs uppercase text-gray-400 mb-1">Wager Amount ($EROL)</label>
-                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black/60 border border-red-900 rounded p-2 mb-6 text-white focus:outline-none focus:border-red-500">
-                
-                <button id="create-btn" onclick="handleCreateGame()" class="mars-button w-full py-3 rounded font-bold orbitron">Deploy Signal</button>
-            </div>
-
-            <div class="card p-4 text-xs text-gray-400">
-                <h3 class="text-red-400 font-bold mb-2 uppercase">The Tactical Triangle</h3>
-                <p>☀️ Solar Flare evaporates 🌬️ Oxygen Siphon</p>
-                <p>🌬️ Oxygen Siphon clears 🌪️ Dust Storm</p>
-                <p>🌪️ Dust Storm blocks ☀️ Solar Flare</p>
-            </div>
-        </section>
-
-        <!-- Active Lobby -->
-        <section class="lg:col-span-8">
-            <div class="card p-6 min-h-[400px]">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="orbitron text-xl text-white">Active Signals</h2>
-                    <button onclick="refreshLobby()" class="text-xs text-red-400 hover:text-white transition">⟳ Sync Lobby</button>
-                </div>
-                
-                <div id="lobby-list" class="space-y-4">
-                    <!-- Dynamic Game Items -->
-                    <div class="text-center py-10 text-gray-500 italic">Scanning Martian frequencies for signals...</div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- UI Feedback Toast -->
-    <div id="toast" class="fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded shadow-2xl transform translate-y-20 transition-transform duration-300 pointer-events-none">
-        Message Here
+    <!-- Header Banner -->
+    <div class="max-w-7xl mx-auto mb-4">
+        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-21-55.jpg" 
+             alt="Martian Gambit Header" 
+             class="header-banner"
+             onerror="this.style.display='none'">
     </div>
 
+    <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 py-4 border-b border-orange-900/30">
+        <div class="flex items-center gap-4">
+            <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" 
+                 alt="Martian Gambit Logo" 
+                 class="game-logo"
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="w-12 h-12 mars-border-glow hidden items-center justify-center bg-black">
+                <span class="text-orange-500 text-2xl font-bold">M</span>
+            </div>
+            <div>
+                <h1 class="orbitron text-2xl font-bold text-orange-500 tracking-widest">MARTIAN GAMBIT</h1>
+                <p class="text-[10px] text-orange-800 uppercase tracking-[0.2em]">Sector 2027 // EROL Protocol</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 mt-4 md:mt-0">
+            <!-- Navigation Tabs -->
+            <div class="flex gap-1 bg-black/40 p-1 border border-orange-900/30 flex-wrap">
+                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-4 py-2 text-[10px] uppercase transition">Lobby</button>
+                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Leaderboard</button>
+                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Profile</button>
+                <button onclick="switchTab('bridge')" id="tab-bridge" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Bridge</button>
+                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-4 py-2 text-[10px] uppercase transition">How to Play</button>
+            </div>
+
+            <div id="connection-interface">
+                <button id="connect-btn" class="btn-mars px-8 py-2">Initialize Uplink</button>
+                <div id="account-info" class="hidden flex items-center gap-3">
+                    <div class="text-right">
+                        <div class="flex items-center gap-2">
+                            <span id="user-address" class="text-[10px] text-orange-400 opacity-70"></span>
+                            <button id="copy-address" class="copy-btn text-orange-400 text-xs" onclick="copyAddress()" title="Copy Address">
+                                📋
+                            </button>
+                        </div>
+                        <div id="user-balance" class="orbitron text-orange-500 font-bold text-sm">0.00 $EROL</div>
+                    </div>
+                    <div class="h-10 w-1 bg-orange-500"></div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto">
+        <!-- LOBBY PAGE -->
+        <div id="page-lobby" class="page-section active">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <aside class="lg:col-span-4 space-y-6">
+                    <div class="mars-glass p-6">
+                        <h2 class="orbitron text-sm text-orange-500 mb-6 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-orange-500 animate-pulse"></span>
+                            COMMENCE SIGNAL DEPLOYMENT
+                        </h2>
+
+                        <div class="grid grid-cols-3 gap-3 mb-6">
+                            <button onclick="selectMove(1)" id="move-1" class="move-select p-4 bg-black flex flex-col items-center">
+                                <span class="text-3xl mb-2">☀️</span>
+                                <span class="text-[9px] uppercase">Solar</span>
+                            </button>
+                            <button onclick="selectMove(2)" id="move-2" class="move-select p-4 bg-black flex flex-col items-center">
+                                <span class="text-3xl mb-2">🌬️</span>
+                                <span class="text-[9px] uppercase">Oxygen</span>
+                            </button>
+                            <button onclick="selectMove(3)" id="move-3" class="move-select p-4 bg-black flex flex-col items-center">
+                                <span class="text-3xl mb-2">🌪️</span>
+                                <span class="text-[9px] uppercase">Dust</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <div>
+                                <label class="text-[10px] text-orange-800 uppercase mb-2 block">Energy Stake ($EROL)</label>
+                                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black border border-orange-900/50 p-3 text-orange-500 focus:outline-none focus:border-orange-500 orbitron">
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-orange-800 uppercase mb-2 block">Interception Timeout</label>
+                                <select id="timeout-select" class="w-full bg-black border border-orange-900/50 p-3 text-orange-500 focus:outline-none focus:border-orange-500 orbitron text-sm">
+                                    <option value="300">5 Minutes</option>
+                                    <option value="600">10 Minutes</option>
+                                    <option value="900" selected>15 Minutes</option>
+                                </select>
+                            </div>
+                            <button id="create-btn" onclick="handleCreateGame()" class="btn-mars w-full py-4 text-lg">Deploy Signal</button>
+                            <button onclick="debugInfo()" class="w-full py-2 text-[9px] border border-orange-900/30 text-orange-700 hover:text-orange-500 uppercase">Debug Info</button>
+                        </div>
+                    </div>
+
+                    <!-- Global Chat -->
+                    <div class="mars-glass p-6">
+                        <h2 class="orbitron text-sm text-orange-500 mb-4 flex items-center gap-2">
+                            <span class="w-2 h-2 bg-orange-500 animate-pulse"></span>
+                            GLOBAL COMMS
+                        </h2>
+                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border border-orange-900/30 p-3 space-y-2"></div>
+                        <div class="flex gap-2">
+                            <input id="chat-input" type="text" placeholder="Type message..." maxlength="200" class="flex-1 bg-black border border-orange-900/50 p-2 text-sm text-orange-500 focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendMessage()">
+                            <button onclick="sendMessage()" class="btn-mars px-4 py-2 text-xs">Send</button>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="lg:col-span-8 space-y-6">
+                    <!-- Game Lobby -->
+                    <div class="mars-glass p-6 min-h-[500px] relative overflow-hidden">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-orange-900/20 pb-4 gap-4">
+                            <h2 class="orbitron text-lg text-white tracking-widest flex items-center gap-3">
+                                LOBBY_FREQUENCIES
+                                <span class="text-[10px] bg-orange-900/30 px-2 py-1 text-orange-500">FAST INDEX</span>
+                            </h2>
+                            
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <!-- Filter Buttons -->
+                                <div class="flex gap-1 bg-black/40 p-1 border border-orange-900/30">
+                                    <button onclick="setLobbyFilter('all')" id="filter-all" class="lobby-filter active px-3 py-1 text-[9px] uppercase transition">All</button>
+                                    <button onclick="setLobbyFilter('open')" id="filter-open" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Open</button>
+                                    <button onclick="setLobbyFilter('intercepted')" id="filter-intercepted" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Intercepted</button>
+                                    <button onclick="setLobbyFilter('resolved')" id="filter-resolved" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Resolved</button>
+                                </div>
+                                
+                                <button onclick="refreshLobby()" class="text-[10px] text-orange-500 hover:text-white border border-orange-500/30 px-3 py-1 uppercase transition">Sync Data</button>
+                            </div>
+                        </div>
+                        <div id="lobby-list" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Live Activity Feed -->
+                    <div class="mars-glass p-6">
+                        <h2 class="orbitron text-lg text-white tracking-widest mb-6 flex items-center gap-3">
+                            LIVE ACTIVITY FEED
+                            <span class="w-2 h-2 bg-green-500 animate-pulse"></span>
+                        </h2>
+                        <div id="activity-feed" class="activity-feed space-y-2"></div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+<!-- END OF PART 1 - Continue with Part 2 -->
+<!-- START OF PART 2 - Paste this after Part 1 -->
+
+        <!-- LEADERBOARD PAGE -->
+        <div id="page-leaderboard" class="page-section">
+            <div class="mars-glass p-8">
+                <h2 class="orbitron text-2xl text-orange-500 mb-8 flex items-center gap-3">
+                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                    PILOT RANKINGS
+                </h2>
+
+                <!-- Global Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
+                        <div class="text-[10px] text-orange-800 uppercase mb-2">Total Wagered</div>
+                        <div id="global-wagered" class="orbitron text-2xl text-orange-500">--</div>
+                    </div>
+                    <div class="bg-black/40 border border-red-900/30 p-4 text-center">
+                        <div class="text-[10px] text-red-800 uppercase mb-2">Burnt ($EROL)</div>
+                        <div id="global-burnt" class="orbitron text-2xl text-red-500">--</div>
+                    </div>
+                    <div class="bg-black/40 border border-blue-900/30 p-4 text-center">
+                        <div class="text-[10px] text-blue-800 uppercase mb-2">Treasury</div>
+                        <div id="global-treasury" class="orbitron text-2xl text-blue-500">--</div>
+                    </div>
+                    <div class="bg-black/40 border border-green-900/30 p-4 text-center">
+                        <div class="text-[10px] text-green-800 uppercase mb-2">Games Played</div>
+                        <div id="global-games" class="orbitron text-2xl text-green-500">--</div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-orange-900/30">
+                                <th class="text-left p-3 text-[10px] text-orange-800 uppercase">Rank</th>
+                                <th class="text-left p-3 text-[10px] text-orange-800 uppercase">Pilot</th>
+                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Wagered</th>
+                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Win Rate</th>
+                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Biggest Pot</th>
+                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Win Streak</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE PAGE -->
+        <div id="page-profile" class="page-section">
+            <div class="mars-glass p-8 max-w-5xl mx-auto">
+                <h2 class="orbitron text-2xl text-orange-500 mb-8 flex items-center gap-3">
+                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                    PILOT STATISTICS
+                </h2>
+                <div id="profile-content" class="space-y-6"></div>
+            </div>
+        </div>
+
+        <!-- HOW TO PLAY PAGE -->
+        <div id="page-howto" class="page-section">
+            <div class="mars-glass p-8 max-w-4xl mx-auto">
+                <h2 class="orbitron text-2xl text-orange-500 mb-8">MISSION BRIEFING</h2>
+                
+                <div class="space-y-8 text-gray-300">
+                    <section>
+                        <h3 class="orbitron text-orange-500 text-lg mb-3">🎯 OBJECTIVE</h3>
+                        <p class="leading-relaxed">Martian Gambit is a high-stakes Rock-Paper-Scissors style game on the Martian Chain. Players bet $EROL tokens and compete using three strategic moves. The winner takes the pot (minus a small fee).</p>
+                    </section>
+
+                    <section>
+                        <h3 class="orbitron text-orange-500 text-lg mb-3">⚔️ THE THREE MOVES</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                                <div class="text-4xl mb-2">☀️</div>
+                                <div class="orbitron text-orange-500 mb-1">SOLAR FLARE</div>
+                                <div class="text-[11px] text-gray-400">Beats Oxygen Siphon</div>
+                            </div>
+                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                                <div class="text-4xl mb-2">🌬️</div>
+                                <div class="orbitron text-orange-500 mb-1">OXYGEN SIPHON</div>
+                                <div class="text-[11px] text-gray-400">Beats Dust Storm</div>
+                            </div>
+                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                                <div class="text-4xl mb-2">🌪️</div>
+                                <div class="orbitron text-orange-500 mb-1">DUST STORM</div>
+                                <div class="text-[11px] text-gray-400">Beats Solar Flare</div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 class="orbitron text-orange-500 text-lg mb-3">📋 HOW TO PLAY</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <div class="orbitron text-orange-500 text-xl">1.</div>
+                                <div>
+                                    <div class="font-bold text-white mb-1">Deploy Signal (Host)</div>
+                                    <p class="text-sm text-gray-400">Select your move, wager amount, and timeout. Your move is encrypted and stored locally. Click "Deploy Signal" to create the game.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="orbitron text-orange-500 text-xl">2.</div>
+                                <div>
+                                    <div class="font-bold text-white mb-1">Intercept (Challenger)</div>
+                                    <p class="text-sm text-gray-400">Find an open game in the lobby and click "Intercept". Choose your move and match the wager amount.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="orbitron text-orange-500 text-xl">3.</div>
+                                <div>
+                                    <div class="font-bold text-white mb-1">Broadcast Reveal (Host)</div>
+                                    <p class="text-sm text-gray-400">Once intercepted, click "Broadcast Reveal" to reveal your move. The smart contract determines the winner automatically.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="orbitron text-orange-500 text-xl">4.</div>
+                                <div>
+                                    <div class="font-bold text-white mb-1">Victory or Defeat</div>
+                                    <p class="text-sm text-gray-400">Winner takes 97% of the pot. 1.5% goes to treasury, 1.5% is burned. In case of a draw, both players get their wager back minus fees.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 class="orbitron text-orange-500 text-lg mb-3">⚠️ IMPORTANT NOTES</h3>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex gap-2"><span class="text-orange-500">→</span> You must use the same browser/device to reveal your move (secret is stored locally)</li>
+                            <li class="flex gap-2"><span class="text-orange-500">→</span> If host doesn't reveal within the timeout, challenger can force forfeit to claim victory</li>
+                            <li class="flex gap-2"><span class="text-orange-500">→</span> If no one intercepts within the timeout, host can retract their wager</li>
+                            <li class="flex gap-2"><span class="text-orange-500">→</span> All games are on-chain and provably fair via cryptographic commitments</li>
+                        </ul>
+                    </section>
+
+                    <section class="bg-orange-900/10 border border-orange-500/30 p-6">
+                        <h3 class="orbitron text-orange-500 text-lg mb-3">💰 FEES & PAYOUTS</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between"><span>Winner Payout:</span><span class="text-orange-500">97% of pot</span></div>
+                            <div class="flex justify-between"><span>Treasury Fee:</span><span class="text-orange-500">1.5%</span></div>
+                            <div class="flex justify-between"><span>Burn Amount:</span><span class="text-orange-500">1.5%</span></div>
+                            <div class="flex justify-between"><span>Draw (each player):</span><span class="text-orange-500">Wager - 3%</span></div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- BRIDGE PAGE -->
+        <div id="page-bridge" class="page-section">
+            <div class="mars-glass p-8 max-w-3xl mx-auto">
+                <h2 class="orbitron text-2xl text-orange-500 mb-2 flex items-center gap-3">
+                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                    CROSS-CHAIN BRIDGE
+                </h2>
+                <p class="text-gray-500 text-sm mb-8">Transfer $EROL from Avalanche C-Chain to Martian Chain (1:1 ratio)</p>
+                
+                <div id="bridge-content" class="space-y-6">
+                    <!-- Bridge Interface -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <!-- From Chain -->
+                        <div class="bg-black/40 border border-orange-900/30 p-6">
+                            <div class="text-[10px] text-orange-800 uppercase mb-3">From</div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    A
+                                </div>
+                                <div>
+                                    <div class="orbitron text-white">Avalanche C-Chain</div>
+                                    <div class="text-[10px] text-gray-500">Chain ID: 43114</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-500 uppercase mb-2 block">Available Balance</label>
+                                <div id="avax-erol-balance" class="orbitron text-orange-500 text-lg">-- $EROL</div>
+                            </div>
+                        </div>
+                        
+                        <!-- To Chain -->
+                        <div class="bg-black/40 border border-orange-900/30 p-6">
+                            <div class="text-[10px] text-orange-800 uppercase mb-3">To</div>
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">
+                                    M
+                                </div>
+                                <div>
+                                    <div class="orbitron text-white">Martian Chain</div>
+                                    <div class="text-[10px] text-gray-500">Chain ID: 2027</div>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-gray-500 uppercase mb-2 block">You'll Receive</label>
+                                <div id="martian-erol-receive" class="orbitron text-orange-500 text-lg">-- $EROL</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Amount Input -->
+                    <div>
+                        <label class="text-[10px] text-orange-800 uppercase mb-2 block">Amount to Bridge</label>
+                        <div class="relative">
+                            <input 
+                                id="bridge-amount" 
+                                type="number" 
+                                step="0.01" 
+                                min="1"
+                                placeholder="0.0"
+                                class="w-full bg-black border border-orange-900/50 p-4 pr-20 text-orange-500 focus:outline-none focus:border-orange-500 orbitron text-xl"
+                                oninput="updateBridgeEstimate()"
+                            >
+                            <button 
+                                onclick="setMaxBridge()" 
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-3 py-1 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 uppercase transition"
+                            >
+                                Max
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bridge Info -->
+                    <div class="bg-orange-900/10 border border-orange-500/30 p-4 space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Exchange Rate:</span>
+                            <span class="text-orange-500">1 $EROL = 1 $EROL</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Bridge Fee:</span>
+                            <span class="text-orange-500">0 $EROL (gas only)</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Min Amount:</span>
+                            <span class="text-orange-500">1 $EROL</span>
+                        </div>
+                    </div>
+
+                    <!-- Bridge Button -->
+                    <button 
+                        id="bridge-btn" 
+                        onclick="handleBridge()" 
+                        class="btn-mars w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled
+                    >
+                        Initialize Bridge Transfer
+                    </button>
+
+                    <!-- Bridge Status -->
+                    <div id="bridge-status" class="hidden bg-black/40 border border-orange-500/30 p-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div>
+                                <div class="text-orange-500 font-bold">Processing Bridge Transaction</div>
+                                <div class="text-[11px] text-gray-500" id="bridge-status-text">Initiating transfer...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bridge Instructions -->
+                    <div class="text-center pt-6 border-t border-orange-900/20">
+                        <div class="text-[10px] text-gray-600 uppercase mb-2">Simple Cross-Chain Transfer</div>
+                        <p class="text-xs text-gray-500">Send $EROL from Avalanche C-Chain to receive $EROL on Martian Chain</p>
+                        <div class="mt-4 text-[10px] text-gray-600">
+                            <div>Bridge Contract: <span class="text-orange-600">0xF95B...1928</span></div>
+                            <div>Token Address: <span class="text-orange-600">0xCaC4...D037</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Player Profile Modal -->
+    <div id="player-modal" class="modal">
+        <div class="modal-content mars-glass p-8 w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="orbitron text-xl text-orange-500">PILOT PROFILE</h2>
+                <button onclick="closePlayerModal()" class="text-2xl text-gray-500 hover:text-orange-500">&times;</button>
+            </div>
+            <div id="player-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 mars-glass border-orange-500 px-8 py-4 text-orange-500 orbitron text-sm transform translate-y-32 transition-all duration-300 z-[200]">
+        SYSTEM MESSAGE
+    </div>
+
+<!-- END OF PART 2 - Continue with Part 3 (JavaScript) -->
+<!-- START OF PART 3 - JavaScript - Paste this after Part 2 -->
+
     <script>
-        const CHAIN_ID = "0x7EB"; // 2027
+        const CHAIN_ID = "0x7EB"; 
         const RPC_URL = "https://martian-rpc1.amichain.org/";
-        const CONTRACT_ADDR = "0x0b912a321801B2f6062b4BdC3d9763e643584074";
-        const TOKEN_ADDR = "0xcac4904e1db1589aa17a2ec742f5a6bcf4c4d037";
+        const CONTRACT_ADDR = "0x395E368045315062b26AC950690f384c98fDEEe2";
+        
+        // Supabase Configuration
+        const SB_URL = "https://tvckbtgggsuwxtlgilcl.supabase.co"; 
+        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2tidGdnZ3N1d3h0bGdpbGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY2NDY0NSwiZXhwIjoyMDg2MjQwNjQ1fQ.DhvGNo3seKoRtDmeRod0gAP48yFZw_0-kAvY3eT_554"; 
+        const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+        // Bridge & Token Configuration
+        const BRIDGE_CONTRACT_ADDR = "0xF95BA10dd7d5EEe89ede7B98250DAD2AcD4B1928";
+        const EROL_TOKEN_ADDR = "0xCaC4904E1DB1589Aa17A2Ec742F5a6bCF4c4D037";
+        const AVAX_CHAIN_ID = "0xa86a"; // 43114
+
+        const ERC20_ABI = [
+            "function balanceOf(address owner) view returns (uint256)",
+            "function approve(address spender, uint256 amount) returns (bool)",
+            "function allowance(address owner, address spender) view returns (uint256)"
+        ];
+
+        const BRIDGE_ABI = [
+            "function bridgeToMartian(uint256 amount) external",
+            "event BridgeInitiated(address indexed sender, uint256 amount, uint256 timestamp)"
+        ];
 
         const ABI = [
-            "function createGame(bytes32 _hash) external payable",
+            "function createGame(bytes32 _hash, uint256 _timeout) external payable",
             "function challengeGame(uint256 _gameId, uint8 _move) external payable",
             "function resolveGame(uint256 _gameId, uint8 _move, string calldata _salt) external",
             "function forceForfeit(uint256 _gameId) external",
             "function refundUnchallenged(uint256 _gameId) external",
             "function gameCounter() public view returns (uint256)",
-            "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timestamp, uint8 status)",
-            "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager)",
+            "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timeout, uint256 timestamp, uint8 status)",
+            "function getTimeRemaining(uint256 _gameId) external view returns (uint256)",
+            "function canForfeit(uint256 _gameId) external view returns (bool)",
+            "function canRefund(uint256 _gameId) external view returns (bool)",
+            "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager, uint256 timeout, bytes32 commitHash)",
             "event GameChallenged(uint256 indexed gameId, address indexed challenger)",
             "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)"
         ];
 
         let provider, signer, contract, userAddress;
         let selectedMoveIdx = 0;
+        let avaxProvider, avaxErolBalance = 0;
+        let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval;
+        let currentLobbyFilter = 'all';
 
-        // Initialize
         async function init() {
             if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 document.getElementById('connect-btn').addEventListener('click', connectWallet);
-                refreshLobby();
-            } else {
-                showToast("Install MetaMask to access Martian Chain.");
+                
+                // Initial refreshes
+                await refreshLobby();
+                await refreshActivityFeed();
+                await refreshChat();
+                
+                // Set up auto-refresh
+                lobbyRefreshInterval = setInterval(refreshLobby, 10000);
+                activityRefreshInterval = setInterval(refreshActivityFeed, 5000);
+                chatRefreshInterval = setInterval(refreshChat, 3000);
+                
+                // Subscribe to Supabase realtime
+                _supabase.channel('game_updates')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, () => {
+                        refreshLobby();
+                        refreshActivityFeed();
+                    })
+                    .subscribe();
+
+                _supabase.channel('chat_updates')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => {
+                        refreshChat();
+                    })
+                    .subscribe();
+
+                window.ethereum.on('accountsChanged', () => window.location.reload());
+                window.ethereum.on('chainChanged', () => window.location.reload());
             }
         }
 
-        async function connectWallet() {
-            try {
-                // Request Network Switch
+        async function checkNetwork() {
+            const network = await provider.getNetwork();
+            if ("0x" + network.chainId.toString(16).toUpperCase() !== CHAIN_ID.toUpperCase()) {
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
@@ -172,221 +733,1274 @@
                     });
                 } catch (switchError) {
                     if (switchError.code === 4902) {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: CHAIN_ID,
-                                chainName: 'Martian Chain',
-                                nativeCurrency: { name: 'EROL', symbol: 'EROL', decimals: 18 },
-                                rpcUrls: [RPC_URL],
-                                blockExplorerUrls: ['https://explorer.martianchain.com/']
-                            }],
-                        });
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: CHAIN_ID,
+                                    chainName: 'Martian Chain',
+                                    nativeCurrency: { name: 'EROL', symbol: 'EROL', decimals: 18 },
+                                    rpcUrls: [RPC_URL],
+                                    blockExplorerUrls: ['https://explorer.martian.com']
+                                }]
+                            });
+                        } catch (addError) {
+                            showToast("FAILED TO ADD MARTIAN NETWORK");
+                            return false;
+                        }
+                    } else {
+                        showToast("SWITCH TO MARTIAN NETWORK");
+                        return false;
                     }
                 }
+            }
+            return true;
+        }
 
+        async function connectWallet() {
+            try {
                 const accounts = await provider.send("eth_requestAccounts", []);
                 userAddress = accounts[0];
                 signer = await provider.getSigner();
-                contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
+                
+                if (!(await checkNetwork())) return;
 
+                contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
                 document.getElementById('connect-btn').classList.add('hidden');
                 document.getElementById('account-info').classList.remove('hidden');
-                document.getElementById('user-address').innerText = userAddress;
+                
+                const shortened = userAddress.slice(0, 6) + '...' + userAddress.slice(-4);
+                document.getElementById('user-address').innerText = shortened;
                 
                 updateBalance();
                 refreshLobby();
-            } catch (err) {
+            } catch (err) { 
                 console.error(err);
-                showToast("Connection Failed");
+                showToast("UPLINK FAILED"); 
+            }
+        }
+
+        function copyAddress() {
+            if (userAddress) {
+                navigator.clipboard.writeText(userAddress).then(() => {
+                    showToast("ADDRESS COPIED");
+                }).catch(err => {
+                    console.error('Copy failed:', err);
+                    showToast("COPY FAILED");
+                });
             }
         }
 
         async function updateBalance() {
-            const balance = await provider.getBalance(userAddress);
-            document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $EROL`;
+            if (!userAddress || !provider) return;
+            try {
+                const balance = await provider.getBalance(userAddress);
+                document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $EROL`;
+            } catch (e) { console.error("Balance fetch error", e); }
         }
 
         function selectMove(idx) {
             selectedMoveIdx = idx;
-            document.querySelectorAll('.move-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.move-select').forEach(btn => btn.classList.remove('selected'));
             document.getElementById(`move-${idx}`).classList.add('selected');
         }
 
-        function generateSalt() {
-            return ethers.hexlify(ethers.randomBytes(16));
-        }
-
         async function handleCreateGame() {
-            if (!signer) return showToast("Connect wallet first!");
-            if (selectedMoveIdx === 0) return showToast("Select a move!");
+            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (selectedMoveIdx === 0) return showToast("SELECT TACTICAL MOVE");
+            if (!(await checkNetwork())) return;
             
-            const wager = document.getElementById('wager-amount').value;
-            if (!wager || wager <= 0) return showToast("Enter valid wager");
-
-            const salt = generateSalt();
-            // Hash: keccak256(abi.encodePacked(_move, _salt, game.host))
-            // We use Solitidy-tight packing logic via ethers
-            const moveValue = selectedMoveIdx;
+            const createBtn = document.getElementById('create-btn');
+            createBtn.disabled = true;
             
-            // Note: The contract expects keccak256(abi.encodePacked(move, salt, msg.sender))
-            const hash = ethers.solidityPackedKeccak256(
-                ["uint8", "string", "address"],
-                [moveValue, salt, userAddress]
-            );
-
+            const wagerInput = document.getElementById('wager-amount').value;
+            const wagerValue = ethers.parseEther(wagerInput);
+            const timeoutValue = document.getElementById('timeout-select').value;
+            const salt = ethers.hexlify(ethers.randomBytes(32));
+            
             try {
-                showToast("Broadcasting Signal...");
-                const tx = await contract.createGame(hash, { value: ethers.parseEther(wager) });
+                const nextGameId = (await contract.gameCounter()) + BigInt(1);
                 
-                // Store local secret
-                const pendingGames = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
-                // We'll map the TX hash temporarily until we get the ID from logs
-                pendingGames[tx.hash] = { move: moveValue, salt: salt };
-                localStorage.setItem('martian_gambits', JSON.stringify(pendingGames));
+                const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+                    ["uint8", "string", "address", "uint256"],
+                    [selectedMoveIdx, salt, userAddress, nextGameId]
+                );
+                const hash = ethers.keccak256(encoded);
 
-                await tx.wait();
-                showToast("Signal Deployed!");
-                updateBalance();
-                refreshLobby();
-            } catch (err) {
-                console.error(err);
-                showToast("Deployment Failed");
+                console.log("=== CREATING GAME ===");
+                console.log("Move:", selectedMoveIdx);
+                console.log("Game ID:", nextGameId.toString());
+                console.log("Hash:", hash);
+
+                showToast("ENCRYPTING SIGNAL...");
+                const tx = await contract.createGame(hash, timeoutValue, { value: wagerValue });
+                
+                showToast("WAITING FOR CONFIRMATION...");
+                const receipt = await tx.wait();
+                
+                const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+                secrets[hash] = { 
+                    move: selectedMoveIdx, 
+                    salt: salt,
+                    gameId: nextGameId.toString(),
+                    address: userAddress.toLowerCase()
+                };
+                localStorage.setItem('martian_gambits', JSON.stringify(secrets));
+                
+                console.log("Secret saved for hash:", hash);
+
+                let gameId = Number(nextGameId);
+
+                try {
+                    for (const log of receipt.logs) {
+                        try {
+                            if (log.address.toLowerCase() !== CONTRACT_ADDR.toLowerCase()) continue;
+                            
+                            const parsed = contract.interface.parseLog({
+                                topics: log.topics,
+                                data: log.data
+                            });
+                            
+                            if (parsed && parsed.name === 'GameCreated') {
+                                gameId = Number(parsed.args.gameId);
+                                console.log("Game ID from event:", gameId);
+                                break;
+                            }
+                        } catch(e) { continue; }
+                    }
+                } catch (e) { 
+                    console.warn("Log parsing failed, using counter:", e); 
+                }
+
+                console.log("Upserting to Supabase - Game ID:", gameId);
+                const { data: upsertData, error: sbError } = await _supabase.from('games')
+                    .upsert([{
+                        game_id: gameId,
+                        host: userAddress.toLowerCase(),
+                        wager: wagerInput,
+                        timeout: parseInt(timeoutValue),
+                        status: 0,
+                        commit_hash: hash
+                    }], {
+                        onConflict: 'game_id'
+                    })
+                    .select();
+
+                if (sbError) {
+                    console.error("Supabase upsert error:", sbError);
+                    showToast("⚠️ GAME CREATED BUT INDEX FAILED");
+                } else {
+                    console.log("Supabase upsert successful:", upsertData);
+                    showToast("✓ SIGNAL DEPLOYED");
+                }
+
+                setTimeout(async () => {
+                    await refreshLobby();
+                    createBtn.disabled = false;
+                }, 2000);
+                
+            } catch (err) { 
+                console.error("Game Creation Error:", err);
+                showToast("DEPLOYMENT ABORTED");
+                createBtn.disabled = false;
             }
         }
 
         async function refreshLobby() {
-            if (!contract) return;
             const lobby = document.getElementById('lobby-list');
-            lobby.innerHTML = '<div class="text-center py-10 animate-pulse text-red-400">Scanning for signals...</div>';
-
             try {
-                const counter = await contract.gameCounter();
-                const gamePromises = [];
-                // Load last 10 games for the demo
-                const start = Number(counter) > 10 ? Number(counter) - 9 : 1;
-                for (let i = Number(counter); i >= start; i--) {
-                    gamePromises.push(contract.games(i).then(g => ({ ...g, id: i })));
-                }
+                console.log("Refreshing lobby with filter:", currentLobbyFilter);
+                const { data: games, error } = await _supabase.from('games')
+                    .select('*')
+                    .order('game_id', { ascending: false })
+                    .limit(100);
 
-                const games = await Promise.all(gamePromises);
-                lobby.innerHTML = "";
-
-                if (games.length === 0) {
-                    lobby.innerHTML = '<div class="text-center py-10 text-gray-500">Silence on all frequencies.</div>';
+                if (error) {
+                    console.error("Supabase Fetch Error:", error);
+                    lobby.innerHTML = `<div class="text-center py-20 text-red-500 uppercase">Indexing Error: ${error.message}</div>`;
                     return;
                 }
 
+                console.log("Fetched games:", games.length);
+
+                lobby.innerHTML = '';
+                let displayedCount = 0;
+
                 games.forEach(game => {
-                    if (game.status > 1 && game.host.toLowerCase() !== userAddress?.toLowerCase() && game.challenger.toLowerCase() !== userAddress?.toLowerCase()) return;
+                    const status = Number(game.status);
+                    const isHost = userAddress && game.host === userAddress.toLowerCase();
+                    const isChallenger = userAddress && game.challenger === userAddress.toLowerCase();
                     
+                    if (currentLobbyFilter === 'open' && status !== 0) return;
+                    if (currentLobbyFilter === 'intercepted' && status !== 1) return;
+                    if (currentLobbyFilter === 'resolved' && status !== 2) return;
+                    
+                    if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') {
+                        return;
+                    }
+
+                    displayedCount++;
+
                     const div = document.createElement('div');
-                    div.className = "card p-4 flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 " + getStatusColor(game.status);
+                    div.className = "p-4 bg-black/40 border-l-2 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-black/60 " + 
+                        (status == 0 ? "border-orange-500" : 
+                         status == 1 ? "border-yellow-500" : 
+                         status == 2 ? "border-green-700" : 
+                         "border-gray-800");
                     
-                    const wager = ethers.formatEther(game.wager);
-                    const isHost = userAddress && game.host.toLowerCase() === userAddress.toLowerCase();
-                    const isChallenger = userAddress && game.challenger.toLowerCase() === userAddress.toLowerCase();
+                    let countdownHTML = '';
+                    if (status === 0 || status === 1) {
+                        const createdAt = new Date(game.created_at).getTime() / 1000;
+                        const timeout = game.timeout || 900;
+                        const deadline = createdAt + timeout;
+                        const now = Math.floor(Date.now() / 1000);
+                        const remaining = deadline - now;
+                        
+                        if (remaining > 0) {
+                            const minutes = Math.floor(remaining / 60);
+                            const seconds = remaining % 60;
+                            const timeColor = remaining < 60 ? 'text-red-500' : 'text-orange-500';
+                            countdownHTML = `<span class="text-[10px] ${timeColor} ml-2">⏱ ${minutes}m ${seconds}s</span>`;
+                        } else {
+                            countdownHTML = `<span class="text-[10px] text-red-500 ml-2 animate-pulse">⏱ TIMEOUT</span>`;
+                        }
+                    }
                     
-                    div.innerHTML = `
+                    let gameInfo = `
                         <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="status-badge ${getStatusBg(game.status)}">${getStatusText(game.status)}</span>
-                                <span class="text-xs text-gray-500">#${game.id}</span>
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-[9px] px-2 py-0.5 border ${
+                                    status == 0 ? 'border-orange-500 text-orange-500' : 
+                                    status == 1 ? 'border-yellow-500 text-yellow-500' : 
+                                    status == 2 ? 'border-green-500 text-green-500' : 
+                                    'border-gray-700 text-gray-500'
+                                } uppercase">${getStatusText(status)}</span>
+                                <span class="text-[9px] text-orange-900/40">ID: ${game.game_id}</span>
+                                ${countdownHTML}
                             </div>
-                            <p class="text-sm font-bold text-white">${wager} $EROL Pool</p>
-                            <p class="text-[10px] text-gray-500 font-mono">${game.host.substring(0,12)}...</p>
+                            <div class="orbitron text-white text-sm">
+                                <span class="text-orange-500">${game.wager} $EROL</span> 
+                                <span class="text-gray-600 text-[10px] ml-2">FROM ${game.host.slice(0,6)}...</span>`;
+                    
+                    if (status == 2 && game.host_move && game.challenger_move) {
+                        const moves = ['', '☀️ Solar', '🌬️ Oxygen', '🌪️ Dust'];
+                        const hostMove = Number(game.host_move);
+                        const challengerMove = Number(game.challenger_move);
+                        
+                        let winner = '';
+                        if (hostMove === challengerMove) {
+                            winner = '⚖️ DRAW';
+                        } else if (
+                            (hostMove === 1 && challengerMove === 2) ||
+                            (hostMove === 2 && challengerMove === 3) ||
+                            (hostMove === 3 && challengerMove === 1)
+                        ) {
+                            winner = `🏆 ${game.host.slice(0,6)}... WINS`;
+                        } else {
+                            winner = `🏆 ${(game.challenger || 'Unknown').slice(0,6)}... WINS`;
+                        }
+                        
+                        gameInfo += `
+                            <div class="text-[10px] mt-1 text-gray-400">
+                                Host: ${moves[hostMove]} vs Challenger: ${moves[challengerMove]}
+                            </div>
+                            <div class="text-[11px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-500' : 'text-green-500'}">
+                                ${winner}
+                            </div>`;
+                    }
+                    
+                    gameInfo += `
+                            </div>
                         </div>
-                        <div class="flex gap-2">
-                            ${getActionButtons(game, isHost, isChallenger)}
-                        </div>
-                    `;
+                        <div class="flex gap-2">${getActionButtons(game, isHost, isChallenger)}</div>`;
+                    
+                    div.innerHTML = gameInfo;
                     lobby.appendChild(div);
                 });
-
-            } catch (err) {
-                console.error(err);
-                lobby.innerHTML = '<div class="text-center py-10 text-red-500">Error syncing with Martian Chain.</div>';
+                
+                console.log(`Displayed ${displayedCount} out of ${games.length} games`);
+                
+                if (displayedCount === 0) {
+                    lobby.innerHTML = '<div class="text-center py-20 opacity-30 uppercase italic">No signals detected...</div>';
+                }
+            } catch (err) { 
+                console.error("Lobby Refresh Error:", err);
+                lobby.innerHTML = `<div class="text-center py-20 text-red-500">Error loading lobby: ${err.message}</div>`;
             }
+        }
+
+        function setLobbyFilter(filter) {
+            currentLobbyFilter = filter;
+            
+            document.querySelectorAll('.lobby-filter').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`filter-${filter}`).classList.add('active');
+            
+            refreshLobby();
         }
 
         function getActionButtons(game, isHost, isChallenger) {
-            // Status: 0:Open, 1:Challenged, 2:Resolved, 3:Refunded, 4:Forfeited
             if (game.status == 0) {
-                if (isHost) return `<button onclick="handleRefund(${game.id})" class="text-[10px] border border-gray-600 px-3 py-1 rounded hover:bg-white/10">Reclaim</button>`;
-                return `<button onclick="handleChallenge(${game.id})" class="mars-button text-[10px] px-4 py-2 rounded font-bold">Accept Gambit</button>`;
+                if (isHost) {
+                    return `<button onclick="handleRefund(${game.game_id})" class="text-[9px] border border-gray-700 px-4 py-2 hover:bg-white/5 uppercase">Retract</button>`;
+                }
+                if (userAddress && game.host === userAddress.toLowerCase()) {
+                    return `<span class="text-[9px] text-gray-500 uppercase italic">Your Signal</span>`;
+                }
+                return `<button onclick="handleChallenge(${game.game_id}, '${game.wager}')" class="btn-mars text-[10px] px-6 py-2">Intercept</button>`;
             }
             if (game.status == 1) {
-                if (isHost) return `<button onclick="handleResolve(${game.id})" class="bg-green-600 text-white text-[10px] px-4 py-2 rounded font-bold animate-bounce">Reveal Move</button>`;
-                if (isChallenger) return `<span class="text-[10px] text-yellow-500 italic">Waiting for Reveal...</span>`;
-                return `<span class="text-[10px] text-gray-600">Locked Combat</span>`;
+                if (isHost) {
+                    return `<button onclick="handleResolve(${game.game_id}, '${game.commit_hash}')" class="btn-mars text-[10px] px-6 py-2 animate-pulse">Broadcast Reveal</button>`;
+                }
+                if (isChallenger) {
+                    const now = Math.floor(Date.now() / 1000);
+                    const createdAt = new Date(game.created_at).getTime() / 1000;
+                    const timeout = game.timeout || 900;
+                    const deadline = createdAt + timeout;
+                    
+                    if (now >= deadline) {
+                        return `<button onclick="handleForceForfeit(${game.game_id})" class="btn-mars text-[10px] px-6 py-2 animate-pulse">Claim Victory</button>`;
+                    }
+                    return `<span class="text-[9px] text-orange-500 uppercase italic">⚔️ Awaiting Host Reveal...</span>`;
+                }
+                return `<span class="text-[9px] text-orange-900 uppercase italic">Combat Active</span>`;
             }
-            return `<span class="text-[10px] text-gray-500">Archived</span>`;
+            if (game.status == 2) {
+                return `<span class="text-[9px] text-green-500 uppercase">✓ Resolved</span>`;
+            }
+            if (game.status == 3) {
+                return `<span class="text-[9px] text-gray-600 uppercase">Refunded</span>`;
+            }
+            if (game.status == 4) {
+                return `<span class="text-[9px] text-red-600 uppercase">⚡ Forfeited</span>`;
+            }
+            return `<span class="text-[9px] text-gray-700 uppercase">Inactive</span>`;
         }
 
-        async function handleChallenge(id) {
-            if (!signer) return showToast("Connect wallet");
-            const move = prompt("Enter Move: 1 (Solar Flare), 2 (Oxygen Siphon), 3 (Dust Storm)");
-            if (![1, 2, 3].includes(Number(move))) return showToast("Invalid Move");
-
-            try {
-                const g = await contract.games(id);
-                showToast("Entering the Gambit...");
-                const tx = await contract.challengeGame(id, move, { value: g.wager });
-                await tx.wait();
-                showToast("Challenge Accepted!");
-                refreshLobby();
-            } catch (err) {
-                showToast("Challenge Failed");
-            }
-        }
-
-        async function handleResolve(id) {
-            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
-            // This is a simplified lookup. In production, we'd index the local storage by gameId
-            // For now, we look for the most recent compatible secret or prompt the user.
-            let mySecret = Object.values(secrets)[0]; // Placeholder logic
+        async function handleChallenge(id, wager) {
+            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!(await checkNetwork())) return;
             
-            if (!mySecret) {
-                const move = prompt("Recovery: What was your move? (1, 2, or 3)");
-                const salt = prompt("Recovery: Enter your Salt (found in local storage)");
-                mySecret = { move, salt };
-            }
-
+            const move = prompt("Select your move:\n1 - Solar Flare ☀️\n2 - Oxygen Siphon 🌬️\n3 - Dust Storm 🌪️");
+            if (!move || move < 1 || move > 3) return showToast("INVALID MOVE");
+            
             try {
-                showToast("Revealing Truth...");
-                const tx = await contract.resolveGame(id, mySecret.move, mySecret.salt);
+                showToast("INTERCEPTING...");
+                
+                const gameData = await contract.games(id);
+                const actualWager = gameData.wager;
+                
+                console.log("Challenging game", id, "with move", move, "and wager", ethers.formatEther(actualWager));
+                
+                const tx = await contract.challengeGame(id, move, { value: actualWager });
+                showToast("CONFIRMING TRANSACTION...");
+                const receipt = await tx.wait();
+                
+                console.log("Challenge successful");
+                
+                const { error: updateError } = await _supabase
+                    .from('games')
+                    .update({ 
+                        status: 1, 
+                        challenger: userAddress.toLowerCase(),
+                        challenger_move: parseInt(move)
+                    })
+                    .eq('game_id', id);
+                
+                if (updateError) {
+                    console.error("Supabase update error:", updateError);
+                    showToast("⚠️ INTERCEPTED BUT DB UPDATE FAILED");
+                } else {
+                    showToast("✓ SIGNAL INTERCEPTED");
+                }
+                
+                setTimeout(refreshLobby, 1500);
+            } catch (err) { 
+                console.error("Challenge error:", err);
+                showToast("INTERCEPTION FAILED"); 
+            }
+        }
+
+        async function handleResolve(id, hash) {
+            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!(await checkNetwork())) return;
+            
+            console.log("=== RESOLVE GAME ===");
+            console.log("Game ID:", id);
+            console.log("Hash:", hash);
+            
+            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+            let secret = secrets[hash];
+            
+            if (!secret) {
+                console.error("Secret not found for hash:", hash);
+                const manualReveal = confirm("Secret not found. Enter manually?");
+                
+                if (manualReveal) {
+                    const move = prompt("Enter your move (1-3):");
+                    const salt = prompt("Enter your salt (hex string):");
+                    
+                    if (!move || !salt) {
+                        showToast("CANCELLED");
+                        return;
+                    }
+                    
+                    const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+                        ["uint8", "string", "address", "uint256"],
+                        [parseInt(move), salt, userAddress, BigInt(id)]
+                    );
+                    const testHash = ethers.keccak256(encoded);
+                    
+                    if (testHash.toLowerCase() !== hash.toLowerCase()) {
+                        showToast("⚠️ HASH MISMATCH");
+                        return;
+                    }
+                    
+                    secret = { move: parseInt(move), salt: salt, gameId: id.toString() };
+                } else {
+                    showToast("⚠️ SECRET NOT FOUND");
+                    return;
+                }
+            }
+            
+            const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+                ["uint8", "string", "address", "uint256"],
+                [secret.move, secret.salt, userAddress, BigInt(secret.gameId || id)]
+            );
+            const verifyHash = ethers.keccak256(encoded);
+            
+            if (verifyHash.toLowerCase() !== hash.toLowerCase()) {
+                showToast("⚠️ HASH VERIFICATION FAILED");
+                return;
+            }
+            
+            try {
+                showToast("BROADCASTING REVEAL...");
+                const tx = await contract.resolveGame(id, secret.move, secret.salt);
+                showToast("CONFIRMING...");
                 await tx.wait();
-                showToast("Game Resolved!");
-                refreshLobby();
-            } catch (err) {
-                showToast("Reveal Error - Check salt/move");
+                
+                const gameData = await contract.games(id);
+                const hostMove = Number(gameData.hostMove);
+                const challengerMove = Number(gameData.challengerMove);
+                
+                let resultMsg = "COMBAT RESOLVED";
+                if (hostMove === challengerMove) {
+                    resultMsg = "⚖️ DRAW";
+                } else if (
+                    (hostMove === 1 && challengerMove === 2) ||
+                    (hostMove === 2 && challengerMove === 3) ||
+                    (hostMove === 3 && challengerMove === 1)
+                ) {
+                    resultMsg = "🏆 VICTORY!";
+                } else {
+                    resultMsg = "💥 DEFEAT";
+                }
+                
+                await _supabase.from('games').update({ 
+                    status: 2,
+                    host_move: hostMove,
+                    challenger_move: challengerMove
+                }).eq('game_id', id);
+                
+                setTimeout(refreshLobby, 1000);
+                updateBalance();
+                showToast(resultMsg);
+            } catch (err) { 
+                console.error("Resolve error:", err);
+                showToast("RESOLVE FAILED"); 
             }
         }
 
         async function handleRefund(id) {
+            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!(await checkNetwork())) return;
+            
             try {
+                showToast("RETRACTING...");
                 const tx = await contract.refundUnchallenged(id);
                 await tx.wait();
-                showToast("Funds Returned");
+                
+                await _supabase.from('games').update({ status: 3 }).eq('game_id', id);
                 refreshLobby();
-            } catch (err) {
-                showToast("Timeout not reached?");
+                updateBalance();
+                showToast("FUNDS RETRACTED");
+            } catch (err) { 
+                console.error(err);
+                showToast("REFUND FAILED"); 
             }
         }
 
-        // Helper UI functions
-        function getStatusText(s) { return ["Open", "Challenged", "Resolved", "Refunded", "Forfeited"][s]; }
-        function getStatusBg(s) { return ["bg-blue-900", "bg-yellow-900", "bg-green-900", "bg-gray-800", "bg-red-900"][s]; }
-        function getStatusColor(s) { return ["border-blue-500", "border-yellow-500", "border-green-500", "border-gray-500", "border-red-500"][s]; }
+        async function handleForceForfeit(gameId) {
+            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!(await checkNetwork())) return;
+            
+            try {
+                showToast("CLAIMING VICTORY...");
+                const tx = await contract.forceForfeit(gameId);
+                await tx.wait();
+                
+                await _supabase.from('games').update({ status: 4 }).eq('game_id', gameId);
+                
+                refreshLobby();
+                updateBalance();
+                showToast("🏆 VICTORY BY FORFEIT!");
+            } catch (err) {
+                console.error("Forfeit error:", err);
+                showToast("FORFEIT FAILED");
+            }
+        }
 
+        // ===== ACTIVITY FEED =====
+        async function refreshActivityFeed() {
+            const feed = document.getElementById('activity-feed');
+            try {
+                const { data: games, error } = await _supabase
+                    .from('games')
+                    .select('*')
+                    .eq('status', 2)
+                    .order('updated_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    console.error("Activity feed error:", error);
+                    return;
+                }
+
+                feed.innerHTML = games.map(game => {
+                    const moves = ['', '☀️', '🌬️', '🌪️'];
+                    const hostMove = Number(game.host_move);
+                    const challengerMove = Number(game.challenger_move);
+                    
+                    let result = '';
+                    let resultColor = '';
+                    
+                    if (hostMove === challengerMove) {
+                        result = 'DRAW';
+                        resultColor = 'text-yellow-500';
+                    } else if (
+                        (hostMove === 1 && challengerMove === 2) ||
+                        (hostMove === 2 && challengerMove === 3) ||
+                        (hostMove === 3 && challengerMove === 1)
+                    ) {
+                        result = `${game.host.slice(0,6)}... WINS`;
+                        resultColor = 'text-green-500';
+                    } else {
+                        result = `${(game.challenger || 'Unknown').slice(0,6)}... WINS`;
+                        resultColor = 'text-green-500';
+                    }
+                    
+                    const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
+                    
+                    return `
+                        <div class="bg-black/40 border-l-2 border-green-700 p-3 flex justify-between items-center hover:bg-black/60 transition">
+                            <div class="flex-1">
+                                <div class="text-sm ${resultColor} font-bold">${result}</div>
+                                <div class="text-[10px] text-gray-500 mt-1">
+                                    ${moves[hostMove]} vs ${moves[challengerMove]} • ${game.wager} $EROL • ${timeAgo}
+                                </div>
+                            </div>
+                            <div class="text-2xl">${result.includes('DRAW') ? '⚖️' : '🏆'}</div>
+                        </div>
+                    `;
+                }).join('') || '<div class="text-center text-gray-600 py-8">No recent activity</div>';
+            } catch (err) {
+                console.error("Activity feed error:", err);
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return `${seconds}s ago`;
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        // ===== CHAT FUNCTIONALITY =====
+        async function refreshChat() {
+            const chatMessages = document.getElementById('chat-messages');
+            try {
+                const { data: messages, error } = await _supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    console.error("Chat error:", error);
+                    return;
+                }
+
+                const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
+
+                chatMessages.innerHTML = messages.reverse().map(msg => {
+                    const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
+                    return `
+                        <div class="${isOwn ? 'text-right' : 'text-left'}">
+                            <div class="inline-block max-w-[80%] ${isOwn ? 'bg-orange-900/30' : 'bg-gray-900/50'} px-3 py-2 rounded">
+                                <div class="text-[9px] text-orange-700 mb-1">${msg.sender.slice(0,6)}...${msg.sender.slice(-4)}</div>
+                                <div class="text-sm text-gray-200">${escapeHtml(msg.message)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                if (shouldScroll) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            } catch (err) {
+                console.error("Chat refresh error:", err);
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (!message || !userAddress) return;
+            
+            try {
+                const { error } = await _supabase
+                    .from('chat_messages')
+                    .insert([{
+                        sender: userAddress.toLowerCase(),
+                        message: message
+                    }]);
+
+                if (error) {
+                    console.error("Send message error:", error);
+                    showToast("MESSAGE FAILED");
+                } else {
+                    input.value = '';
+                    refreshChat();
+                }
+            } catch (err) {
+                console.error("Send message error:", err);
+                showToast("MESSAGE FAILED");
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+
+        // ===== LEADERBOARD =====
+        async function loadLeaderboard() {
+            try {
+                const { data: games, error } = await _supabase
+                    .from('games')
+                    .select('*')
+                    .eq('status', 2);
+
+                if (error) {
+                    console.error("Leaderboard error:", error);
+                    return;
+                }
+
+                const playerStats = {};
+                let totalWagered = 0;
+                let totalBurnt = 0;
+                let totalTreasury = 0;
+
+                games.forEach(game => {
+                    const wager = parseFloat(game.wager);
+                    totalWagered += wager * 2;
+                    
+                    const pot = wager * 2;
+                    const burn = pot * 0.015;
+                    const treasury = pot * 0.015;
+                    totalBurnt += burn;
+                    totalTreasury += treasury;
+
+                    const hostMove = Number(game.host_move);
+                    const challengerMove = Number(game.challenger_move);
+                    
+                    if (!playerStats[game.host]) {
+                        playerStats[game.host] = {
+                            address: game.host,
+                            totalWagered: 0,
+                            wins: 0,
+                            losses: 0,
+                            draws: 0,
+                            games: 0,
+                            biggestPot: 0,
+                            currentStreak: 0,
+                            longestStreak: 0
+                        };
+                    }
+                    if (game.challenger && !playerStats[game.challenger]) {
+                        playerStats[game.challenger] = {
+                            address: game.challenger,
+                            totalWagered: 0,
+                            wins: 0,
+                            losses: 0,
+                            draws: 0,
+                            games: 0,
+                            biggestPot: 0,
+                            currentStreak: 0,
+                            longestStreak: 0
+                        };
+                    }
+
+                    playerStats[game.host].totalWagered += wager;
+                    playerStats[game.host].games++;
+                    if (wager * 2 > playerStats[game.host].biggestPot) {
+                        playerStats[game.host].biggestPot = wager * 2;
+                    }
+
+                    if (game.challenger) {
+                        playerStats[game.challenger].totalWagered += wager;
+                        playerStats[game.challenger].games++;
+                        if (wager * 2 > playerStats[game.challenger].biggestPot) {
+                            playerStats[game.challenger].biggestPot = wager * 2;
+                        }
+                    }
+
+                    if (hostMove === challengerMove) {
+                        playerStats[game.host].draws++;
+                        if (game.challenger) playerStats[game.challenger].draws++;
+                        
+                        playerStats[game.host].currentStreak = 0;
+                        if (game.challenger) playerStats[game.challenger].currentStreak = 0;
+                    } else {
+                        const hostWins = (
+                            (hostMove === 1 && challengerMove === 2) ||
+                            (hostMove === 2 && challengerMove === 3) ||
+                            (hostMove === 3 && challengerMove === 1)
+                        );
+
+                        if (hostWins) {
+                            playerStats[game.host].wins++;
+                            playerStats[game.host].currentStreak++;
+                            if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
+                                playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
+                            }
+                            
+                            if (game.challenger) {
+                                playerStats[game.challenger].losses++;
+                                playerStats[game.challenger].currentStreak = 0;
+                            }
+                        } else if (game.challenger) {
+                            playerStats[game.challenger].wins++;
+                            playerStats[game.challenger].currentStreak++;
+                            if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
+                                playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
+                            }
+                            
+                            playerStats[game.host].losses++;
+                            playerStats[game.host].currentStreak = 0;
+                        }
+                    }
+                });
+
+                document.getElementById('global-wagered').textContent = totalWagered.toFixed(2);
+                document.getElementById('global-burnt').textContent = totalBurnt.toFixed(2);
+                document.getElementById('global-treasury').textContent = totalTreasury.toFixed(2);
+                document.getElementById('global-games').textContent = games.length;
+
+                const leaderboard = Object.values(playerStats)
+                    .sort((a, b) => b.totalWagered - a.totalWagered)
+                    .slice(0, 50);
+
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = leaderboard.map((player, index) => {
+                    const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
+                    
+                    return `
+                        <tr class="border-b border-gray-900/30 hover:bg-orange-900/10 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
+                            <td class="p-3 text-orange-500 orbitron">#${index + 1}</td>
+                            <td class="p-3">
+                                <div class="text-sm text-white">${player.address.slice(0,8)}...${player.address.slice(-6)}</div>
+                                <div class="text-[10px] text-gray-600">${player.games} games</div>
+                            </td>
+                            <td class="p-3 text-right orbitron text-orange-500">${player.totalWagered.toFixed(2)}</td>
+                            <td class="p-3 text-right orbitron ${winRate >= 50 ? 'text-green-500' : 'text-red-500'}">${winRate}%</td>
+                            <td class="p-3 text-right orbitron text-orange-500">${player.biggestPot.toFixed(2)}</td>
+                            <td class="p-3 text-right orbitron text-yellow-500">${player.longestStreak}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                console.error("Leaderboard error:", err);
+            }
+        }
+
+        async function showPlayerProfile(address) {
+            const modal = document.getElementById('player-modal');
+            const content = document.getElementById('player-modal-content');
+            
+            modal.classList.add('active');
+            content.innerHTML = '<div class="text-center py-8 text-orange-500">Loading...</div>';
+
+            try {
+                const { data: games, error } = await _supabase
+                    .from('games')
+                    .select('*')
+                    .eq('status', 2)
+                    .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`)
+                    .order('game_id', { ascending: false });
+
+                if (error) throw error;
+
+                let wins = 0, losses = 0, draws = 0;
+                let totalWagered = 0, biggestPot = 0, longestStreak = 0, currentStreak = 0;
+                const recentGames = [];
+
+                games.forEach(game => {
+                    const isHost = game.host === address.toLowerCase();
+                    const wager = parseFloat(game.wager);
+                    totalWagered += wager;
+                    if (wager * 2 > biggestPot) biggestPot = wager * 2;
+
+                    const hostMove = Number(game.host_move);
+                    const challengerMove = Number(game.challenger_move);
+
+                    let result = '';
+                    if (hostMove === challengerMove) {
+                        draws++;
+                        result = 'DRAW';
+                        currentStreak = 0;
+                    } else {
+                        const hostWins = (
+                            (hostMove === 1 && challengerMove === 2) ||
+                            (hostMove === 2 && challengerMove === 3) ||
+                            (hostMove === 3 && challengerMove === 1)
+                        );
+                        
+                        if ((isHost && hostWins) || (!isHost && !hostWins)) {
+                            wins++;
+                            result = 'WIN';
+                            currentStreak++;
+                            if (currentStreak > longestStreak) longestStreak = currentStreak;
+                        } else {
+                            losses++;
+                            result = 'LOSS';
+                            currentStreak = 0;
+                        }
+                    }
+
+                    recentGames.push({ ...game, result, isHost });
+                });
+
+                const totalGames = games.length;
+                const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+
+                content.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="text-center pb-4 border-b border-orange-900/30">
+                            <div class="text-sm text-gray-500 mb-2">ADDRESS</div>
+                            <div class="orbitron text-orange-500 text-lg">${address.slice(0,12)}...${address.slice(-10)}</div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
+                                <div class="text-[10px] text-orange-800 uppercase mb-2">Games</div>
+                                <div class="orbitron text-2xl text-orange-500">${totalGames}</div>
+                            </div>
+                            <div class="bg-black/40 border border-green-900/30 p-4 text-center">
+                                <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
+                                <div class="orbitron text-2xl text-green-500">${wins}</div>
+                            </div>
+                            <div class="bg-black/40 border border-red-900/30 p-4 text-center">
+                                <div class="text-[10px] text-red-800 uppercase mb-2">Losses</div>
+                                <div class="orbitron text-2xl text-red-500">${losses}</div>
+                            </div>
+                            <div class="bg-black/40 border border-yellow-900/30 p-4 text-center">
+                                <div class="text-[10px] text-yellow-800 uppercase mb-2">Draws</div>
+                                <div class="orbitron text-2xl text-yellow-500">${draws}</div>
+                            </div>
+                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
+                                <div class="text-[10px] text-orange-800 uppercase mb-2">Win Rate</div>
+                                <div class="orbitron text-2xl text-orange-500">${winRate}%</div>
+                            </div>
+                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
+                                <div class="text-[10px] text-orange-800 uppercase mb-2">Wagered</div>
+                                <div class="orbitron text-xl text-orange-500">${totalWagered.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
+                                <div class="text-[10px] text-orange-800 uppercase mb-2">Biggest Pot</div>
+                                <div class="orbitron text-xl text-orange-500">${biggestPot.toFixed(2)}</div>
+                            </div>
+                            <div class="bg-black/40 border border-yellow-900/30 p-4 text-center">
+                                <div class="text-[10px] text-yellow-800 uppercase mb-2">Longest Streak</div>
+                                <div class="orbitron text-xl text-yellow-500">${longestStreak}</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="orbitron text-orange-500 mb-3">RECENT BATTLES</h3>
+                            <div class="space-y-2 max-h-60 overflow-y-auto">
+                                ${recentGames.slice(0, 10).map(game => {
+                                    const moves = ['', '☀️', '🌬️', '🌪️'];
+                                    return `
+                                        <div class="bg-black/40 border-l-2 border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-700 p-3 flex justify-between items-center">
+                                            <div>
+                                                <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
+                                                <div class="text-sm mt-1">
+                                                    <span class="text-orange-500">${game.wager} $EROL</span>
+                                                    <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
+                                                </div>
+                                            </div>
+                                            <div class="text-2xl">${game.isHost ? moves[game.host_move] : moves[game.challenger_move]}</div>
+                                        </div>
+                                    `;
+                                }).join('') || '<div class="text-center text-gray-600 py-4">No battles yet</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Profile error:", err);
+                content.innerHTML = '<div class="text-center text-red-500 py-8">Error loading profile</div>';
+            }
+        }
+
+        function closePlayerModal() {
+            document.getElementById('player-modal').classList.remove('active');
+        }
+
+        // ===== BRIDGE FUNCTIONALITY =====
+        async function loadBridge() {
+            if (userAddress) {
+                await updateAvaxErolBalance();
+            }
+        }
+
+        async function updateAvaxErolBalance() {
+            try {
+                const avaxRPC = 'https://api.avax.network/ext/bc/C/rpc';
+                avaxProvider = new ethers.JsonRpcProvider(avaxRPC);
+                
+                const erolContract = new ethers.Contract(EROL_TOKEN_ADDR, ERC20_ABI, avaxProvider);
+                const balance = await erolContract.balanceOf(userAddress);
+                avaxErolBalance = parseFloat(ethers.formatEther(balance));
+                document.getElementById('avax-erol-balance').textContent = avaxErolBalance.toFixed(4) + ' $EROL';
+            } catch (err) {
+                console.error("AVAX EROL balance error:", err);
+                document.getElementById('avax-erol-balance').textContent = '-- $EROL';
+            }
+        }
+
+        function updateBridgeEstimate() {
+            const amount = parseFloat(document.getElementById('bridge-amount').value) || 0;
+            const bridgeBtn = document.getElementById('bridge-btn');
+            
+            if (amount >= 1 && amount <= avaxErolBalance) {
+                bridgeBtn.disabled = false;
+                document.getElementById('martian-erol-receive').textContent = amount.toFixed(4) + ' $EROL';
+            } else {
+                bridgeBtn.disabled = true;
+                document.getElementById('martian-erol-receive').textContent = '-- $EROL';
+            }
+        }
+
+        function setMaxBridge() {
+            if (avaxErolBalance > 0) {
+                document.getElementById('bridge-amount').value = avaxErolBalance.toFixed(4);
+                updateBridgeEstimate();
+            } else {
+                showToast("INSUFFICIENT $EROL BALANCE");
+            }
+        }
+
+        async function handleBridge() {
+            if (!userAddress) {
+                showToast("CONNECT WALLET FIRST");
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('bridge-amount').value);
+            
+            if (!amount || amount < 1) {
+                showToast("MINIMUM 1 $EROL");
+                return;
+            }
+            
+            if (amount > avaxErolBalance) {
+                showToast("INSUFFICIENT BALANCE");
+                return;
+            }
+            
+            document.getElementById('bridge-status').classList.remove('hidden');
+            document.getElementById('bridge-btn').disabled = true;
+            
+            try {
+                updateBridgeStatus('Switching to Avalanche C-Chain...');
+                
+                const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
+                
+                if (currentChainId !== AVAX_CHAIN_ID) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: AVAX_CHAIN_ID }],
+                        });
+                    } catch (switchError) {
+                        if (switchError.code === 4902) {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: AVAX_CHAIN_ID,
+                                    chainName: 'Avalanche Network',
+                                    nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
+                                    rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
+                                    blockExplorerUrls: ['https://snowtrace.io/']
+                                }]
+                            });
+                        } else {
+                            throw switchError;
+                        }
+                    }
+                }
+                
+                updateBridgeStatus('Approving $EROL for bridge...');
+                
+                const avaxSigner = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
+                const erolContract = new ethers.Contract(EROL_TOKEN_ADDR, ERC20_ABI, avaxSigner);
+                const bridgeContract = new ethers.Contract(BRIDGE_CONTRACT_ADDR, BRIDGE_ABI, avaxSigner);
+                
+                const amountWei = ethers.parseEther(amount.toString());
+                
+                const allowance = await erolContract.allowance(userAddress, BRIDGE_CONTRACT_ADDR);
+                
+                if (allowance < amountWei) {
+                    updateBridgeStatus('Confirm approval in wallet...');
+                    const approveTx = await erolContract.approve(BRIDGE_CONTRACT_ADDR, amountWei);
+                    updateBridgeStatus('Waiting for approval confirmation...');
+                    await approveTx.wait();
+                }
+                
+                updateBridgeStatus('Initiating bridge transfer...');
+                updateBridgeStatus('Confirm transaction in wallet...');
+                
+                const bridgeTx = await bridgeContract.bridgeToMartian(amountWei);
+                
+                updateBridgeStatus('Processing bridge transaction...');
+                await bridgeTx.wait();
+                
+                updateBridgeStatus('Bridge completed! ✓');
+                
+                setTimeout(() => {
+                    document.getElementById('bridge-status').classList.add('hidden');
+                    document.getElementById('bridge-btn').disabled = false;
+                    showToast('🌉 BRIDGE SUCCESSFUL');
+                    checkNetwork();
+                }, 2000);
+                
+            } catch (error) {
+                console.error("Bridge error:", error);
+                
+                let errorMsg = "BRIDGE FAILED";
+                if (error.message && error.message.includes('user rejected')) {
+                    errorMsg = "TRANSACTION REJECTED";
+                } else if (error.message && error.message.includes('insufficient funds')) {
+                    errorMsg = "INSUFFICIENT FUNDS";
+                }
+                
+                showToast(errorMsg);
+                document.getElementById('bridge-status').classList.add('hidden');
+                document.getElementById('bridge-btn').disabled = false;
+            }
+        }
+
+        function updateBridgeStatus(message) {
+            document.getElementById('bridge-status-text').textContent = message;
+        }
+
+        async function loadProfile() {
+            const profileContent = document.getElementById('profile-content');
+            
+            if (!userAddress) {
+                profileContent.innerHTML = `
+                    <div class="text-center py-20">
+                        <div class="text-orange-900 text-6xl mb-4">🔒</div>
+                        <div class="text-orange-500 orbitron text-lg mb-2">UPLINK REQUIRED</div>
+                        <div class="text-gray-500 text-sm">Connect your wallet to view pilot statistics</div>
+                    </div>`;
+                return;
+            }
+            
+            profileContent.innerHTML = `
+                <div class="text-center py-20">
+                    <div class="text-orange-500 animate-pulse">Loading pilot data...</div>
+                </div>`;
+            
+            try {
+                const { data: games, error } = await _supabase
+                    .from('games')
+                    .select('*')
+                    .or(`host.eq.${userAddress.toLowerCase()},challenger.eq.${userAddress.toLowerCase()}`)
+                    .order('game_id', { ascending: false });
+                
+                if (error) {
+                    console.error("Profile error:", error);
+                    profileContent.innerHTML = `<div class="text-red-500">Error loading profile</div>`;
+                    return;
+                }
+                
+                let totalGames = 0, wins = 0, losses = 0, draws = 0;
+                let totalWagered = 0, totalWon = 0;
+                const recentGames = [];
+                
+                games.forEach(game => {
+                    const isHost = game.host === userAddress.toLowerCase();
+                    const wager = parseFloat(game.wager);
+                    
+                    if (game.status === 2 && game.host_move && game.challenger_move) {
+                        totalGames++;
+                        totalWagered += wager;
+                        
+                        const hostMove = Number(game.host_move);
+                        const challengerMove = Number(game.challenger_move);
+                        
+                        let result = '';
+                        if (hostMove === challengerMove) {
+                            draws++;
+                            result = 'DRAW';
+                            totalWon += wager * 0.97;
+                        } else {
+                            const hostWins = (
+                                (hostMove === 1 && challengerMove === 2) ||
+                                (hostMove === 2 && challengerMove === 3) ||
+                                (hostMove === 3 && challengerMove === 1)
+                            );
+                            
+                            if ((isHost && hostWins) || (!isHost && !hostWins)) {
+                                wins++;
+                                result = 'WIN';
+                                totalWon += wager * 2 * 0.97;
+                            } else {
+                                losses++;
+                                result = 'LOSS';
+                            }
+                        }
+                        
+                        recentGames.push({ ...game, result, isHost });
+                    }
+                });
+                
+                const netPnL = totalWon - totalWagered;
+                const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+                
+                profileContent.innerHTML = `
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div class="bg-black/40 border border-orange-900/30 p-6 text-center">
+                            <div class="text-[10px] text-orange-800 uppercase mb-2">Games</div>
+                            <div class="orbitron text-3xl text-orange-500">${totalGames}</div>
+                        </div>
+                        <div class="bg-black/40 border border-green-900/30 p-6 text-center">
+                            <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
+                            <div class="orbitron text-3xl text-green-500">${wins}</div>
+                        </div>
+                        <div class="bg-black/40 border border-red-900/30 p-6 text-center">
+                            <div class="text-[10px] text-red-800 uppercase mb-2">Losses</div>
+                            <div class="orbitron text-3xl text-red-500">${losses}</div>
+                        </div>
+                        <div class="bg-black/40 border border-yellow-900/30 p-6 text-center">
+                            <div class="text-[10px] text-yellow-800 uppercase mb-2">Draws</div>
+                            <div class="orbitron text-3xl text-yellow-500">${draws}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div class="bg-black/40 border border-orange-900/30 p-6">
+                            <div class="text-[10px] text-orange-800 uppercase mb-2">Win Rate</div>
+                            <div class="orbitron text-2xl text-orange-500">${winRate}%</div>
+                        </div>
+                        <div class="bg-black/40 border border-orange-900/30 p-6">
+                            <div class="text-[10px] text-orange-800 uppercase mb-2">Wagered</div>
+                            <div class="orbitron text-2xl text-orange-500">${totalWagered.toFixed(2)}</div>
+                        </div>
+                        <div class="bg-black/40 border border-${netPnL >= 0 ? 'green' : 'red'}-900/30 p-6">
+                            <div class="text-[10px] text-${netPnL >= 0 ? 'green' : 'red'}-800 uppercase mb-2">Net P&L</div>
+                            <div class="orbitron text-2xl text-${netPnL >= 0 ? 'green' : 'red'}-500">${netPnL >= 0 ? '+' : ''}${netPnL.toFixed(2)}</div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="orbitron text-orange-500 mb-4">RECENT BATTLES</h3>
+                    <div class="space-y-3">
+                        ${recentGames.slice(0, 10).map(game => {
+                            const moves = ['', '☀️', '🌬️', '🌪️'];
+                            return `
+                                <div class="bg-black/40 border-l-2 border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-700 p-4 flex justify-between">
+                                    <div>
+                                        <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
+                                        <div class="text-sm mt-1">
+                                            <span class="text-orange-500">${game.wager} $EROL</span>
+                                            <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-2xl">${game.isHost ? moves[game.host_move] : moves[game.challenger_move]}</div>
+                                </div>
+                            `;
+                        }).join('') || '<div class="text-center text-gray-600 py-8">No battles yet</div>'}
+                    </div>
+                `;
+            } catch (err) {
+                console.error("Profile error:", err);
+                profileContent.innerHTML = `<div class="text-red-500">Error: ${err.message}</div>`;
+            }
+        }
+        
+        function getStatusText(s) { 
+            return ["Open", "Intercepted", "Resolved", "Refunded", "Forfeited"][s]; 
+        }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(`page-${tab}`).classList.add('active');
+            
+            if (tab === 'profile') loadProfile();
+            if (tab === 'bridge') loadBridge();
+            if (tab === 'leaderboard') loadLeaderboard();
+        }
+        
+        function debugInfo() {
+            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+            console.log("=== DEBUG INFO ===");
+            console.log("Address:", userAddress);
+            console.log("Contract:", CONTRACT_ADDR);
+            console.log("Secrets:", Object.keys(secrets).length);
+            console.log("");
+            Object.entries(secrets).forEach(([hash, data]) => {
+                console.log(`Hash: ${hash}`);
+                console.log(`  Move: ${data.move}`);
+                console.log(`  Salt: ${data.salt}`);
+                console.log(`  GameID: ${data.gameId}`);
+            });
+            alert("Debug info in console (F12)");
+        }
+        
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
-            t.classList.remove('translate-y-20');
-            setTimeout(() => t.classList.add('translate-y-20'), 3000);
+            t.classList.remove('translate-y-32');
+            setTimeout(() => t.classList.add('translate-y-32'), 4000);
         }
-
+        
         window.onload = init;
+        
+        window.onbeforeunload = () => {
+            if (lobbyRefreshInterval) clearInterval(lobbyRefreshInterval);
+            if (activityRefreshInterval) clearInterval(activityRefreshInterval);
+            if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+        };
     </script>
 </body>
 </html>
+
+<!-- END OF PART 3 - Complete! -->
