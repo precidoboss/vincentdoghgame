@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Erol's Martian Gambit | Mission Control</title>
+    <title>Multi-Chain Gambit | Mission Control</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
-            --mars-orange: #ff4d00;
+            --primary-color: #ff4d00;
             --habitat-bg: #060608;
             --panel-bg: rgba(20, 20, 25, 0.95);
             --glow: rgba(255, 77, 0, 0.3);
@@ -27,6 +27,14 @@
             margin: 0;
         }
 
+        body.grotto-theme {
+            --primary-color: #9333ea;
+            --glow: rgba(147, 51, 234, 0.3);
+            background-image: 
+                linear-gradient(rgba(147, 51, 234, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(147, 51, 234, 0.03) 1px, transparent 1px);
+        }
+
         .orbitron { font-family: 'Orbitron', sans-serif; }
         
         .mars-glass {
@@ -35,13 +43,17 @@
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
 
+        body.grotto-theme .mars-glass {
+            border: 1px solid rgba(147, 51, 234, 0.2);
+        }
+
         .mars-border-glow {
-            border: 1px solid var(--mars-orange);
+            border: 1px solid var(--primary-color);
             box-shadow: 0 0 10px var(--glow);
         }
 
         .btn-mars {
-            background: var(--mars-orange);
+            background: var(--primary-color);
             color: black;
             font-weight: bold;
             text-transform: uppercase;
@@ -67,16 +79,16 @@
         }
 
         .move-select.selected {
-            border-color: var(--mars-orange);
+            border-color: var(--primary-color);
             filter: grayscale(0);
-            background: rgba(255, 77, 0, 0.1);
+            background: var(--glow);
             box-shadow: inset 0 0 10px var(--glow);
         }
 
         .scanline {
             width: 100%;
             height: 2px;
-            background: rgba(255, 77, 0, 0.1);
+            background: var(--glow);
             position: fixed;
             top: 0;
             z-index: 100;
@@ -91,7 +103,7 @@
 
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: var(--habitat-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--mars-orange); }
+        ::-webkit-scrollbar-thumb { background: var(--primary-color); }
 
         .tab-btn {
             color: #666;
@@ -99,13 +111,13 @@
         }
 
         .tab-btn:hover {
-            color: var(--mars-orange);
+            color: var(--primary-color);
         }
 
         .tab-btn.active {
-            color: var(--mars-orange);
-            background: rgba(255, 77, 0, 0.1);
-            border-bottom: 2px solid var(--mars-orange);
+            color: var(--primary-color);
+            background: var(--glow);
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .lobby-filter {
@@ -114,12 +126,12 @@
         }
 
         .lobby-filter:hover {
-            color: var(--mars-orange);
+            color: var(--primary-color);
         }
 
         .lobby-filter.active {
-            color: var(--mars-orange);
-            background: rgba(255, 77, 0, 0.1);
+            color: var(--primary-color);
+            background: var(--glow);
         }
 
         .page-section {
@@ -136,7 +148,7 @@
         }
 
         .copy-btn:hover {
-            color: var(--mars-orange);
+            color: var(--primary-color);
             transform: scale(1.1);
         }
 
@@ -144,7 +156,7 @@
             width: 100%;
             height: 200px;
             object-fit: cover;
-            border-bottom: 2px solid var(--mars-orange);
+            border-bottom: 2px solid var(--primary-color);
         }
 
         .game-logo {
@@ -189,6 +201,37 @@
             overflow-y: auto;
         }
 
+        .chain-switch-btn {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .chain-switch-btn:hover {
+            background: var(--glow);
+            transform: scale(1.05);
+        }
+
+        .chain-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
         @media (max-width: 768px) {
             .header-banner {
                 height: 120px;
@@ -209,7 +252,7 @@
     <!-- Header Banner -->
     <div class="max-w-7xl mx-auto mb-4">
         <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-21-55.jpg" 
-             alt="Martian Gambit Header" 
+             alt="Multi-Chain Gambit Header" 
              class="header-banner"
              onerror="this.style.display='none'">
     </div>
@@ -217,21 +260,31 @@
     <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 py-4 border-b border-orange-900/30">
         <div class="flex items-center gap-4">
             <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" 
-                 alt="Martian Gambit Logo" 
+                 alt="Gambit Logo" 
                  class="game-logo"
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
             <div class="w-12 h-12 mars-border-glow hidden items-center justify-center bg-black">
-                <span class="text-orange-500 text-2xl font-bold">M</span>
+                <span class="text-2xl font-bold" id="logo-letter">M</span>
             </div>
             <div>
-                <h1 class="orbitron text-2xl font-bold text-orange-500 tracking-widest">MARTIAN GAMBIT</h1>
-                <p class="text-[10px] text-orange-800 uppercase tracking-[0.2em]">Sector 2027 // EROL Protocol</p>
+                <h1 class="orbitron text-2xl font-bold tracking-widest" id="game-title" style="color: var(--primary-color)">MARTIAN GAMBIT</h1>
+                <p class="text-[10px] uppercase tracking-[0.2em]" id="game-subtitle" style="color: var(--primary-color); opacity: 0.5;">Sector 2027 // EROL Protocol</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-6 mt-4 md:mt-0">
+        <div class="flex items-center gap-6 mt-4 md:mt-0 flex-wrap">
+            <!-- Chain Switcher -->
+            <div class="flex gap-2">
+                <button onclick="switchToMartian()" id="chain-martian" class="chain-switch-btn">
+                    <span class="chain-indicator"></span>Martian
+                </button>
+                <button onclick="switchToGrotto()" id="chain-grotto" class="chain-switch-btn" style="opacity: 0.5;">
+                    <span class="chain-indicator" style="background: #9333ea;"></span>Grotto
+                </button>
+            </div>
+
             <!-- Navigation Tabs -->
-            <div class="flex gap-1 bg-black/40 p-1 border border-orange-900/30 flex-wrap">
+            <div class="flex gap-1 bg-black/40 p-1 border flex-wrap" style="border-color: var(--primary-color); opacity: 0.3;">
                 <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-4 py-2 text-[10px] uppercase transition">Lobby</button>
                 <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Leaderboard</button>
                 <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Profile</button>
@@ -244,27 +297,26 @@
                 <div id="account-info" class="hidden flex items-center gap-3">
                     <div class="text-right">
                         <div class="flex items-center gap-2">
-                            <span id="user-address" class="text-[10px] text-orange-400 opacity-70"></span>
-                            <button id="copy-address" class="copy-btn text-orange-400 text-xs" onclick="copyAddress()" title="Copy Address">
+                            <span id="user-address" class="text-[10px] opacity-70" style="color: var(--primary-color)"></span>
+                            <button id="copy-address" class="copy-btn text-xs" onclick="copyAddress()" title="Copy Address" style="color: var(--primary-color)">
                                 📋
                             </button>
                         </div>
-                        <div id="user-balance" class="orbitron text-orange-500 font-bold text-sm">0.00 $EROL</div>
+                        <div id="user-balance" class="orbitron font-bold text-sm" style="color: var(--primary-color)">0.00 $EROL</div>
                     </div>
-                    <div class="h-10 w-1 bg-orange-500"></div>
+                    <div class="h-10 w-1" style="background: var(--primary-color)"></div>
                 </div>
             </div>
         </div>
     </nav>
-
-    <main class="max-w-7xl mx-auto">
+<main class="max-w-7xl mx-auto">
         <!-- LOBBY PAGE -->
         <div id="page-lobby" class="page-section active">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <aside class="lg:col-span-4 space-y-6">
                     <div class="mars-glass p-6">
-                        <h2 class="orbitron text-sm text-orange-500 mb-6 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-orange-500 animate-pulse"></span>
+                        <h2 class="orbitron text-sm mb-6 flex items-center gap-2" style="color: var(--primary-color)">
+                            <span class="w-2 h-2 animate-pulse" style="background: var(--primary-color)"></span>
                             COMMENCE SIGNAL DEPLOYMENT
                         </h2>
 
@@ -285,31 +337,31 @@
 
                         <div class="space-y-4">
                             <div>
-                                <label class="text-[10px] text-orange-800 uppercase mb-2 block">Energy Stake ($EROL)</label>
-                                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black border border-orange-900/50 p-3 text-orange-500 focus:outline-none focus:border-orange-500 orbitron">
+                                <label class="text-[10px] uppercase mb-2 block" id="wager-label" style="color: var(--primary-color); opacity: 0.5;">Energy Stake ($EROL)</label>
+                                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black border p-3 focus:outline-none orbitron" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);">
                             </div>
                             <div>
-                                <label class="text-[10px] text-orange-800 uppercase mb-2 block">Interception Timeout</label>
-                                <select id="timeout-select" class="w-full bg-black border border-orange-900/50 p-3 text-orange-500 focus:outline-none focus:border-orange-500 orbitron text-sm">
+                                <label class="text-[10px] uppercase mb-2 block" style="color: var(--primary-color); opacity: 0.5;">Interception Timeout</label>
+                                <select id="timeout-select" class="w-full bg-black border p-3 focus:outline-none orbitron text-sm" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);">
                                     <option value="300">5 Minutes</option>
                                     <option value="600">10 Minutes</option>
                                     <option value="900" selected>15 Minutes</option>
                                 </select>
                             </div>
                             <button id="create-btn" onclick="handleCreateGame()" class="btn-mars w-full py-4 text-lg">Deploy Signal</button>
-                            <button onclick="debugInfo()" class="w-full py-2 text-[9px] border border-orange-900/30 text-orange-700 hover:text-orange-500 uppercase">Debug Info</button>
+                            <button onclick="debugInfo()" class="w-full py-2 text-[9px] border uppercase hover:brightness-110" style="border-color: rgba(255, 77, 0, 0.3); color: var(--primary-color); opacity: 0.7;">Debug Info</button>
                         </div>
                     </div>
 
                     <!-- Global Chat -->
                     <div class="mars-glass p-6">
-                        <h2 class="orbitron text-sm text-orange-500 mb-4 flex items-center gap-2">
-                            <span class="w-2 h-2 bg-orange-500 animate-pulse"></span>
+                        <h2 class="orbitron text-sm mb-4 flex items-center gap-2" style="color: var(--primary-color)">
+                            <span class="w-2 h-2 animate-pulse" style="background: var(--primary-color)"></span>
                             GLOBAL COMMS
                         </h2>
-                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border border-orange-900/30 p-3 space-y-2"></div>
+                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border p-3 space-y-2" style="border-color: rgba(255, 77, 0, 0.3);"></div>
                         <div class="flex gap-2">
-                            <input id="chat-input" type="text" placeholder="Type message..." maxlength="200" class="flex-1 bg-black border border-orange-900/50 p-2 text-sm text-orange-500 focus:outline-none focus:border-orange-500" onkeypress="if(event.key==='Enter') sendMessage()">
+                            <input id="chat-input" type="text" placeholder="Type message..." maxlength="200" class="flex-1 bg-black border p-2 text-sm focus:outline-none" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);" onkeypress="if(event.key==='Enter') sendMessage()">
                             <button onclick="sendMessage()" class="btn-mars px-4 py-2 text-xs">Send</button>
                         </div>
                     </div>
@@ -318,22 +370,21 @@
                 <section class="lg:col-span-8 space-y-6">
                     <!-- Game Lobby -->
                     <div class="mars-glass p-6 min-h-[500px] relative overflow-hidden">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-orange-900/20 pb-4 gap-4">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-4 gap-4" style="border-color: rgba(255, 77, 0, 0.2);">
                             <h2 class="orbitron text-lg text-white tracking-widest flex items-center gap-3">
                                 LOBBY_FREQUENCIES
-                                <span class="text-[10px] bg-orange-900/30 px-2 py-1 text-orange-500">FAST INDEX</span>
+                                <span class="text-[10px] px-2 py-1" style="background: rgba(255, 77, 0, 0.3); color: var(--primary-color);">FAST INDEX</span>
                             </h2>
                             
                             <div class="flex items-center gap-2 flex-wrap">
-                                <!-- Filter Buttons -->
-                                <div class="flex gap-1 bg-black/40 p-1 border border-orange-900/30">
+                                <div class="flex gap-1 bg-black/40 p-1 border" style="border-color: rgba(255, 77, 0, 0.3);">
                                     <button onclick="setLobbyFilter('all')" id="filter-all" class="lobby-filter active px-3 py-1 text-[9px] uppercase transition">All</button>
                                     <button onclick="setLobbyFilter('open')" id="filter-open" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Open</button>
                                     <button onclick="setLobbyFilter('intercepted')" id="filter-intercepted" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Intercepted</button>
                                     <button onclick="setLobbyFilter('resolved')" id="filter-resolved" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Resolved</button>
                                 </div>
                                 
-                                <button onclick="refreshLobby()" class="text-[10px] text-orange-500 hover:text-white border border-orange-500/30 px-3 py-1 uppercase transition">Sync Data</button>
+                                <button onclick="refreshLobby()" class="text-[10px] hover:text-white border px-3 py-1 uppercase transition" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.3);">Sync Data</button>
                             </div>
                         </div>
                         <div id="lobby-list" class="space-y-4"></div>
@@ -351,25 +402,22 @@
             </div>
         </div>
 
-<!-- END OF PART 1 - Continue with Part 2 -->
-<!-- START OF PART 2 - Paste this after Part 1 -->
-
         <!-- LEADERBOARD PAGE -->
         <div id="page-leaderboard" class="page-section">
             <div class="mars-glass p-8">
-                <h2 class="orbitron text-2xl text-orange-500 mb-8 flex items-center gap-3">
-                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                <h2 class="orbitron text-2xl mb-8 flex items-center gap-3" style="color: var(--primary-color)">
+                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
                     PILOT RANKINGS
                 </h2>
 
                 <!-- Global Stats -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
-                        <div class="text-[10px] text-orange-800 uppercase mb-2">Total Wagered</div>
-                        <div id="global-wagered" class="orbitron text-2xl text-orange-500">--</div>
+                    <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                        <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Total Wagered</div>
+                        <div id="global-wagered" class="orbitron text-2xl" style="color: var(--primary-color)">--</div>
                     </div>
                     <div class="bg-black/40 border border-red-900/30 p-4 text-center">
-                        <div class="text-[10px] text-red-800 uppercase mb-2">Burnt ($EROL)</div>
+                        <div class="text-[10px] text-red-800 uppercase mb-2">Burnt</div>
                         <div id="global-burnt" class="orbitron text-2xl text-red-500">--</div>
                     </div>
                     <div class="bg-black/40 border border-blue-900/30 p-4 text-center">
@@ -386,13 +434,13 @@
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
-                            <tr class="border-b border-orange-900/30">
-                                <th class="text-left p-3 text-[10px] text-orange-800 uppercase">Rank</th>
-                                <th class="text-left p-3 text-[10px] text-orange-800 uppercase">Pilot</th>
-                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Wagered</th>
-                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Win Rate</th>
-                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Biggest Pot</th>
-                                <th class="text-right p-3 text-[10px] text-orange-800 uppercase">Win Streak</th>
+                            <tr class="border-b" style="border-color: rgba(255, 77, 0, 0.3);">
+                                <th class="text-left p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Rank</th>
+                                <th class="text-left p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Pilot</th>
+                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Wagered</th>
+                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Win Rate</th>
+                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Biggest Pot</th>
+                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Win Streak</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body"></tbody>
@@ -404,72 +452,71 @@
         <!-- PROFILE PAGE -->
         <div id="page-profile" class="page-section">
             <div class="mars-glass p-8 max-w-5xl mx-auto">
-                <h2 class="orbitron text-2xl text-orange-500 mb-8 flex items-center gap-3">
-                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                <h2 class="orbitron text-2xl mb-8 flex items-center gap-3" style="color: var(--primary-color)">
+                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
                     PILOT STATISTICS
                 </h2>
                 <div id="profile-content" class="space-y-6"></div>
             </div>
         </div>
-
-        <!-- HOW TO PLAY PAGE -->
+<!-- HOW TO PLAY PAGE -->
         <div id="page-howto" class="page-section">
             <div class="mars-glass p-8 max-w-4xl mx-auto">
-                <h2 class="orbitron text-2xl text-orange-500 mb-8">MISSION BRIEFING</h2>
+                <h2 class="orbitron text-2xl mb-8" style="color: var(--primary-color)">MISSION BRIEFING</h2>
                 
                 <div class="space-y-8 text-gray-300">
                     <section>
-                        <h3 class="orbitron text-orange-500 text-lg mb-3">🎯 OBJECTIVE</h3>
-                        <p class="leading-relaxed">Martian Gambit is a high-stakes Rock-Paper-Scissors style game on the Martian Chain. Players bet $EROL tokens and compete using three strategic moves. The winner takes the pot (minus a small fee).</p>
+                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">🎯 OBJECTIVE</h3>
+                        <p class="leading-relaxed">Multi-Chain Gambit is a high-stakes Rock-Paper-Scissors style game on Martian Chain & The Grotto. Players bet native tokens and compete using three strategic moves. The winner takes the pot (minus a small fee).</p>
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-orange-500 text-lg mb-3">⚔️ THE THREE MOVES</h3>
+                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">⚔️ THE THREE MOVES</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
                                 <div class="text-4xl mb-2">☀️</div>
-                                <div class="orbitron text-orange-500 mb-1">SOLAR FLARE</div>
+                                <div class="orbitron mb-1" style="color: var(--primary-color)">SOLAR FLARE</div>
                                 <div class="text-[11px] text-gray-400">Beats Oxygen Siphon</div>
                             </div>
-                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
                                 <div class="text-4xl mb-2">🌬️</div>
-                                <div class="orbitron text-orange-500 mb-1">OXYGEN SIPHON</div>
+                                <div class="orbitron mb-1" style="color: var(--primary-color)">OXYGEN SIPHON</div>
                                 <div class="text-[11px] text-gray-400">Beats Dust Storm</div>
                             </div>
-                            <div class="bg-black/40 p-4 border border-orange-900/30">
+                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
                                 <div class="text-4xl mb-2">🌪️</div>
-                                <div class="orbitron text-orange-500 mb-1">DUST STORM</div>
+                                <div class="orbitron mb-1" style="color: var(--primary-color)">DUST STORM</div>
                                 <div class="text-[11px] text-gray-400">Beats Solar Flare</div>
                             </div>
                         </div>
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-orange-500 text-lg mb-3">📋 HOW TO PLAY</h3>
+                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">📋 HOW TO PLAY</h3>
                         <div class="space-y-4">
                             <div class="flex gap-4">
-                                <div class="orbitron text-orange-500 text-xl">1.</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">1.</div>
                                 <div>
                                     <div class="font-bold text-white mb-1">Deploy Signal (Host)</div>
                                     <p class="text-sm text-gray-400">Select your move, wager amount, and timeout. Your move is encrypted and stored locally. Click "Deploy Signal" to create the game.</p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
-                                <div class="orbitron text-orange-500 text-xl">2.</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">2.</div>
                                 <div>
                                     <div class="font-bold text-white mb-1">Intercept (Challenger)</div>
                                     <p class="text-sm text-gray-400">Find an open game in the lobby and click "Intercept". Choose your move and match the wager amount.</p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
-                                <div class="orbitron text-orange-500 text-xl">3.</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">3.</div>
                                 <div>
                                     <div class="font-bold text-white mb-1">Broadcast Reveal (Host)</div>
                                     <p class="text-sm text-gray-400">Once intercepted, click "Broadcast Reveal" to reveal your move. The smart contract determines the winner automatically.</p>
                                 </div>
                             </div>
                             <div class="flex gap-4">
-                                <div class="orbitron text-orange-500 text-xl">4.</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">4.</div>
                                 <div>
                                     <div class="font-bold text-white mb-1">Victory or Defeat</div>
                                     <p class="text-sm text-gray-400">Winner takes 97% of the pot. 1.5% goes to treasury, 1.5% is burned. In case of a draw, both players get their wager back minus fees.</p>
@@ -479,22 +526,23 @@
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-orange-500 text-lg mb-3">⚠️ IMPORTANT NOTES</h3>
+                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">⚠️ IMPORTANT NOTES</h3>
                         <ul class="space-y-2 text-sm text-gray-400">
-                            <li class="flex gap-2"><span class="text-orange-500">→</span> You must use the same browser/device to reveal your move (secret is stored locally)</li>
-                            <li class="flex gap-2"><span class="text-orange-500">→</span> If host doesn't reveal within the timeout, challenger can force forfeit to claim victory</li>
-                            <li class="flex gap-2"><span class="text-orange-500">→</span> If no one intercepts within the timeout, host can retract their wager</li>
-                            <li class="flex gap-2"><span class="text-orange-500">→</span> All games are on-chain and provably fair via cryptographic commitments</li>
+                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> You must use the same browser/device to reveal your move (secret is stored locally)</li>
+                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> If host doesn't reveal within the timeout, challenger can force forfeit to claim victory</li>
+                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> If no one intercepts within the timeout, host can retract their wager</li>
+                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> All games are on-chain and provably fair via cryptographic commitments</li>
+                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> Switch between Martian Chain ($EROL) and The Grotto ($HERESY) anytime</li>
                         </ul>
                     </section>
 
-                    <section class="bg-orange-900/10 border border-orange-500/30 p-6">
-                        <h3 class="orbitron text-orange-500 text-lg mb-3">💰 FEES & PAYOUTS</h3>
+                    <section class="bg-black/20 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
+                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">💰 FEES & PAYOUTS</h3>
                         <div class="space-y-2 text-sm">
-                            <div class="flex justify-between"><span>Winner Payout:</span><span class="text-orange-500">97% of pot</span></div>
-                            <div class="flex justify-between"><span>Treasury Fee:</span><span class="text-orange-500">1.5%</span></div>
-                            <div class="flex justify-between"><span>Burn Amount:</span><span class="text-orange-500">1.5%</span></div>
-                            <div class="flex justify-between"><span>Draw (each player):</span><span class="text-orange-500">Wager - 3%</span></div>
+                            <div class="flex justify-between"><span>Winner Payout:</span><span style="color: var(--primary-color)">97% of pot</span></div>
+                            <div class="flex justify-between"><span>Treasury Fee:</span><span style="color: var(--primary-color)">1.5%</span></div>
+                            <div class="flex justify-between"><span>Burn Amount:</span><span style="color: var(--primary-color)">1.5%</span></div>
+                            <div class="flex justify-between"><span>Draw (each player):</span><span style="color: var(--primary-color)">Wager - 3%</span></div>
                         </div>
                     </section>
                 </div>
@@ -504,8 +552,8 @@
         <!-- BRIDGE PAGE -->
         <div id="page-bridge" class="page-section">
             <div class="mars-glass p-8 max-w-3xl mx-auto">
-                <h2 class="orbitron text-2xl text-orange-500 mb-2 flex items-center gap-3">
-                    <span class="w-3 h-3 bg-orange-500 animate-pulse"></span>
+                <h2 class="orbitron text-2xl mb-2 flex items-center gap-3" style="color: var(--primary-color)">
+                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
                     CROSS-CHAIN BRIDGE
                 </h2>
                 <p class="text-gray-500 text-sm mb-8">Transfer $EROL from Avalanche C-Chain to Martian Chain (1:1 ratio)</p>
@@ -514,8 +562,8 @@
                     <!-- Bridge Interface -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                         <!-- From Chain -->
-                        <div class="bg-black/40 border border-orange-900/30 p-6">
-                            <div class="text-[10px] text-orange-800 uppercase mb-3">From</div>
+                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
+                            <div class="text-[10px] uppercase mb-3" style="color: var(--primary-color); opacity: 0.5;">From</div>
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">
                                     A
@@ -527,15 +575,15 @@
                             </div>
                             <div>
                                 <label class="text-[10px] text-gray-500 uppercase mb-2 block">Available Balance</label>
-                                <div id="avax-erol-balance" class="orbitron text-orange-500 text-lg">-- $EROL</div>
+                                <div id="avax-erol-balance" class="orbitron text-lg" style="color: var(--primary-color)">-- $EROL</div>
                             </div>
                         </div>
                         
                         <!-- To Chain -->
-                        <div class="bg-black/40 border border-orange-900/30 p-6">
-                            <div class="text-[10px] text-orange-800 uppercase mb-3">To</div>
+                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
+                            <div class="text-[10px] uppercase mb-3" style="color: var(--primary-color); opacity: 0.5;">To</div>
                             <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style="background: var(--primary-color)">
                                     M
                                 </div>
                                 <div>
@@ -545,14 +593,14 @@
                             </div>
                             <div>
                                 <label class="text-[10px] text-gray-500 uppercase mb-2 block">You'll Receive</label>
-                                <div id="martian-erol-receive" class="orbitron text-orange-500 text-lg">-- $EROL</div>
+                                <div id="martian-erol-receive" class="orbitron text-lg" style="color: var(--primary-color)">-- $EROL</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Amount Input -->
                     <div>
-                        <label class="text-[10px] text-orange-800 uppercase mb-2 block">Amount to Bridge</label>
+                        <label class="text-[10px] uppercase mb-2 block" style="color: var(--primary-color); opacity: 0.5;">Amount to Bridge</label>
                         <div class="relative">
                             <input 
                                 id="bridge-amount" 
@@ -560,12 +608,14 @@
                                 step="0.01" 
                                 min="1"
                                 placeholder="0.0"
-                                class="w-full bg-black border border-orange-900/50 p-4 pr-20 text-orange-500 focus:outline-none focus:border-orange-500 orbitron text-xl"
+                                class="w-full bg-black border p-4 pr-20 focus:outline-none orbitron text-xl"
+                                style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);"
                                 oninput="updateBridgeEstimate()"
                             >
                             <button 
                                 onclick="setMaxBridge()" 
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-3 py-1 border border-orange-500/50 text-orange-500 hover:bg-orange-500/10 uppercase transition"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-3 py-1 border uppercase transition hover:brightness-110"
+                                style="border-color: rgba(255, 77, 0, 0.5); color: var(--primary-color);"
                             >
                                 Max
                             </button>
@@ -573,18 +623,18 @@
                     </div>
 
                     <!-- Bridge Info -->
-                    <div class="bg-orange-900/10 border border-orange-500/30 p-4 space-y-2 text-sm">
+                    <div class="bg-black/20 border p-4 space-y-2 text-sm" style="border-color: rgba(255, 77, 0, 0.3);">
                         <div class="flex justify-between">
                             <span class="text-gray-400">Exchange Rate:</span>
-                            <span class="text-orange-500">1 $EROL = 1 $EROL</span>
+                            <span style="color: var(--primary-color)">1 $EROL = 1 $EROL</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-400">Bridge Fee:</span>
-                            <span class="text-orange-500">0 $EROL (gas only)</span>
+                            <span style="color: var(--primary-color)">0 $EROL (gas only)</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-400">Min Amount:</span>
-                            <span class="text-orange-500">1 $EROL</span>
+                            <span style="color: var(--primary-color)">1 $EROL</span>
                         </div>
                     </div>
 
@@ -599,23 +649,13 @@
                     </button>
 
                     <!-- Bridge Status -->
-                    <div id="bridge-status" class="hidden bg-black/40 border border-orange-500/30 p-4">
+                    <div id="bridge-status" class="hidden bg-black/40 border p-4" style="border-color: rgba(255, 77, 0, 0.3);">
                         <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                            <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--primary-color); border-top-color: transparent;"></div>
                             <div>
-                                <div class="text-orange-500 font-bold">Processing Bridge Transaction</div>
+                                <div class="font-bold" style="color: var(--primary-color)">Processing Bridge Transaction</div>
                                 <div class="text-[11px] text-gray-500" id="bridge-status-text">Initiating transfer...</div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Bridge Instructions -->
-                    <div class="text-center pt-6 border-t border-orange-900/20">
-                        <div class="text-[10px] text-gray-600 uppercase mb-2">Simple Cross-Chain Transfer</div>
-                        <p class="text-xs text-gray-500">Send $EROL from Avalanche C-Chain to receive $EROL on Martian Chain</p>
-                        <div class="mt-4 text-[10px] text-gray-600">
-                            <div>Bridge Contract: <span class="text-orange-600">0xF95B...1928</span></div>
-                            <div>Token Address: <span class="text-orange-600">0xCaC4...D037</span></div>
                         </div>
                     </div>
                 </div>
@@ -627,34 +667,59 @@
     <div id="player-modal" class="modal">
         <div class="modal-content mars-glass p-8 w-full">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="orbitron text-xl text-orange-500">PILOT PROFILE</h2>
-                <button onclick="closePlayerModal()" class="text-2xl text-gray-500 hover:text-orange-500">&times;</button>
+                <h2 class="orbitron text-xl" style="color: var(--primary-color)">PILOT PROFILE</h2>
+                <button onclick="closePlayerModal()" class="text-2xl text-gray-500 hover:brightness-150" style="color: var(--primary-color)">&times;</button>
             </div>
             <div id="player-modal-content"></div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 mars-glass border-orange-500 px-8 py-4 text-orange-500 orbitron text-sm transform translate-y-32 transition-all duration-300 z-[200]">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 mars-glass px-8 py-4 orbitron text-sm transform translate-y-32 transition-all duration-300 z-[200]" style="border: 1px solid var(--primary-color); color: var(--primary-color)">
         SYSTEM MESSAGE
     </div>
+<script>
+        // Multi-Chain Configuration
+        const CHAINS = {
+            martian: {
+                chainId: "0x7EB",
+                name: "Martian Chain",
+                rpc: "https://martian-rpc1.amichain.org/",
+                contract: "0x395E368045315062b26AC950690f384c98fDEEe2",
+                currency: { name: "EROL", symbol: "EROL", decimals: 18 },
+                explorer: "https://explorer.martian.com",
+                color: "#ff4d00",
+                theme: "martian",
+                title: "MARTIAN GAMBIT",
+                subtitle: "Sector 2027 // EROL Protocol",
+                logo: "M"
+            },
+            grotto: {
+                chainId: "0x8E6F",
+                name: "The Grotto",
+                rpc: "https://subnets.avax.network/thegrotto/mainnet/rpc",
+                contract: "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c",
+                currency: { name: "HERESY", symbol: "HERESY", decimals: 18 },
+                explorer: "https://subnets.avax.network/thegrotto",
+                color: "#9333ea",
+                theme: "grotto",
+                title: "GROTTO GAMBIT",
+                subtitle: "Dark Realm // HERESY Protocol",
+                logo: "G"
+            }
+        };
 
-<!-- END OF PART 2 - Continue with Part 3 (JavaScript) -->
-<!-- START OF PART 3 - JavaScript - Paste this after Part 2 -->
-
-    <script>
-        const CHAIN_ID = "0x7EB"; 
-        const RPC_URL = "https://martian-rpc1.amichain.org/";
-        const CONTRACT_ADDR = "0x395E368045315062b26AC950690f384c98fDEEe2";
+        let currentChain = 'martian';
+        let CHAIN_ID, RPC_URL, CONTRACT_ADDR, CURRENCY_SYMBOL;
         
         // Supabase Configuration
         const SB_URL = "https://tvckbtgggsuwxtlgilcl.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2tidGdnZ3N1d3h0bGdpbGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY2NDY0NSwiZXhwIjoyMDg2MjQwNjQ1fQ.DhvGNo3seKoRtDmeRod0gAP48yFZw_0-kAvY3eT_554"; 
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-        // Bridge & Token Configuration
-        const BRIDGE_CONTRACT_ADDR = "0xF95BA10dd7d5EEe89ede7B98250DAD2AcD4B1928";
+        // Bridge Configuration
+        const BRIDGE_CONTRACT_ADDR = "0x87260775905e83689958a1491bc0c47396b2b21c";
         const EROL_TOKEN_ADDR = "0xCaC4904E1DB1589Aa17A2Ec742F5a6bCF4c4D037";
-        const AVAX_CHAIN_ID = "0xa86a"; // 43114
+        const AVAX_CHAIN_ID = "0xa86a";
 
         const ERC20_ABI = [
             "function balanceOf(address owner) view returns (uint256)",
@@ -689,22 +754,73 @@
         let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval;
         let currentLobbyFilter = 'all';
 
+        function setChainConfig(chain) {
+            currentChain = chain;
+            const config = CHAINS[chain];
+            CHAIN_ID = config.chainId;
+            RPC_URL = config.rpc;
+            CONTRACT_ADDR = config.contract;
+            CURRENCY_SYMBOL = config.currency.symbol;
+
+            // Update CSS variables
+            document.documentElement.style.setProperty('--primary-color', config.color);
+            
+            // Update theme
+            if (chain === 'grotto') {
+                document.body.classList.add('grotto-theme');
+            } else {
+                document.body.classList.remove('grotto-theme');
+            }
+
+            // Update UI text
+            document.getElementById('game-title').textContent = config.title;
+            document.getElementById('game-subtitle').textContent = config.subtitle;
+            document.getElementById('logo-letter').textContent = config.logo;
+            document.getElementById('wager-label').textContent = `Energy Stake ($${CURRENCY_SYMBOL})`;
+            
+            // Update balance display
+            if (userAddress) {
+                updateBalance();
+            }
+        }
+
+        async function switchToMartian() {
+            setChainConfig('martian');
+            document.getElementById('chain-martian').style.opacity = '1';
+            document.getElementById('chain-grotto').style.opacity = '0.5';
+            
+            if (userAddress) {
+                await checkNetwork();
+                await refreshLobby();
+            }
+        }
+
+        async function switchToGrotto() {
+            setChainConfig('grotto');
+            document.getElementById('chain-grotto').style.opacity = '1';
+            document.getElementById('chain-martian').style.opacity = '0.5';
+            
+            if (userAddress) {
+                await checkNetwork();
+                await refreshLobby();
+            }
+        }
+
         async function init() {
+            setChainConfig('martian'); // Default to Martian
+            
             if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 document.getElementById('connect-btn').addEventListener('click', connectWallet);
                 
-                // Initial refreshes
                 await refreshLobby();
                 await refreshActivityFeed();
                 await refreshChat();
                 
-                // Set up auto-refresh
                 lobbyRefreshInterval = setInterval(refreshLobby, 10000);
                 activityRefreshInterval = setInterval(refreshActivityFeed, 5000);
                 chatRefreshInterval = setInterval(refreshChat, 3000);
                 
-                // Subscribe to Supabase realtime
                 _supabase.channel('game_updates')
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, () => {
                         refreshLobby();
@@ -725,7 +841,9 @@
 
         async function checkNetwork() {
             const network = await provider.getNetwork();
-            if ("0x" + network.chainId.toString(16).toUpperCase() !== CHAIN_ID.toUpperCase()) {
+            const currentChainIdHex = "0x" + network.chainId.toString(16).toUpperCase();
+            
+            if (currentChainIdHex !== CHAIN_ID.toUpperCase()) {
                 try {
                     await window.ethereum.request({
                         method: 'wallet_switchEthereumChain',
@@ -733,23 +851,24 @@
                     });
                 } catch (switchError) {
                     if (switchError.code === 4902) {
+                        const config = CHAINS[currentChain];
                         try {
                             await window.ethereum.request({
                                 method: 'wallet_addEthereumChain',
                                 params: [{
                                     chainId: CHAIN_ID,
-                                    chainName: 'Martian Chain',
-                                    nativeCurrency: { name: 'EROL', symbol: 'EROL', decimals: 18 },
+                                    chainName: config.name,
+                                    nativeCurrency: config.currency,
                                     rpcUrls: [RPC_URL],
-                                    blockExplorerUrls: ['https://explorer.martian.com']
+                                    blockExplorerUrls: [config.explorer]
                                 }]
                             });
                         } catch (addError) {
-                            showToast("FAILED TO ADD MARTIAN NETWORK");
+                            showToast("FAILED TO ADD NETWORK");
                             return false;
                         }
                     } else {
-                        showToast("SWITCH TO MARTIAN NETWORK");
+                        showToast("SWITCH TO " + CHAINS[currentChain].name.toUpperCase());
                         return false;
                     }
                 }
@@ -795,7 +914,7 @@
             if (!userAddress || !provider) return;
             try {
                 const balance = await provider.getBalance(userAddress);
-                document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $EROL`;
+                document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $${CURRENCY_SYMBOL}`;
             } catch (e) { console.error("Balance fetch error", e); }
         }
 
@@ -828,9 +947,9 @@
                 const hash = ethers.keccak256(encoded);
 
                 console.log("=== CREATING GAME ===");
+                console.log("Chain:", currentChain);
                 console.log("Move:", selectedMoveIdx);
                 console.log("Game ID:", nextGameId.toString());
-                console.log("Hash:", hash);
 
                 showToast("ENCRYPTING SIGNAL...");
                 const tx = await contract.createGame(hash, timeoutValue, { value: wagerValue });
@@ -838,16 +957,15 @@
                 showToast("WAITING FOR CONFIRMATION...");
                 const receipt = await tx.wait();
                 
-                const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+                const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
                 secrets[hash] = { 
                     move: selectedMoveIdx, 
                     salt: salt,
                     gameId: nextGameId.toString(),
-                    address: userAddress.toLowerCase()
+                    address: userAddress.toLowerCase(),
+                    chain: currentChain
                 };
-                localStorage.setItem('martian_gambits', JSON.stringify(secrets));
-                
-                console.log("Secret saved for hash:", hash);
+                localStorage.setItem(`${currentChain}_gambits`, JSON.stringify(secrets));
 
                 let gameId = Number(nextGameId);
 
@@ -863,34 +981,31 @@
                             
                             if (parsed && parsed.name === 'GameCreated') {
                                 gameId = Number(parsed.args.gameId);
-                                console.log("Game ID from event:", gameId);
                                 break;
                             }
                         } catch(e) { continue; }
                     }
                 } catch (e) { 
-                    console.warn("Log parsing failed, using counter:", e); 
+                    console.warn("Log parsing failed:", e); 
                 }
 
-                console.log("Upserting to Supabase - Game ID:", gameId);
-                const { data: upsertData, error: sbError } = await _supabase.from('games')
+                const { error: sbError } = await _supabase.from('games')
                     .upsert([{
                         game_id: gameId,
                         host: userAddress.toLowerCase(),
                         wager: wagerInput,
                         timeout: parseInt(timeoutValue),
                         status: 0,
-                        commit_hash: hash
+                        commit_hash: hash,
+                        chain: currentChain
                     }], {
-                        onConflict: 'game_id'
-                    })
-                    .select();
+                        onConflict: 'game_id,chain'
+                    });
 
                 if (sbError) {
-                    console.error("Supabase upsert error:", sbError);
+                    console.error("Supabase error:", sbError);
                     showToast("⚠️ GAME CREATED BUT INDEX FAILED");
                 } else {
-                    console.log("Supabase upsert successful:", upsertData);
                     showToast("✓ SIGNAL DEPLOYED");
                 }
 
@@ -909,19 +1024,17 @@
         async function refreshLobby() {
             const lobby = document.getElementById('lobby-list');
             try {
-                console.log("Refreshing lobby with filter:", currentLobbyFilter);
                 const { data: games, error } = await _supabase.from('games')
                     .select('*')
+                    .eq('chain', currentChain)
                     .order('game_id', { ascending: false })
                     .limit(100);
 
                 if (error) {
-                    console.error("Supabase Fetch Error:", error);
-                    lobby.innerHTML = `<div class="text-center py-20 text-red-500 uppercase">Indexing Error: ${error.message}</div>`;
+                    console.error("Supabase Error:", error);
+                    lobby.innerHTML = `<div class="text-center py-20 text-red-500 uppercase">Indexing Error</div>`;
                     return;
                 }
-
-                console.log("Fetched games:", games.length);
 
                 lobby.innerHTML = '';
                 let displayedCount = 0;
@@ -942,11 +1055,12 @@
                     displayedCount++;
 
                     const div = document.createElement('div');
-                    div.className = "p-4 bg-black/40 border-l-2 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-black/60 " + 
-                        (status == 0 ? "border-orange-500" : 
-                         status == 1 ? "border-yellow-500" : 
-                         status == 2 ? "border-green-700" : 
-                         "border-gray-800");
+                    const borderColor = status == 0 ? 'var(--primary-color)' : 
+                                       status == 1 ? '#eab308' : 
+                                       status == 2 ? '#15803d' : '#374151';
+                    
+                    div.className = "p-4 bg-black/40 border-l-2 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-black/60";
+                    div.style.borderLeftColor = borderColor;
                     
                     let countdownHTML = '';
                     if (status === 0 || status === 1) {
@@ -959,8 +1073,8 @@
                         if (remaining > 0) {
                             const minutes = Math.floor(remaining / 60);
                             const seconds = remaining % 60;
-                            const timeColor = remaining < 60 ? 'text-red-500' : 'text-orange-500';
-                            countdownHTML = `<span class="text-[10px] ${timeColor} ml-2">⏱ ${minutes}m ${seconds}s</span>`;
+                            const timeColor = remaining < 60 ? 'text-red-500' : 'var(--primary-color)';
+                            countdownHTML = `<span class="text-[10px] ml-2" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
                         } else {
                             countdownHTML = `<span class="text-[10px] text-red-500 ml-2 animate-pulse">⏱ TIMEOUT</span>`;
                         }
@@ -969,17 +1083,12 @@
                     let gameInfo = `
                         <div class="flex-1">
                             <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="text-[9px] px-2 py-0.5 border ${
-                                    status == 0 ? 'border-orange-500 text-orange-500' : 
-                                    status == 1 ? 'border-yellow-500 text-yellow-500' : 
-                                    status == 2 ? 'border-green-500 text-green-500' : 
-                                    'border-gray-700 text-gray-500'
-                                } uppercase">${getStatusText(status)}</span>
-                                <span class="text-[9px] text-orange-900/40">ID: ${game.game_id}</span>
+                                <span class="text-[9px] px-2 py-0.5 border uppercase" style="border-color: ${borderColor}; color: ${borderColor}">${getStatusText(status)}</span>
+                                <span class="text-[9px] text-gray-500">ID: ${game.game_id}</span>
                                 ${countdownHTML}
                             </div>
                             <div class="orbitron text-white text-sm">
-                                <span class="text-orange-500">${game.wager} $EROL</span> 
+                                <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span> 
                                 <span class="text-gray-600 text-[10px] ml-2">FROM ${game.host.slice(0,6)}...</span>`;
                     
                     if (status == 2 && game.host_move && game.challenger_move) {
@@ -1018,23 +1127,19 @@
                     lobby.appendChild(div);
                 });
                 
-                console.log(`Displayed ${displayedCount} out of ${games.length} games`);
-                
                 if (displayedCount === 0) {
                     lobby.innerHTML = '<div class="text-center py-20 opacity-30 uppercase italic">No signals detected...</div>';
                 }
             } catch (err) { 
-                console.error("Lobby Refresh Error:", err);
-                lobby.innerHTML = `<div class="text-center py-20 text-red-500">Error loading lobby: ${err.message}</div>`;
+                console.error("Lobby Error:", err);
+                lobby.innerHTML = `<div class="text-center py-20 text-red-500">Error loading lobby</div>`;
             }
         }
 
         function setLobbyFilter(filter) {
             currentLobbyFilter = filter;
-            
             document.querySelectorAll('.lobby-filter').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`filter-${filter}`).classList.add('active');
-            
             refreshLobby();
         }
 
@@ -1061,19 +1166,13 @@
                     if (now >= deadline) {
                         return `<button onclick="handleForceForfeit(${game.game_id})" class="btn-mars text-[10px] px-6 py-2 animate-pulse">Claim Victory</button>`;
                     }
-                    return `<span class="text-[9px] text-orange-500 uppercase italic">⚔️ Awaiting Host Reveal...</span>`;
+                    return `<span class="text-[9px] uppercase italic" style="color: var(--primary-color)">⚔️ Awaiting Host Reveal...</span>`;
                 }
-                return `<span class="text-[9px] text-orange-900 uppercase italic">Combat Active</span>`;
+                return `<span class="text-[9px] text-gray-600 uppercase italic">Combat Active</span>`;
             }
-            if (game.status == 2) {
-                return `<span class="text-[9px] text-green-500 uppercase">✓ Resolved</span>`;
-            }
-            if (game.status == 3) {
-                return `<span class="text-[9px] text-gray-600 uppercase">Refunded</span>`;
-            }
-            if (game.status == 4) {
-                return `<span class="text-[9px] text-red-600 uppercase">⚡ Forfeited</span>`;
-            }
+            if (game.status == 2) return `<span class="text-[9px] text-green-500 uppercase">✓ Resolved</span>`;
+            if (game.status == 3) return `<span class="text-[9px] text-gray-600 uppercase">Refunded</span>`;
+            if (game.status == 4) return `<span class="text-[9px] text-red-600 uppercase">⚡ Forfeited</span>`;
             return `<span class="text-[9px] text-gray-700 uppercase">Inactive</span>`;
         }
 
@@ -1086,34 +1185,23 @@
             
             try {
                 showToast("INTERCEPTING...");
-                
                 const gameData = await contract.games(id);
                 const actualWager = gameData.wager;
                 
-                console.log("Challenging game", id, "with move", move, "and wager", ethers.formatEther(actualWager));
-                
                 const tx = await contract.challengeGame(id, move, { value: actualWager });
-                showToast("CONFIRMING TRANSACTION...");
-                const receipt = await tx.wait();
+                showToast("CONFIRMING...");
+                await tx.wait();
                 
-                console.log("Challenge successful");
-                
-                const { error: updateError } = await _supabase
-                    .from('games')
+                await _supabase.from('games')
                     .update({ 
                         status: 1, 
                         challenger: userAddress.toLowerCase(),
                         challenger_move: parseInt(move)
                     })
-                    .eq('game_id', id);
+                    .eq('game_id', id)
+                    .eq('chain', currentChain);
                 
-                if (updateError) {
-                    console.error("Supabase update error:", updateError);
-                    showToast("⚠️ INTERCEPTED BUT DB UPDATE FAILED");
-                } else {
-                    showToast("✓ SIGNAL INTERCEPTED");
-                }
-                
+                showToast("✓ SIGNAL INTERCEPTED");
                 setTimeout(refreshLobby, 1500);
             } catch (err) { 
                 console.error("Challenge error:", err);
@@ -1125,59 +1213,37 @@
             if (!signer) return showToast("CONNECT UPLINK FIRST");
             if (!(await checkNetwork())) return;
             
-            console.log("=== RESOLVE GAME ===");
-            console.log("Game ID:", id);
-            console.log("Hash:", hash);
-            
-            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+            const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
             let secret = secrets[hash];
             
             if (!secret) {
-                console.error("Secret not found for hash:", hash);
                 const manualReveal = confirm("Secret not found. Enter manually?");
-                
-                if (manualReveal) {
-                    const move = prompt("Enter your move (1-3):");
-                    const salt = prompt("Enter your salt (hex string):");
-                    
-                    if (!move || !salt) {
-                        showToast("CANCELLED");
-                        return;
-                    }
-                    
-                    const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-                        ["uint8", "string", "address", "uint256"],
-                        [parseInt(move), salt, userAddress, BigInt(id)]
-                    );
-                    const testHash = ethers.keccak256(encoded);
-                    
-                    if (testHash.toLowerCase() !== hash.toLowerCase()) {
-                        showToast("⚠️ HASH MISMATCH");
-                        return;
-                    }
-                    
-                    secret = { move: parseInt(move), salt: salt, gameId: id.toString() };
-                } else {
+                if (!manualReveal) {
                     showToast("⚠️ SECRET NOT FOUND");
                     return;
                 }
-            }
-            
-            const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-                ["uint8", "string", "address", "uint256"],
-                [secret.move, secret.salt, userAddress, BigInt(secret.gameId || id)]
-            );
-            const verifyHash = ethers.keccak256(encoded);
-            
-            if (verifyHash.toLowerCase() !== hash.toLowerCase()) {
-                showToast("⚠️ HASH VERIFICATION FAILED");
-                return;
+                
+                const move = prompt("Enter your move (1-3):");
+                const salt = prompt("Enter your salt (hex string):");
+                
+                if (!move || !salt) return showToast("CANCELLED");
+                
+                const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+                    ["uint8", "string", "address", "uint256"],
+                    [parseInt(move), salt, userAddress, BigInt(id)]
+                );
+                const testHash = ethers.keccak256(encoded);
+                
+                if (testHash.toLowerCase() !== hash.toLowerCase()) {
+                    return showToast("⚠️ HASH MISMATCH");
+                }
+                
+                secret = { move: parseInt(move), salt: salt, gameId: id.toString() };
             }
             
             try {
                 showToast("BROADCASTING REVEAL...");
                 const tx = await contract.resolveGame(id, secret.move, secret.salt);
-                showToast("CONFIRMING...");
                 await tx.wait();
                 
                 const gameData = await contract.games(id);
@@ -1201,7 +1267,7 @@
                     status: 2,
                     host_move: hostMove,
                     challenger_move: challengerMove
-                }).eq('game_id', id);
+                }).eq('game_id', id).eq('chain', currentChain);
                 
                 setTimeout(refreshLobby, 1000);
                 updateBalance();
@@ -1221,7 +1287,7 @@
                 const tx = await contract.refundUnchallenged(id);
                 await tx.wait();
                 
-                await _supabase.from('games').update({ status: 3 }).eq('game_id', id);
+                await _supabase.from('games').update({ status: 3 }).eq('game_id', id).eq('chain', currentChain);
                 refreshLobby();
                 updateBalance();
                 showToast("FUNDS RETRACTED");
@@ -1240,8 +1306,7 @@
                 const tx = await contract.forceForfeit(gameId);
                 await tx.wait();
                 
-                await _supabase.from('games').update({ status: 4 }).eq('game_id', gameId);
-                
+                await _supabase.from('games').update({ status: 4 }).eq('game_id', gameId).eq('chain', currentChain);
                 refreshLobby();
                 updateBalance();
                 showToast("🏆 VICTORY BY FORFEIT!");
@@ -1251,7 +1316,6 @@
             }
         }
 
-        // ===== ACTIVITY FEED =====
         async function refreshActivityFeed() {
             const feed = document.getElementById('activity-feed');
             try {
@@ -1259,11 +1323,12 @@
                     .from('games')
                     .select('*')
                     .eq('status', 2)
+                    .eq('chain', currentChain)
                     .order('updated_at', { ascending: false })
                     .limit(50);
 
                 if (error) {
-                    console.error("Activity feed error:", error);
+                    console.error("Activity error:", error);
                     return;
                 }
 
@@ -1272,9 +1337,7 @@
                     const hostMove = Number(game.host_move);
                     const challengerMove = Number(game.challenger_move);
                     
-                    let result = '';
-                    let resultColor = '';
-                    
+                    let result = '', resultColor = '';
                     if (hostMove === challengerMove) {
                         result = 'DRAW';
                         resultColor = 'text-yellow-500';
@@ -1297,7 +1360,7 @@
                             <div class="flex-1">
                                 <div class="text-sm ${resultColor} font-bold">${result}</div>
                                 <div class="text-[10px] text-gray-500 mt-1">
-                                    ${moves[hostMove]} vs ${moves[challengerMove]} • ${game.wager} $EROL • ${timeAgo}
+                                    ${moves[hostMove]} vs ${moves[challengerMove]} • ${game.wager} $${CURRENCY_SYMBOL} • ${timeAgo}
                                 </div>
                             </div>
                             <div class="text-2xl">${result.includes('DRAW') ? '⚖️' : '🏆'}</div>
@@ -1305,7 +1368,7 @@
                     `;
                 }).join('') || '<div class="text-center text-gray-600 py-8">No recent activity</div>';
             } catch (err) {
-                console.error("Activity feed error:", err);
+                console.error("Activity error:", err);
             }
         }
 
@@ -1320,7 +1383,6 @@
             return `${days}d ago`;
         }
 
-        // ===== CHAT FUNCTIONALITY =====
         async function refreshChat() {
             const chatMessages = document.getElementById('chat-messages');
             try {
@@ -1330,10 +1392,7 @@
                     .order('created_at', { ascending: false })
                     .limit(50);
 
-                if (error) {
-                    console.error("Chat error:", error);
-                    return;
-                }
+                if (error) return;
 
                 const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
 
@@ -1341,8 +1400,8 @@
                     const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
                     return `
                         <div class="${isOwn ? 'text-right' : 'text-left'}">
-                            <div class="inline-block max-w-[80%] ${isOwn ? 'bg-orange-900/30' : 'bg-gray-900/50'} px-3 py-2 rounded">
-                                <div class="text-[9px] text-orange-700 mb-1">${msg.sender.slice(0,6)}...${msg.sender.slice(-4)}</div>
+                            <div class="inline-block max-w-[80%] px-3 py-2 rounded" style="background: ${isOwn ? 'rgba(255, 77, 0, 0.3)' : 'rgba(128, 128, 128, 0.3)'}">
+                                <div class="text-[9px] mb-1" style="color: var(--primary-color); opacity: 0.7;">${msg.sender.slice(0,6)}...${msg.sender.slice(-4)}</div>
                                 <div class="text-sm text-gray-200">${escapeHtml(msg.message)}</div>
                             </div>
                         </div>
@@ -1353,7 +1412,7 @@
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
             } catch (err) {
-                console.error("Chat refresh error:", err);
+                console.error("Chat error:", err);
             }
         }
 
@@ -1364,22 +1423,14 @@
             if (!message || !userAddress) return;
             
             try {
-                const { error } = await _supabase
-                    .from('chat_messages')
-                    .insert([{
-                        sender: userAddress.toLowerCase(),
-                        message: message
-                    }]);
-
-                if (error) {
-                    console.error("Send message error:", error);
-                    showToast("MESSAGE FAILED");
-                } else {
-                    input.value = '';
-                    refreshChat();
-                }
+                await _supabase.from('chat_messages').insert([{
+                    sender: userAddress.toLowerCase(),
+                    message: message
+                }]);
+                input.value = '';
+                refreshChat();
             } catch (err) {
-                console.error("Send message error:", err);
+                console.error("Send error:", err);
                 showToast("MESSAGE FAILED");
             }
         }
@@ -1390,112 +1441,65 @@
             return div.innerHTML;
         }
 
-
-        // ===== LEADERBOARD =====
         async function loadLeaderboard() {
             try {
                 const { data: games, error } = await _supabase
                     .from('games')
                     .select('*')
-                    .eq('status', 2);
+                    .eq('status', 2)
+                    .eq('chain', currentChain);
 
-                if (error) {
-                    console.error("Leaderboard error:", error);
-                    return;
-                }
+                if (error) return;
 
                 const playerStats = {};
-                let totalWagered = 0;
-                let totalBurnt = 0;
-                let totalTreasury = 0;
+                let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
 
                 games.forEach(game => {
                     const wager = parseFloat(game.wager);
                     totalWagered += wager * 2;
-                    
                     const pot = wager * 2;
-                    const burn = pot * 0.015;
-                    const treasury = pot * 0.015;
-                    totalBurnt += burn;
-                    totalTreasury += treasury;
+                    totalBurnt += pot * 0.015;
+                    totalTreasury += pot * 0.015;
+
+                    [game.host, game.challenger].forEach(addr => {
+                        if (!addr) return;
+                        if (!playerStats[addr]) {
+                            playerStats[addr] = {
+                                address: addr,
+                                totalWagered: 0,
+                                wins: 0,
+                                losses: 0,
+                                draws: 0,
+                                games: 0,
+                                biggestPot: 0,
+                                longestStreak: 0
+                            };
+                        }
+                        playerStats[addr].totalWagered += wager;
+                        playerStats[addr].games++;
+                        if (wager * 2 > playerStats[addr].biggestPot) {
+                            playerStats[addr].biggestPot = wager * 2;
+                        }
+                    });
 
                     const hostMove = Number(game.host_move);
                     const challengerMove = Number(game.challenger_move);
-                    
-                    if (!playerStats[game.host]) {
-                        playerStats[game.host] = {
-                            address: game.host,
-                            totalWagered: 0,
-                            wins: 0,
-                            losses: 0,
-                            draws: 0,
-                            games: 0,
-                            biggestPot: 0,
-                            currentStreak: 0,
-                            longestStreak: 0
-                        };
-                    }
-                    if (game.challenger && !playerStats[game.challenger]) {
-                        playerStats[game.challenger] = {
-                            address: game.challenger,
-                            totalWagered: 0,
-                            wins: 0,
-                            losses: 0,
-                            draws: 0,
-                            games: 0,
-                            biggestPot: 0,
-                            currentStreak: 0,
-                            longestStreak: 0
-                        };
-                    }
-
-                    playerStats[game.host].totalWagered += wager;
-                    playerStats[game.host].games++;
-                    if (wager * 2 > playerStats[game.host].biggestPot) {
-                        playerStats[game.host].biggestPot = wager * 2;
-                    }
-
-                    if (game.challenger) {
-                        playerStats[game.challenger].totalWagered += wager;
-                        playerStats[game.challenger].games++;
-                        if (wager * 2 > playerStats[game.challenger].biggestPot) {
-                            playerStats[game.challenger].biggestPot = wager * 2;
-                        }
-                    }
 
                     if (hostMove === challengerMove) {
                         playerStats[game.host].draws++;
                         if (game.challenger) playerStats[game.challenger].draws++;
-                        
-                        playerStats[game.host].currentStreak = 0;
-                        if (game.challenger) playerStats[game.challenger].currentStreak = 0;
                     } else {
                         const hostWins = (
                             (hostMove === 1 && challengerMove === 2) ||
                             (hostMove === 2 && challengerMove === 3) ||
                             (hostMove === 3 && challengerMove === 1)
                         );
-
                         if (hostWins) {
                             playerStats[game.host].wins++;
-                            playerStats[game.host].currentStreak++;
-                            if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
-                                playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
-                            }
-                            
-                            if (game.challenger) {
-                                playerStats[game.challenger].losses++;
-                                playerStats[game.challenger].currentStreak = 0;
-                            }
+                            if (game.challenger) playerStats[game.challenger].losses++;
                         } else if (game.challenger) {
                             playerStats[game.challenger].wins++;
-                            playerStats[game.challenger].currentStreak++;
-                            if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
-                                playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
-                            }
-                            
                             playerStats[game.host].losses++;
-                            playerStats[game.host].currentStreak = 0;
                         }
                     }
                 });
@@ -1512,22 +1516,20 @@
                 const tbody = document.getElementById('leaderboard-body');
                 tbody.innerHTML = leaderboard.map((player, index) => {
                     const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
-                    
                     return `
-                        <tr class="border-b border-gray-900/30 hover:bg-orange-900/10 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
-                            <td class="p-3 text-orange-500 orbitron">#${index + 1}</td>
+                        <tr class="border-b border-gray-900/30 hover:brightness-110 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
+                            <td class="p-3 orbitron" style="color: var(--primary-color)">#${index + 1}</td>
                             <td class="p-3">
                                 <div class="text-sm text-white">${player.address.slice(0,8)}...${player.address.slice(-6)}</div>
                                 <div class="text-[10px] text-gray-600">${player.games} games</div>
                             </td>
-                            <td class="p-3 text-right orbitron text-orange-500">${player.totalWagered.toFixed(2)}</td>
+                            <td class="p-3 text-right orbitron" style="color: var(--primary-color)">${player.totalWagered.toFixed(2)}</td>
                             <td class="p-3 text-right orbitron ${winRate >= 50 ? 'text-green-500' : 'text-red-500'}">${winRate}%</td>
-                            <td class="p-3 text-right orbitron text-orange-500">${player.biggestPot.toFixed(2)}</td>
-                            <td class="p-3 text-right orbitron text-yellow-500">${player.longestStreak}</td>
+                            <td class="p-3 text-right orbitron" style="color: var(--primary-color)">${player.biggestPot.toFixed(2)}</td>
+                            <td class="p-3 text-right orbitron text-yellow-500">${player.longestStreak || 0}</td>
                         </tr>
                     `;
                 }).join('');
-
             } catch (err) {
                 console.error("Leaderboard error:", err);
             }
@@ -1538,13 +1540,14 @@
             const content = document.getElementById('player-modal-content');
             
             modal.classList.add('active');
-            content.innerHTML = '<div class="text-center py-8 text-orange-500">Loading...</div>';
+            content.innerHTML = '<div class="text-center py-8" style="color: var(--primary-color)">Loading...</div>';
 
             try {
                 const { data: games, error } = await _supabase
                     .from('games')
                     .select('*')
                     .eq('status', 2)
+                    .eq('chain', currentChain)
                     .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`)
                     .order('game_id', { ascending: false });
 
@@ -1595,15 +1598,15 @@
 
                 content.innerHTML = `
                     <div class="space-y-6">
-                        <div class="text-center pb-4 border-b border-orange-900/30">
+                        <div class="text-center pb-4 border-b" style="border-color: rgba(255, 77, 0, 0.3);">
                             <div class="text-sm text-gray-500 mb-2">ADDRESS</div>
-                            <div class="orbitron text-orange-500 text-lg">${address.slice(0,12)}...${address.slice(-10)}</div>
+                            <div class="orbitron text-lg" style="color: var(--primary-color)">${address.slice(0,12)}...${address.slice(-10)}</div>
                         </div>
 
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
-                                <div class="text-[10px] text-orange-800 uppercase mb-2">Games</div>
-                                <div class="orbitron text-2xl text-orange-500">${totalGames}</div>
+                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Games</div>
+                                <div class="orbitron text-2xl" style="color: var(--primary-color)">${totalGames}</div>
                             </div>
                             <div class="bg-black/40 border border-green-900/30 p-4 text-center">
                                 <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
@@ -1617,20 +1620,20 @@
                                 <div class="text-[10px] text-yellow-800 uppercase mb-2">Draws</div>
                                 <div class="orbitron text-2xl text-yellow-500">${draws}</div>
                             </div>
-                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
-                                <div class="text-[10px] text-orange-800 uppercase mb-2">Win Rate</div>
-                                <div class="orbitron text-2xl text-orange-500">${winRate}%</div>
+                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Win Rate</div>
+                                <div class="orbitron text-2xl" style="color: var(--primary-color)">${winRate}%</div>
                             </div>
-                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
-                                <div class="text-[10px] text-orange-800 uppercase mb-2">Wagered</div>
-                                <div class="orbitron text-xl text-orange-500">${totalWagered.toFixed(2)}</div>
+                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Wagered</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">${totalWagered.toFixed(2)}</div>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-black/40 border border-orange-900/30 p-4 text-center">
-                                <div class="text-[10px] text-orange-800 uppercase mb-2">Biggest Pot</div>
-                                <div class="orbitron text-xl text-orange-500">${biggestPot.toFixed(2)}</div>
+                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Biggest Pot</div>
+                                <div class="orbitron text-xl" style="color: var(--primary-color)">${biggestPot.toFixed(2)}</div>
                             </div>
                             <div class="bg-black/40 border border-yellow-900/30 p-4 text-center">
                                 <div class="text-[10px] text-yellow-800 uppercase mb-2">Longest Streak</div>
@@ -1639,7 +1642,7 @@
                         </div>
 
                         <div>
-                            <h3 class="orbitron text-orange-500 mb-3">RECENT BATTLES</h3>
+                            <h3 class="orbitron mb-3" style="color: var(--primary-color)">RECENT BATTLES</h3>
                             <div class="space-y-2 max-h-60 overflow-y-auto">
                                 ${recentGames.slice(0, 10).map(game => {
                                     const moves = ['', '☀️', '🌬️', '🌪️'];
@@ -1648,7 +1651,7 @@
                                             <div>
                                                 <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
                                                 <div class="text-sm mt-1">
-                                                    <span class="text-orange-500">${game.wager} $EROL</span>
+                                                    <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span>
                                                     <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
                                                 </div>
                                             </div>
@@ -1670,7 +1673,6 @@
             document.getElementById('player-modal').classList.remove('active');
         }
 
-        // ===== BRIDGE FUNCTIONALITY =====
         async function loadBridge() {
             if (userAddress) {
                 await updateAvaxErolBalance();
@@ -1679,15 +1681,13 @@
 
         async function updateAvaxErolBalance() {
             try {
-                const avaxRPC = 'https://api.avax.network/ext/bc/C/rpc';
-                avaxProvider = new ethers.JsonRpcProvider(avaxRPC);
-                
+                avaxProvider = new ethers.JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc');
                 const erolContract = new ethers.Contract(EROL_TOKEN_ADDR, ERC20_ABI, avaxProvider);
                 const balance = await erolContract.balanceOf(userAddress);
                 avaxErolBalance = parseFloat(ethers.formatEther(balance));
                 document.getElementById('avax-erol-balance').textContent = avaxErolBalance.toFixed(4) + ' $EROL';
             } catch (err) {
-                console.error("AVAX EROL balance error:", err);
+                console.error("AVAX balance error:", err);
                 document.getElementById('avax-erol-balance').textContent = '-- $EROL';
             }
         }
@@ -1710,7 +1710,7 @@
                 document.getElementById('bridge-amount').value = avaxErolBalance.toFixed(4);
                 updateBridgeEstimate();
             } else {
-                showToast("INSUFFICIENT $EROL BALANCE");
+                showToast("INSUFFICIENT BALANCE");
             }
         }
 
@@ -1824,8 +1824,8 @@
             if (!userAddress) {
                 profileContent.innerHTML = `
                     <div class="text-center py-20">
-                        <div class="text-orange-900 text-6xl mb-4">🔒</div>
-                        <div class="text-orange-500 orbitron text-lg mb-2">UPLINK REQUIRED</div>
+                        <div class="text-6xl mb-4" style="color: var(--primary-color); opacity: 0.3;">🔒</div>
+                        <div class="orbitron text-lg mb-2" style="color: var(--primary-color)">UPLINK REQUIRED</div>
                         <div class="text-gray-500 text-sm">Connect your wallet to view pilot statistics</div>
                     </div>`;
                 return;
@@ -1833,13 +1833,14 @@
             
             profileContent.innerHTML = `
                 <div class="text-center py-20">
-                    <div class="text-orange-500 animate-pulse">Loading pilot data...</div>
+                    <div class="animate-pulse" style="color: var(--primary-color)">Loading pilot data...</div>
                 </div>`;
             
             try {
                 const { data: games, error } = await _supabase
                     .from('games')
                     .select('*')
+                    .eq('chain', currentChain)
                     .or(`host.eq.${userAddress.toLowerCase()},challenger.eq.${userAddress.toLowerCase()}`)
                     .order('game_id', { ascending: false });
                 
@@ -1895,9 +1896,9 @@
                 
                 profileContent.innerHTML = `
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-black/40 border border-orange-900/30 p-6 text-center">
-                            <div class="text-[10px] text-orange-800 uppercase mb-2">Games</div>
-                            <div class="orbitron text-3xl text-orange-500">${totalGames}</div>
+                        <div class="bg-black/40 border p-6 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
+                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Games</div>
+                            <div class="orbitron text-3xl" style="color: var(--primary-color)">${totalGames}</div>
                         </div>
                         <div class="bg-black/40 border border-green-900/30 p-6 text-center">
                             <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
@@ -1914,21 +1915,21 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="bg-black/40 border border-orange-900/30 p-6">
-                            <div class="text-[10px] text-orange-800 uppercase mb-2">Win Rate</div>
-                            <div class="orbitron text-2xl text-orange-500">${winRate}%</div>
+                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
+                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Win Rate</div>
+                            <div class="orbitron text-2xl" style="color: var(--primary-color)">${winRate}%</div>
                         </div>
-                        <div class="bg-black/40 border border-orange-900/30 p-6">
-                            <div class="text-[10px] text-orange-800 uppercase mb-2">Wagered</div>
-                            <div class="orbitron text-2xl text-orange-500">${totalWagered.toFixed(2)}</div>
+                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
+                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Wagered</div>
+                            <div class="orbitron text-2xl" style="color: var(--primary-color)">${totalWagered.toFixed(2)}</div>
                         </div>
-                        <div class="bg-black/40 border border-${netPnL >= 0 ? 'green' : 'red'}-900/30 p-6">
-                            <div class="text-[10px] text-${netPnL >= 0 ? 'green' : 'red'}-800 uppercase mb-2">Net P&L</div>
-                            <div class="orbitron text-2xl text-${netPnL >= 0 ? 'green' : 'red'}-500">${netPnL >= 0 ? '+' : ''}${netPnL.toFixed(2)}</div>
+                        <div class="bg-black/40 border p-6" style="border-color: ${netPnL >= 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'};">
+                            <div class="text-[10px] uppercase mb-2" style="color: ${netPnL >= 0 ? '#22c55e' : '#ef4444'}; opacity: 0.5;">Net P&L</div>
+                            <div class="orbitron text-2xl" style="color: ${netPnL >= 0 ? '#22c55e' : '#ef4444'}">${netPnL >= 0 ? '+' : ''}${netPnL.toFixed(2)}</div>
                         </div>
                     </div>
                     
-                    <h3 class="orbitron text-orange-500 mb-4">RECENT BATTLES</h3>
+                    <h3 class="orbitron mb-4" style="color: var(--primary-color)">RECENT BATTLES</h3>
                     <div class="space-y-3">
                         ${recentGames.slice(0, 10).map(game => {
                             const moves = ['', '☀️', '🌬️', '🌪️'];
@@ -1937,7 +1938,7 @@
                                     <div>
                                         <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
                                         <div class="text-sm mt-1">
-                                            <span class="text-orange-500">${game.wager} $EROL</span>
+                                            <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span>
                                             <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
                                         </div>
                                     </div>
@@ -1970,18 +1971,12 @@
         }
         
         function debugInfo() {
-            const secrets = JSON.parse(localStorage.getItem('martian_gambits') || '{}');
+            const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
             console.log("=== DEBUG INFO ===");
+            console.log("Chain:", currentChain);
             console.log("Address:", userAddress);
             console.log("Contract:", CONTRACT_ADDR);
             console.log("Secrets:", Object.keys(secrets).length);
-            console.log("");
-            Object.entries(secrets).forEach(([hash, data]) => {
-                console.log(`Hash: ${hash}`);
-                console.log(`  Move: ${data.move}`);
-                console.log(`  Salt: ${data.salt}`);
-                console.log(`  GameID: ${data.gameId}`);
-            });
             alert("Debug info in console (F12)");
         }
         
@@ -2002,5 +1997,3 @@
     </script>
 </body>
 </html>
-
-<!-- END OF PART 3 - Complete! -->
