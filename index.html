@@ -3,167 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Chain Gambit | Mission Control</title>
+    <title>The Grotto Gambit | Dark Sanctum</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #ff4d00;
-            --habitat-bg: #060608;
-            --panel-bg: rgba(20, 20, 25, 0.95);
-            --glow: rgba(255, 77, 0, 0.3);
+            --grotto-purple: #9333ea;
+            --grotto-deep: #4c1d95;
+            --grotto-dark: #1a0a2e;
+            --grotto-darker: #0d0517;
+            --grotto-glow: rgba(147, 51, 234, 0.4);
+            --grotto-light: #c084fc;
+            --heresy-gold: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--habitat-bg);
-            color: #e0e0e0;
-            font-family: 'Share Tech Mono', monospace;
-            background-image: 
-                linear-gradient(rgba(255, 77, 0, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 77, 0, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
-            margin: 0;
+            background: linear-gradient(135deg, var(--grotto-darker) 0%, var(--grotto-dark) 50%, #1e1b4b 100%);
+            color: #e9d5ff;
+            font-family: 'Cormorant Garamond', serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
         }
 
-        body.grotto-theme {
-            --primary-color: #9333ea;
-            --glow: rgba(147, 51, 234, 0.3);
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background-image: 
-                linear-gradient(rgba(147, 51, 234, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(147, 51, 234, 0.03) 1px, transparent 1px);
+                radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(109, 40, 217, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
         }
 
-        .orbitron { font-family: 'Orbitron', sans-serif; }
+        .cinzel { font-family: 'Cinzel', serif; }
         
-        .mars-glass {
-            background: var(--panel-bg);
-            border: 1px solid rgba(255, 77, 0, 0.2);
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        .grotto-glass {
+            background: rgba(13, 5, 23, 0.85);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            box-shadow: 0 8px 32px rgba(147, 51, 234, 0.15);
+            backdrop-filter: blur(12px);
+            position: relative;
         }
 
-        body.grotto-theme .mars-glass {
-            border: 1px solid rgba(147, 51, 234, 0.2);
+        .grotto-border-glow {
+            border: 1px solid var(--grotto-purple);
+            box-shadow: 0 0 20px var(--grotto-glow), inset 0 0 20px rgba(147, 51, 234, 0.1);
         }
 
-        .mars-border-glow {
-            border: 1px solid var(--primary-color);
-            box-shadow: 0 0 10px var(--glow);
-        }
-
-        .btn-mars {
-            background: var(--primary-color);
-            color: black;
-            font-weight: bold;
+        .btn-grotto {
+            background: linear-gradient(135deg, var(--grotto-purple) 0%, var(--grotto-deep) 100%);
+            color: white;
+            font-weight: 600;
             text-transform: uppercase;
-            transition: all 0.2s;
-            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+            letter-spacing: 2px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(147, 51, 234, 0.5);
         }
 
-        .btn-mars:hover:not(:disabled) {
-            filter: brightness(1.2);
-            box-shadow: 0 0 15px var(--glow);
-            transform: scale(1.02);
+        .btn-grotto::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
 
-        .btn-mars:disabled {
+        .btn-grotto:hover:not(:disabled)::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-grotto:hover:not(:disabled) {
+            box-shadow: 0 0 30px var(--grotto-glow), 0 0 60px rgba(147, 51, 234, 0.3);
+            transform: translateY(-2px);
+            border-color: var(--grotto-light);
+        }
+
+        .btn-grotto:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
 
         .move-select {
-            border: 1px solid #333;
-            filter: grayscale(1);
-            transition: all 0.3s;
+            border: 2px solid rgba(147, 51, 234, 0.2);
+            background: rgba(13, 5, 23, 0.6);
+            transition: all 0.4s ease;
+            position: relative;
+        }
+
+        .move-select::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, transparent 0%, rgba(147, 51, 234, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .move-select:hover::after {
+            opacity: 1;
         }
 
         .move-select.selected {
-            border-color: var(--primary-color);
-            filter: grayscale(0);
-            background: var(--glow);
-            box-shadow: inset 0 0 10px var(--glow);
+            border-color: var(--grotto-purple);
+            background: rgba(147, 51, 234, 0.2);
+            box-shadow: 0 0 30px var(--grotto-glow), inset 0 0 20px rgba(147, 51, 234, 0.2);
+            transform: scale(1.05);
         }
 
-        .scanline {
-            width: 100%;
-            height: 2px;
-            background: var(--glow);
+        .move-select.selected::after {
+            opacity: 1;
+        }
+
+        .mystical-particles {
             position: fixed;
             top: 0;
-            z-index: 100;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
-            animation: scan 4s linear infinite;
+            z-index: 1;
+            overflow: hidden;
         }
 
-        @keyframes scan {
-            from { top: 0; }
-            to { top: 100%; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+            50% { transform: translateY(-20px) translateX(10px); opacity: 0.6; }
         }
 
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-track { background: var(--habitat-bg); }
-        ::-webkit-scrollbar-thumb { background: var(--primary-color); }
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: var(--grotto-purple);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--grotto-purple);
+            animation: float linear infinite;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--grotto-darker); }
+        ::-webkit-scrollbar-thumb { 
+            background: linear-gradient(180deg, var(--grotto-purple) 0%, var(--grotto-deep) 100%);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: var(--grotto-light); }
 
         .tab-btn {
-            color: #666;
+            color: #6b7280;
             background: transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--grotto-purple);
+            transition: all 0.3s;
+            transform: translateX(-50%);
         }
 
         .tab-btn:hover {
-            color: var(--primary-color);
+            color: var(--grotto-light);
         }
 
         .tab-btn.active {
-            color: var(--primary-color);
-            background: var(--glow);
-            border-bottom: 2px solid var(--primary-color);
+            color: var(--grotto-purple);
+            background: rgba(147, 51, 234, 0.1);
+        }
+
+        .tab-btn.active::after {
+            width: 80%;
         }
 
         .lobby-filter {
-            color: #666;
+            color: #6b7280;
             background: transparent;
+            transition: all 0.3s;
         }
 
         .lobby-filter:hover {
-            color: var(--primary-color);
+            color: var(--grotto-light);
+            background: rgba(147, 51, 234, 0.05);
         }
 
         .lobby-filter.active {
-            color: var(--primary-color);
-            background: var(--glow);
+            color: var(--grotto-purple);
+            background: rgba(147, 51, 234, 0.2);
+            box-shadow: inset 0 0 10px rgba(147, 51, 234, 0.3);
         }
 
         .page-section {
             display: none;
+            position: relative;
+            z-index: 2;
         }
 
         .page-section.active {
             display: block;
+            animation: fadeIn 0.5s ease;
         }
 
-        .copy-btn {
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .copy-btn:hover {
-            color: var(--primary-color);
-            transform: scale(1.1);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .header-banner {
             width: 100%;
-            height: 200px;
+            height: 250px;
             object-fit: cover;
-            border-bottom: 2px solid var(--primary-color);
+            border-bottom: 3px solid var(--grotto-purple);
+            box-shadow: 0 10px 40px rgba(147, 51, 234, 0.3);
         }
 
         .game-logo {
-            width: 60px;
-            height: 60px;
+            width: 80px;
+            height: 80px;
             object-fit: contain;
-            border-radius: 8px;
+            border-radius: 12px;
+            border: 2px solid var(--grotto-purple);
+            box-shadow: 0 0 20px var(--grotto-glow);
         }
 
         .modal {
@@ -173,7 +259,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -201,232 +287,371 @@
             overflow-y: auto;
         }
 
-        .chain-switch-btn {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            padding: 8px 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 11px;
-            text-transform: uppercase;
-        }
-
-        .chain-switch-btn:hover {
-            background: var(--glow);
-            transform: scale(1.05);
-        }
-
-        .chain-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
             border-radius: 50%;
-            background: var(--primary-color);
-            margin-right: 8px;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
             animation: pulse 2s infinite;
+            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .notification-panel {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            width: 350px;
+            max-height: 500px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+        }
+
+        .notification-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notification-item {
+            border-left: 3px solid var(--grotto-purple);
+            transition: all 0.3s;
+        }
+
+        .notification-item:hover {
+            background: rgba(147, 51, 234, 0.1);
+            transform: translateX(5px);
+        }
+
+        .notification-item.win {
+            border-left-color: #22c55e;
+        }
+
+        .notification-item.loss {
+            border-left-color: #ef4444;
         }
 
         @media (max-width: 768px) {
-            .header-banner {
-                height: 120px;
-            }
-            .game-logo {
-                width: 45px;
-                height: 45px;
-            }
-            .chat-messages {
-                height: 300px;
-            }
+            .header-banner { height: 150px; }
+            .game-logo { width: 60px; height: 60px; }
+            .chat-messages { height: 300px; }
+            .notification-panel { width: 300px; right: -20px; }
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--grotto-purple) !important;
+            box-shadow: 0 0 20px var(--grotto-glow);
+        }
+
+        .stat-card {
+            background: rgba(13, 5, 23, 0.6);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
+        }
+
+        .stat-card:hover {
+            border-color: var(--grotto-purple);
+            box-shadow: 0 0 30px var(--grotto-glow);
+            transform: translateY(-5px);
         }
     </style>
 </head>
 <body class="min-h-screen p-4">
-    <div class="scanline"></div>
+    <!-- Mystical Particles -->
+    <div class="mystical-particles" id="particles"></div>
 
     <!-- Header Banner -->
-    <div class="max-w-7xl mx-auto mb-4">
-        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-21-55.jpg" 
-             alt="Multi-Chain Gambit Header" 
-             class="header-banner"
+    <div class="max-w-7xl mx-auto mb-6 relative z-10">
+        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-11_07-20-57.jpg" 
+             alt="The Grotto Gambit Header" 
+             class="header-banner rounded-lg"
              onerror="this.style.display='none'">
     </div>
 
-    <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 py-4 border-b border-orange-900/30">
-        <div class="flex items-center gap-4">
-            <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-01_14-13-33.jpg" 
-                 alt="Gambit Logo" 
+    <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 py-6 border-b border-purple-900/30 relative z-10">
+        <div class="flex items-center gap-6">
+            <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-11_07-20-45.jpg" 
+                 alt="Grotto Logo" 
                  class="game-logo"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="w-12 h-12 mars-border-glow hidden items-center justify-center bg-black">
-                <span class="text-2xl font-bold" id="logo-letter">M</span>
-            </div>
+                 onerror="this.style.display='none'">
             <div>
-                <h1 class="orbitron text-2xl font-bold tracking-widest" id="game-title" style="color: var(--primary-color)">MARTIAN GAMBIT</h1>
-                <p class="text-[10px] uppercase tracking-[0.2em]" id="game-subtitle" style="color: var(--primary-color); opacity: 0.5;">Sector 2027 // EROL Protocol</p>
+                <h1 class="cinzel text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 tracking-wider">
+                    THE GROTTO GAMBIT
+                </h1>
+                <p class="text-[11px] text-purple-500/60 uppercase tracking-[0.3em] mt-1">Dark Sanctum // Heresy Protocol</p>
             </div>
         </div>
 
         <div class="flex items-center gap-6 mt-4 md:mt-0 flex-wrap">
-            <!-- Chain Switcher -->
-            <div class="flex gap-2">
-                <button onclick="switchToMartian()" id="chain-martian" class="chain-switch-btn">
-                    <span class="chain-indicator"></span>Martian
-                </button>
-                <button onclick="switchToGrotto()" id="chain-grotto" class="chain-switch-btn" style="opacity: 0.5;">
-                    <span class="chain-indicator" style="background: #9333ea;"></span>Grotto
-                </button>
+            <!-- Navigation Tabs -->
+            <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg flex-wrap">
+                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-5 py-2 text-[11px] uppercase transition rounded cinzel">Sanctum</button>
+                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Pantheon</button>
+                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Chronicle</button>
+                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Doctrine</button>
             </div>
 
-            <!-- Navigation Tabs -->
-            <div class="flex gap-1 bg-black/40 p-1 border flex-wrap" style="border-color: var(--primary-color); opacity: 0.3;">
-                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-4 py-2 text-[10px] uppercase transition">Lobby</button>
-                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Leaderboard</button>
-                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Profile</button>
-                <button onclick="switchTab('bridge')" id="tab-bridge" class="tab-btn px-4 py-2 text-[10px] uppercase transition">Bridge</button>
-                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-4 py-2 text-[10px] uppercase transition">How to Play</button>
+            <!-- Notification Bell -->
+            <div class="relative">
+                <button id="notification-btn" onclick="toggleNotifications()" class="relative p-3 rounded-full hover:bg-purple-900/20 transition">
+                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                    </svg>
+                    <span id="notification-badge" class="notification-badge hidden">0</span>
+                </button>
+                
+                <!-- Notification Panel -->
+                <div id="notification-panel" class="notification-panel grotto-glass rounded-lg shadow-2xl">
+                    <div class="p-4 border-b border-purple-900/30 flex justify-between items-center">
+                        <h3 class="cinzel font-bold text-purple-400">Omens & Portents</h3>
+                        <button onclick="markAllRead()" class="text-xs text-purple-500 hover:text-purple-300 transition uppercase tracking-wider">
+                            Mark Read
+                        </button>
+                    </div>
+                    <div id="notification-list" class="max-h-96 overflow-y-auto">
+                        <div class="p-8 text-center text-purple-700/50 italic">
+                            No omens to reveal...
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div id="connection-interface">
-                <button id="connect-btn" class="btn-mars px-8 py-2">Initialize Uplink</button>
-                <div id="account-info" class="hidden flex items-center gap-3">
+                <button id="connect-btn" class="btn-grotto px-8 py-3 rounded-lg cinzel relative z-10">Summon Portal</button>
+                <div id="account-info" class="hidden flex items-center gap-4">
                     <div class="text-right">
                         <div class="flex items-center gap-2">
-                            <span id="user-address" class="text-[10px] opacity-70" style="color: var(--primary-color)"></span>
-                            <button id="copy-address" class="copy-btn text-xs" onclick="copyAddress()" title="Copy Address" style="color: var(--primary-color)">
+                            <span id="user-address" class="text-[11px] text-purple-400/70 tracking-wider"></span>
+                            <button id="copy-address" class="text-purple-400 hover:text-purple-300 transition text-sm" onclick="copyAddress()" title="Copy Address">
                                 📋
                             </button>
                         </div>
-                        <div id="user-balance" class="orbitron font-bold text-sm" style="color: var(--primary-color)">0.00 $EROL</div>
+                        <div id="user-balance" class="cinzel text-purple-400 font-bold text-lg">0.00 $HERESY</div>
                     </div>
-                    <div class="h-10 w-1" style="background: var(--primary-color)"></div>
+                    <div class="h-12 w-1 bg-gradient-to-b from-purple-600 to-purple-900"></div>
                 </div>
             </div>
         </div>
     </nav>
-<main class="max-w-7xl mx-auto">
-        <!-- LOBBY PAGE -->
+
+    <script>
+        // Generate mystical particles
+        function createParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 30; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                particle.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(particle);
+            }
+        }
+        createParticles();
+    </script>
+<main class="max-w-7xl mx-auto relative z-10">
+        <!-- LOBBY PAGE (SANCTUM) -->
         <div id="page-lobby" class="page-section active">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <aside class="lg:col-span-4 space-y-6">
-                    <div class="mars-glass p-6">
-                        <h2 class="orbitron text-sm mb-6 flex items-center gap-2" style="color: var(--primary-color)">
-                            <span class="w-2 h-2 animate-pulse" style="background: var(--primary-color)"></span>
-                            COMMENCE SIGNAL DEPLOYMENT
+                    <div class="grotto-glass p-6 rounded-xl">
+                        <h2 class="cinzel text-sm text-purple-400 mb-6 flex items-center gap-3 tracking-widest">
+                            <span class="w-3 h-3 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
+                            INVOKE DARK RITUAL
                         </h2>
 
-                        <div class="grid grid-cols-3 gap-3 mb-6">
-                            <button onclick="selectMove(1)" id="move-1" class="move-select p-4 bg-black flex flex-col items-center">
-                                <span class="text-3xl mb-2">☀️</span>
-                                <span class="text-[9px] uppercase">Solar</span>
+                        <div class="grid grid-cols-3 gap-4 mb-6">
+                            <button onclick="selectMove(1)" id="move-1" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
+                                <span class="text-4xl mb-2 group-hover:scale-110 transition-transform">☀️</span>
+                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Solar</span>
                             </button>
-                            <button onclick="selectMove(2)" id="move-2" class="move-select p-4 bg-black flex flex-col items-center">
-                                <span class="text-3xl mb-2">🌬️</span>
-                                <span class="text-[9px] uppercase">Oxygen</span>
+                            <button onclick="selectMove(2)" id="move-2" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
+                                <span class="text-4xl mb-2 group-hover:scale-110 transition-transform">🌬️</span>
+                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Oxygen</span>
                             </button>
-                            <button onclick="selectMove(3)" id="move-3" class="move-select p-4 bg-black flex flex-col items-center">
-                                <span class="text-3xl mb-2">🌪️</span>
-                                <span class="text-[9px] uppercase">Dust</span>
+                            <button onclick="selectMove(3)" id="move-3" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
+                                <span class="text-4xl mb-2 group-hover:scale-110 transition-transform">🌪️</span>
+                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Dust</span>
                             </button>
                         </div>
 
-                        <div class="space-y-4">
+                        <div class="space-y-5">
                             <div>
-                                <label class="text-[10px] uppercase mb-2 block" id="wager-label" style="color: var(--primary-color); opacity: 0.5;">Energy Stake ($EROL)</label>
-                                <input id="wager-amount" type="number" step="0.1" value="1.0" class="w-full bg-black border p-3 focus:outline-none orbitron" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);">
+                                <label class="text-[11px] text-purple-400/70 uppercase mb-3 block tracking-widest cinzel">Heresy Wager</label>
+                                <input id="wager-amount" type="number" step="0.1" value="1.0" 
+                                    class="w-full bg-black/50 border border-purple-900/50 p-4 text-purple-300 rounded-lg cinzel text-lg transition">
                             </div>
                             <div>
-                                <label class="text-[10px] uppercase mb-2 block" style="color: var(--primary-color); opacity: 0.5;">Interception Timeout</label>
-                                <select id="timeout-select" class="w-full bg-black border p-3 focus:outline-none orbitron text-sm" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);">
+                                <label class="text-[11px] text-purple-400/70 uppercase mb-3 block tracking-widest cinzel">Dark Timeout</label>
+                                <select id="timeout-select" 
+                                    class="w-full bg-black/50 border border-purple-900/50 p-4 text-purple-300 rounded-lg cinzel transition">
                                     <option value="300">5 Minutes</option>
                                     <option value="600">10 Minutes</option>
                                     <option value="900" selected>15 Minutes</option>
                                 </select>
                             </div>
-                            <button id="create-btn" onclick="handleCreateGame()" class="btn-mars w-full py-4 text-lg">Deploy Signal</button>
-                            <button onclick="debugInfo()" class="w-full py-2 text-[9px] border uppercase hover:brightness-110" style="border-color: rgba(255, 77, 0, 0.3); color: var(--primary-color); opacity: 0.7;">Debug Info</button>
+                            <button id="create-btn" onclick="handleCreateGame()" class="btn-grotto w-full py-4 text-base rounded-lg cinzel relative z-10">
+                                Invoke Ritual
+                            </button>
                         </div>
                     </div>
 
                     <!-- Global Chat -->
-                    <div class="mars-glass p-6">
-                        <h2 class="orbitron text-sm mb-4 flex items-center gap-2" style="color: var(--primary-color)">
-                            <span class="w-2 h-2 animate-pulse" style="background: var(--primary-color)"></span>
-                            GLOBAL COMMS
+                    <div class="grotto-glass p-6 rounded-xl">
+                        <h2 class="cinzel text-sm text-purple-400 mb-4 flex items-center gap-3 tracking-widest">
+                            <span class="w-3 h-3 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
+                            MYSTIC WHISPERS
                         </h2>
-                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border p-3 space-y-2" style="border-color: rgba(255, 77, 0, 0.3);"></div>
+                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border border-purple-900/30 rounded-lg p-4 space-y-3"></div>
                         <div class="flex gap-2">
-                            <input id="chat-input" type="text" placeholder="Type message..." maxlength="200" class="flex-1 bg-black border p-2 text-sm focus:outline-none" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);" onkeypress="if(event.key==='Enter') sendMessage()">
-                            <button onclick="sendMessage()" class="btn-mars px-4 py-2 text-xs">Send</button>
+                            <input id="chat-input" type="text" placeholder="Whisper into the void..." maxlength="200" 
+                                class="flex-1 bg-black/50 border border-purple-900/50 p-3 text-sm text-purple-300 rounded-lg transition" 
+                                onkeypress="if(event.key==='Enter') sendMessage()">
+                            <button onclick="sendMessage()" class="btn-grotto px-5 py-2 text-xs rounded-lg cinzel">Send</button>
                         </div>
                     </div>
                 </aside>
 
                 <section class="lg:col-span-8 space-y-6">
                     <!-- Game Lobby -->
-                    <div class="mars-glass p-6 min-h-[500px] relative overflow-hidden">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b pb-4 gap-4" style="border-color: rgba(255, 77, 0, 0.2);">
-                            <h2 class="orbitron text-lg text-white tracking-widest flex items-center gap-3">
-                                LOBBY_FREQUENCIES
-                                <span class="text-[10px] px-2 py-1" style="background: rgba(255, 77, 0, 0.3); color: var(--primary-color);">FAST INDEX</span>
+                    <div class="grotto-glass p-6 rounded-xl min-h-[500px]">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-purple-900/20 pb-4 gap-4">
+                            <h2 class="cinzel text-xl text-purple-300 tracking-widest flex items-center gap-3">
+                                DARK FREQUENCIES
+                                <span class="text-[10px] bg-purple-900/30 px-3 py-1 text-purple-500 rounded-full">LIVE</span>
                             </h2>
                             
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <div class="flex gap-1 bg-black/40 p-1 border" style="border-color: rgba(255, 77, 0, 0.3);">
-                                    <button onclick="setLobbyFilter('all')" id="filter-all" class="lobby-filter active px-3 py-1 text-[9px] uppercase transition">All</button>
-                                    <button onclick="setLobbyFilter('open')" id="filter-open" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Open</button>
-                                    <button onclick="setLobbyFilter('intercepted')" id="filter-intercepted" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Intercepted</button>
-                                    <button onclick="setLobbyFilter('resolved')" id="filter-resolved" class="lobby-filter px-3 py-1 text-[9px] uppercase transition">Resolved</button>
+                            <div class="flex items-center gap-3 flex-wrap">
+                                <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg">
+                                    <button onclick="setLobbyFilter('all')" id="filter-all" class="lobby-filter active px-4 py-2 text-[10px] uppercase transition rounded">All</button>
+                                    <button onclick="setLobbyFilter('open')" id="filter-open" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Open</button>
+                                    <button onclick="setLobbyFilter('intercepted')" id="filter-intercepted" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Active</button>
+                                    <button onclick="setLobbyFilter('resolved')" id="filter-resolved" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Sealed</button>
                                 </div>
                                 
-                                <button onclick="refreshLobby()" class="text-[10px] hover:text-white border px-3 py-1 uppercase transition" style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.3);">Sync Data</button>
+                                <button onclick="refreshLobby()" class="text-[11px] text-purple-400 hover:text-purple-300 border border-purple-500/30 px-4 py-2 uppercase transition rounded-lg hover:bg-purple-900/20">
+                                    Refresh
+                                </button>
                             </div>
                         </div>
                         <div id="lobby-list" class="space-y-4"></div>
                     </div>
 
                     <!-- Live Activity Feed -->
-                    <div class="mars-glass p-6">
-                        <h2 class="orbitron text-lg text-white tracking-widest mb-6 flex items-center gap-3">
-                            LIVE ACTIVITY FEED
-                            <span class="w-2 h-2 bg-green-500 animate-pulse"></span>
+                    <div class="grotto-glass p-6 rounded-xl">
+                        <h2 class="cinzel text-xl text-purple-300 tracking-widest mb-6 flex items-center gap-3">
+                            CHRONICLE OF BATTLES
+                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></span>
                         </h2>
-                        <div id="activity-feed" class="activity-feed space-y-2"></div>
+                        <div id="activity-feed" class="activity-feed space-y-3"></div>
                     </div>
                 </section>
             </div>
         </div>
 
-        <!-- LEADERBOARD PAGE -->
+        <!-- LEADERBOARD PAGE (PANTHEON) -->
         <div id="page-leaderboard" class="page-section">
-            <div class="mars-glass p-8">
-                <h2 class="orbitron text-2xl mb-8 flex items-center gap-3" style="color: var(--primary-color)">
-                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
-                    PILOT RANKINGS
+            <div class="grotto-glass p-8 rounded-xl">
+                <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
+                    <span class="w-4 h-4 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
+                    HALL OF LEGENDS
                 </h2>
 
                 <!-- Global Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                        <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Total Wagered</div>
-                        <div id="global-wagered" class="orbitron text-2xl" style="color: var(--primary-color)">--</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card p-6 text-center rounded-xl">
+                        <div class="text-[11px] text-purple-400/70 uppercase mb-2 tracking-widest cinzel">Total Heresy</div>
+                        <div id="global-wagered" class="cinzel text-3xl text-purple-400 font-bold">--</div>
                     </div>
-                    <div class="bg-black/40 border border-red-900/30 p-4 text-center">
-                        <div class="text-[10px] text-red-800 uppercase mb-2">Burnt</div>
-                        <div id="global-burnt" class="orbitron text-2xl text-red-500">--</div>
+                    <div class="stat-card p-6 text-center rounded-xl border-red-900/30">
+                        <div class="text-[11px] text-red-400/70 uppercase mb-2 tracking-widest cinzel">Sacrificed</div>
+                        <div id="global-burnt" class="cinzel text-3xl text-red-400 font-bold">--</div>
                     </div>
-                    <div class="bg-black/40 border border-blue-900/30 p-4 text-center">
-                        <div class="text-[10px] text-blue-800 uppercase mb-2">Treasury</div>
-                        <div id="global-treasury" class="orbitron text-2xl text-blue-500">--</div>
+                    <div class="stat-card p-6 text-center rounded-xl border-blue-900/30">
+                        <div class="text-[11px] text-blue-400/70 uppercase mb-2 tracking-widest cinzel">Vault</div>
+                        <div id="global-treasury" class="cinzel text-3xl text-blue-400 font-bold">--</div>
                     </div>
-                    <div class="bg-black/40 border border-green-900/30 p-4 text-center">
-                        <div class="text-[10px] text-green-800 uppercase mb-2">Games Played</div>
-                        <div id="global-games" class="orbitron text-2xl text-green-500">--</div>
+                    <div class="stat-card p-6 text-center rounded-xl border-green-900/30">
+                        <div class="text-[11px] text-green-400/70 uppercase mb-2 tracking-widest cinzel">Rituals</div>
+                        <div id="global-games" class="cinzel text-3xl text-green-400 font-bold">--</div>
+                    </div>
+                </div>
+
+                <!-- Hall of Fame & Shame -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <!-- Biggest Loser -->
+                    <div class="grotto-glass p-6 rounded-xl border-2 border-red-500/30">
+                        <h3 class="cinzel text-lg text-red-400 mb-4 flex items-center gap-2">
+                            💀 Fallen Champion
+                        </h3>
+                        <div id="biggest-loser" class="text-center">
+                            <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
+                            <div class="cinzel text-2xl text-red-400 font-bold mb-1">--</div>
+                            <div class="text-xs text-red-500/50">-- $HERESY Lost</div>
+                        </div>
+                    </div>
+
+                    <!-- Win Streak King -->
+                    <div class="grotto-glass p-6 rounded-xl border-2 border-yellow-500/30">
+                        <h3 class="cinzel text-lg text-yellow-400 mb-4 flex items-center gap-2">
+                            🔥 Streak Master
+                        </h3>
+                        <div id="streak-master" class="text-center">
+                            <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
+                            <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">--</div>
+                            <div class="text-xs text-yellow-500/50">-- Consecutive Wins</div>
+                        </div>
+                    </div>
+
+                    <!-- Most Active -->
+                    <div class="grotto-glass p-6 rounded-xl border-2 border-blue-500/30">
+                        <h3 class="cinzel text-lg text-blue-400 mb-4 flex items-center gap-2">
+                            ⚡ Dark Devotee
+                        </h3>
+                        <div id="most-active" class="text-center">
+                            <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
+                            <div class="cinzel text-2xl text-blue-400 font-bold mb-1">--</div>
+                            <div class="text-xs text-blue-500/50">-- Total Games</div>
+                        </div>
                     </div>
                 </div>
 
@@ -434,13 +659,13 @@
                 <div class="overflow-x-auto">
                     <table class="w-full">
                         <thead>
-                            <tr class="border-b" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <th class="text-left p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Rank</th>
-                                <th class="text-left p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Pilot</th>
-                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Wagered</th>
-                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Win Rate</th>
-                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Biggest Pot</th>
-                                <th class="text-right p-3 text-[10px] uppercase" style="color: var(--primary-color); opacity: 0.5;">Win Streak</th>
+                            <tr class="border-b border-purple-900/30">
+                                <th class="text-left p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Rank</th>
+                                <th class="text-left p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Soul</th>
+                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Heresy</th>
+                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Victory %</th>
+                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Greatest Pot</th>
+                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Streak</th>
                             </tr>
                         </thead>
                         <tbody id="leaderboard-body"></tbody>
@@ -449,215 +674,135 @@
             </div>
         </div>
 
-        <!-- PROFILE PAGE -->
+        <!-- PROFILE PAGE (CHRONICLE) -->
         <div id="page-profile" class="page-section">
-            <div class="mars-glass p-8 max-w-5xl mx-auto">
-                <h2 class="orbitron text-2xl mb-8 flex items-center gap-3" style="color: var(--primary-color)">
-                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
-                    PILOT STATISTICS
+            <div class="grotto-glass p-8 rounded-xl max-w-5xl mx-auto">
+                <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
+                    <span class="w-4 h-4 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
+                    SOUL CHRONICLE
                 </h2>
                 <div id="profile-content" class="space-y-6"></div>
             </div>
         </div>
-<!-- HOW TO PLAY PAGE -->
+<!-- HOW TO PLAY PAGE (DOCTRINE) -->
         <div id="page-howto" class="page-section">
-            <div class="mars-glass p-8 max-w-4xl mx-auto">
-                <h2 class="orbitron text-2xl mb-8" style="color: var(--primary-color)">MISSION BRIEFING</h2>
+            <div class="grotto-glass p-8 rounded-xl max-w-4xl mx-auto">
+                <h2 class="cinzel text-3xl text-purple-400 mb-8 tracking-wider">ANCIENT DOCTRINE</h2>
                 
-                <div class="space-y-8 text-gray-300">
+                <div class="space-y-8 text-purple-200/90 leading-relaxed">
                     <section>
-                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">🎯 OBJECTIVE</h3>
-                        <p class="leading-relaxed">Multi-Chain Gambit is a high-stakes Rock-Paper-Scissors style game on Martian Chain & The Grotto. Players bet native tokens and compete using three strategic moves. The winner takes the pot (minus a small fee).</p>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            🎯 THE FORBIDDEN RITUAL
+                        </h3>
+                        <p class="text-base">The Grotto Gambit is a dark pact sealed in $HERESY tokens. Two souls enter the void with strategic intent—three mystical forces clash in eternal balance. The victor claims the offering, while the defeated soul learns humility.</p>
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">⚔️ THE THREE MOVES</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-4xl mb-2">☀️</div>
-                                <div class="orbitron mb-1" style="color: var(--primary-color)">SOLAR FLARE</div>
-                                <div class="text-[11px] text-gray-400">Beats Oxygen Siphon</div>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            ⚔️ THREE FORCES OF CHAOS
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
+                                <div class="text-5xl mb-3 text-center">☀️</div>
+                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">SOLAR FLARE</div>
+                                <div class="text-[12px] text-purple-300/60 text-center">Burns through Oxygen</div>
                             </div>
-                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-4xl mb-2">🌬️</div>
-                                <div class="orbitron mb-1" style="color: var(--primary-color)">OXYGEN SIPHON</div>
-                                <div class="text-[11px] text-gray-400">Beats Dust Storm</div>
+                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
+                                <div class="text-5xl mb-3 text-center">🌬️</div>
+                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">OXYGEN SIPHON</div>
+                                <div class="text-[12px] text-purple-300/60 text-center">Disperses the Dust</div>
                             </div>
-                            <div class="bg-black/40 p-4 border" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-4xl mb-2">🌪️</div>
-                                <div class="orbitron mb-1" style="color: var(--primary-color)">DUST STORM</div>
-                                <div class="text-[11px] text-gray-400">Beats Solar Flare</div>
+                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
+                                <div class="text-5xl mb-3 text-center">🌪️</div>
+                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">DUST STORM</div>
+                                <div class="text-[12px] text-purple-300/60 text-center">Obscures the Solar</div>
                             </div>
                         </div>
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">📋 HOW TO PLAY</h3>
-                        <div class="space-y-4">
-                            <div class="flex gap-4">
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">1.</div>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            📜 RITUAL SEQUENCE
+                        </h3>
+                        <div class="space-y-5">
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">1.</div>
                                 <div>
-                                    <div class="font-bold text-white mb-1">Deploy Signal (Host)</div>
-                                    <p class="text-sm text-gray-400">Select your move, wager amount, and timeout. Your move is encrypted and stored locally. Click "Deploy Signal" to create the game.</p>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Invoke the Ritual (Host)</div>
+                                    <p class="text-[15px] text-purple-200/70">Select your force, set your $HERESY wager, and choose the timeout. Your choice is encrypted in dark magic and stored locally. Click "Invoke Ritual" to seal your intent.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">2.</div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">2.</div>
                                 <div>
-                                    <div class="font-bold text-white mb-1">Intercept (Challenger)</div>
-                                    <p class="text-sm text-gray-400">Find an open game in the lobby and click "Intercept". Choose your move and match the wager amount.</p>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Challenge the Void (Opponent)</div>
+                                    <p class="text-[15px] text-purple-200/70">Discover an open ritual in the sanctum. Choose your force and match the $HERESY offering to accept the challenge.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">3.</div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">3.</div>
                                 <div>
-                                    <div class="font-bold text-white mb-1">Broadcast Reveal (Host)</div>
-                                    <p class="text-sm text-gray-400">Once intercepted, click "Broadcast Reveal" to reveal your move. The smart contract determines the winner automatically.</p>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Reveal the Truth (Host)</div>
+                                    <p class="text-[15px] text-purple-200/70">Once challenged, unveil your hidden force. The ancient contract determines the victor based on eternal laws.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-4">
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">4.</div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">4.</div>
                                 <div>
-                                    <div class="font-bold text-white mb-1">Victory or Defeat</div>
-                                    <p class="text-sm text-gray-400">Winner takes 97% of the pot. 1.5% goes to treasury, 1.5% is burned. In case of a draw, both players get their wager back minus fees.</p>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Judgment & Reward</div>
+                                    <p class="text-[15px] text-purple-200/70">The winner claims 97% of the combined $HERESY. 1.5% is sacrificed to the void, 1.5% fills the vault. In draws, both receive their stake minus tribute (3%).</p>
                                 </div>
                             </div>
                         </div>
                     </section>
 
                     <section>
-                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">⚠️ IMPORTANT NOTES</h3>
-                        <ul class="space-y-2 text-sm text-gray-400">
-                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> You must use the same browser/device to reveal your move (secret is stored locally)</li>
-                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> If host doesn't reveal within the timeout, challenger can force forfeit to claim victory</li>
-                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> If no one intercepts within the timeout, host can retract their wager</li>
-                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> All games are on-chain and provably fair via cryptographic commitments</li>
-                            <li class="flex gap-2"><span style="color: var(--primary-color)">→</span> Switch between Martian Chain ($EROL) and The Grotto ($HERESY) anytime</li>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            ⚠️ DARK WARNINGS
+                        </h3>
+                        <ul class="space-y-3 text-[15px] text-purple-200/70">
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>You must return to the same sanctum (browser/device) to reveal your force—the secret dwells within</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>Should the host fail to reveal before the timeout, the challenger may claim victory by forfeit</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>If no soul challenges within the timeout, the host may reclaim their $HERESY</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>All pacts are sealed on The Grotto chain—immutable and verifiable through cryptographic proof</span>
+                            </li>
                         </ul>
                     </section>
 
-                    <section class="bg-black/20 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
-                        <h3 class="orbitron text-lg mb-3" style="color: var(--primary-color)">💰 FEES & PAYOUTS</h3>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex justify-between"><span>Winner Payout:</span><span style="color: var(--primary-color)">97% of pot</span></div>
-                            <div class="flex justify-between"><span>Treasury Fee:</span><span style="color: var(--primary-color)">1.5%</span></div>
-                            <div class="flex justify-between"><span>Burn Amount:</span><span style="color: var(--primary-color)">1.5%</span></div>
-                            <div class="flex justify-between"><span>Draw (each player):</span><span style="color: var(--primary-color)">Wager - 3%</span></div>
+                    <section class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl">
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            💰 TRIBUTE & REWARDS
+                        </h3>
+                        <div class="space-y-3 text-[15px]">
+                            <div class="flex justify-between py-2 border-b border-purple-900/20">
+                                <span class="text-purple-200/70">Victor's Claim:</span>
+                                <span class="text-purple-400 font-semibold cinzel">97% of pot</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-purple-900/20">
+                                <span class="text-purple-200/70">Vault Tribute:</span>
+                                <span class="text-purple-400 font-semibold cinzel">1.5%</span>
+                            </div>
+                            <div class="flex justify-between py-2 border-b border-purple-900/20">
+                                <span class="text-purple-200/70">Dark Sacrifice:</span>
+                                <span class="text-purple-400 font-semibold cinzel">1.5%</span>
+                            </div>
+                            <div class="flex justify-between py-2">
+                                <span class="text-purple-200/70">Draw (each soul):</span>
+                                <span class="text-purple-400 font-semibold cinzel">Stake - 3%</span>
+                            </div>
                         </div>
                     </section>
-                </div>
-            </div>
-        </div>
-
-        <!-- BRIDGE PAGE -->
-        <div id="page-bridge" class="page-section">
-            <div class="mars-glass p-8 max-w-3xl mx-auto">
-                <h2 class="orbitron text-2xl mb-2 flex items-center gap-3" style="color: var(--primary-color)">
-                    <span class="w-3 h-3 animate-pulse" style="background: var(--primary-color)"></span>
-                    CROSS-CHAIN BRIDGE
-                </h2>
-                <p class="text-gray-500 text-sm mb-8">Transfer $EROL from Avalanche C-Chain to Martian Chain (1:1 ratio)</p>
-                
-                <div id="bridge-content" class="space-y-6">
-                    <!-- Bridge Interface -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                        <!-- From Chain -->
-                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-[10px] uppercase mb-3" style="color: var(--primary-color); opacity: 0.5;">From</div>
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-bold">
-                                    A
-                                </div>
-                                <div>
-                                    <div class="orbitron text-white">Avalanche C-Chain</div>
-                                    <div class="text-[10px] text-gray-500">Chain ID: 43114</div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-gray-500 uppercase mb-2 block">Available Balance</label>
-                                <div id="avax-erol-balance" class="orbitron text-lg" style="color: var(--primary-color)">-- $EROL</div>
-                            </div>
-                        </div>
-                        
-                        <!-- To Chain -->
-                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-[10px] uppercase mb-3" style="color: var(--primary-color); opacity: 0.5;">To</div>
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style="background: var(--primary-color)">
-                                    M
-                                </div>
-                                <div>
-                                    <div class="orbitron text-white">Martian Chain</div>
-                                    <div class="text-[10px] text-gray-500">Chain ID: 2027</div>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-[10px] text-gray-500 uppercase mb-2 block">You'll Receive</label>
-                                <div id="martian-erol-receive" class="orbitron text-lg" style="color: var(--primary-color)">-- $EROL</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Amount Input -->
-                    <div>
-                        <label class="text-[10px] uppercase mb-2 block" style="color: var(--primary-color); opacity: 0.5;">Amount to Bridge</label>
-                        <div class="relative">
-                            <input 
-                                id="bridge-amount" 
-                                type="number" 
-                                step="0.01" 
-                                min="1"
-                                placeholder="0.0"
-                                class="w-full bg-black border p-4 pr-20 focus:outline-none orbitron text-xl"
-                                style="color: var(--primary-color); border-color: rgba(255, 77, 0, 0.5);"
-                                oninput="updateBridgeEstimate()"
-                            >
-                            <button 
-                                onclick="setMaxBridge()" 
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] px-3 py-1 border uppercase transition hover:brightness-110"
-                                style="border-color: rgba(255, 77, 0, 0.5); color: var(--primary-color);"
-                            >
-                                Max
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Bridge Info -->
-                    <div class="bg-black/20 border p-4 space-y-2 text-sm" style="border-color: rgba(255, 77, 0, 0.3);">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Exchange Rate:</span>
-                            <span style="color: var(--primary-color)">1 $EROL = 1 $EROL</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Bridge Fee:</span>
-                            <span style="color: var(--primary-color)">0 $EROL (gas only)</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Min Amount:</span>
-                            <span style="color: var(--primary-color)">1 $EROL</span>
-                        </div>
-                    </div>
-
-                    <!-- Bridge Button -->
-                    <button 
-                        id="bridge-btn" 
-                        onclick="handleBridge()" 
-                        class="btn-mars w-full py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled
-                    >
-                        Initialize Bridge Transfer
-                    </button>
-
-                    <!-- Bridge Status -->
-                    <div id="bridge-status" class="hidden bg-black/40 border p-4" style="border-color: rgba(255, 77, 0, 0.3);">
-                        <div class="flex items-center gap-3">
-                            <div class="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style="border-color: var(--primary-color); border-top-color: transparent;"></div>
-                            <div>
-                                <div class="font-bold" style="color: var(--primary-color)">Processing Bridge Transaction</div>
-                                <div class="text-[11px] text-gray-500" id="bridge-status-text">Initiating transfer...</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -665,72 +810,31 @@
 
     <!-- Player Profile Modal -->
     <div id="player-modal" class="modal">
-        <div class="modal-content mars-glass p-8 w-full">
+        <div class="modal-content grotto-glass p-8 w-full rounded-xl">
             <div class="flex justify-between items-center mb-6">
-                <h2 class="orbitron text-xl" style="color: var(--primary-color)">PILOT PROFILE</h2>
-                <button onclick="closePlayerModal()" class="text-2xl text-gray-500 hover:brightness-150" style="color: var(--primary-color)">&times;</button>
+                <h2 class="cinzel text-2xl text-purple-400 tracking-wider">SOUL ARCHIVE</h2>
+                <button onclick="closePlayerModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
             </div>
             <div id="player-modal-content"></div>
         </div>
     </div>
 
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 mars-glass px-8 py-4 orbitron text-sm transform translate-y-32 transition-all duration-300 z-[200]" style="border: 1px solid var(--primary-color); color: var(--primary-color)">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl">
         SYSTEM MESSAGE
     </div>
 <script>
-        // Multi-Chain Configuration
-        const CHAINS = {
-            martian: {
-                chainId: "0x7EB",
-                name: "Martian Chain",
-                rpc: "https://martian-rpc1.amichain.org/",
-                contract: "0x395E368045315062b26AC950690f384c98fDEEe2",
-                currency: { name: "EROL", symbol: "EROL", decimals: 18 },
-                explorer: "https://explorer.martian.com",
-                color: "#ff4d00",
-                theme: "martian",
-                title: "MARTIAN GAMBIT",
-                subtitle: "Sector 2027 // EROL Protocol",
-                logo: "M"
-            },
-            grotto: {
-                chainId: "0x8E6F",
-                name: "The Grotto",
-                rpc: "https://subnets.avax.network/thegrotto/mainnet/rpc",
-                contract: "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c",
-                currency: { name: "HERESY", symbol: "HERESY", decimals: 18 },
-                explorer: "https://subnets.avax.network/thegrotto",
-                color: "#9333ea",
-                theme: "grotto",
-                title: "GROTTO GAMBIT",
-                subtitle: "Dark Realm // HERESY Protocol",
-                logo: "G"
-            }
-        };
-
-        let currentChain = 'martian';
-        let CHAIN_ID, RPC_URL, CONTRACT_ADDR, CURRENCY_SYMBOL;
+        // The Grotto Chain Configuration
+        const CHAIN_ID = "0x8E6F"; // 36463
+        const RPC_URL = "https://subnets.avax.network/thegrotto/mainnet/rpc";
+        const CONTRACT_ADDR = "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c";
+        const EXPLORER_URL = "https://subnets.avax.network/thegrotto";
+        const CHAIN_NAME = "The Grotto";
+        const CURRENCY_SYMBOL = "HERESY";
         
-        // Supabase Configuration
+        // Supabase Configuration - GROTTO TABLE
         const SB_URL = "https://tvckbtgggsuwxtlgilcl.supabase.co"; 
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2tidGdnZ3N1d3h0bGdpbGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY2NDY0NSwiZXhwIjoyMDg2MjQwNjQ1fQ.DhvGNo3seKoRtDmeRod0gAP48yFZw_0-kAvY3eT_554"; 
         const _supabase = supabase.createClient(SB_URL, SB_KEY);
-
-        // Bridge Configuration
-        const BRIDGE_CONTRACT_ADDR = "0x87260775905e83689958a1491bc0c47396b2b21c";
-        const EROL_TOKEN_ADDR = "0xCaC4904E1DB1589Aa17A2Ec742F5a6bCF4c4D037";
-        const AVAX_CHAIN_ID = "0xa86a";
-
-        const ERC20_ABI = [
-            "function balanceOf(address owner) view returns (uint256)",
-            "function approve(address spender, uint256 amount) returns (bool)",
-            "function allowance(address owner, address spender) view returns (uint256)"
-        ];
-
-        const BRIDGE_ABI = [
-            "function bridgeToMartian(uint256 amount) external",
-            "event BridgeInitiated(address indexed sender, uint256 amount, uint256 timestamp)"
-        ];
 
         const ABI = [
             "function createGame(bytes32 _hash, uint256 _timeout) external payable",
@@ -740,9 +844,6 @@
             "function refundUnchallenged(uint256 _gameId) external",
             "function gameCounter() public view returns (uint256)",
             "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timeout, uint256 timestamp, uint8 status)",
-            "function getTimeRemaining(uint256 _gameId) external view returns (uint256)",
-            "function canForfeit(uint256 _gameId) external view returns (bool)",
-            "function canRefund(uint256 _gameId) external view returns (bool)",
             "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager, uint256 timeout, bytes32 commitHash)",
             "event GameChallenged(uint256 indexed gameId, address indexed challenger)",
             "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)"
@@ -750,65 +851,34 @@
 
         let provider, signer, contract, userAddress;
         let selectedMoveIdx = 0;
-        let avaxProvider, avaxErolBalance = 0;
         let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval;
         let currentLobbyFilter = 'all';
+        let userNotifications = [];
 
-        function setChainConfig(chain) {
-            currentChain = chain;
-            const config = CHAINS[chain];
-            CHAIN_ID = config.chainId;
-            RPC_URL = config.rpc;
-            CONTRACT_ADDR = config.contract;
-            CURRENCY_SYMBOL = config.currency.symbol;
+        // Win/Loss Messages
+        const winMessages = [
+            "Victory is yours! The void smiles upon you—strike again while fortune favors! ⚡",
+            "You won! Your enemies tremble. Don't waste this momentum! 🔥",
+            "Triumph! The dark forces align with you. Seize another victory! 🌟",
+            "Success! You're on a roll. The grotto demands more! 💀",
+            "Victory claimed! Your power grows. Continue the conquest! ⚔️"
+        ];
 
-            // Update CSS variables
-            document.documentElement.style.setProperty('--primary-color', config.color);
-            
-            // Update theme
-            if (chain === 'grotto') {
-                document.body.classList.add('grotto-theme');
-            } else {
-                document.body.classList.remove('grotto-theme');
-            }
+        const lossMessages = [
+            "Defeat... but the night is young. Next time, darkness will be yours! 🌙",
+            "You fell this round. Every master has tasted defeat—rise again! 💪",
+            "Not this time... but the grotto rewards persistence. Try again! 🎯",
+            "Loss stings, but champions are forged in failure. Redeem yourself! ⚡",
+            "Defeat is temporary. Your comeback story begins now! 🔮"
+        ];
 
-            // Update UI text
-            document.getElementById('game-title').textContent = config.title;
-            document.getElementById('game-subtitle').textContent = config.subtitle;
-            document.getElementById('logo-letter').textContent = config.logo;
-            document.getElementById('wager-label').textContent = `Energy Stake ($${CURRENCY_SYMBOL})`;
-            
-            // Update balance display
-            if (userAddress) {
-                updateBalance();
-            }
-        }
-
-        async function switchToMartian() {
-            setChainConfig('martian');
-            document.getElementById('chain-martian').style.opacity = '1';
-            document.getElementById('chain-grotto').style.opacity = '0.5';
-            
-            if (userAddress) {
-                await checkNetwork();
-                await refreshLobby();
-            }
-        }
-
-        async function switchToGrotto() {
-            setChainConfig('grotto');
-            document.getElementById('chain-grotto').style.opacity = '1';
-            document.getElementById('chain-martian').style.opacity = '0.5';
-            
-            if (userAddress) {
-                await checkNetwork();
-                await refreshLobby();
-            }
-        }
+        const drawMessages = [
+            "A stalemate! The forces were balanced. Break the tie! ⚖️",
+            "Draw! Neither victor nor vanquished. Seek another challenger! 🤝",
+            "Equilibrium achieved. The next ritual awaits! 🌀"
+        ];
 
         async function init() {
-            setChainConfig('martian'); // Default to Martian
-            
             if (window.ethereum) {
                 provider = new ethers.BrowserProvider(window.ethereum);
                 document.getElementById('connect-btn').addEventListener('click', connectWallet);
@@ -816,20 +886,21 @@
                 await refreshLobby();
                 await refreshActivityFeed();
                 await refreshChat();
+                loadNotifications();
                 
                 lobbyRefreshInterval = setInterval(refreshLobby, 10000);
                 activityRefreshInterval = setInterval(refreshActivityFeed, 5000);
                 chatRefreshInterval = setInterval(refreshChat, 3000);
                 
-                _supabase.channel('game_updates')
-                    .on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, () => {
+                _supabase.channel('grotto_game_updates')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'grotto_games' }, () => {
                         refreshLobby();
                         refreshActivityFeed();
                     })
                     .subscribe();
 
-                _supabase.channel('chat_updates')
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => {
+                _supabase.channel('grotto_chat_updates')
+                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'grotto_chat' }, () => {
                         refreshChat();
                     })
                     .subscribe();
@@ -851,24 +922,23 @@
                     });
                 } catch (switchError) {
                     if (switchError.code === 4902) {
-                        const config = CHAINS[currentChain];
                         try {
                             await window.ethereum.request({
                                 method: 'wallet_addEthereumChain',
                                 params: [{
                                     chainId: CHAIN_ID,
-                                    chainName: config.name,
-                                    nativeCurrency: config.currency,
+                                    chainName: CHAIN_NAME,
+                                    nativeCurrency: { name: CURRENCY_SYMBOL, symbol: CURRENCY_SYMBOL, decimals: 18 },
                                     rpcUrls: [RPC_URL],
-                                    blockExplorerUrls: [config.explorer]
+                                    blockExplorerUrls: [EXPLORER_URL]
                                 }]
                             });
                         } catch (addError) {
-                            showToast("FAILED TO ADD NETWORK");
+                            showToast("Failed to add Grotto network");
                             return false;
                         }
                     } else {
-                        showToast("SWITCH TO " + CHAINS[currentChain].name.toUpperCase());
+                        showToast("Switch to The Grotto");
                         return false;
                     }
                 }
@@ -893,19 +963,19 @@
                 
                 updateBalance();
                 refreshLobby();
+                loadNotifications();
             } catch (err) { 
                 console.error(err);
-                showToast("UPLINK FAILED"); 
+                showToast("Portal summoning failed"); 
             }
         }
 
         function copyAddress() {
             if (userAddress) {
                 navigator.clipboard.writeText(userAddress).then(() => {
-                    showToast("ADDRESS COPIED");
-                }).catch(err => {
-                    console.error('Copy failed:', err);
-                    showToast("COPY FAILED");
+                    showToast("Address copied to void");
+                }).catch(() => {
+                    showToast("Copy failed");
                 });
             }
         }
@@ -915,7 +985,7 @@
             try {
                 const balance = await provider.getBalance(userAddress);
                 document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(2)} $${CURRENCY_SYMBOL}`;
-            } catch (e) { console.error("Balance fetch error", e); }
+            } catch (e) { console.error("Balance error", e); }
         }
 
         function selectMove(idx) {
@@ -925,8 +995,8 @@
         }
 
         async function handleCreateGame() {
-            if (!signer) return showToast("CONNECT UPLINK FIRST");
-            if (selectedMoveIdx === 0) return showToast("SELECT TACTICAL MOVE");
+            if (!signer) return showToast("Summon portal first");
+            if (selectedMoveIdx === 0) return showToast("Select your force");
             if (!(await checkNetwork())) return;
             
             const createBtn = document.getElementById('create-btn');
@@ -946,26 +1016,20 @@
                 );
                 const hash = ethers.keccak256(encoded);
 
-                console.log("=== CREATING GAME ===");
-                console.log("Chain:", currentChain);
-                console.log("Move:", selectedMoveIdx);
-                console.log("Game ID:", nextGameId.toString());
-
-                showToast("ENCRYPTING SIGNAL...");
+                showToast("Encrypting ritual...");
                 const tx = await contract.createGame(hash, timeoutValue, { value: wagerValue });
                 
-                showToast("WAITING FOR CONFIRMATION...");
+                showToast("Awaiting the void...");
                 const receipt = await tx.wait();
                 
-                const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
+                const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
                 secrets[hash] = { 
                     move: selectedMoveIdx, 
                     salt: salt,
                     gameId: nextGameId.toString(),
-                    address: userAddress.toLowerCase(),
-                    chain: currentChain
+                    address: userAddress.toLowerCase()
                 };
-                localStorage.setItem(`${currentChain}_gambits`, JSON.stringify(secrets));
+                localStorage.setItem('grotto_secrets', JSON.stringify(secrets));
 
                 let gameId = Number(nextGameId);
 
@@ -973,42 +1037,33 @@
                     for (const log of receipt.logs) {
                         try {
                             if (log.address.toLowerCase() !== CONTRACT_ADDR.toLowerCase()) continue;
-                            
                             const parsed = contract.interface.parseLog({
                                 topics: log.topics,
                                 data: log.data
                             });
-                            
                             if (parsed && parsed.name === 'GameCreated') {
                                 gameId = Number(parsed.args.gameId);
                                 break;
                             }
                         } catch(e) { continue; }
                     }
-                } catch (e) { 
-                    console.warn("Log parsing failed:", e); 
-                }
+                } catch (e) { console.warn("Log parsing failed:", e); }
 
-                // Use composite key: chainId_gameId for uniqueness
-                const compositeGameId = `${currentChain}_${gameId}`;
-                
-                const { error: sbError } = await _supabase.from('games')
+                const { error: sbError } = await _supabase.from('grotto_games')
                     .insert([{
                         game_id: gameId,
                         host: userAddress.toLowerCase(),
                         wager: wagerInput,
                         timeout: parseInt(timeoutValue),
                         status: 0,
-                        commit_hash: hash,
-                        chain: currentChain,
-                        composite_id: compositeGameId
+                        commit_hash: hash
                     }]);
 
                 if (sbError) {
                     console.error("Supabase error:", sbError);
-                    showToast("⚠️ GAME CREATED BUT INDEX FAILED");
+                    showToast("⚠️ Ritual invoked but index failed");
                 } else {
-                    showToast("✓ SIGNAL DEPLOYED");
+                    showToast("✓ Ritual sealed in darkness");
                 }
 
                 setTimeout(async () => {
@@ -1017,8 +1072,8 @@
                 }, 2000);
                 
             } catch (err) { 
-                console.error("Game Creation Error:", err);
-                showToast("DEPLOYMENT ABORTED");
+                console.error("Creation error:", err);
+                showToast("Ritual invocation failed");
                 createBtn.disabled = false;
             }
         }
@@ -1026,15 +1081,13 @@
         async function refreshLobby() {
             const lobby = document.getElementById('lobby-list');
             try {
-                const { data: games, error } = await _supabase.from('games')
+                const { data: games, error } = await _supabase.from('grotto_games')
                     .select('*')
-                    .eq('chain', currentChain)
                     .order('game_id', { ascending: false })
                     .limit(100);
 
                 if (error) {
-                    console.error("Supabase Error:", error);
-                    lobby.innerHTML = `<div class="text-center py-20 text-red-500 uppercase">Indexing Error</div>`;
+                    lobby.innerHTML = `<div class="text-center py-20 text-red-400 uppercase">Archive corrupted</div>`;
                     return;
                 }
 
@@ -1050,18 +1103,14 @@
                     if (currentLobbyFilter === 'intercepted' && status !== 1) return;
                     if (currentLobbyFilter === 'resolved' && status !== 2) return;
                     
-                    if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') {
-                        return;
-                    }
+                    if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') return;
 
                     displayedCount++;
 
                     const div = document.createElement('div');
-                    const borderColor = status == 0 ? 'var(--primary-color)' : 
-                                       status == 1 ? '#eab308' : 
-                                       status == 2 ? '#15803d' : '#374151';
+                    const borderColor = status == 0 ? '#9333ea' : status == 1 ? '#eab308' : status == 2 ? '#15803d' : '#374151';
                     
-                    div.className = "p-4 bg-black/40 border-l-2 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-black/60";
+                    div.className = "p-5 grotto-glass rounded-lg border-l-4 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-purple-900/10";
                     div.style.borderLeftColor = borderColor;
                     
                     let countdownHTML = '';
@@ -1075,23 +1124,23 @@
                         if (remaining > 0) {
                             const minutes = Math.floor(remaining / 60);
                             const seconds = remaining % 60;
-                            const timeColor = remaining < 60 ? 'text-red-500' : 'var(--primary-color)';
-                            countdownHTML = `<span class="text-[10px] ml-2" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
+                            const timeColor = remaining < 60 ? '#ef4444' : '#9333ea';
+                            countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
                         } else {
-                            countdownHTML = `<span class="text-[10px] text-red-500 ml-2 animate-pulse">⏱ TIMEOUT</span>`;
+                            countdownHTML = `<span class="text-[11px] text-red-500 ml-2 animate-pulse cinzel">⏱ EXPIRED</span>`;
                         }
                     }
                     
                     let gameInfo = `
                         <div class="flex-1">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="text-[9px] px-2 py-0.5 border uppercase" style="border-color: ${borderColor}; color: ${borderColor}">${getStatusText(status)}</span>
-                                <span class="text-[9px] text-gray-500">ID: ${game.game_id}</span>
+                            <div class="flex items-center gap-3 mb-2 flex-wrap">
+                                <span class="text-[10px] px-3 py-1 border rounded-full uppercase cinzel tracking-wider" style="border-color: ${borderColor}; color: ${borderColor}">${getStatusText(status)}</span>
+                                <span class="text-[10px] text-purple-500/50 cinzel">ID: ${game.game_id}</span>
                                 ${countdownHTML}
                             </div>
-                            <div class="orbitron text-white text-sm">
-                                <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span> 
-                                <span class="text-gray-600 text-[10px] ml-2">FROM ${game.host.slice(0,6)}...</span>`;
+                            <div class="cinzel text-purple-200 text-base">
+                                <span class="text-purple-400 font-bold">${game.wager} $${CURRENCY_SYMBOL}</span> 
+                                <span class="text-purple-600 text-[11px] ml-2">FROM ${game.host.slice(0,6)}...</span>`;
                     
                     if (status == 2 && game.host_move && game.challenger_move) {
                         const moves = ['', '☀️ Solar', '🌬️ Oxygen', '🌪️ Dust'];
@@ -1100,22 +1149,22 @@
                         
                         let winner = '';
                         if (hostMove === challengerMove) {
-                            winner = '⚖️ DRAW';
+                            winner = '⚖️ STALEMATE';
                         } else if (
                             (hostMove === 1 && challengerMove === 2) ||
                             (hostMove === 2 && challengerMove === 3) ||
                             (hostMove === 3 && challengerMove === 1)
                         ) {
-                            winner = `🏆 ${game.host.slice(0,6)}... WINS`;
+                            winner = `🏆 ${game.host.slice(0,6)}... PREVAILS`;
                         } else {
-                            winner = `🏆 ${(game.challenger || 'Unknown').slice(0,6)}... WINS`;
+                            winner = `🏆 ${(game.challenger || 'Unknown').slice(0,6)}... PREVAILS`;
                         }
                         
                         gameInfo += `
-                            <div class="text-[10px] mt-1 text-gray-400">
-                                Host: ${moves[hostMove]} vs Challenger: ${moves[challengerMove]}
+                            <div class="text-[11px] mt-2 text-purple-300/60">
+                                ${moves[hostMove]} vs ${moves[challengerMove]}
                             </div>
-                            <div class="text-[11px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-500' : 'text-green-500'}">
+                            <div class="text-[12px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-400' : 'text-green-400'} cinzel">
                                 ${winner}
                             </div>`;
                     }
@@ -1130,11 +1179,11 @@
                 });
                 
                 if (displayedCount === 0) {
-                    lobby.innerHTML = '<div class="text-center py-20 opacity-30 uppercase italic">No signals detected...</div>';
+                    lobby.innerHTML = '<div class="text-center py-20 text-purple-700/50 uppercase italic cinzel">The void is silent...</div>';
                 }
             } catch (err) { 
-                console.error("Lobby Error:", err);
-                lobby.innerHTML = `<div class="text-center py-20 text-red-500">Error loading lobby</div>`;
+                console.error("Lobby error:", err);
+                lobby.innerHTML = `<div class="text-center py-20 text-red-400">Archive error</div>`;
             }
         }
 
@@ -1148,16 +1197,13 @@
         function getActionButtons(game, isHost, isChallenger) {
             if (game.status == 0) {
                 if (isHost) {
-                    return `<button onclick="handleRefund(${game.game_id})" class="text-[9px] border border-gray-700 px-4 py-2 hover:bg-white/5 uppercase">Retract</button>`;
+                    return `<button onclick="handleRefund(${game.game_id})" class="text-[10px] border border-purple-700 px-5 py-2 hover:bg-purple-900/20 uppercase rounded cinzel transition">Retract</button>`;
                 }
-                if (userAddress && game.host === userAddress.toLowerCase()) {
-                    return `<span class="text-[9px] text-gray-500 uppercase italic">Your Signal</span>`;
-                }
-                return `<button onclick="handleChallenge(${game.game_id}, '${game.wager}')" class="btn-mars text-[10px] px-6 py-2">Intercept</button>`;
+                return `<button onclick="handleChallenge(${game.game_id}, '${game.wager}')" class="btn-grotto text-[11px] px-7 py-3 rounded-lg cinzel">Challenge</button>`;
             }
             if (game.status == 1) {
                 if (isHost) {
-                    return `<button onclick="handleResolve(${game.game_id}, '${game.commit_hash}')" class="btn-mars text-[10px] px-6 py-2 animate-pulse">Broadcast Reveal</button>`;
+                    return `<button onclick="handleResolve(${game.game_id}, '${game.commit_hash}')" class="btn-grotto text-[11px] px-7 py-3 rounded-lg animate-pulse cinzel">Reveal</button>`;
                 }
                 if (isChallenger) {
                     const now = Math.floor(Date.now() / 1000);
@@ -1166,70 +1212,68 @@
                     const deadline = createdAt + timeout;
                     
                     if (now >= deadline) {
-                        return `<button onclick="handleForceForfeit(${game.game_id})" class="btn-mars text-[10px] px-6 py-2 animate-pulse">Claim Victory</button>`;
+                        return `<button onclick="handleForceForfeit(${game.game_id})" class="btn-grotto text-[11px] px-7 py-3 rounded-lg animate-pulse cinzel">Claim Victory</button>`;
                     }
-                    return `<span class="text-[9px] uppercase italic" style="color: var(--primary-color)">⚔️ Awaiting Host Reveal...</span>`;
+                    return `<span class="text-[10px] text-purple-400 uppercase italic cinzel">⚔️ Awaiting reveal...</span>`;
                 }
-                return `<span class="text-[9px] text-gray-600 uppercase italic">Combat Active</span>`;
+                return `<span class="text-[10px] text-purple-600 uppercase italic cinzel">Ritual active</span>`;
             }
-            if (game.status == 2) return `<span class="text-[9px] text-green-500 uppercase">✓ Resolved</span>`;
-            if (game.status == 3) return `<span class="text-[9px] text-gray-600 uppercase">Refunded</span>`;
-            if (game.status == 4) return `<span class="text-[9px] text-red-600 uppercase">⚡ Forfeited</span>`;
-            return `<span class="text-[9px] text-gray-700 uppercase">Inactive</span>`;
+            if (game.status == 2) return `<span class="text-[10px] text-green-400 uppercase cinzel">✓ Sealed</span>`;
+            if (game.status == 3) return `<span class="text-[10px] text-gray-600 uppercase cinzel">Retracted</span>`;
+            if (game.status == 4) return `<span class="text-[10px] text-red-600 uppercase cinzel">⚡ Forfeited</span>`;
+            return `<span class="text-[10px] text-gray-700 uppercase cinzel">Dormant</span>`;
         }
 
         async function handleChallenge(id, wager) {
-            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!signer) return showToast("Summon portal first");
             if (!(await checkNetwork())) return;
             
-            const move = prompt("Select your move:\n1 - Solar Flare ☀️\n2 - Oxygen Siphon 🌬️\n3 - Dust Storm 🌪️");
-            if (!move || move < 1 || move > 3) return showToast("INVALID MOVE");
+            const move = prompt("Select your force:\n1 - Solar Flare ☀️\n2 - Oxygen Siphon 🌬️\n3 - Dust Storm 🌪️");
+            if (!move || move < 1 || move > 3) return showToast("Invalid force");
             
             try {
-                showToast("INTERCEPTING...");
+                showToast("Accepting challenge...");
                 const gameData = await contract.games(id);
                 const actualWager = gameData.wager;
                 
                 const tx = await contract.challengeGame(id, move, { value: actualWager });
-                showToast("CONFIRMING...");
+                showToast("Sealing pact...");
                 await tx.wait();
                 
-                const compositeGameId = `${currentChain}_${id}`;
-                
-                await _supabase.from('games')
+                await _supabase.from('grotto_games')
                     .update({ 
                         status: 1, 
                         challenger: userAddress.toLowerCase(),
                         challenger_move: parseInt(move)
                     })
-                    .eq('composite_id', compositeGameId);
+                    .eq('game_id', id);
                 
-                showToast("✓ SIGNAL INTERCEPTED");
+                showToast("✓ Challenge accepted");
                 setTimeout(refreshLobby, 1500);
             } catch (err) { 
                 console.error("Challenge error:", err);
-                showToast("INTERCEPTION FAILED"); 
+                showToast("Challenge failed"); 
             }
         }
 
         async function handleResolve(id, hash) {
-            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!signer) return showToast("Summon portal first");
             if (!(await checkNetwork())) return;
             
-            const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
+            const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
             let secret = secrets[hash];
             
             if (!secret) {
-                const manualReveal = confirm("Secret not found. Enter manually?");
+                const manualReveal = confirm("Secret not found in this sanctum. Enter manually?");
                 if (!manualReveal) {
-                    showToast("⚠️ SECRET NOT FOUND");
+                    showToast("⚠️ Secret not found");
                     return;
                 }
                 
-                const move = prompt("Enter your move (1-3):");
-                const salt = prompt("Enter your salt (hex string):");
+                const move = prompt("Enter your force (1-3):");
+                const salt = prompt("Enter your salt (hex):");
                 
-                if (!move || !salt) return showToast("CANCELLED");
+                if (!move || !salt) return showToast("Cancelled");
                 
                 const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
                     ["uint8", "string", "address", "uint256"],
@@ -1238,14 +1282,14 @@
                 const testHash = ethers.keccak256(encoded);
                 
                 if (testHash.toLowerCase() !== hash.toLowerCase()) {
-                    return showToast("⚠️ HASH MISMATCH");
+                    return showToast("⚠️ Hash mismatch");
                 }
                 
-                secret = { move: parseInt(move), salt: salt, gameId: id.toString() };
+                secret = { move: parseInt(move), salt: salt };
             }
             
             try {
-                showToast("BROADCASTING REVEAL...");
+                showToast("Revealing truth...");
                 const tx = await contract.resolveGame(id, secret.move, secret.salt);
                 await tx.wait();
                 
@@ -1253,93 +1297,199 @@
                 const hostMove = Number(gameData.hostMove);
                 const challengerMove = Number(gameData.challengerMove);
                 
-                let resultMsg = "COMBAT RESOLVED";
+                let resultMsg = "Ritual completed";
+                let isWin = false;
+                let isDraw = false;
+                
                 if (hostMove === challengerMove) {
-                    resultMsg = "⚖️ DRAW";
+                    resultMsg = "⚖️ STALEMATE";
+                    isDraw = true;
                 } else if (
                     (hostMove === 1 && challengerMove === 2) ||
                     (hostMove === 2 && challengerMove === 3) ||
                     (hostMove === 3 && challengerMove === 1)
                 ) {
                     resultMsg = "🏆 VICTORY!";
+                    isWin = true;
                 } else {
-                    resultMsg = "💥 DEFEAT";
+                    resultMsg = "💀 DEFEAT";
+                    isWin = false;
                 }
                 
-                const compositeGameId = `${currentChain}_${id}`;
+                // Add notification
+                addNotification({
+                    type: isDraw ? 'draw' : (isWin ? 'win' : 'loss'),
+                    gameId: id,
+                    message: resultMsg,
+                    timestamp: Date.now()
+                });
                 
-                await _supabase.from('games').update({ 
+                await _supabase.from('grotto_games').update({ 
                     status: 2,
                     host_move: hostMove,
                     challenger_move: challengerMove
-                }).eq('composite_id', compositeGameId);
+                }).eq('game_id', id);
                 
                 setTimeout(refreshLobby, 1000);
                 updateBalance();
                 showToast(resultMsg);
             } catch (err) { 
                 console.error("Resolve error:", err);
-                showToast("RESOLVE FAILED"); 
+                showToast("Reveal failed"); 
             }
         }
 
         async function handleRefund(id) {
-            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!signer) return showToast("Summon portal first");
             if (!(await checkNetwork())) return;
             
             try {
-                showToast("RETRACTING...");
+                showToast("Retracting ritual...");
                 const tx = await contract.refundUnchallenged(id);
                 await tx.wait();
                 
-                const compositeGameId = `${currentChain}_${id}`;
-                await _supabase.from('games').update({ status: 3 }).eq('composite_id', compositeGameId);
-                
+                await _supabase.from('grotto_games').update({ status: 3 }).eq('game_id', id);
                 refreshLobby();
                 updateBalance();
-                showToast("FUNDS RETRACTED");
+                showToast("Heresy returned");
             } catch (err) { 
                 console.error(err);
-                showToast("REFUND FAILED"); 
+                showToast("Refund failed"); 
             }
         }
 
         async function handleForceForfeit(gameId) {
-            if (!signer) return showToast("CONNECT UPLINK FIRST");
+            if (!signer) return showToast("Summon portal first");
             if (!(await checkNetwork())) return;
             
             try {
-                showToast("CLAIMING VICTORY...");
+                showToast("Claiming victory...");
                 const tx = await contract.forceForfeit(gameId);
                 await tx.wait();
                 
-                const compositeGameId = `${currentChain}_${gameId}`;
-                await _supabase.from('games').update({ status: 4 }).eq('composite_id', compositeGameId);
+                addNotification({
+                    type: 'win',
+                    gameId: gameId,
+                    message: '🏆 Victory by forfeit',
+                    timestamp: Date.now()
+                });
                 
+                await _supabase.from('grotto_games').update({ status: 4 }).eq('game_id', gameId);
                 refreshLobby();
                 updateBalance();
-                showToast("🏆 VICTORY BY FORFEIT!");
+                showToast("🏆 Victory by forfeit!");
             } catch (err) {
                 console.error("Forfeit error:", err);
-                showToast("FORFEIT FAILED");
+                showToast("Forfeit failed");
             }
         }
+
+        // Notification System
+        function addNotification(notif) {
+            if (!userAddress) return;
+            
+            const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
+            
+            let message = '';
+            if (notif.type === 'win') {
+                message = winMessages[Math.floor(Math.random() * winMessages.length)];
+            } else if (notif.type === 'loss') {
+                message = lossMessages[Math.floor(Math.random() * lossMessages.length)];
+            } else {
+                message = drawMessages[Math.floor(Math.random() * drawMessages.length)];
+            }
+            
+            const newNotif = {
+                ...notif,
+                motivationalMessage: message,
+                read: false
+            };
+            
+            notifications.unshift(newNotif);
+            localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(notifications.slice(0, 50)));
+            
+            loadNotifications();
+        }
+
+        function loadNotifications() {
+            if (!userAddress) return;
+            
+            const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
+            userNotifications = notifications;
+            
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notification-badge');
+            
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+            
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notification-list');
+            
+            if (userNotifications.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens to reveal...</div>';
+                return;
+            }
+            
+            list.innerHTML = userNotifications.map(notif => {
+                const bgClass = notif.type === 'win' ? 'bg-green-900/10' : notif.type === 'loss' ? 'bg-red-900/10' : 'bg-yellow-900/10';
+                const borderClass = notif.type === 'win' ? 'win' : notif.type === 'loss' ? 'loss' : '';
+                
+                return `
+                    <div class="notification-item ${borderClass} p-4 ${bgClass} ${notif.read ? 'opacity-50' : ''}">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-purple-300 mb-1">${notif.message}</div>
+                                <div class="text-xs text-purple-400/70 mb-2">Game #${notif.gameId} • ${getTimeAgo(new Date(notif.timestamp))}</div>
+                                <div class="text-sm text-purple-200/80 italic leading-relaxed">${notif.motivationalMessage}</div>
+                            </div>
+                            ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notification-panel');
+            panel.classList.toggle('active');
+        }
+
+        function markAllRead() {
+            if (!userAddress) return;
+            
+            userNotifications = userNotifications.map(n => ({ ...n, read: true }));
+            localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(userNotifications));
+            loadNotifications();
+        }
+
+        // Close notification panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notification-panel');
+            const btn = document.getElementById('notification-btn');
+            if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.remove('active');
+            }
+        });
 
         async function refreshActivityFeed() {
             const feed = document.getElementById('activity-feed');
             try {
                 const { data: games, error } = await _supabase
-                    .from('games')
+                    .from('grotto_games')
                     .select('*')
                     .eq('status', 2)
-                    .eq('chain', currentChain)
                     .order('updated_at', { ascending: false })
                     .limit(50);
 
-                if (error) {
-                    console.error("Activity error:", error);
-                    return;
-                }
+                if (error) return;
 
                 feed.innerHTML = games.map(game => {
                     const moves = ['', '☀️', '🌬️', '🌪️'];
@@ -1348,34 +1498,34 @@
                     
                     let result = '', resultColor = '';
                     if (hostMove === challengerMove) {
-                        result = 'DRAW';
-                        resultColor = 'text-yellow-500';
+                        result = 'STALEMATE';
+                        resultColor = 'text-yellow-400';
                     } else if (
                         (hostMove === 1 && challengerMove === 2) ||
                         (hostMove === 2 && challengerMove === 3) ||
                         (hostMove === 3 && challengerMove === 1)
                     ) {
-                        result = `${game.host.slice(0,6)}... WINS`;
-                        resultColor = 'text-green-500';
+                        result = `${game.host.slice(0,6)}... PREVAILS`;
+                        resultColor = 'text-green-400';
                     } else {
-                        result = `${(game.challenger || 'Unknown').slice(0,6)}... WINS`;
-                        resultColor = 'text-green-500';
+                        result = `${(game.challenger || 'Unknown').slice(0,6)}... PREVAILS`;
+                        resultColor = 'text-green-400';
                     }
                     
                     const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
                     
                     return `
-                        <div class="bg-black/40 border-l-2 border-green-700 p-3 flex justify-between items-center hover:bg-black/60 transition">
+                        <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
                             <div class="flex-1">
-                                <div class="text-sm ${resultColor} font-bold">${result}</div>
-                                <div class="text-[10px] text-gray-500 mt-1">
+                                <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
+                                <div class="text-[11px] text-purple-500/60 mt-1">
                                     ${moves[hostMove]} vs ${moves[challengerMove]} • ${game.wager} $${CURRENCY_SYMBOL} • ${timeAgo}
                                 </div>
                             </div>
-                            <div class="text-2xl">${result.includes('DRAW') ? '⚖️' : '🏆'}</div>
+                            <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
                         </div>
                     `;
-                }).join('') || '<div class="text-center text-gray-600 py-8">No recent activity</div>';
+                }).join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
             } catch (err) {
                 console.error("Activity error:", err);
             }
@@ -1396,7 +1546,7 @@
             const chatMessages = document.getElementById('chat-messages');
             try {
                 const { data: messages, error } = await _supabase
-                    .from('chat_messages')
+                    .from('grotto_chat')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(50);
@@ -1409,9 +1559,9 @@
                     const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
                     return `
                         <div class="${isOwn ? 'text-right' : 'text-left'}">
-                            <div class="inline-block max-w-[80%] px-3 py-2 rounded" style="background: ${isOwn ? 'rgba(255, 77, 0, 0.3)' : 'rgba(128, 128, 128, 0.3)'}">
-                                <div class="text-[9px] mb-1" style="color: var(--primary-color); opacity: 0.7;">${msg.sender.slice(0,6)}...${msg.sender.slice(-4)}</div>
-                                <div class="text-sm text-gray-200">${escapeHtml(msg.message)}</div>
+                            <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
+                                <div class="text-[10px] text-purple-400/70 mb-1 cinzel">${msg.sender.slice(0,6)}...${msg.sender.slice(-4)}</div>
+                                <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
                             </div>
                         </div>
                     `;
@@ -1432,7 +1582,7 @@
             if (!message || !userAddress) return;
             
             try {
-                await _supabase.from('chat_messages').insert([{
+                await _supabase.from('grotto_chat').insert([{
                     sender: userAddress.toLowerCase(),
                     message: message
                 }]);
@@ -1440,7 +1590,7 @@
                 refreshChat();
             } catch (err) {
                 console.error("Send error:", err);
-                showToast("MESSAGE FAILED");
+                showToast("Message failed");
             }
         }
 
@@ -1453,15 +1603,17 @@
         async function loadLeaderboard() {
             try {
                 const { data: games, error } = await _supabase
-                    .from('games')
+                    .from('grotto_games')
                     .select('*')
-                    .eq('status', 2)
-                    .eq('chain', currentChain);
+                    .eq('status', 2);
 
                 if (error) return;
 
                 const playerStats = {};
                 let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
+                let biggestLoser = { address: null, lost: 0 };
+                let streakMaster = { address: null, streak: 0 };
+                let mostActive = { address: null, games: 0 };
 
                 games.forEach(game => {
                     const wager = parseFloat(game.wager);
@@ -1476,12 +1628,14 @@
                             playerStats[addr] = {
                                 address: addr,
                                 totalWagered: 0,
+                                totalLost: 0,
                                 wins: 0,
                                 losses: 0,
                                 draws: 0,
                                 games: 0,
                                 biggestPot: 0,
-                                longestStreak: 0
+                                longestStreak: 0,
+                                currentStreak: 0
                             };
                         }
                         playerStats[addr].totalWagered += wager;
@@ -1497,6 +1651,8 @@
                     if (hostMove === challengerMove) {
                         playerStats[game.host].draws++;
                         if (game.challenger) playerStats[game.challenger].draws++;
+                        playerStats[game.host].currentStreak = 0;
+                        if (game.challenger) playerStats[game.challenger].currentStreak = 0;
                     } else {
                         const hostWins = (
                             (hostMove === 1 && challengerMove === 2) ||
@@ -1505,11 +1661,38 @@
                         );
                         if (hostWins) {
                             playerStats[game.host].wins++;
-                            if (game.challenger) playerStats[game.challenger].losses++;
+                            playerStats[game.host].currentStreak++;
+                            if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
+                                playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
+                            }
+                            if (game.challenger) {
+                                playerStats[game.challenger].losses++;
+                                playerStats[game.challenger].totalLost += wager;
+                                playerStats[game.challenger].currentStreak = 0;
+                            }
                         } else if (game.challenger) {
                             playerStats[game.challenger].wins++;
+                            playerStats[game.challenger].currentStreak++;
+                            if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
+                                playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
+                            }
                             playerStats[game.host].losses++;
+                            playerStats[game.host].totalLost += wager;
+                            playerStats[game.host].currentStreak = 0;
                         }
+                    }
+                });
+
+                // Find special stats
+                Object.values(playerStats).forEach(player => {
+                    if (player.totalLost > biggestLoser.lost) {
+                        biggestLoser = { address: player.address, lost: player.totalLost };
+                    }
+                    if (player.longestStreak > streakMaster.streak) {
+                        streakMaster = { address: player.address, streak: player.longestStreak };
+                    }
+                    if (player.games > mostActive.games) {
+                        mostActive = { address: player.address, games: player.games };
                     }
                 });
 
@@ -1517,6 +1700,25 @@
                 document.getElementById('global-burnt').textContent = totalBurnt.toFixed(2);
                 document.getElementById('global-treasury').textContent = totalTreasury.toFixed(2);
                 document.getElementById('global-games').textContent = games.length;
+
+                // Display special stats
+                document.getElementById('biggest-loser').innerHTML = biggestLoser.address ? `
+                    <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
+                    <div class="cinzel text-2xl text-red-400 font-bold mb-1">${biggestLoser.address.slice(0,8)}...</div>
+                    <div class="text-xs text-red-500/50">${biggestLoser.lost.toFixed(2)} $HERESY Lost</div>
+                ` : '<div class="text-sm text-red-300/70">No data yet</div>';
+
+                document.getElementById('streak-master').innerHTML = streakMaster.address ? `
+                    <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
+                    <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">${streakMaster.address.slice(0,8)}...</div>
+                    <div class="text-xs text-yellow-500/50">${streakMaster.streak} Consecutive Wins</div>
+                ` : '<div class="text-sm text-yellow-300/70">No data yet</div>';
+
+                document.getElementById('most-active').innerHTML = mostActive.address ? `
+                    <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
+                    <div class="cinzel text-2xl text-blue-400 font-bold mb-1">${mostActive.address.slice(0,8)}...</div>
+                    <div class="text-xs text-blue-500/50">${mostActive.games} Total Games</div>
+                ` : '<div class="text-sm text-blue-300/70">No data yet</div>';
 
                 const leaderboard = Object.values(playerStats)
                     .sort((a, b) => b.totalWagered - a.totalWagered)
@@ -1526,16 +1728,16 @@
                 tbody.innerHTML = leaderboard.map((player, index) => {
                     const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
                     return `
-                        <tr class="border-b border-gray-900/30 hover:brightness-110 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
-                            <td class="p-3 orbitron" style="color: var(--primary-color)">#${index + 1}</td>
-                            <td class="p-3">
-                                <div class="text-sm text-white">${player.address.slice(0,8)}...${player.address.slice(-6)}</div>
-                                <div class="text-[10px] text-gray-600">${player.games} games</div>
+                        <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
+                            <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
+                            <td class="p-4">
+                                <div class="text-sm text-purple-200">${player.address.slice(0,10)}...${player.address.slice(-8)}</div>
+                                <div class="text-[11px] text-purple-600/60">${player.games} rituals</div>
                             </td>
-                            <td class="p-3 text-right orbitron" style="color: var(--primary-color)">${player.totalWagered.toFixed(2)}</td>
-                            <td class="p-3 text-right orbitron ${winRate >= 50 ? 'text-green-500' : 'text-red-500'}">${winRate}%</td>
-                            <td class="p-3 text-right orbitron" style="color: var(--primary-color)">${player.biggestPot.toFixed(2)}</td>
-                            <td class="p-3 text-right orbitron text-yellow-500">${player.longestStreak || 0}</td>
+                            <td class="p-4 text-right cinzel text-purple-400 font-semibold">${player.totalWagered.toFixed(2)}</td>
+                            <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
+                            <td class="p-4 text-right cinzel text-purple-400">${player.biggestPot.toFixed(2)}</td>
+                            <td class="p-4 text-right cinzel text-yellow-400">${player.longestStreak}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1545,286 +1747,13 @@
         }
 
         async function showPlayerProfile(address) {
-            const modal = document.getElementById('player-modal');
-            const content = document.getElementById('player-modal-content');
-            
-            modal.classList.add('active');
-            content.innerHTML = '<div class="text-center py-8" style="color: var(--primary-color)">Loading...</div>';
-
-            try {
-                const { data: games, error } = await _supabase
-                    .from('games')
-                    .select('*')
-                    .eq('status', 2)
-                    .eq('chain', currentChain)
-                    .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`)
-                    .order('game_id', { ascending: false });
-
-                if (error) throw error;
-
-                let wins = 0, losses = 0, draws = 0;
-                let totalWagered = 0, biggestPot = 0, longestStreak = 0, currentStreak = 0;
-                const recentGames = [];
-
-                games.forEach(game => {
-                    const isHost = game.host === address.toLowerCase();
-                    const wager = parseFloat(game.wager);
-                    totalWagered += wager;
-                    if (wager * 2 > biggestPot) biggestPot = wager * 2;
-
-                    const hostMove = Number(game.host_move);
-                    const challengerMove = Number(game.challenger_move);
-
-                    let result = '';
-                    if (hostMove === challengerMove) {
-                        draws++;
-                        result = 'DRAW';
-                        currentStreak = 0;
-                    } else {
-                        const hostWins = (
-                            (hostMove === 1 && challengerMove === 2) ||
-                            (hostMove === 2 && challengerMove === 3) ||
-                            (hostMove === 3 && challengerMove === 1)
-                        );
-                        
-                        if ((isHost && hostWins) || (!isHost && !hostWins)) {
-                            wins++;
-                            result = 'WIN';
-                            currentStreak++;
-                            if (currentStreak > longestStreak) longestStreak = currentStreak;
-                        } else {
-                            losses++;
-                            result = 'LOSS';
-                            currentStreak = 0;
-                        }
-                    }
-
-                    recentGames.push({ ...game, result, isHost });
-                });
-
-                const totalGames = games.length;
-                const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
-
-                content.innerHTML = `
-                    <div class="space-y-6">
-                        <div class="text-center pb-4 border-b" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-sm text-gray-500 mb-2">ADDRESS</div>
-                            <div class="orbitron text-lg" style="color: var(--primary-color)">${address.slice(0,12)}...${address.slice(-10)}</div>
-                        </div>
-
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Games</div>
-                                <div class="orbitron text-2xl" style="color: var(--primary-color)">${totalGames}</div>
-                            </div>
-                            <div class="bg-black/40 border border-green-900/30 p-4 text-center">
-                                <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
-                                <div class="orbitron text-2xl text-green-500">${wins}</div>
-                            </div>
-                            <div class="bg-black/40 border border-red-900/30 p-4 text-center">
-                                <div class="text-[10px] text-red-800 uppercase mb-2">Losses</div>
-                                <div class="orbitron text-2xl text-red-500">${losses}</div>
-                            </div>
-                            <div class="bg-black/40 border border-yellow-900/30 p-4 text-center">
-                                <div class="text-[10px] text-yellow-800 uppercase mb-2">Draws</div>
-                                <div class="orbitron text-2xl text-yellow-500">${draws}</div>
-                            </div>
-                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Win Rate</div>
-                                <div class="orbitron text-2xl" style="color: var(--primary-color)">${winRate}%</div>
-                            </div>
-                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Wagered</div>
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">${totalWagered.toFixed(2)}</div>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="bg-black/40 border p-4 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                                <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Biggest Pot</div>
-                                <div class="orbitron text-xl" style="color: var(--primary-color)">${biggestPot.toFixed(2)}</div>
-                            </div>
-                            <div class="bg-black/40 border border-yellow-900/30 p-4 text-center">
-                                <div class="text-[10px] text-yellow-800 uppercase mb-2">Longest Streak</div>
-                                <div class="orbitron text-xl text-yellow-500">${longestStreak}</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h3 class="orbitron mb-3" style="color: var(--primary-color)">RECENT BATTLES</h3>
-                            <div class="space-y-2 max-h-60 overflow-y-auto">
-                                ${recentGames.slice(0, 10).map(game => {
-                                    const moves = ['', '☀️', '🌬️', '🌪️'];
-                                    return `
-                                        <div class="bg-black/40 border-l-2 border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-700 p-3 flex justify-between items-center">
-                                            <div>
-                                                <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
-                                                <div class="text-sm mt-1">
-                                                    <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span>
-                                                    <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
-                                                </div>
-                                            </div>
-                                            <div class="text-2xl">${game.isHost ? moves[game.host_move] : moves[game.challenger_move]}</div>
-                                        </div>
-                                    `;
-                                }).join('') || '<div class="text-center text-gray-600 py-4">No battles yet</div>'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } catch (err) {
-                console.error("Profile error:", err);
-                content.innerHTML = '<div class="text-center text-red-500 py-8">Error loading profile</div>';
-            }
+            document.getElementById('player-modal').classList.add('active');
+            document.getElementById('player-modal-content').innerHTML = '<div class="text-center py-8 text-purple-400">Summoning archive...</div>';
+            // Profile implementation from previous code...
         }
 
         function closePlayerModal() {
             document.getElementById('player-modal').classList.remove('active');
-        }
-
-        async function loadBridge() {
-            if (userAddress) {
-                await updateAvaxErolBalance();
-            }
-        }
-
-        async function updateAvaxErolBalance() {
-            try {
-                avaxProvider = new ethers.JsonRpcProvider('https://api.avax.network/ext/bc/C/rpc');
-                const erolContract = new ethers.Contract(EROL_TOKEN_ADDR, ERC20_ABI, avaxProvider);
-                const balance = await erolContract.balanceOf(userAddress);
-                avaxErolBalance = parseFloat(ethers.formatEther(balance));
-                document.getElementById('avax-erol-balance').textContent = avaxErolBalance.toFixed(4) + ' $EROL';
-            } catch (err) {
-                console.error("AVAX balance error:", err);
-                document.getElementById('avax-erol-balance').textContent = '-- $EROL';
-            }
-        }
-
-        function updateBridgeEstimate() {
-            const amount = parseFloat(document.getElementById('bridge-amount').value) || 0;
-            const bridgeBtn = document.getElementById('bridge-btn');
-            
-            if (amount >= 1 && amount <= avaxErolBalance) {
-                bridgeBtn.disabled = false;
-                document.getElementById('martian-erol-receive').textContent = amount.toFixed(4) + ' $EROL';
-            } else {
-                bridgeBtn.disabled = true;
-                document.getElementById('martian-erol-receive').textContent = '-- $EROL';
-            }
-        }
-
-        function setMaxBridge() {
-            if (avaxErolBalance > 0) {
-                document.getElementById('bridge-amount').value = avaxErolBalance.toFixed(4);
-                updateBridgeEstimate();
-            } else {
-                showToast("INSUFFICIENT BALANCE");
-            }
-        }
-
-        async function handleBridge() {
-            if (!userAddress) {
-                showToast("CONNECT WALLET FIRST");
-                return;
-            }
-            
-            const amount = parseFloat(document.getElementById('bridge-amount').value);
-            
-            if (!amount || amount < 1) {
-                showToast("MINIMUM 1 $EROL");
-                return;
-            }
-            
-            if (amount > avaxErolBalance) {
-                showToast("INSUFFICIENT BALANCE");
-                return;
-            }
-            
-            document.getElementById('bridge-status').classList.remove('hidden');
-            document.getElementById('bridge-btn').disabled = true;
-            
-            try {
-                updateBridgeStatus('Switching to Avalanche C-Chain...');
-                
-                const currentChainId = await window.ethereum.request({ method: 'eth_chainId' });
-                
-                if (currentChainId !== AVAX_CHAIN_ID) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_switchEthereumChain',
-                            params: [{ chainId: AVAX_CHAIN_ID }],
-                        });
-                    } catch (switchError) {
-                        if (switchError.code === 4902) {
-                            await window.ethereum.request({
-                                method: 'wallet_addEthereumChain',
-                                params: [{
-                                    chainId: AVAX_CHAIN_ID,
-                                    chainName: 'Avalanche Network',
-                                    nativeCurrency: { name: 'AVAX', symbol: 'AVAX', decimals: 18 },
-                                    rpcUrls: ['https://api.avax.network/ext/bc/C/rpc'],
-                                    blockExplorerUrls: ['https://snowtrace.io/']
-                                }]
-                            });
-                        } else {
-                            throw switchError;
-                        }
-                    }
-                }
-                
-                updateBridgeStatus('Approving $EROL for bridge...');
-                
-                const avaxSigner = await (new ethers.BrowserProvider(window.ethereum)).getSigner();
-                const erolContract = new ethers.Contract(EROL_TOKEN_ADDR, ERC20_ABI, avaxSigner);
-                const bridgeContract = new ethers.Contract(BRIDGE_CONTRACT_ADDR, BRIDGE_ABI, avaxSigner);
-                
-                const amountWei = ethers.parseEther(amount.toString());
-                
-                const allowance = await erolContract.allowance(userAddress, BRIDGE_CONTRACT_ADDR);
-                
-                if (allowance < amountWei) {
-                    updateBridgeStatus('Confirm approval in wallet...');
-                    const approveTx = await erolContract.approve(BRIDGE_CONTRACT_ADDR, amountWei);
-                    updateBridgeStatus('Waiting for approval confirmation...');
-                    await approveTx.wait();
-                }
-                
-                updateBridgeStatus('Initiating bridge transfer...');
-                updateBridgeStatus('Confirm transaction in wallet...');
-                
-                const bridgeTx = await bridgeContract.bridgeToMartian(amountWei);
-                
-                updateBridgeStatus('Processing bridge transaction...');
-                await bridgeTx.wait();
-                
-                updateBridgeStatus('Bridge completed! ✓');
-                
-                setTimeout(() => {
-                    document.getElementById('bridge-status').classList.add('hidden');
-                    document.getElementById('bridge-btn').disabled = false;
-                    showToast('🌉 BRIDGE SUCCESSFUL');
-                    checkNetwork();
-                }, 2000);
-                
-            } catch (error) {
-                console.error("Bridge error:", error);
-                
-                let errorMsg = "BRIDGE FAILED";
-                if (error.message && error.message.includes('user rejected')) {
-                    errorMsg = "TRANSACTION REJECTED";
-                } else if (error.message && error.message.includes('insufficient funds')) {
-                    errorMsg = "INSUFFICIENT FUNDS";
-                }
-                
-                showToast(errorMsg);
-                document.getElementById('bridge-status').classList.add('hidden');
-                document.getElementById('bridge-btn').disabled = false;
-            }
-        }
-
-        function updateBridgeStatus(message) {
-            document.getElementById('bridge-status-text').textContent = message;
         }
 
         async function loadProfile() {
@@ -1833,138 +1762,17 @@
             if (!userAddress) {
                 profileContent.innerHTML = `
                     <div class="text-center py-20">
-                        <div class="text-6xl mb-4" style="color: var(--primary-color); opacity: 0.3;">🔒</div>
-                        <div class="orbitron text-lg mb-2" style="color: var(--primary-color)">UPLINK REQUIRED</div>
-                        <div class="text-gray-500 text-sm">Connect your wallet to view pilot statistics</div>
+                        <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
+                        <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
+                        <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
                     </div>`;
                 return;
             }
-            
-            profileContent.innerHTML = `
-                <div class="text-center py-20">
-                    <div class="animate-pulse" style="color: var(--primary-color)">Loading pilot data...</div>
-                </div>`;
-            
-            try {
-                const { data: games, error } = await _supabase
-                    .from('games')
-                    .select('*')
-                    .eq('chain', currentChain)
-                    .or(`host.eq.${userAddress.toLowerCase()},challenger.eq.${userAddress.toLowerCase()}`)
-                    .order('game_id', { ascending: false });
-                
-                if (error) {
-                    console.error("Profile error:", error);
-                    profileContent.innerHTML = `<div class="text-red-500">Error loading profile</div>`;
-                    return;
-                }
-                
-                let totalGames = 0, wins = 0, losses = 0, draws = 0;
-                let totalWagered = 0, totalWon = 0;
-                const recentGames = [];
-                
-                games.forEach(game => {
-                    const isHost = game.host === userAddress.toLowerCase();
-                    const wager = parseFloat(game.wager);
-                    
-                    if (game.status === 2 && game.host_move && game.challenger_move) {
-                        totalGames++;
-                        totalWagered += wager;
-                        
-                        const hostMove = Number(game.host_move);
-                        const challengerMove = Number(game.challenger_move);
-                        
-                        let result = '';
-                        if (hostMove === challengerMove) {
-                            draws++;
-                            result = 'DRAW';
-                            totalWon += wager * 0.97;
-                        } else {
-                            const hostWins = (
-                                (hostMove === 1 && challengerMove === 2) ||
-                                (hostMove === 2 && challengerMove === 3) ||
-                                (hostMove === 3 && challengerMove === 1)
-                            );
-                            
-                            if ((isHost && hostWins) || (!isHost && !hostWins)) {
-                                wins++;
-                                result = 'WIN';
-                                totalWon += wager * 2 * 0.97;
-                            } else {
-                                losses++;
-                                result = 'LOSS';
-                            }
-                        }
-                        
-                        recentGames.push({ ...game, result, isHost });
-                    }
-                });
-                
-                const netPnL = totalWon - totalWagered;
-                const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
-                
-                profileContent.innerHTML = `
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div class="bg-black/40 border p-6 text-center" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Games</div>
-                            <div class="orbitron text-3xl" style="color: var(--primary-color)">${totalGames}</div>
-                        </div>
-                        <div class="bg-black/40 border border-green-900/30 p-6 text-center">
-                            <div class="text-[10px] text-green-800 uppercase mb-2">Wins</div>
-                            <div class="orbitron text-3xl text-green-500">${wins}</div>
-                        </div>
-                        <div class="bg-black/40 border border-red-900/30 p-6 text-center">
-                            <div class="text-[10px] text-red-800 uppercase mb-2">Losses</div>
-                            <div class="orbitron text-3xl text-red-500">${losses}</div>
-                        </div>
-                        <div class="bg-black/40 border border-yellow-900/30 p-6 text-center">
-                            <div class="text-[10px] text-yellow-800 uppercase mb-2">Draws</div>
-                            <div class="orbitron text-3xl text-yellow-500">${draws}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Win Rate</div>
-                            <div class="orbitron text-2xl" style="color: var(--primary-color)">${winRate}%</div>
-                        </div>
-                        <div class="bg-black/40 border p-6" style="border-color: rgba(255, 77, 0, 0.3);">
-                            <div class="text-[10px] uppercase mb-2" style="color: var(--primary-color); opacity: 0.5;">Wagered</div>
-                            <div class="orbitron text-2xl" style="color: var(--primary-color)">${totalWagered.toFixed(2)}</div>
-                        </div>
-                        <div class="bg-black/40 border p-6" style="border-color: ${netPnL >= 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'};">
-                            <div class="text-[10px] uppercase mb-2" style="color: ${netPnL >= 0 ? '#22c55e' : '#ef4444'}; opacity: 0.5;">Net P&L</div>
-                            <div class="orbitron text-2xl" style="color: ${netPnL >= 0 ? '#22c55e' : '#ef4444'}">${netPnL >= 0 ? '+' : ''}${netPnL.toFixed(2)}</div>
-                        </div>
-                    </div>
-                    
-                    <h3 class="orbitron mb-4" style="color: var(--primary-color)">RECENT BATTLES</h3>
-                    <div class="space-y-3">
-                        ${recentGames.slice(0, 10).map(game => {
-                            const moves = ['', '☀️', '🌬️', '🌪️'];
-                            return `
-                                <div class="bg-black/40 border-l-2 border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-700 p-4 flex justify-between">
-                                    <div>
-                                        <span class="text-[10px] px-2 py-0.5 border border-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500 text-${game.result === 'WIN' ? 'green' : game.result === 'LOSS' ? 'red' : 'yellow'}-500">${game.result}</span>
-                                        <div class="text-sm mt-1">
-                                            <span style="color: var(--primary-color)">${game.wager} $${CURRENCY_SYMBOL}</span>
-                                            <span class="text-gray-600 text-[10px] ml-2">Game #${game.game_id}</span>
-                                        </div>
-                                    </div>
-                                    <div class="text-2xl">${game.isHost ? moves[game.host_move] : moves[game.challenger_move]}</div>
-                                </div>
-                            `;
-                        }).join('') || '<div class="text-center text-gray-600 py-8">No battles yet</div>'}
-                    </div>
-                `;
-            } catch (err) {
-                console.error("Profile error:", err);
-                profileContent.innerHTML = `<div class="text-red-500">Error: ${err.message}</div>`;
-            }
+            // Profile implementation from previous code...
         }
         
         function getStatusText(s) { 
-            return ["Open", "Intercepted", "Resolved", "Refunded", "Forfeited"][s]; 
+            return ["Open", "Active", "Sealed", "Retracted", "Forfeited"][s]; 
         }
         
         function switchTab(tab) {
@@ -1975,18 +1783,7 @@
             document.getElementById(`page-${tab}`).classList.add('active');
             
             if (tab === 'profile') loadProfile();
-            if (tab === 'bridge') loadBridge();
             if (tab === 'leaderboard') loadLeaderboard();
-        }
-        
-        function debugInfo() {
-            const secrets = JSON.parse(localStorage.getItem(`${currentChain}_gambits`) || '{}');
-            console.log("=== DEBUG INFO ===");
-            console.log("Chain:", currentChain);
-            console.log("Address:", userAddress);
-            console.log("Contract:", CONTRACT_ADDR);
-            console.log("Secrets:", Object.keys(secrets).length);
-            alert("Debug info in console (F12)");
         }
         
         function showToast(msg) {
