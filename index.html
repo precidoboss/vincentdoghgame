@@ -17,13 +17,11 @@
             --grotto-glow: rgba(147, 51, 234, 0.4);
             --grotto-light: #c084fc;
             --heresy-gold: #fbbf24;
+            --premium-gold: #ffd700;
+            --premium-glow: rgba(255, 215, 0, 0.4);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: linear-gradient(135deg, var(--grotto-darker) 0%, var(--grotto-dark) 50%, #1e1b4b 100%);
@@ -59,9 +57,118 @@
             position: relative;
         }
 
-        .grotto-border-glow {
-            border: 1px solid var(--grotto-purple);
-            box-shadow: 0 0 20px var(--grotto-glow), inset 0 0 20px rgba(147, 51, 234, 0.1);
+        /* PREMIUM STYLES */
+        .premium-username {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: goldShimmer 3s linear infinite;
+            font-weight: 900;
+            position: relative;
+            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+        }
+
+        @keyframes goldShimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .premium-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a0a2e;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px var(--premium-glow);
+            animation: premiumPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes premiumPulse {
+            0%, 100% { box-shadow: 0 0 15px var(--premium-glow); }
+            50% { box-shadow: 0 0 25px var(--premium-glow), 0 0 35px var(--premium-glow); }
+        }
+
+        .premium-row {
+            background: linear-gradient(90deg, 
+                rgba(255, 215, 0, 0.05) 0%, 
+                rgba(255, 215, 0, 0.15) 50%, 
+                rgba(255, 215, 0, 0.05) 100%) !important;
+            border: 2px solid var(--premium-gold) !important;
+            box-shadow: 0 0 30px var(--premium-glow), inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-row::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255, 215, 0, 0.2) 50%, 
+                transparent 70%);
+            animation: premiumShine 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes premiumShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .premium-modal-content {
+            animation: premiumModalEntrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        @keyframes premiumModalEntrance {
+            0% { 
+                opacity: 0; 
+                transform: scale(0.7) rotateY(30deg) rotateX(20deg);
+            }
+            100% { 
+                opacity: 1; 
+                transform: scale(1) rotateY(0deg) rotateX(0deg);
+            }
+        }
+
+        .premium-modal-content::before {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700, #ffed4e);
+            background-size: 400% 400%;
+            animation: premiumBorderFlow 4s linear infinite;
+            border-radius: inherit;
+            z-index: -1;
+            filter: blur(10px);
+        }
+
+        @keyframes premiumBorderFlow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .premium-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--premium-gold);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--premium-gold);
+            pointer-events: none;
         }
 
         .btn-grotto {
@@ -103,6 +210,19 @@
         .btn-grotto:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #1a0a2e !important;
+            box-shadow: 0 0 20px var(--premium-glow);
+            border: 2px solid #ffd700 !important;
+            font-weight: 900 !important;
+        }
+
+        .btn-premium:hover:not(:disabled) {
+            box-shadow: 0 0 40px var(--premium-glow), 0 0 60px rgba(255, 215, 0, 0.5);
+            transform: translateY(-3px) scale(1.05);
         }
 
         .move-select {
@@ -287,6 +407,11 @@
             overflow-y: auto;
         }
 
+        .lobby-item {
+            opacity: 1 !important;
+            will-change: auto;
+        }
+
         .notification-badge {
             position: absolute;
             top: -8px;
@@ -414,14 +539,45 @@
             border-color: var(--grotto-purple) !important;
             box-shadow: 0 0 20px var(--grotto-glow);
         }
+
+        .market-item {
+            background: rgba(13, 5, 23, 0.7);
+            border: 2px solid rgba(147, 51, 234, 0.3);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .market-item:hover {
+            border-color: var(--premium-gold);
+            box-shadow: 0 0 30px var(--premium-glow);
+            transform: translateY(-5px);
+        }
+
+        .market-item::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 215, 0, 0.05) 50%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .market-item:hover::before {
+            opacity: 1;
+            animation: shine 2s linear infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
     </style>
 </head>
 <body class="min-h-screen p-4">
-    <!-- Continue in part 2 -->
-</body>
-</html>
-<!-- PART 2: HTML STRUCTURE - Copy this after the <body> tag in part 1 -->
-
     <!-- Mystical Particles -->
     <div class="mystical-particles" id="particles"></div>
 
@@ -452,6 +608,7 @@
             <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg flex-wrap">
                 <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-5 py-2 text-[11px] uppercase transition rounded cinzel">Sanctum</button>
                 <button onclick="switchTab('bloodrite')" id="tab-bloodrite" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Blood Rite</button>
+                <button onclick="switchTab('marketplace')" id="tab-marketplace" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Vault of Relics</button>
                 <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Pantheon</button>
                 <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Chronicle</button>
                 <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Doctrine</button>
@@ -488,6 +645,7 @@
                     <div class="text-right">
                         <div class="flex items-center gap-2">
                             <span id="user-address" class="text-[11px] text-purple-400/70 tracking-wider"></span>
+                            <span id="premium-indicator" class="hidden"></span>
                             <button id="copy-address" class="text-purple-400 hover:text-purple-300 transition text-sm" onclick="copyAddress()" title="Copy Address">
                                 📋
                             </button>
@@ -518,6 +676,34 @@
     </script>
 
     <main class="max-w-7xl mx-auto relative z-10">
+        <!-- PAGE SECTIONS WILL BE INSERTED HERE IN PART 3 -->
+    </main>
+
+    <!-- Player Profile Modal -->
+    <div id="player-modal" class="modal">
+        <div id="player-modal-wrapper" class="modal-content grotto-glass p-8 w-full rounded-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="cinzel text-2xl text-purple-400 tracking-wider">SOUL ARCHIVE</h2>
+                <button onclick="closePlayerModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
+            </div>
+            <div id="player-modal-content"></div>
+        </div>
+    </div>
+
+    <!-- Premium Purchase Modal -->
+    <div id="premium-modal" class="modal">
+        <div class="modal-content grotto-glass p-8 w-full rounded-xl max-w-2xl premium-modal-content relative">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="cinzel text-2xl premium-username">VAULT OF RELICS</h2>
+                <button onclick="closePremiumModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
+            </div>
+            <div id="premium-modal-content"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl">
+        SYSTEM MESSAGE
+    </div>
         <!-- LOBBY PAGE (SANCTUM) -->
         <div id="page-lobby" class="page-section active">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -617,11 +803,7 @@
             </div>
         </div>
 
-        <!-- Continue in part 3 -->
-    </main>
-<!-- PART 3: BLOOD RITE AND OTHER PAGES - Continue from part 2 -->
-
-        <!-- BLOOD RITE PAGE (NEW) -->
+        <!-- BLOOD RITE PAGE -->
         <div id="page-bloodrite" class="page-section">
             <div class="grotto-glass p-8 rounded-xl max-w-6xl mx-auto">
                 <div class="flex justify-between items-center mb-8">
@@ -686,7 +868,74 @@
             </div>
         </div>
 
-        <!-- LEADERBOARD PAGE (PANTHEON) -->
+        <!-- MARKETPLACE PAGE (VAULT OF RELICS) -->
+        <div id="page-marketplace" class="page-section">
+            <div class="grotto-glass p-8 rounded-xl max-w-6xl mx-auto">
+                <div class="mb-8">
+                    <h2 class="cinzel text-3xl premium-username mb-2 flex items-center gap-4 tracking-wider">
+                        <span class="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></span>
+                        VAULT OF RELICS
+                    </h2>
+                    <p class="text-purple-300/70 text-sm">Acquire mystical artifacts to enhance your presence in the grotto</p>
+                </div>
+
+                <!-- Premium Membership -->
+                <div class="market-item p-8 rounded-xl mb-6 border-4" style="border-color: var(--premium-gold)">
+                    <div class="flex flex-col md:flex-row gap-6 items-start">
+                        <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-4xl shadow-2xl" style="box-shadow: 0 0 40px var(--premium-glow)">
+                            👑
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="cinzel text-2xl premium-username mb-2 flex items-center gap-3">
+                                GILDED ASCENSION
+                                <span class="premium-badge">⭐ PREMIUM</span>
+                            </h3>
+                            <p class="text-purple-200/80 mb-4 leading-relaxed">
+                                Transcend mortality with the ultimate power. Your name shines in radiant gold across all realms, 
+                                commanding respect and awe. Premium souls receive exclusive visual effects, animated profiles, 
+                                and the coveted golden badge of supremacy.
+                            </p>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <div class="bg-black/30 p-4 rounded-lg border border-yellow-500/30">
+                                    <div class="text-xs text-yellow-400/70 uppercase mb-2 cinzel">Features Included:</div>
+                                    <ul class="text-sm text-purple-200/70 space-y-2">
+                                        <li class="flex items-center gap-2">✨ Golden animated username</li>
+                                        <li class="flex items-center gap-2">👑 Premium badge everywhere</li>
+                                        <li class="flex items-center gap-2">🌟 Enhanced profile display</li>
+                                        <li class="flex items-center gap-2">⚡ Animated profile modal</li>
+                                        <li class="flex items-center gap-2">💫 Leaderboard distinction</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-black/30 p-4 rounded-lg border border-yellow-500/30">
+                                    <div class="text-xs text-yellow-400/70 uppercase mb-2 cinzel">Duration & Price:</div>
+                                    <div class="text-3xl cinzel font-bold text-yellow-400 mb-1">30 Days</div>
+                                    <div class="text-xl cinzel text-purple-300">0.0001 $HERESY</div>
+                                    <div class="text-xs text-purple-400/60 mt-2">Direct to treasury vault</div>
+                                </div>
+                            </div>
+
+                            <div id="premium-status-display" class="mb-4"></div>
+                            
+                            <button onclick="purchasePremium()" id="purchase-premium-btn" class="btn-premium px-8 py-4 text-base rounded-lg cinzel w-full md:w-auto">
+                                ACQUIRE GILDED POWER
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Future Items Placeholder -->
+                <div class="grotto-glass border-2 border-purple-500/20 p-8 rounded-xl text-center">
+                    <div class="text-6xl mb-4 text-purple-500/30">🔮</div>
+                    <h3 class="cinzel text-xl text-purple-400 mb-2">MORE RELICS INCOMING</h3>
+                    <p class="text-purple-300/60 text-sm">
+                        Additional mystical artifacts and cosmetic enhancements are being forged in the depths of the grotto...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEADERBOARD PAGE (PANTHEON) - Continued from Part 3 -->
         <div id="page-leaderboard" class="page-section">
             <div class="grotto-glass p-8 rounded-xl">
                 <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
@@ -902,30 +1151,12 @@
                 </div>
             </div>
         </div>
-    </main>
-
-    <!-- Player Profile Modal -->
-    <div id="player-modal" class="modal">
-        <div class="modal-content grotto-glass p-8 w-full rounded-xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="cinzel text-2xl text-purple-400 tracking-wider">SOUL ARCHIVE</h2>
-                <button onclick="closePlayerModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
-            </div>
-            <div id="player-modal-content"></div>
-        </div>
-    </div>
-
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl">
-        SYSTEM MESSAGE
-    </div>
-
-    <!-- Continue in part 4 with JavaScript -->
-<!-- PART 4: JAVASCRIPT - Main application logic -->
 <script>
     // The Grotto Chain Configuration
     const CHAIN_ID = "0x8E6F"; // 36463
     const RPC_URL = "https://subnets.avax.network/thegrotto/mainnet/rpc";
     const CONTRACT_ADDR = "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c";
+    const TREASURY_ADDR = "0x46914d5dc59598801e435af2a08928da87c60df0";
     const EXPLORER_URL = "https://subnets.avax.network/thegrotto";
     const CHAIN_NAME = "The Grotto";
     const CURRENCY_SYMBOL = "HERESY";
@@ -953,6 +1184,9 @@
     let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval, dailyTimerInterval;
     let currentLobbyFilter = 'all';
     let userNotifications = [];
+    let cachedLobbyHTML = '';
+    let cachedActivityHTML = '';
+    let userPremiumStatus = null;
 
     // Move names
     const moveNames = ['', 'Greg', 'Bob', 'Disco'];
@@ -986,12 +1220,12 @@
         "Equilibrium achieved. The next ritual awaits! 🌀"
     ];
 
-    // Blood Rite Achievements
+    // Blood Rite Achievements - UPDATED HIGH ROLLER THRESHOLD
     const dailyAchievements = [
         { id: 'daily_win', name: 'First Blood', desc: 'Win your first game today', points: 50, icon: '⚔️', check: (stats) => stats.dailyWins >= 1 },
         { id: 'daily_3games', name: 'Ritual Devotee', desc: 'Play 3 games today', points: 30, icon: '🎯', check: (stats) => stats.dailyGames >= 3 },
         { id: 'daily_streak', name: 'Unbroken', desc: 'Win 2 games in a row', points: 75, icon: '🔥', check: (stats) => stats.dailyStreak >= 2 },
-        { id: 'daily_wager', name: 'High Roller', desc: 'Wager 10+ HERESY today', points: 40, icon: '💰', check: (stats) => stats.dailyWagered >= 10 }
+        { id: 'daily_wager', name: 'High Roller', desc: 'Wager 0.001+ HERESY today', points: 40, icon: '💰', check: (stats) => stats.dailyWagered >= 0.001 }
     ];
 
     const milestoneAchievements = [
@@ -1086,12 +1320,23 @@
             document.getElementById('account-info').classList.remove('hidden');
             
             const username = await getUsernameOrAddress(userAddress);
-            document.getElementById('user-address').innerText = username;
+            const premiumStatus = await checkPremiumStatus(userAddress);
+            
+            // Display username with premium styling if applicable
+            const addressEl = document.getElementById('user-address');
+            if (premiumStatus && premiumStatus.is_active) {
+                addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
+                document.getElementById('premium-indicator').innerHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
+                document.getElementById('premium-indicator').classList.remove('hidden');
+            } else {
+                addressEl.innerText = username;
+            }
             
             updateBalance();
             refreshLobby();
             loadNotifications();
             loadBloodRite();
+            updatePremiumDisplay();
         } catch (err) { 
             console.error(err);
             showToast("Portal summoning failed"); 
@@ -1155,8 +1400,18 @@
             if (error) throw error;
 
             showToast("✓ Username updated");
+            
+            // Update display
             const username = await getUsernameOrAddress(userAddress);
-            document.getElementById('user-address').innerText = username;
+            const premiumStatus = await checkPremiumStatus(userAddress);
+            const addressEl = document.getElementById('user-address');
+            
+            if (premiumStatus && premiumStatus.is_active) {
+                addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
+            } else {
+                addressEl.innerText = username;
+            }
+            
             refreshLobby();
             refreshChat();
         } catch (err) {
@@ -1170,7 +1425,9 @@
         document.querySelectorAll('.move-select').forEach(btn => btn.classList.remove('selected'));
         document.getElementById(`move-${idx}`).classList.add('selected');
     }
-
+</script>
+<script>
+    // GAME CREATION AND MANAGEMENT
     async function handleCreateGame() {
         if (!signer) return showToast("Summon portal first");
         if (selectedMoveIdx === 0) return showToast("Select your force");
@@ -1243,7 +1500,7 @@
                 showToast("✓ Ritual sealed in darkness");
             }
 
-            updatePlayerStats('gameCreated', parseFloat(wagerInput));
+            await updatePlayerStatsDB('gameCreated', parseFloat(wagerInput));
 
             setTimeout(async () => {
                 await refreshLobby();
@@ -1257,13 +1514,8 @@
         }
     }
 
-    // Continue with rest of JavaScript in your editor...
-    // This file is getting long. Let me split the remaining functions into a helper section.
-</script>
-<!-- PART 4B: JAVASCRIPT CONTINUATION - Add after part 4 -->
-<script>
-    // LOBBY AND GAME MANAGEMENT FUNCTIONS
-
+    // LOBBY WITH STABLE RENDERING - NO FLICKER
+    let lobbyGames = [];
     async function refreshLobby() {
         const lobby = document.getElementById('lobby-list');
         try {
@@ -1273,53 +1525,76 @@
                 .limit(100);
 
             if (error) {
-                lobby.innerHTML = `<div class="text-center py-20 text-red-400 uppercase">Archive corrupted</div>`;
+                if (!cachedLobbyHTML) {
+                    lobby.innerHTML = `<div class="text-center py-20 text-red-400 uppercase">Archive corrupted</div>`;
+                }
                 return;
             }
 
-            lobby.innerHTML = '';
-            let displayedCount = 0;
+            // Create new HTML without clearing existing
+            const newHTML = await buildLobbyHTML(games);
+            
+            // Only update if content changed
+            if (newHTML !== cachedLobbyHTML) {
+                lobby.innerHTML = newHTML;
+                cachedLobbyHTML = newHTML;
+            }
 
-            for (const game of games) {
-                const status = Number(game.status);
-                const isHost = userAddress && game.host === userAddress.toLowerCase();
-                const isChallenger = userAddress && game.challenger === userAddress.toLowerCase();
-                
-                if (currentLobbyFilter === 'open' && status !== 0) continue;
-                if (currentLobbyFilter === 'intercepted' && status !== 1) continue;
-                if (currentLobbyFilter === 'resolved' && status !== 2) continue;
-                
-                if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') continue;
+        } catch (err) { 
+            console.error("Lobby error:", err);
+            if (!cachedLobbyHTML) {
+                lobby.innerHTML = `<div class="text-center py-20 text-red-400">Archive error</div>`;
+            }
+        }
+    }
 
-                displayedCount++;
+    async function buildLobbyHTML(games) {
+        let html = '';
+        let displayedCount = 0;
 
-                const div = document.createElement('div');
-                const borderColor = status == 0 ? '#9333ea' : status == 1 ? '#eab308' : status == 2 ? '#15803d' : '#374151';
+        for (const game of games) {
+            const status = Number(game.status);
+            const isHost = userAddress && game.host === userAddress.toLowerCase();
+            const isChallenger = userAddress && game.challenger === userAddress.toLowerCase();
+            
+            if (currentLobbyFilter === 'open' && status !== 0) continue;
+            if (currentLobbyFilter === 'intercepted' && status !== 1) continue;
+            if (currentLobbyFilter === 'resolved' && status !== 2) continue;
+            
+            if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') continue;
+
+            displayedCount++;
+
+            const borderColor = status == 0 ? '#9333ea' : status == 1 ? '#eab308' : status == 2 ? '#15803d' : '#374151';
+            
+            let countdownHTML = '';
+            if (status === 0 || status === 1) {
+                const createdAt = new Date(game.created_at).getTime() / 1000;
+                const timeout = game.timeout || 900;
+                const deadline = createdAt + timeout;
+                const now = Math.floor(Date.now() / 1000);
+                const remaining = deadline - now;
                 
-                div.className = "p-5 grotto-glass rounded-lg border-l-4 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-purple-900/10";
-                div.style.borderLeftColor = borderColor;
-                
-                let countdownHTML = '';
-                if (status === 0 || status === 1) {
-                    const createdAt = new Date(game.created_at).getTime() / 1000;
-                    const timeout = game.timeout || 900;
-                    const deadline = createdAt + timeout;
-                    const now = Math.floor(Date.now() / 1000);
-                    const remaining = deadline - now;
-                    
-                    if (remaining > 0) {
-                        const minutes = Math.floor(remaining / 60);
-                        const seconds = remaining % 60;
-                        const timeColor = remaining < 60 ? '#ef4444' : '#9333ea';
-                        countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
-                    } else {
-                        countdownHTML = `<span class="text-[11px] text-red-500 ml-2 animate-pulse cinzel">⏱ EXPIRED</span>`;
-                    }
+                if (remaining > 0) {
+                    const minutes = Math.floor(remaining / 60);
+                    const seconds = remaining % 60;
+                    const timeColor = remaining < 60 ? '#ef4444' : '#9333ea';
+                    countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
+                } else {
+                    countdownHTML = `<span class="text-[11px] text-red-500 ml-2 animate-pulse cinzel">⏱ EXPIRED</span>`;
                 }
-                
-                const hostName = await getUsernameOrAddress(game.host);
-                
-                let gameInfo = `
+            }
+            
+            const hostName = await getUsernameOrAddress(game.host);
+            const isPremiumHost = await checkPremiumStatus(game.host);
+            
+            let hostDisplay = hostName;
+            if (isPremiumHost && isPremiumHost.is_active) {
+                hostDisplay = `<span class="premium-username">${hostName}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
+            }
+            
+            let gameInfo = `
+                <div class="lobby-item p-5 grotto-glass rounded-lg border-l-4 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-purple-900/10" style="border-left-color: ${borderColor}">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2 flex-wrap">
                             <span class="text-[10px] px-3 py-1 border rounded-full uppercase cinzel tracking-wider" style="border-color: ${borderColor}; color: ${borderColor}">${getStatusText(status)}</span>
@@ -1328,58 +1603,62 @@
                         </div>
                         <div class="cinzel text-purple-200 text-base">
                             <span class="text-purple-400 font-bold">${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL}</span> 
-                            <span class="text-purple-600 text-[11px] ml-2">FROM ${hostName}</span>`;
+                            <span class="text-purple-600 text-[11px] ml-2">FROM ${hostDisplay}</span>`;
+            
+            if (status == 2 && game.host_move && game.challenger_move) {
+                const hostMove = Number(game.host_move);
+                const challengerMove = Number(game.challenger_move);
                 
-                if (status == 2 && game.host_move && game.challenger_move) {
-                    const hostMove = Number(game.host_move);
-                    const challengerMove = Number(game.challenger_move);
-                    
-                    let winner = '';
-                    if (hostMove === challengerMove) {
-                        winner = '⚖️ STALEMATE';
-                    } else if (
-                        (hostMove === 1 && challengerMove === 2) ||
-                        (hostMove === 2 && challengerMove === 3) ||
-                        (hostMove === 3 && challengerMove === 1)
-                    ) {
-                        winner = `🏆 ${hostName} PREVAILS`;
-                    } else {
-                        const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
-                        winner = `🏆 ${challengerName} PREVAILS`;
+                let winner = '';
+                if (hostMove === challengerMove) {
+                    winner = '⚖️ STALEMATE';
+                } else if (
+                    (hostMove === 1 && challengerMove === 2) ||
+                    (hostMove === 2 && challengerMove === 3) ||
+                    (hostMove === 3 && challengerMove === 1)
+                ) {
+                    winner = `🏆 ${hostDisplay} PREVAILS`;
+                } else {
+                    const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
+                    const isPremiumChallenger = await checkPremiumStatus(game.challenger);
+                    let challengerDisplay = challengerName;
+                    if (isPremiumChallenger && isPremiumChallenger.is_active) {
+                        challengerDisplay = `<span class="premium-username">${challengerName}</span> <span class="premium-badge">⭐</span>`;
                     }
-                    
-                    gameInfo += `
-                        <div class="text-[11px] mt-2 text-purple-300/60 flex gap-2 items-center">
-                            <img src="${moveImages[hostMove]}" class="w-6 h-6 object-contain"> ${moveNames[hostMove]} vs 
-                            <img src="${moveImages[challengerMove]}" class="w-6 h-6 object-contain"> ${moveNames[challengerMove]}
-                        </div>
-                        <div class="text-[12px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-400' : 'text-green-400'} cinzel">
-                            ${winner}
-                        </div>`;
+                    winner = `🏆 ${challengerDisplay} PREVAILS`;
                 }
                 
                 gameInfo += `
-                        </div>
+                    <div class="text-[11px] mt-2 text-purple-300/60 flex gap-2 items-center">
+                        <img src="${moveImages[hostMove]}" class="w-6 h-6 object-contain"> ${moveNames[hostMove]} vs 
+                        <img src="${moveImages[challengerMove]}" class="w-6 h-6 object-contain"> ${moveNames[challengerMove]}
                     </div>
-                    <div class="flex gap-2">${await getActionButtons(game, isHost, isChallenger)}</div>`;
-                
-                div.innerHTML = gameInfo;
-                lobby.appendChild(div);
+                    <div class="text-[12px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-400' : 'text-green-400'} cinzel">
+                        ${winner}
+                    </div>`;
             }
             
-            if (displayedCount === 0) {
-                lobby.innerHTML = '<div class="text-center py-20 text-purple-700/50 uppercase italic cinzel">The void is silent...</div>';
-            }
-        } catch (err) { 
-            console.error("Lobby error:", err);
-            lobby.innerHTML = `<div class="text-center py-20 text-red-400">Archive error</div>`;
+            gameInfo += `
+                    </div>
+                </div>
+                <div class="flex gap-2">${await getActionButtons(game, isHost, isChallenger)}</div>
+            </div>`;
+            
+            html += gameInfo;
         }
+        
+        if (displayedCount === 0) {
+            html = '<div class="text-center py-20 text-purple-700/50 uppercase italic cinzel">The void is silent...</div>';
+        }
+        
+        return html;
     }
 
     function setLobbyFilter(filter) {
         currentLobbyFilter = filter;
         document.querySelectorAll('.lobby-filter').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`filter-${filter}`).classList.add('active');
+        cachedLobbyHTML = ''; // Force refresh
         refreshLobby();
     }
 
@@ -1412,1008 +1691,1360 @@
         if (game.status == 4) return `<span class="text-[10px] text-red-600 uppercase cinzel">⚡ Forfeited</span>`;
         return `<span class="text-[10px] text-gray-700 uppercase cinzel">Dormant</span>`;
     }
+</script>
+<script>
+// GROTTO GAMBIT - REMAINING JAVASCRIPT FUNCTIONS
+// Add this content after the previous script tags in your HTML
 
-    async function handleChallenge(id, wager) {
-        if (!signer) return showToast("Summon portal first");
-        if (!(await checkNetwork())) return;
+// GAME CHALLENGE, RESOLVE, AND FORFEIT FUNCTIONS
+async function handleChallenge(id, wager) {
+    if (!signer) return showToast("Summon portal first");
+    if (!(await checkNetwork())) return;
+    
+    const move = prompt(`Select your force:\n1 - ${moveNames[1]}\n2 - ${moveNames[2]}\n3 - ${moveNames[3]}`);
+    if (!move || move < 1 || move > 3) return showToast("Invalid force");
+    
+    try {
+        showToast("Accepting challenge...");
+        const gameData = await contract.games(id);
+        const actualWager = gameData.wager;
         
-        const move = prompt(`Select your force:\n1 - ${moveNames[1]}\n2 - ${moveNames[2]}\n3 - ${moveNames[3]}`);
-        if (!move || move < 1 || move > 3) return showToast("Invalid force");
+        const tx = await contract.challengeGame(id, move, { value: actualWager });
+        showToast("Sealing pact...");
+        await tx.wait();
         
-        try {
-            showToast("Accepting challenge...");
-            const gameData = await contract.games(id);
-            const actualWager = gameData.wager;
-            
-            const tx = await contract.challengeGame(id, move, { value: actualWager });
-            showToast("Sealing pact...");
-            await tx.wait();
-            
-            await _supabase.from('grotto_games')
-                .update({ 
-                    status: 1, 
-                    challenger: userAddress.toLowerCase(),
-                    challenger_move: parseInt(move)
-                })
-                .eq('game_id', id);
-            
-            updatePlayerStats('gameChallenged', parseFloat(wager));
-            showToast("✓ Challenge accepted");
-            setTimeout(refreshLobby, 1500);
-        } catch (err) { 
-            console.error("Challenge error:", err);
-            showToast("Challenge failed"); 
-        }
+        await _supabase.from('grotto_games')
+            .update({ 
+                status: 1, 
+                challenger: userAddress.toLowerCase(),
+                challenger_move: parseInt(move)
+            })
+            .eq('game_id', id);
+        
+        await updatePlayerStatsDB('gameChallenged', parseFloat(wager));
+        showToast("✓ Challenge accepted");
+        cachedLobbyHTML = '';
+        setTimeout(refreshLobby, 1500);
+    } catch (err) { 
+        console.error("Challenge error:", err);
+        showToast("Challenge failed"); 
     }
+}
 
-    async function handleResolve(id, hash) {
-        if (!signer) return showToast("Summon portal first");
-        if (!(await checkNetwork())) return;
-        
-        const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
-        let secret = secrets[hash];
-        
-        if (!secret) {
-            const manualReveal = confirm("Secret not found in this sanctum. Enter manually?");
-            if (!manualReveal) {
-                showToast("⚠️ Secret not found");
-                return;
-            }
-            
-            const move = prompt("Enter your force (1-3):");
-            const salt = prompt("Enter your salt (hex):");
-            
-            if (!move || !salt) return showToast("Cancelled");
-            
-            const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-                ["uint8", "string", "address", "uint256"],
-                [parseInt(move), salt, userAddress, BigInt(id)]
-            );
-            const testHash = ethers.keccak256(encoded);
-            
-            if (testHash.toLowerCase() !== hash.toLowerCase()) {
-                return showToast("⚠️ Hash mismatch");
-            }
-            
-            secret = { move: parseInt(move), salt: salt };
-        }
-        
-        try {
-            showToast("Revealing truth...");
-            const tx = await contract.resolveGame(id, secret.move, secret.salt);
-            await tx.wait();
-            
-            const gameData = await contract.games(id);
-            const hostMove = Number(gameData.hostMove);
-            const challengerMove = Number(gameData.challengerMove);
-            
-            let resultMsg = "Ritual completed";
-            let isWin = false;
-            let isDraw = false;
-            
-            if (hostMove === challengerMove) {
-                resultMsg = "⚖️ STALEMATE";
-                isDraw = true;
-            } else if (
-                (hostMove === 1 && challengerMove === 2) ||
-                (hostMove === 2 && challengerMove === 3) ||
-                (hostMove === 3 && challengerMove === 1)
-            ) {
-                resultMsg = "🏆 VICTORY!";
-                isWin = true;
-            } else {
-                resultMsg = "💀 DEFEAT";
-                isWin = false;
-            }
-            
-            // Add notification
-            addNotification({
-                type: isDraw ? 'draw' : (isWin ? 'win' : 'loss'),
-                gameId: id,
-                message: resultMsg,
-                timestamp: Date.now()
-            });
-            
-            await _supabase.from('grotto_games').update({ 
-                status: 2,
-                host_move: hostMove,
-                challenger_move: challengerMove
-            }).eq('game_id', id);
-            
-            updatePlayerStats(isWin ? 'gameWon' : (isDraw ? 'gameDraw' : 'gameLost'));
-            
-            setTimeout(refreshLobby, 1000);
-            updateBalance();
-            showToast(resultMsg);
-        } catch (err) { 
-            console.error("Resolve error:", err);
-            showToast("Reveal failed"); 
-        }
-    }
-
-    async function handleRefund(id) {
-        if (!signer) return showToast("Summon portal first");
-        if (!(await checkNetwork())) return;
-        
-        try {
-            showToast("Retracting ritual...");
-            const tx = await contract.refundUnchallenged(id);
-            await tx.wait();
-            
-            await _supabase.from('grotto_games').update({ status: 3 }).eq('game_id', id);
-            refreshLobby();
-            updateBalance();
-            showToast("Heresy returned");
-        } catch (err) { 
-            console.error(err);
-            showToast("Refund failed"); 
-        }
-    }
-
-    async function handleForceForfeit(gameId) {
-        if (!signer) return showToast("Summon portal first");
-        if (!(await checkNetwork())) return;
-        
-        try {
-            showToast("Claiming victory...");
-            const tx = await contract.forceForfeit(gameId);
-            await tx.wait();
-            
-            addNotification({
-                type: 'win',
-                gameId: gameId,
-                message: '🏆 Victory by forfeit',
-                timestamp: Date.now()
-            });
-            
-            await _supabase.from('grotto_games').update({ status: 4 }).eq('game_id', gameId);
-            updatePlayerStats('gameWon');
-            refreshLobby();
-            updateBalance();
-            showToast("🏆 Victory by forfeit!");
-        } catch (err) {
-            console.error("Forfeit error:", err);
-            showToast("Forfeit failed");
-        }
-    }
-
-    // NOTIFICATION SYSTEM
-    function addNotification(notif) {
-        if (!userAddress) return;
-        
-        const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
-        
-        let message = '';
-        if (notif.type === 'win') {
-            message = winMessages[Math.floor(Math.random() * winMessages.length)];
-        } else if (notif.type === 'loss') {
-            message = lossMessages[Math.floor(Math.random() * lossMessages.length)];
-        } else {
-            message = drawMessages[Math.floor(Math.random() * drawMessages.length)];
-        }
-        
-        const newNotif = {
-            ...notif,
-            motivationalMessage: message,
-            read: false
-        };
-        
-        notifications.unshift(newNotif);
-        localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(notifications.slice(0, 50)));
-        
-        loadNotifications();
-    }
-
-    function loadNotifications() {
-        if (!userAddress) return;
-        
-        const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
-        userNotifications = notifications;
-        
-        const unreadCount = notifications.filter(n => !n.read).length;
-        const badge = document.getElementById('notification-badge');
-        
-        if (unreadCount > 0) {
-            badge.textContent = unreadCount;
-            badge.classList.remove('hidden');
-        } else {
-            badge.classList.add('hidden');
-        }
-        
-        renderNotifications();
-    }
-
-    function renderNotifications() {
-        const list = document.getElementById('notification-list');
-        
-        if (userNotifications.length === 0) {
-            list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens to reveal...</div>';
+async function handleResolve(id, hash) {
+    if (!signer) return showToast("Summon portal first");
+    if (!(await checkNetwork())) return;
+    
+    const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
+    let secret = secrets[hash];
+    
+    if (!secret) {
+        const manualReveal = confirm("Secret not found in this sanctum. Enter manually?");
+        if (!manualReveal) {
+            showToast("⚠️ Secret not found");
             return;
         }
         
-        list.innerHTML = userNotifications.map(notif => {
-            const bgClass = notif.type === 'win' ? 'bg-green-900/10' : notif.type === 'loss' ? 'bg-red-900/10' : 'bg-yellow-900/10';
-            const borderClass = notif.type === 'win' ? 'win' : notif.type === 'loss' ? 'loss' : '';
+        const move = prompt("Enter your force (1-3):");
+        const salt = prompt("Enter your salt (hex):");
+        
+        if (!move || !salt) return showToast("Cancelled");
+        
+        const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
+            ["uint8", "string", "address", "uint256"],
+            [parseInt(move), salt, userAddress, BigInt(id)]
+        );
+        const testHash = ethers.keccak256(encoded);
+        
+        if (testHash.toLowerCase() !== hash.toLowerCase()) {
+            return showToast("⚠️ Hash mismatch");
+        }
+        
+        secret = { move: parseInt(move), salt: salt };
+    }
+    
+    try {
+        showToast("Revealing truth...");
+        const tx = await contract.resolveGame(id, secret.move, secret.salt);
+        await tx.wait();
+        
+        const gameData = await contract.games(id);
+        const hostMove = Number(gameData.hostMove);
+        const challengerMove = Number(gameData.challengerMove);
+        
+        let resultMsg = "Ritual completed";
+        let isWin = false;
+        let isDraw = false;
+        
+        if (hostMove === challengerMove) {
+            resultMsg = "⚖️ STALEMATE";
+            isDraw = true;
+        } else if (
+            (hostMove === 1 && challengerMove === 2) ||
+            (hostMove === 2 && challengerMove === 3) ||
+            (hostMove === 3 && challengerMove === 1)
+        ) {
+            resultMsg = "🏆 VICTORY!";
+            isWin = true;
+        } else {
+            resultMsg = "💀 DEFEAT";
+            isWin = false;
+        }
+        
+        addNotification({
+            type: isDraw ? 'draw' : (isWin ? 'win' : 'loss'),
+            gameId: id,
+            message: resultMsg,
+            timestamp: Date.now()
+        });
+        
+        await _supabase.from('grotto_games').update({ 
+            status: 2,
+            host_move: hostMove,
+            challenger_move: challengerMove
+        }).eq('game_id', id);
+        
+        await updatePlayerStatsDB(isWin ? 'gameWon' : (isDraw ? 'gameDraw' : 'gameLost'));
+        
+        cachedLobbyHTML = '';
+        setTimeout(refreshLobby, 1000);
+        updateBalance();
+        showToast(resultMsg);
+    } catch (err) { 
+        console.error("Resolve error:", err);
+        showToast("Reveal failed"); 
+    }
+}
+
+async function handleRefund(id) {
+    if (!signer) return showToast("Summon portal first");
+    if (!(await checkNetwork())) return;
+    
+    try {
+        showToast("Retracting ritual...");
+        const tx = await contract.refundUnchallenged(id);
+        await tx.wait();
+        
+        await _supabase.from('grotto_games').update({ status: 3 }).eq('game_id', id);
+        cachedLobbyHTML = '';
+        refreshLobby();
+        updateBalance();
+        showToast("Heresy returned");
+    } catch (err) { 
+        console.error(err);
+        showToast("Refund failed"); 
+    }
+}
+
+async function handleForceForfeit(gameId) {
+    if (!signer) return showToast("Summon portal first");
+    if (!(await checkNetwork())) return;
+    
+    try {
+        showToast("Claiming victory...");
+        const tx = await contract.forceForfeit(gameId);
+        await tx.wait();
+        
+        addNotification({
+            type: 'win',
+            gameId: gameId,
+            message: '🏆 Victory by forfeit',
+            timestamp: Date.now()
+        });
+        
+        await _supabase.from('grotto_games').update({ status: 4 }).eq('game_id', gameId);
+        await updatePlayerStatsDB('gameWon');
+        cachedLobbyHTML = '';
+        refreshLobby();
+        updateBalance();
+        showToast("🏆 Victory by forfeit!");
+    } catch (err) {
+        console.error("Forfeit error:", err);
+        showToast("Forfeit failed");
+    }
+}
+
+// PREMIUM FUNCTIONS
+async function checkPremiumStatus(address) {
+    if (!address) return null;
+    
+    try {
+        const { data, error } = await _supabase
+            .from('grotto_premium')
+            .select('*')
+            .eq('address', address.toLowerCase())
+            .single();
+        
+        if (error || !data) return null;
+        
+        // Check if expired
+        if (data.is_active && new Date(data.expiry_date) < new Date()) {
+            // Update to inactive
+            await _supabase
+                .from('grotto_premium')
+                .update({ is_active: false })
+                .eq('address', address.toLowerCase());
+            return { ...data, is_active: false };
+        }
+        
+        return data;
+    } catch (err) {
+        console.error("Premium check error:", err);
+        return null;
+    }
+}
+
+async function purchasePremium() {
+    if (!signer || !userAddress) {
+        showToast("Summon portal first");
+        return;
+    }
+    
+    if (!(await checkNetwork())) return;
+    
+    const confirmPurchase = confirm(`Purchase Gilded Ascension for 30 days?\n\nPrice: 0.0001 $HERESY\n\nYour name will shimmer in gold across all realms!`);
+    if (!confirmPurchase) return;
+    
+    try {
+        showToast("Forging golden covenant...");
+        
+        const amount = ethers.parseEther("0.0001");
+        const tx = await signer.sendTransaction({
+            to: TREASURY_ADDR,
+            value: amount
+        });
+        
+        showToast("Awaiting divine confirmation...");
+        const receipt = await tx.wait();
+        
+        // Calculate expiry date (30 days from now)
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30);
+        
+        // Save to database
+        const { error } = await _supabase
+            .from('grotto_premium')
+            .upsert({
+                address: userAddress.toLowerCase(),
+                is_active: true,
+                purchase_date: new Date().toISOString(),
+                expiry_date: expiryDate.toISOString(),
+                transaction_hash: receipt.hash,
+                amount_paid: "0.0001"
+            });
+        
+        if (error) {
+            console.error("Premium DB error:", error);
+            showToast("⚠️ Payment sent but activation failed - contact support");
+            return;
+        }
+        
+        userPremiumStatus = await checkPremiumStatus(userAddress);
+        
+        showToast("✨ GILDED ASCENSION GRANTED! ✨");
+        
+        // Update UI
+        const username = await getUsernameOrAddress(userAddress);
+        const addressEl = document.getElementById('user-address');
+        addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
+        document.getElementById('premium-indicator').innerHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
+        document.getElementById('premium-indicator').classList.remove('hidden');
+        
+        updatePremiumDisplay();
+        updateBalance();
+        
+        // Refresh displays
+        cachedLobbyHTML = '';
+        refreshLobby();
+        loadLeaderboard();
+        
+    } catch (err) {
+        console.error("Premium purchase error:", err);
+        showToast("Purchase failed");
+    }
+}
+
+async function updatePremiumDisplay() {
+    const statusDisplay = document.getElementById('premium-status-display');
+    const purchaseBtn = document.getElementById('purchase-premium-btn');
+    
+    if (!userAddress) {
+        statusDisplay.innerHTML = `
+            <div class="grotto-glass border border-purple-500/30 p-4 rounded-lg text-center">
+                <div class="text-purple-400 text-sm">Connect wallet to view premium status</div>
+            </div>
+        `;
+        purchaseBtn.disabled = true;
+        return;
+    }
+    
+    const premiumStatus = await checkPremiumStatus(userAddress);
+    
+    if (premiumStatus && premiumStatus.is_active) {
+        const expiryDate = new Date(premiumStatus.expiry_date);
+        const daysRemaining = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
+        
+        statusDisplay.innerHTML = `
+            <div class="grotto-glass border-2 border-yellow-500/50 p-6 rounded-lg">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-2xl" style="box-shadow: 0 0 20px var(--premium-glow)">
+                        👑
+                    </div>
+                    <div>
+                        <div class="cinzel text-lg premium-username">ACTIVE PREMIUM</div>
+                        <div class="text-xs text-purple-400/70">${daysRemaining} days remaining</div>
+                    </div>
+                </div>
+                <div class="text-sm text-purple-300/80">
+                    Your gilded ascension expires on ${expiryDate.toLocaleDateString()}
+                </div>
+            </div>
+        `;
+        purchaseBtn.textContent = "RENEW GILDED POWER";
+    } else {
+        statusDisplay.innerHTML = `
+            <div class="grotto-glass border border-purple-500/30 p-4 rounded-lg">
+                <div class="text-purple-400 text-sm">You don't have premium status yet</div>
+            </div>
+        `;
+        purchaseBtn.textContent = "ACQUIRE GILDED POWER";
+        purchaseBtn.disabled = false;
+    }
+}
+
+function closePremiumModal() {
+    document.getElementById('premium-modal').classList.remove('active');
+}
+
+// PLAYER STATS IN SUPABASE
+async function updatePlayerStatsDB(event, amount = 0) {
+    if (!userAddress) return;
+    
+    try {
+        // Get current stats from DB
+        const { data: existingStats, error: fetchError } = await _supabase
+            .from('grotto_player_stats')
+            .select('*')
+            .eq('address', userAddress.toLowerCase())
+            .single();
+        
+        const today = new Date().toISOString().split('T')[0];
+        let stats = existingStats || {
+            address: userAddress.toLowerCase(),
+            total_games: 0,
+            total_wins: 0,
+            total_losses: 0,
+            total_draws: 0,
+            total_wagered: 0,
+            longest_streak: 0,
+            current_streak: 0,
+            biggest_pot: 0,
+            daily_games: 0,
+            daily_wins: 0,
+            daily_losses: 0,
+            daily_wagered: 0,
+            daily_streak: 0,
+            last_daily_reset: today
+        };
+        
+        // Reset daily stats if new day
+        if (stats.last_daily_reset !== today) {
+            stats.daily_games = 0;
+            stats.daily_wins = 0;
+            stats.daily_losses = 0;
+            stats.daily_wagered = 0;
+            stats.daily_streak = 0;
+            stats.last_daily_reset = today;
+        }
+        
+        // Update based on event
+        switch(event) {
+            case 'gameCreated':
+            case 'gameChallenged':
+                stats.daily_games++;
+                stats.total_games++;
+                stats.daily_wagered = parseFloat(stats.daily_wagered) + amount;
+                stats.total_wagered = parseFloat(stats.total_wagered) + amount;
+                if (amount * 2 > stats.biggest_pot) {
+                    stats.biggest_pot = amount * 2;
+                }
+                break;
+            case 'gameWon':
+                stats.daily_wins++;
+                stats.total_wins++;
+                stats.daily_streak++;
+                stats.current_streak++;
+                if (stats.current_streak > stats.longest_streak) {
+                    stats.longest_streak = stats.current_streak;
+                }
+                break;
+            case 'gameLost':
+                stats.daily_losses++;
+                stats.total_losses++;
+                stats.daily_streak = 0;
+                stats.current_streak = 0;
+                break;
+            case 'gameDraw':
+                stats.total_draws++;
+                stats.daily_streak = 0;
+                stats.current_streak = 0;
+                break;
+        }
+        
+        // Upsert to DB
+        const { error: upsertError } = await _supabase
+            .from('grotto_player_stats')
+            .upsert(stats);
+        
+        if (upsertError) {
+            console.error("Stats update error:", upsertError);
+        }
+        
+        checkAchievements();
+    } catch (err) {
+        console.error("Player stats DB error:", err);
+    }
+}
+
+// BLOOD RITE SYSTEM - SUPABASE VERSION
+async function getBloodPoints() {
+    if (!userAddress) return 0;
+    
+    try {
+        const { data, error } = await _supabase
+            .from('grotto_blood_points')
+            .select('total_points')
+            .eq('address', userAddress.toLowerCase())
+            .single();
+        
+        if (error || !data) return 0;
+        return data.total_points || 0;
+    } catch (err) {
+        return 0;
+    }
+}
+
+async function addBloodPoints(points) {
+    if (!userAddress) return;
+    
+    try {
+        const currentBP = await getBloodPoints();
+        const newTotal = currentBP + points;
+        const newLevel = Math.floor(newTotal / 100) + 1;
+        
+        const { error } = await _supabase
+            .from('grotto_blood_points')
+            .upsert({
+                address: userAddress.toLowerCase(),
+                total_points: newTotal,
+                current_level: newLevel
+            });
+        
+        if (error) {
+            console.error("Blood points add error:", error);
+        }
+        
+        await updateBloodLevel();
+    } catch (err) {
+        console.error("Add BP error:", err);
+    }
+}
+
+async function updateBloodLevel() {
+    const bp = await getBloodPoints();
+    const level = Math.floor(bp / 100) + 1;
+    const currentLevelBP = bp % 100;
+    const nextLevelBP = 100;
+    const progress = (currentLevelBP / nextLevelBP) * 100;
+    
+    const elements = {
+        'blood-points-total': bp,
+        'blood-level': level,
+        'current-level': level,
+        'next-level-bp': nextLevelBP,
+        'current-bp': currentLevelBP
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    });
+    
+    const progressBar = document.getElementById('level-progress-bar');
+    if (progressBar) progressBar.style.width = progress + '%';
+}
+
+async function getClaimedAchievements() {
+    if (!userAddress) return { daily: [], milestone: [] };
+    
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const { data, error } = await _supabase
+            .from('grotto_achievements')
+            .select('*')
+            .eq('address', userAddress.toLowerCase());
+        
+        if (error || !data) return { daily: [], milestone: [] };
+        
+        const daily = data
+            .filter(a => a.is_daily && a.claimed_date === today)
+            .map(a => a.achievement_id);
+        
+        const milestone = data
+            .filter(a => !a.is_daily)
+            .map(a => a.achievement_id);
+        
+        return { daily, milestone };
+    } catch (err) {
+        return { daily: [], milestone: [] };
+    }
+}
+
+async function claimAchievement(achievementId, isDaily, points) {
+    if (!userAddress) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+        const { error } = await _supabase
+            .from('grotto_achievements')
+            .insert({
+                address: userAddress.toLowerCase(),
+                achievement_id: achievementId,
+                is_daily: isDaily,
+                claimed_date: today,
+                points_awarded: points
+            });
+        
+        if (error) {
+            if (error.code === '23505') { // Duplicate
+                showToast("Already claimed");
+            } else {
+                showToast("Claim failed");
+            }
+            return;
+        }
+        
+        await addBloodPoints(points);
+        showToast(`✓ Claimed ${points} Blood Points!`);
+        await loadBloodRite();
+    } catch (err) {
+        console.error("Claim error:", err);
+        showToast("Claim failed");
+    }
+}
+
+function updateDailyTimer() {
+    const now = new Date();
+    const utcMidnight = new Date();
+    utcMidnight.setUTCHours(24, 0, 0, 0);
+    
+    const diff = utcMidnight - now;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    const timerEl = document.getElementById('daily-timer');
+    if (timerEl) {
+        timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+}
+
+async function getPlayerStatsForAchievements() {
+    if (!userAddress) return null;
+    
+    try {
+        const { data, error } = await _supabase
+            .from('grotto_player_stats')
+            .select('*')
+            .eq('address', userAddress.toLowerCase())
+            .single();
+        
+        if (error || !data) {
+            return {
+                dailyGames: 0,
+                dailyWins: 0,
+                dailyLosses: 0,
+                dailyWagered: 0,
+                dailyStreak: 0,
+                totalWins: 0,
+                totalLosses: 0,
+                totalGames: 0,
+                totalWagered: 0,
+                longestStreak: 0
+            };
+        }
+        
+        return {
+            dailyGames: data.daily_games || 0,
+            dailyWins: data.daily_wins || 0,
+            dailyLosses: data.daily_losses || 0,
+            dailyWagered: parseFloat(data.daily_wagered) || 0,
+            dailyStreak: data.daily_streak || 0,
+            totalWins: data.total_wins || 0,
+            totalLosses: data.total_losses || 0,
+            totalGames: data.total_games || 0,
+            totalWagered: parseFloat(data.total_wagered) || 0,
+            longestStreak: data.longest_streak || 0
+        };
+    } catch (err) {
+        console.error("Stats fetch error:", err);
+        return null;
+    }
+}
+
+async function checkAchievements() {
+    if (!userAddress) return;
+    const stats = await getPlayerStatsForAchievements();
+    if (!stats) return;
+    
+    const claimed = await getClaimedAchievements();
+    
+    let newAchievements = 0;
+    
+    dailyAchievements.forEach(ach => {
+        if (!claimed.daily.includes(ach.id) && ach.check(stats)) {
+            newAchievements++;
+        }
+    });
+    
+    milestoneAchievements.forEach(ach => {
+        if (!claimed.milestone.includes(ach.id) && ach.check(stats)) {
+            newAchievements++;
+        }
+    });
+    
+    if (newAchievements > 0) {
+        showToast(`${newAchievements} new achievement${newAchievements > 1 ? 's' : ''} available!`);
+    }
+}
+
+async function loadBloodRite() {
+    if (!userAddress) return;
+    
+    const stats = await getPlayerStatsForAchievements();
+    if (!stats) return;
+    
+    const claimed = await getClaimedAchievements();
+    
+    await updateBloodLevel();
+    
+    // Render daily achievements
+    const dailyContainer = document.getElementById('daily-achievements');
+    if (dailyContainer) {
+        dailyContainer.innerHTML = dailyAchievements.map(ach => {
+            const isCompleted = ach.check(stats);
+            const isClaimed = claimed.daily.includes(ach.id);
+            const canClaim = isCompleted && !isClaimed;
             
             return `
-                <div class="notification-item ${borderClass} p-4 ${bgClass} ${notif.read ? 'opacity-50' : ''}">
-                    <div class="flex items-start justify-between gap-3">
+                <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
+                    <div class="flex items-start gap-4">
+                        <div class="text-4xl">${ach.icon}</div>
                         <div class="flex-1">
-                            <div class="text-sm font-semibold text-purple-300 mb-1">${notif.message}</div>
-                            <div class="text-xs text-purple-400/70 mb-2">Game #${notif.gameId} • ${getTimeAgo(new Date(notif.timestamp))}</div>
-                            <div class="text-sm text-purple-200/80 italic leading-relaxed">${notif.motivationalMessage}</div>
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
+                                    <p class="text-sm text-purple-400/70">${ach.desc}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
+                                    <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
+                                </div>
+                            </div>
+                            ${canClaim ? 
+                                `<button onclick="claimAchievement('${ach.id}', true, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
+                                isClaimed ? 
+                                    `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
+                                    `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">In Progress</div>`
+                            }
                         </div>
-                        ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>' : ''}
                     </div>
                 </div>
             `;
         }).join('');
     }
-
-    function toggleNotifications() {
-        const panel = document.getElementById('notification-panel');
-        panel.classList.toggle('active');
-    }
-
-    function markAllRead() {
-        if (!userAddress) return;
-        
-        userNotifications = userNotifications.map(n => ({ ...n, read: true }));
-        localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(userNotifications));
-        loadNotifications();
-    }
-
-    document.addEventListener('click', (e) => {
-        const panel = document.getElementById('notification-panel');
-        const btn = document.getElementById('notification-btn');
-        if (!panel.contains(e.target) && !btn.contains(e.target)) {
-            panel.classList.remove('active');
-        }
-    });
-
-    // Continue in part 4c...
-</script>
-<!-- PART 4C: FINAL JAVASCRIPT - Blood Rite, Profile, Leaderboard, Helpers -->
-<script>
-    // BLOOD RITE SYSTEM
-    function updateDailyTimer() {
-        const now = new Date();
-        const utcMidnight = new Date();
-        utcMidnight.setUTCHours(24, 0, 0, 0);
-        
-        const diff = utcMidnight - now;
-        const hours = Math.floor(diff / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-        
-        const timerEl = document.getElementById('daily-timer');
-        if (timerEl) {
-            timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-    }
-
-    function getPlayerStats() {
-        if (!userAddress) return null;
-        
-        const today = new Date().toISOString().split('T')[0];
-        const stats = JSON.parse(localStorage.getItem(`grotto_stats_${userAddress}`) || '{}');
-        
-        if (stats.lastUpdate !== today) {
-            stats.dailyGames = 0;
-            stats.dailyWins = 0;
-            stats.dailyLosses = 0;
-            stats.dailyWagered = 0;
-            stats.dailyStreak = 0;
-            stats.lastUpdate = today;
-        }
-        
-        stats.totalWins = stats.totalWins || 0;
-        stats.totalLosses = stats.totalLosses || 0;
-        stats.totalGames = stats.totalGames || 0;
-        stats.totalWagered = stats.totalWagered || 0;
-        stats.longestStreak = stats.longestStreak || 0;
-        stats.currentStreak = stats.currentStreak || 0;
-        
-        return stats;
-    }
-
-    function updatePlayerStats(event, amount = 0) {
-        if (!userAddress) return;
-        
-        const stats = getPlayerStats();
-        
-        switch(event) {
-            case 'gameCreated':
-            case 'gameChallenged':
-                stats.dailyGames++;
-                stats.totalGames++;
-                stats.dailyWagered += amount;
-                stats.totalWagered += amount;
-                break;
-            case 'gameWon':
-                stats.dailyWins++;
-                stats.totalWins++;
-                stats.dailyStreak++;
-                stats.currentStreak++;
-                if (stats.currentStreak > stats.longestStreak) {
-                    stats.longestStreak = stats.currentStreak;
-                }
-                break;
-            case 'gameLost':
-                stats.dailyLosses++;
-                stats.totalLosses++;
-                stats.dailyStreak = 0;
-                stats.currentStreak = 0;
-                break;
-            case 'gameDraw':
-                stats.dailyStreak = 0;
-                stats.currentStreak = 0;
-                break;
-        }
-        
-        localStorage.setItem(`grotto_stats_${userAddress}`, JSON.stringify(stats));
-        checkAchievements();
-    }
-
-    function getBloodPoints() {
-        if (!userAddress) return 0;
-        return parseInt(localStorage.getItem(`grotto_bp_${userAddress}`) || '0');
-    }
-
-    function addBloodPoints(points) {
-        if (!userAddress) return;
-        const current = getBloodPoints();
-        localStorage.setItem(`grotto_bp_${userAddress}`, (current + points).toString());
-        updateBloodLevel();
-    }
-
-    function getClaimedAchievements() {
-        if (!userAddress) return [];
-        return JSON.parse(localStorage.getItem(`grotto_claimed_${userAddress}`) || '[]');
-    }
-
-    function markAchievementClaimed(achievementId) {
-        if (!userAddress) return;
-        const claimed = getClaimedAchievements();
-        if (!claimed.includes(achievementId)) {
-            claimed.push(achievementId);
-            localStorage.setItem(`grotto_claimed_${userAddress}`, JSON.stringify(claimed));
-        }
-    }
-
-    function checkAchievements() {
-        if (!userAddress) return;
-        const stats = getPlayerStats();
-        const claimed = getClaimedAchievements();
-        const today = new Date().toISOString().split('T')[0];
-        const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
-        
-        let newAchievements = 0;
-        
-        // Check daily achievements
-        dailyAchievements.forEach(ach => {
-            if (!dailyClaimed.includes(ach.id) && ach.check(stats)) {
-                newAchievements++;
-            }
-        });
-        
-        // Check milestone achievements
-        milestoneAchievements.forEach(ach => {
-            if (!claimed.includes(ach.id) && ach.check(stats)) {
-                newAchievements++;
-            }
-        });
-        
-        if (newAchievements > 0) {
-            showToast(`${newAchievements} new achievement${newAchievements > 1 ? 's' : ''} available!`);
-        }
-    }
-
-    function claimAchievement(achievementId, isDaily, points) {
-        if (!userAddress) return;
-        
-        const today = new Date().toISOString().split('T')[0];
-        
-        if (isDaily) {
-            const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
-            if (dailyClaimed.includes(achievementId)) {
-                showToast("Already claimed today");
-                return;
-            }
-            dailyClaimed.push(achievementId);
-            localStorage.setItem(`grotto_daily_claimed_${userAddress}_${today}`, JSON.stringify(dailyClaimed));
-        } else {
-            const claimed = getClaimedAchievements();
-            if (claimed.includes(achievementId)) {
-                showToast("Already claimed");
-                return;
-            }
-            markAchievementClaimed(achievementId);
-        }
-        
-        addBloodPoints(points);
-        showToast(`✓ Claimed ${points} Blood Points!`);
-        loadBloodRite();
-    }
-
-    function updateBloodLevel() {
-        const bp = getBloodPoints();
-        const level = Math.floor(bp / 100) + 1;
-        const currentLevelBP = bp % 100;
-        const nextLevelBP = 100;
-        const progress = (currentLevelBP / nextLevelBP) * 100;
-        
-        document.getElementById('blood-points-total').textContent = bp;
-        document.getElementById('blood-level').textContent = level;
-        document.getElementById('current-level').textContent = level;
-        document.getElementById('next-level-bp').textContent = nextLevelBP;
-        document.getElementById('current-bp').textContent = currentLevelBP;
-        document.getElementById('level-progress-bar').style.width = progress + '%';
-    }
-
-    function loadBloodRite() {
-        if (!userAddress) return;
-        
-        const stats = getPlayerStats();
-        const today = new Date().toISOString().split('T')[0];
-        const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
-        const claimed = getClaimedAchievements();
-        
-        // Update blood points display
-        updateBloodLevel();
-        
-        // Render daily achievements
-        const dailyContainer = document.getElementById('daily-achievements');
-        if (dailyContainer) {
-            dailyContainer.innerHTML = dailyAchievements.map(ach => {
-                const isCompleted = ach.check(stats);
-                const isClaimed = dailyClaimed.includes(ach.id);
-                const canClaim = isCompleted && !isClaimed;
-                
-                return `
-                    <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
-                        <div class="flex items-start gap-4">
-                            <div class="text-4xl">${ach.icon}</div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                        <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                        <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                    </div>
-                                </div>
-                                ${canClaim ? 
-                                    `<button onclick="claimAchievement('${ach.id}', true, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
-                                    isClaimed ? 
-                                        `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                        `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">In Progress</div>`
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        
-        // Render milestone achievements
-        const milestoneContainer = document.getElementById('milestone-achievements');
-        if (milestoneContainer) {
-            milestoneContainer.innerHTML = milestoneAchievements.map(ach => {
-                const isCompleted = ach.check(stats);
-                const isClaimed = claimed.includes(ach.id);
-                const canClaim = isCompleted && !isClaimed;
-                
-                return `
-                    <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
-                        <div class="flex items-start gap-4">
-                            <div class="text-4xl">${ach.icon}</div>
-                            <div class="flex-1">
-                                <div class="flex justify-between items-start mb-2">
-                                    <div>
-                                        <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                        <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                        <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                    </div>
-                                </div>
-                                ${canClaim ? 
-                                    `<button onclick="claimAchievement('${ach.id}', false, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
-                                    isClaimed ? 
-                                        `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                        `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">Locked</div>`
-                                }
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-    }
-
-    // ACTIVITY FEED
-    async function refreshActivityFeed() {
-        const feed = document.getElementById('activity-feed');
-        try {
-            const { data: games, error } = await _supabase
-                .from('grotto_games')
-                .select('*')
-                .eq('status', 2)
-                .order('updated_at', { ascending: false })
-                .limit(50);
-
-            if (error) return;
-
-            const feedItems = await Promise.all(games.map(async game => {
-                const hostMove = Number(game.host_move);
-                const challengerMove = Number(game.challenger_move);
-                
-                let result = '', resultColor = '';
-                const hostName = await getUsernameOrAddress(game.host);
-                const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
-                
-                if (hostMove === challengerMove) {
-                    result = 'STALEMATE';
-                    resultColor = 'text-yellow-400';
-                } else if (
-                    (hostMove === 1 && challengerMove === 2) ||
-                    (hostMove === 2 && challengerMove === 3) ||
-                    (hostMove === 3 && challengerMove === 1)
-                ) {
-                    result = `${hostName} PREVAILS`;
-                    resultColor = 'text-green-400';
-                } else {
-                    result = `${challengerName} PREVAILS`;
-                    resultColor = 'text-green-400';
-                }
-                
-                const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
-                
-                return `
-                    <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
+    
+    // Render milestone achievements
+    const milestoneContainer = document.getElementById('milestone-achievements');
+    if (milestoneContainer) {
+        milestoneContainer.innerHTML = milestoneAchievements.map(ach => {
+            const isCompleted = ach.check(stats);
+            const isClaimed = claimed.milestone.includes(ach.id);
+            const canClaim = isCompleted && !isClaimed;
+            
+            return `
+                <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
+                    <div class="flex items-start gap-4">
+                        <div class="text-4xl">${ach.icon}</div>
                         <div class="flex-1">
-                            <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
-                            <div class="text-[11px] text-purple-500/60 mt-1 flex items-center gap-2">
-                                <img src="${moveImages[hostMove]}" class="w-5 h-5 object-contain"> ${moveNames[hostMove]} vs 
-                                <img src="${moveImages[challengerMove]}" class="w-5 h-5 object-contain"> ${moveNames[challengerMove]} • 
-                                ${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL} • ${timeAgo}
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
+                                    <p class="text-sm text-purple-400/70">${ach.desc}</p>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
+                                    <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
+                                </div>
                             </div>
+                            ${canClaim ? 
+                                `<button onclick="claimAchievement('${ach.id}', false, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
+                                isClaimed ? 
+                                    `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
+                                    `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">Locked</div>`
+                            }
                         </div>
-                        <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
-                    </div>
-                `;
-            }));
-
-            feed.innerHTML = feedItems.join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
-        } catch (err) {
-            console.error("Activity error:", err);
-        }
-    }
-
-    // CHAT SYSTEM
-    async function refreshChat() {
-        const chatMessages = document.getElementById('chat-messages');
-        try {
-            const { data: messages, error } = await _supabase
-                .from('grotto_chat')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(50);
-
-            if (error) return;
-
-            const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
-
-            const chatItems = await Promise.all(messages.reverse().map(async msg => {
-                const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
-                const senderName = await getUsernameOrAddress(msg.sender);
-                return `
-                    <div class="${isOwn ? 'text-right' : 'text-left'}">
-                        <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
-                            <div class="text-[10px] text-purple-400/70 mb-1 cinzel">${senderName}</div>
-                            <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
-                        </div>
-                    </div>
-                `;
-            }));
-
-            chatMessages.innerHTML = chatItems.join('');
-
-            if (shouldScroll) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        } catch (err) {
-            console.error("Chat error:", err);
-        }
-    }
-
-    async function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
-        
-        if (!message || !userAddress) return;
-        
-        try {
-            await _supabase.from('grotto_chat').insert([{
-                sender: userAddress.toLowerCase(),
-                message: message
-            }]);
-            input.value = '';
-            refreshChat();
-        } catch (err) {
-            console.error("Send error:", err);
-            showToast("Message failed");
-        }
-    }
-
-    // LEADERBOARD
-    async function loadLeaderboard() {
-        try {
-            const { data: games, error } = await _supabase
-                .from('grotto_games')
-                .select('*')
-                .eq('status', 2);
-
-            if (error) return;
-
-            const playerStats = {};
-            let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
-            let biggestLoser = { address: null, lost: 0 };
-            let streakMaster = { address: null, streak: 0 };
-            let mostActive = { address: null, games: 0 };
-
-            games.forEach(game => {
-                const wager = parseFloat(game.wager);
-                totalWagered += wager * 2;
-                const pot = wager * 2;
-                totalBurnt += pot * 0.015;
-                totalTreasury += pot * 0.015;
-
-                [game.host, game.challenger].forEach(addr => {
-                    if (!addr) return;
-                    if (!playerStats[addr]) {
-                        playerStats[addr] = {
-                            address: addr,
-                            totalWagered: 0,
-                            totalLost: 0,
-                            wins: 0,
-                            losses: 0,
-                            draws: 0,
-                            games: 0,
-                            biggestPot: 0,
-                            longestStreak: 0,
-                            currentStreak: 0
-                        };
-                    }
-                    playerStats[addr].totalWagered += wager;
-                    playerStats[addr].games++;
-                    if (wager * 2 > playerStats[addr].biggestPot) {
-                        playerStats[addr].biggestPot = wager * 2;
-                    }
-                });
-
-                const hostMove = Number(game.host_move);
-                const challengerMove = Number(game.challenger_move);
-
-                if (hostMove === challengerMove) {
-                    playerStats[game.host].draws++;
-                    if (game.challenger) playerStats[game.challenger].draws++;
-                    playerStats[game.host].currentStreak = 0;
-                    if (game.challenger) playerStats[game.challenger].currentStreak = 0;
-                } else {
-                    const hostWins = (
-                        (hostMove === 1 && challengerMove === 2) ||
-                        (hostMove === 2 && challengerMove === 3) ||
-                        (hostMove === 3 && challengerMove === 1)
-                    );
-                    if (hostWins) {
-                        playerStats[game.host].wins++;
-                        playerStats[game.host].currentStreak++;
-                        if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
-                            playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
-                        }
-                        if (game.challenger) {
-                            playerStats[game.challenger].losses++;
-                            playerStats[game.challenger].totalLost += wager;
-                            playerStats[game.challenger].currentStreak = 0;
-                        }
-                    } else if (game.challenger) {
-                        playerStats[game.challenger].wins++;
-                        playerStats[game.challenger].currentStreak++;
-                        if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
-                            playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
-                        }
-                        playerStats[game.host].losses++;
-                        playerStats[game.host].totalLost += wager;
-                        playerStats[game.host].currentStreak = 0;
-                    }
-                }
-            });
-
-            Object.values(playerStats).forEach(player => {
-                if (player.totalLost > biggestLoser.lost) {
-                    biggestLoser = { address: player.address, lost: player.totalLost };
-                }
-                if (player.longestStreak > streakMaster.streak) {
-                    streakMaster = { address: player.address, streak: player.longestStreak };
-                }
-                if (player.games > mostActive.games) {
-                    mostActive = { address: player.address, games: player.games };
-                }
-            });
-
-            document.getElementById('global-wagered').textContent = totalWagered.toFixed(5);
-            document.getElementById('global-burnt').textContent = totalBurnt.toFixed(5);
-            document.getElementById('global-treasury').textContent = totalTreasury.toFixed(5);
-            document.getElementById('global-games').textContent = games.length;
-
-            // Display special stats
-            if (biggestLoser.address) {
-                const loserName = await getUsernameOrAddress(biggestLoser.address);
-                document.getElementById('biggest-loser').innerHTML = `
-                    <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
-                    <div class="cinzel text-2xl text-red-400 font-bold mb-1">${loserName}</div>
-                    <div class="text-xs text-red-500/50">${biggestLoser.lost.toFixed(5)} $HERESY Lost</div>
-                `;
-            }
-
-            if (streakMaster.address) {
-                const streakName = await getUsernameOrAddress(streakMaster.address);
-                document.getElementById('streak-master').innerHTML = `
-                    <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
-                    <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">${streakName}</div>
-                    <div class="text-xs text-yellow-500/50">${streakMaster.streak} Consecutive Wins</div>
-                `;
-            }
-
-            if (mostActive.address) {
-                const activeName = await getUsernameOrAddress(mostActive.address);
-                document.getElementById('most-active').innerHTML = `
-                    <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
-                    <div class="cinzel text-2xl text-blue-400 font-bold mb-1">${activeName}</div>
-                    <div class="text-xs text-blue-500/50">${mostActive.games} Total Games</div>
-                `;
-            }
-
-            const leaderboard = Object.values(playerStats)
-                .sort((a, b) => b.totalWagered - a.totalWagered)
-                .slice(0, 50);
-
-            const tbody = document.getElementById('leaderboard-body');
-            const rows = await Promise.all(leaderboard.map(async (player, index) => {
-                const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
-                const playerName = await getUsernameOrAddress(player.address);
-                return `
-                    <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
-                        <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
-                        <td class="p-4">
-                            <div class="text-sm text-purple-200">${playerName}</div>
-                            <div class="text-[11px] text-purple-600/60">${player.games} rituals</div>
-                        </td>
-                        <td class="p-4 text-right cinzel text-purple-400 font-semibold">${player.totalWagered.toFixed(5)}</td>
-                        <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
-                        <td class="p-4 text-right cinzel text-purple-400">${player.biggestPot.toFixed(5)}</td>
-                        <td class="p-4 text-right cinzel text-yellow-400">${player.longestStreak}</td>
-                    </tr>
-                `;
-            }));
-            tbody.innerHTML = rows.join('');
-        } catch (err) {
-            console.error("Leaderboard error:", err);
-        }
-    }
-
-    // PROFILE
-    async function loadProfile() {
-        const profileContent = document.getElementById('profile-content');
-        
-        if (!userAddress) {
-            profileContent.innerHTML = `
-                <div class="text-center py-20">
-                    <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
-                    <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
-                    <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
-                </div>`;
-            return;
-        }
-
-        const stats = getPlayerStats();
-        const username = await getUsernameOrAddress(userAddress);
-        const bp = getBloodPoints();
-        const level = Math.floor(bp / 100) + 1;
-
-        profileContent.innerHTML = `
-            <div class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl mb-6">
-                <div class="flex justify-between items-start mb-6">
-                    <div>
-                        <h3 class="cinzel text-2xl text-purple-300 mb-2">${username}</h3>
-                        <div class="text-sm text-purple-400/70">${userAddress}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs text-purple-400/70 uppercase mb-1">Blood Level</div>
-                        <div class="cinzel text-3xl text-red-400 font-bold">${level}</div>
-                        <div class="text-xs text-purple-500/50">${bp} BP</div>
-                    </div>
-                </div>
-                <button onclick="updateUsername()" class="btn-grotto px-6 py-2 text-xs rounded-lg cinzel">
-                    Update Username
-                </button>
-            </div>
-
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div class="stat-card p-6 rounded-xl text-center">
-                    <div class="text-[11px] text-purple-400/70 uppercase mb-2 cinzel">Total Games</div>
-                    <div class="cinzel text-3xl text-purple-400 font-bold">${stats.totalGames || 0}</div>
-                </div>
-                <div class="stat-card p-6 rounded-xl text-center border-green-900/30">
-                    <div class="text-[11px] text-green-400/70 uppercase mb-2 cinzel">Wins</div>
-                    <div class="cinzel text-3xl text-green-400 font-bold">${stats.totalWins || 0}</div>
-                </div>
-                <div class="stat-card p-6 rounded-xl text-center border-red-900/30">
-                    <div class="text-[11px] text-red-400/70 uppercase mb-2 cinzel">Losses</div>
-                    <div class="cinzel text-3xl text-red-400 font-bold">${stats.totalLosses || 0}</div>
-                </div>
-                <div class="stat-card p-6 rounded-xl text-center border-yellow-900/30">
-                    <div class="text-[11px] text-yellow-400/70 uppercase mb-2 cinzel">Best Streak</div>
-                    <div class="cinzel text-3xl text-yellow-400 font-bold">${stats.longestStreak || 0}</div>
-                </div>
-            </div>
-
-            <div class="grotto-glass p-6 rounded-xl">
-                <h3 class="cinzel text-lg text-purple-300 mb-4">Statistics</h3>
-                <div class="space-y-3">
-                    <div class="flex justify-between py-2 border-b border-purple-900/20">
-                        <span class="text-purple-300">Total Wagered:</span>
-                        <span class="cinzel text-purple-400 font-semibold">${(stats.totalWagered || 0).toFixed(5)} $HERESY</span>
-                    </div>
-                    <div class="flex justify-between py-2 border-b border-purple-900/20">
-                        <span class="text-purple-300">Win Rate:</span>
-                        <span class="cinzel font-semibold ${(stats.totalWins/(stats.totalGames||1)*100) >= 50 ? 'text-green-400' : 'text-red-400'}">${((stats.totalWins/(stats.totalGames||1))*100).toFixed(1)}%</span>
-                    </div>
-                    <div class="flex justify-between py-2">
-                        <span class="text-purple-300">Current Streak:</span>
-                        <span class="cinzel text-yellow-400 font-semibold">${stats.currentStreak || 0}</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    async function showPlayerProfile(address) {
-        document.getElementById('player-modal').classList.add('active');
-        const content = document.getElementById('player-modal-content');
-        content.innerHTML = '<div class="text-center py-8 text-purple-400">Summoning archive...</div>';
-        
-        try {
-            const { data: games } = await _supabase
-                .from('grotto_games')
-                .select('*')
-                .eq('status', 2)
-                .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`);
-
-            let wins = 0, losses = 0, draws = 0, totalWagered = 0;
-
-            games.forEach(game => {
-                const hostMove = Number(game.host_move);
-                const challengerMove = Number(game.challenger_move);
-                const isHost = game.host.toLowerCase() === address.toLowerCase();
-                
-                totalWagered += parseFloat(game.wager);
-
-                if (hostMove === challengerMove) {
-                    draws++;
-                } else {
-                    const hostWins = (
-                        (hostMove === 1 && challengerMove === 2) ||
-                        (hostMove === 2 && challengerMove === 3) ||
-                        (hostMove === 3 && challengerMove === 1)
-                    );
-                    if ((isHost && hostWins) || (!isHost && !hostWins)) {
-                        wins++;
-                    } else {
-                        losses++;
-                    }
-                }
-            });
-
-            const playerName = await getUsernameOrAddress(address);
-            const totalGames = wins + losses + draws;
-            const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
-
-            content.innerHTML = `
-                <div class="space-y-6">
-                    <div class="text-center">
-                        <h3 class="cinzel text-2xl text-purple-300 mb-2">${playerName}</h3>
-                        <div class="text-sm text-purple-400/70">${address}</div>
-                    </div>
-
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div class="stat-card p-4 rounded-xl text-center">
-                            <div class="text-[10px] text-purple-400/70 uppercase mb-1 cinzel">Games</div>
-                            <div class="cinzel text-2xl text-purple-400 font-bold">${totalGames}</div>
-                        </div>
-                        <div class="stat-card p-4 rounded-xl text-center border-green-900/30">
-                            <div class="text-[10px] text-green-400/70 uppercase mb-1 cinzel">Wins</div>
-                            <div class="cinzel text-2xl text-green-400 font-bold">${wins}</div>
-                        </div>
-                        <div class="stat-card p-4 rounded-xl text-center border-red-900/30">
-                            <div class="text-[10px] text-red-400/70 uppercase mb-1 cinzel">Losses</div>
-                            <div class="cinzel text-2xl text-red-400 font-bold">${losses}</div>
-                        </div>
-                        <div class="stat-card p-4 rounded-xl text-center border-yellow-900/30">
-                            <div class="text-[10px] text-yellow-400/70 uppercase mb-1 cinzel">Win Rate</div>
-                            <div class="cinzel text-2xl font-bold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</div>
-                        </div>
-                    </div>
-
-                    <div class="grotto-glass p-4 rounded-xl">
-                        <div class="text-sm text-purple-300">Total Wagered:</div>
-                        <div class="cinzel text-xl text-purple-400 font-bold">${totalWagered.toFixed(5)} $HERESY</div>
                     </div>
                 </div>
             `;
-        } catch (err) {
-            content.innerHTML = '<div class="text-center py-8 text-red-400">Failed to load profile</div>';
+        }).join('');
+    }
+}
+
+// ACTIVITY FEED - STABLE VERSION
+async function refreshActivityFeed() {
+    const feed = document.getElementById('activity-feed');
+    try {
+        const { data: games, error } = await _supabase
+            .from('grotto_games')
+            .select('*')
+            .eq('status', 2)
+            .order('updated_at', { ascending: false })
+            .limit(50);
+
+        if (error) return;
+
+        const feedHTML = await buildActivityHTML(games);
+        
+        if (feedHTML !== cachedActivityHTML) {
+            feed.innerHTML = feedHTML;
+            cachedActivityHTML = feedHTML;
         }
+    } catch (err) {
+        console.error("Activity error:", err);
     }
+}
 
-    function closePlayerModal() {
-        document.getElementById('player-modal').classList.remove('active');
-    }
-
-    // HELPER FUNCTIONS
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        if (seconds < 60) return `${seconds}s ago`;
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes}m ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours}h ago`;
-        const days = Math.floor(hours / 24);
-        return `${days}d ago`;
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    function getStatusText(s) { 
-        return ["Open", "Active", "Sealed", "Retracted", "Forfeited"][s]; 
-    }
-
-    function switchTab(tab) {
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`tab-${tab}`).classList.add('active');
+async function buildActivityHTML(games) {
+    const feedItems = await Promise.all(games.map(async game => {
+        const hostMove = Number(game.host_move);
+        const challengerMove = Number(game.challenger_move);
         
-        document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
-        document.getElementById(`page-${tab}`).classList.add('active');
+        let result = '', resultColor = '';
+        const hostName = await getUsernameOrAddress(game.host);
+        const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
         
-        if (tab === 'profile') loadProfile();
-        if (tab === 'leaderboard') loadLeaderboard();
-        if (tab === 'bloodrite') loadBloodRite();
+        if (hostMove === challengerMove) {
+            result = 'STALEMATE';
+            resultColor = 'text-yellow-400';
+        } else if (
+            (hostMove === 1 && challengerMove === 2) ||
+            (hostMove === 2 && challengerMove === 3) ||
+            (hostMove === 3 && challengerMove === 1)
+        ) {
+            result = `${hostName} PREVAILS`;
+            resultColor = 'text-green-400';
+        } else {
+            result = `${challengerName} PREVAILS`;
+            resultColor = 'text-green-400';
+        }
+        
+        const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
+        
+        return `
+            <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
+                <div class="flex-1">
+                    <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
+                    <div class="text-[11px] text-purple-500/60 mt-1 flex items-center gap-2">
+                        <img src="${moveImages[hostMove]}" class="w-5 h-5 object-contain"> ${moveNames[hostMove]} vs 
+                        <img src="${moveImages[challengerMove]}" class="w-5 h-5 object-contain"> ${moveNames[challengerMove]} • 
+                        ${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL} • ${timeAgo}
+                    </div>
+                </div>
+                <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
+            </div>
+        `;
+    }));
+
+    return feedItems.join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
+}
+
+// CHAT SYSTEM
+async function refreshChat() {
+    const chatMessages = document.getElementById('chat-messages');
+    try {
+        const { data: messages, error } = await _supabase
+            .from('grotto_chat')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(50);
+
+        if (error) return;
+
+        const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
+
+        const chatItems = await Promise.all(messages.reverse().map(async msg => {
+            const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
+            const senderName = await getUsernameOrAddress(msg.sender);
+            const isPremium = await checkPremiumStatus(msg.sender);
+            
+            let senderDisplay = senderName;
+            if (isPremium && isPremium.is_active) {
+                senderDisplay = `<span class="premium-username text-[10px]">${senderName}</span> <span class="premium-badge" style="font-size: 7px;">⭐</span>`;
+            } else {
+                senderDisplay = `<span class="text-[10px] text-purple-400/70 cinzel">${senderName}</span>`;
+            }
+            
+            return `
+                <div class="${isOwn ? 'text-right' : 'text-left'}">
+                    <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
+                        <div class="mb-1">${senderDisplay}</div>
+                        <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
+                    </div>
+                </div>
+            `;
+        }));
+
+        chatMessages.innerHTML = chatItems.join('');
+
+        if (shouldScroll) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    } catch (err) {
+        console.error("Chat error:", err);
     }
+}
 
-    function showToast(msg) {
-        const t = document.getElementById('toast');
-        t.innerText = msg;
-        t.classList.remove('translate-y-32');
-        setTimeout(() => t.classList.add('translate-y-32'), 4000);
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (!message || !userAddress) return;
+    
+    try {
+        await _supabase.from('grotto_chat').insert([{
+            sender: userAddress.toLowerCase(),
+            message: message
+        }]);
+        input.value = '';
+        refreshChat();
+    } catch (err) {
+        console.error("Send error:", err);
+        showToast("Message failed");
     }
+}
 
-    window.onload = init;
-
-    window.onbeforeunload = () => {
-        if (lobbyRefreshInterval) clearInterval(lobbyRefreshInterval);
-        if (activityRefreshInterval) clearInterval(activityRefreshInterval);
-        if (chatRefreshInterval) clearInterval(chatRefreshInterval);
-        if (dailyTimerInterval) clearInterval(dailyTimerInterval);
+// NOTIFICATIONS
+function addNotification(notif) {
+    if (!userAddress) return;
+    
+    const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
+    
+    let message = '';
+    if (notif.type === 'win') {
+        message = winMessages[Math.floor(Math.random() * winMessages.length)];
+    } else if (notif.type === 'loss') {
+        message = lossMessages[Math.floor(Math.random() * lossMessages.length)];
+    } else {
+        message = drawMessages[Math.floor(Math.random() * drawMessages.length)];
+    }
+    
+    const newNotif = {
+        ...notif,
+        motivationalMessage: message,
+        read: false
     };
+    
+    notifications.unshift(newNotif);
+    localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(notifications.slice(0, 50)));
+    
+    loadNotifications();
+}
+
+function loadNotifications() {
+    if (!userAddress) return;
+    
+    const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
+    userNotifications = notifications;
+    
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notification-badge');
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+    
+    renderNotifications();
+}
+
+function renderNotifications() {
+    const list = document.getElementById('notification-list');
+    
+    if (userNotifications.length === 0) {
+        list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens to reveal...</div>';
+        return;
+    }
+    
+    list.innerHTML = userNotifications.map(notif => {
+        const bgClass = notif.type === 'win' ? 'bg-green-900/10' : notif.type === 'loss' ? 'bg-red-900/10' : 'bg-yellow-900/10';
+        const borderClass = notif.type === 'win' ? 'win' : notif.type === 'loss' ? 'loss' : '';
+        
+        return `
+            <div class="notification-item ${borderClass} p-4 ${bgClass} ${notif.read ? 'opacity-50' : ''}">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex-1">
+                        <div class="text-sm font-semibold text-purple-300 mb-1">${notif.message}</div>
+                        <div class="text-xs text-purple-400/70 mb-2">Game #${notif.gameId} • ${getTimeAgo(new Date(notif.timestamp))}</div>
+                        <div class="text-sm text-purple-200/80 italic leading-relaxed">${notif.motivationalMessage}</div>
+                    </div>
+                    ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notification-panel');
+    panel.classList.toggle('active');
+}
+
+function markAllRead() {
+    if (!userAddress) return;
+    
+    userNotifications = userNotifications.map(n => ({ ...n, read: true }));
+    localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(userNotifications));
+    loadNotifications();
+}
+
+document.addEventListener('click', (e) => {
+    const panel = document.getElementById('notification-panel');
+    const btn = document.getElementById('notification-btn');
+    if (!panel.contains(e.target) && !btn.contains(e.target)) {
+        panel.classList.remove('active');
+    }
+});
+
+// LEADERBOARD - WITH PREMIUM STYLING
+async function loadLeaderboard() {
+    try {
+        const { data: games, error } = await _supabase
+            .from('grotto_games')
+            .select('*')
+            .eq('status', 2);
+
+        if (error) return;
+
+        const playerStats = {};
+        let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
+        let biggestLoser = { address: null, lost: 0 };
+        let streakMaster = { address: null, streak: 0 };
+        let mostActive = { address: null, games: 0 };
+
+        games.forEach(game => {
+            const wager = parseFloat(game.wager);
+            totalWagered += wager * 2;
+            const pot = wager * 2;
+            totalBurnt += pot * 0.015;
+            totalTreasury += pot * 0.015;
+
+            [game.host, game.challenger].forEach(addr => {
+                if (!addr) return;
+                if (!playerStats[addr]) {
+                    playerStats[addr] = {
+                        address: addr,
+                        totalWagered: 0,
+                        totalLost: 0,
+                        wins: 0,
+                        losses: 0,
+                        draws: 0,
+                        games: 0,
+                        biggestPot: 0,
+                        longestStreak: 0,
+                        currentStreak: 0
+                    };
+                }
+                playerStats[addr].totalWagered += wager;
+                playerStats[addr].games++;
+                if (wager * 2 > playerStats[addr].biggestPot) {
+                    playerStats[addr].biggestPot = wager * 2;
+                }
+            });
+
+            const hostMove = Number(game.host_move);
+            const challengerMove = Number(game.challenger_move);
+
+            if (hostMove === challengerMove) {
+                playerStats[game.host].draws++;
+                if (game.challenger) playerStats[game.challenger].draws++;
+                playerStats[game.host].currentStreak = 0;
+                if (game.challenger) playerStats[game.challenger].currentStreak = 0;
+            } else {
+                const hostWins = (
+                    (hostMove === 1 && challengerMove === 2) ||
+                    (hostMove === 2 && challengerMove === 3) ||
+                    (hostMove === 3 && challengerMove === 1)
+                );
+                if (hostWins) {
+                    playerStats[game.host].wins++;
+                    playerStats[game.host].currentStreak++;
+                    if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
+                        playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
+                    }
+                    if (game.challenger) {
+                        playerStats[game.challenger].losses++;
+                        playerStats[game.challenger].totalLost += wager;
+                        playerStats[game.challenger].currentStreak = 0;
+                    }
+                } else if (game.challenger) {
+                    playerStats[game.challenger].wins++;
+                    playerStats[game.challenger].currentStreak++;
+                    if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
+                        playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
+                    }
+                    playerStats[game.host].losses++;
+                    playerStats[game.host].totalLost += wager;
+                    playerStats[game.host].currentStreak = 0;
+                }
+            }
+        });
+
+        Object.values(playerStats).forEach(player => {
+            if (player.totalLost > biggestLoser.lost) {
+                biggestLoser = { address: player.address, lost: player.totalLost };
+            }
+            if (player.longestStreak > streakMaster.streak) {
+                streakMaster = { address: player.address, streak: player.longestStreak };
+            }
+            if (player.games > mostActive.games) {
+                mostActive = { address: player.address, games: player.games };
+            }
+        });
+
+        document.getElementById('global-wagered').textContent = totalWagered.toFixed(5);
+        document.getElementById('global-burnt').textContent = totalBurnt.toFixed(5);
+        document.getElementById('global-treasury').textContent = totalTreasury.toFixed(5);
+        document.getElementById('global-games').textContent = games.length;
+
+        // Display special stats
+        if (biggestLoser.address) {
+            const loserName = await getUsernameOrAddress(biggestLoser.address);
+            document.getElementById('biggest-loser').innerHTML = `
+                <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
+                <div class="cinzel text-2xl text-red-400 font-bold mb-1">${loserName}</div>
+                <div class="text-xs text-red-500/50">${biggestLoser.lost.toFixed(5)} $HERESY Lost</div>
+            `;
+        }
+
+        if (streakMaster.address) {
+            const streakName = await getUsernameOrAddress(streakMaster.address);
+            document.getElementById('streak-master').innerHTML = `
+                <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
+                <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">${streakName}</div>
+                <div class="text-xs text-yellow-500/50">${streakMaster.streak} Consecutive Wins</div>
+            `;
+        }
+
+        if (mostActive.address) {
+            const activeName = await getUsernameOrAddress(mostActive.address);
+            document.getElementById('most-active').innerHTML = `
+                <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
+                <div class="cinzel text-2xl text-blue-400 font-bold mb-1">${activeName}</div>
+                <div class="text-xs text-blue-500/50">${mostActive.games} Total Games</div>
+            `;
+        }
+
+        const leaderboard = Object.values(playerStats)
+            .sort((a, b) => b.totalWagered - a.totalWagered)
+            .slice(0, 50);
+
+        const tbody = document.getElementById('leaderboard-body');
+        const rows = await Promise.all(leaderboard.map(async (player, index) => {
+            const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
+            const playerName = await getUsernameOrAddress(player.address);
+            const isPremium = await checkPremiumStatus(player.address);
+            
+            let nameDisplay = playerName;
+            let rowClass = '';
+            
+            if (isPremium && isPremium.is_active) {
+                nameDisplay = `<span class="premium-username">${playerName}</span> <span class="premium-badge">⭐</span>`;
+                rowClass = 'premium-row';
+            }
+            
+            return `
+                <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition ${rowClass}" onclick="showPlayerProfile('${player.address}')">
+                    <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
+                    <td class="p-4">
+                        <div class="text-sm text-purple-200">${nameDisplay}</div>
+                        <div class="text-[11px] text-purple-600/60">${player.games} rituals</div>
+                    </td>
+                    <td class="p-4 text-right cinzel text-purple-400 font-semibold">${player.totalWagered.toFixed(5)}</td>
+                    <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
+                    <td class="p-4 text-right cinzel text-purple-400">${player.biggestPot.toFixed(5)}</td>
+                    <td class="p-4 text-right cinzel text-yellow-400">${player.longestStreak}</td>
+                </tr>
+            `;
+        }));
+        tbody.innerHTML = rows.join('');
+    } catch (err) {
+        console.error("Leaderboard error:", err);
+    }
+}
+
+// PROFILE
+async function loadProfile() {
+    const profileContent = document.getElementById('profile-content');
+    
+    if (!userAddress) {
+        profileContent.innerHTML = `
+            <div class="text-center py-20">
+                <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
+                <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
+                <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
+            </div>`;
+        return;
+    }
+
+    const stats = await getPlayerStatsForAchievements();
+    const username = await getUsernameOrAddress(userAddress);
+    const bp = await getBloodPoints();
+    const level = Math.floor(bp / 100) + 1;
+    const isPremium = await checkPremiumStatus(userAddress);
+    
+    let usernameDisplay = username;
+    if (isPremium && isPremium.is_active) {
+        usernameDisplay = `<span class="premium-username">${username}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
+    }
+
+    profileContent.innerHTML = `
+        <div class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl mb-6">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="cinzel text-2xl text-purple-300 mb-2">${usernameDisplay}</h3>
+                    <div class="text-sm text-purple-400/70">${userAddress}</div>
+                </div>
+                <div class="text-right">
+                    <div class="text-xs text-purple-400/70 uppercase mb-1">Blood Level</div>
+                    <div class="cinzel text-3xl text-red-400 font-bold">${level}</div>
+                    <div class="text-xs text-purple-500/50">${bp} BP</div>
+                </div>
+            </div>
+            <button onclick="updateUsername()" class="btn-grotto px-6 py-2 text-xs rounded-lg cinzel">
+                Update Username
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="stat-card p-6 rounded-xl text-center">
+                <div class="text-[11px] text-purple-400/70 uppercase mb-2 cinzel">Total Games</div>
+                <div class="cinzel text-3xl text-purple-400 font-bold">${stats.totalGames || 0}</div>
+            </div>
+            <div class="stat-card p-6 rounded-xl text-center border-green-900/30">
+                <div class="text-[11px] text-green-400/70 uppercase mb-2 cinzel">Wins</div>
+                <div class="cinzel text-3xl text-green-400 font-bold">${stats.totalWins || 0}</div>
+            </div>
+            <div class="stat-card p-6 rounded-xl text-center border-red-900/30">
+                <div class="text-[11px] text-red-400/70 uppercase mb-2 cinzel">Losses</div>
+                <div class="cinzel text-3xl text-red-400 font-bold">${stats.totalLosses || 0}</div>
+            </div>
+            <div class="stat-card p-6 rounded-xl text-center border-yellow-900/30">
+                <div class="text-[11px] text-yellow-400/70 uppercase mb-2 cinzel">Best Streak</div>
+                <div class="cinzel text-3xl text-yellow-400 font-bold">${stats.longestStreak || 0}</div>
+            </div>
+        </div>
+
+        <div class="grotto-glass p-6 rounded-xl">
+            <h3 class="cinzel text-lg text-purple-300 mb-4">Statistics</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between py-2 border-b border-purple-900/20">
+                    <span class="text-purple-300">Total Wagered:</span>
+                    <span class="cinzel text-purple-400 font-semibold">${(stats.totalWagered || 0).toFixed(5)} $HERESY</span>
+                </div>
+                <div class="flex justify-between py-2 border-b border-purple-900/20">
+                    <span class="text-purple-300">Win Rate:</span>
+                    <span class="cinzel font-semibold ${(stats.totalWins/(stats.totalGames||1)*100) >= 50 ? 'text-green-400' : 'text-red-400'}">${((stats.totalWins/(stats.totalGames||1))*100).toFixed(1)}%</span>
+                </div>
+                <div class="flex justify-between py-2">
+                    <span class="text-purple-300">Current Streak:</span>
+                    <span class="cinzel text-yellow-400 font-semibold">${stats.currentStreak || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+async function showPlayerProfile(address) {
+    const modal = document.getElementById('player-modal');
+    const wrapper = document.getElementById('player-modal-wrapper');
+    const content = document.getElementById('player-modal-content');
+    
+    modal.classList.add('active');
+    content.innerHTML = '<div class="text-center py-8 text-purple-400">Summoning archive...</div>';
+    
+    const isPremium = await checkPremiumStatus(address);
+    
+    // Add premium styling to modal if player is premium
+    if (isPremium && isPremium.is_active) {
+        wrapper.classList.add('premium-modal-content');
+        
+        // Add premium particles
+        for (let i = 0; i < 10; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'premium-particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            particle.style.animationDelay = Math.random() * 2 + 's';
+            particle.style.animation = `floatGold ${Math.random() * 3 + 2}s ease-in-out infinite`;
+            wrapper.appendChild(particle);
+        }
+    } else {
+        wrapper.classList.remove('premium-modal-content');
+        // Remove any existing particles
+        wrapper.querySelectorAll('.premium-particle').forEach(p => p.remove());
+    }
+    
+    try {
+        const { data: games } = await _supabase
+            .from('grotto_games')
+            .select('*')
+            .eq('status', 2)
+            .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`);
+
+        let wins = 0, losses = 0, draws = 0, totalWagered = 0;
+
+        games.forEach(game => {
+            const hostMove = Number(game.host_move);
+            const challengerMove = Number(game.challenger_move);
+            const isHost = game.host.toLowerCase() === address.toLowerCase();
+            
+            totalWagered += parseFloat(game.wager);
+
+            if (hostMove === challengerMove) {
+                draws++;
+            } else {
+                const hostWins = (
+                    (hostMove === 1 && challengerMove === 2) ||
+                    (hostMove === 2 && challengerMove === 3) ||
+                    (hostMove === 3 && challengerMove === 1)
+                );
+                if ((isHost && hostWins) || (!isHost && !hostWins)) {
+                    wins++;
+                } else {
+                    losses++;
+                }
+            }
+        });
+
+        const playerName = await getUsernameOrAddress(address);
+        const totalGames = wins + losses + draws;
+        const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+        
+        let nameDisplay = playerName;
+        if (isPremium && isPremium.is_active) {
+            nameDisplay = `<span class="premium-username">${playerName}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
+        }
+
+        content.innerHTML = `
+            <div class="space-y-6">
+                <div class="text-center">
+                    <h3 class="cinzel text-2xl text-purple-300 mb-2">${nameDisplay}</h3>
+                    <div class="text-sm text-purple-400/70">${address}</div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="stat-card p-4 rounded-xl text-center">
+                        <div class="text-[10px] text-purple-400/70 uppercase mb-1 cinzel">Games</div>
+                        <div class="cinzel text-2xl text-purple-400 font-bold">${totalGames}</div>
+                    </div>
+                    <div class="stat-card p-4 rounded-xl text-center border-green-900/30">
+                        <div class="text-[10px] text-green-400/70 uppercase mb-1 cinzel">Wins</div>
+                        <div class="cinzel text-2xl text-green-400 font-bold">${wins}</div>
+                    </div>
+                    <div class="stat-card p-4 rounded-xl text-center border-red-900/30">
+                        <div class="text-[10px] text-red-400/70 uppercase mb-1 cinzel">Losses</div>
+                        <div class="cinzel text-2xl text-red-400 font-bold">${losses}</div>
+                    </div>
+                    <div class="stat-card p-4 rounded-xl text-center border-yellow-900/30">
+                        <div class="text-[10px] text-yellow-400/70 uppercase mb-1 cinzel">Win Rate</div>
+                        <div class="cinzel text-2xl font-bold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</div>
+                    </div>
+                </div>
+
+                <div class="grotto-glass p-4 rounded-xl">
+                    <div class="text-sm text-purple-300">Total Wagered:</div>
+                    <div class="cinzel text-xl text-purple-400 font-bold">${totalWagered.toFixed(5)} $HERESY</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        content.innerHTML = '<div class="text-center py-8 text-red-400">Failed to load profile</div>';
+    }
+}
+
+function closePlayerModal() {
+    const modal = document.getElementById('player-modal');
+    const wrapper = document.getElementById('player-modal-wrapper');
+    modal.classList.remove('active');
+    wrapper.classList.remove('premium-modal-content');
+    wrapper.querySelectorAll('.premium-particle').forEach(p => p.remove());
+}
+
+// HELPER FUNCTIONS
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getStatusText(s) { 
+    return ["Open", "Active", "Sealed", "Retracted", "Forfeited"][s]; 
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(`tab-${tab}`).classList.add('active');
+    
+    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+    document.getElementById(`page-${tab}`).classList.add('active');
+    
+    if (tab === 'profile') loadProfile();
+    if (tab === 'leaderboard') loadLeaderboard();
+    if (tab === 'bloodrite') loadBloodRite();
+    if (tab === 'marketplace') updatePremiumDisplay();
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.remove('translate-y-32');
+    setTimeout(() => t.classList.add('translate-y-32'), 4000);
+}
+
+window.onload = init;
+
+window.onbeforeunload = () => {
+    if (lobbyRefreshInterval) clearInterval(lobbyRefreshInterval);
+    if (activityRefreshInterval) clearInterval(activityRefreshInterval);
+    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
+    if (dailyTimerInterval) clearInterval(dailyTimerInterval);
+};
 </script>
-</body>
-</html>
+</body></html>
