@@ -17,7 +17,6 @@
             --grotto-glow: rgba(147, 51, 234, 0.4);
             --grotto-light: #c084fc;
             --heresy-gold: #fbbf24;
-            --arcane-gold: #ffd700;
         }
 
         * {
@@ -315,6 +314,7 @@
             position: fixed;
             top: 80px;
             right: 20px;
+            margin-top: 10px;
             width: 350px;
             max-height: 500px;
             overflow-y: auto;
@@ -348,10 +348,6 @@
 
         .notification-item.loss {
             border-left-color: #ef4444;
-        }
-
-        .notification-item.challenge {
-            border-left-color: #f59e0b;
         }
 
         .stat-card {
@@ -401,155 +397,6 @@
             border-color: rgba(107, 114, 128, 0.3);
         }
 
-        /* PREMIUM PROFILE STYLES - ARCANE ASCENDANCE */
-        .premium-profile {
-            position: relative;
-            border: 3px solid var(--arcane-gold) !important;
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.05) 0%, rgba(147, 51, 234, 0.1) 100%) !important;
-            box-shadow: 0 0 40px rgba(255, 215, 0, 0.4), inset 0 0 40px rgba(255, 215, 0, 0.1) !important;
-            animation: arcaneGlow 3s ease-in-out infinite;
-        }
-
-        @keyframes arcaneGlow {
-            0%, 100% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.4), inset 0 0 40px rgba(255, 215, 0, 0.1); }
-            50% { box-shadow: 0 0 60px rgba(255, 215, 0, 0.6), inset 0 0 60px rgba(255, 215, 0, 0.2); }
-        }
-
-        .premium-name {
-            color: var(--arcane-gold) !important;
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
-            font-weight: 900 !important;
-            animation: shimmer 2s linear infinite;
-            background: linear-gradient(90deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-size: 200% 100%;
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        .arcane-particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            overflow: hidden;
-            border-radius: inherit;
-        }
-
-        .arcane-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--arcane-gold);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--arcane-gold);
-            animation: floatGold linear infinite;
-        }
-
-        @keyframes floatGold {
-            0% { transform: translateY(100%) translateX(0); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateY(-100%) translateX(20px); opacity: 0; }
-        }
-
-        .premium-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--arcane-gold) 0%, #ffed4e 100%);
-            color: var(--grotto-darker);
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 900;
-            letter-spacing: 1px;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
-            animation: badgePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes badgePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .challenge-card {
-            background: rgba(13, 5, 23, 0.8);
-            border: 2px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.3s;
-        }
-
-        .challenge-card.pending {
-            border-color: #f59e0b;
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
-        }
-
-        .challenge-card.accepted {
-            border-color: #22c55e;
-        }
-
-        .challenge-card.declined {
-            opacity: 0.5;
-            border-color: #6b7280;
-        }
-
-        .marketplace-item {
-            background: rgba(13, 5, 23, 0.8);
-            border: 2px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .marketplace-item::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .marketplace-item:hover::before {
-            opacity: 1;
-        }
-
-        .marketplace-item:hover {
-            border-color: var(--heresy-gold);
-            box-shadow: 0 0 30px rgba(251, 191, 36, 0.4);
-            transform: translateY(-5px);
-        }
-
-        .cosmetic-item {
-            background: rgba(13, 5, 23, 0.7);
-            border: 2px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .cosmetic-item:hover {
-            border-color: var(--grotto-purple);
-            box-shadow: 0 0 20px var(--grotto-glow);
-            transform: scale(1.03);
-        }
-
-        .cosmetic-item.owned {
-            border-color: #22c55e;
-            opacity: 0.7;
-        }
-
-        .cosmetic-item.equipped {
-            border-color: var(--arcane-gold);
-            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
-        }
-
         @media (max-width: 768px) {
             .header-banner { height: 150px; }
             .game-logo { width: 60px; height: 60px; }
@@ -567,36 +414,13 @@
             border-color: var(--grotto-purple) !important;
             box-shadow: 0 0 20px var(--grotto-glow);
         }
-
-        /* Loading State */
-        .loading {
-            opacity: 0.5;
-            pointer-events: none;
-            position: relative;
-        }
-
-        .loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--grotto-purple);
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            transform: translate(-50%, -50%);
-        }
-
-        @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
     </style>
 </head>
 <body class="min-h-screen p-4">
     <!-- Continue in part 2 -->
-<!-- PART 2: NAVIGATION + LOBBY STRUCTURE - Insert after <body> tag from part 1 -->
+</body>
+</html>
+<!-- PART 2: HTML STRUCTURE - Copy this after the <body> tag in part 1 -->
 
     <!-- Mystical Particles -->
     <div class="mystical-particles" id="particles"></div>
@@ -619,19 +443,18 @@
                 <h1 class="cinzel text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 tracking-wider">
                     THE GROTTO GAMBIT
                 </h1>
-                <p class="text-[11px] text-purple-500/60 uppercase tracking-[0.3em] mt-1">Dark Sanctum // Heresy Protocol V3</p>
+                <p class="text-[11px] text-purple-500/60 uppercase tracking-[0.3em] mt-1">Dark Sanctum // Heresy Protocol</p>
             </div>
         </div>
 
         <div class="flex items-center gap-6 mt-4 md:mt-0 flex-wrap">
             <!-- Navigation Tabs -->
             <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg flex-wrap">
-                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-4 py-2 text-[10px] uppercase transition rounded cinzel">Sanctum</button>
-                <button onclick="switchTab('marketplace')" id="tab-marketplace" class="tab-btn px-4 py-2 text-[10px] uppercase transition rounded cinzel">Bazaar</button>
-                <button onclick="switchTab('bloodrite')" id="tab-bloodrite" class="tab-btn px-4 py-2 text-[10px] uppercase transition rounded cinzel">Blood Rite</button>
-                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-4 py-2 text-[10px] uppercase transition rounded cinzel">Pantheon</button>
-                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-4 py-2 text-[10px] uppercase transition rounded cinzel">Chronicle</button>
-                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-4 py-2 text-[10px] uppercase transition rounded cinzel">Doctrine</button>
+                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-5 py-2 text-[11px] uppercase transition rounded cinzel">Sanctum</button>
+                <button onclick="switchTab('bloodrite')" id="tab-bloodrite" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Blood Rite</button>
+                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Pantheon</button>
+                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Chronicle</button>
+                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Doctrine</button>
             </div>
 
             <!-- Notification Bell -->
@@ -699,7 +522,6 @@
         <div id="page-lobby" class="page-section active">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <aside class="lg:col-span-4 space-y-6">
-                    <!-- Create Game Panel -->
                     <div class="grotto-glass p-6 rounded-xl">
                         <h2 class="cinzel text-sm text-purple-400 mb-6 flex items-center gap-3 tracking-widest">
                             <span class="w-3 h-3 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
@@ -734,39 +556,10 @@
                                     <option value="300">5 Minutes</option>
                                     <option value="600">10 Minutes</option>
                                     <option value="900" selected>15 Minutes</option>
-                                    <option value="1800">30 Minutes</option>
-                                    <option value="3600">1 Hour</option>
-                                    <option value="86400">1 Day</option>
-                                    <option value="259200">3 Days</option>
-                                    <option value="604800">7 Days</option>
                                 </select>
                             </div>
                             <button id="create-btn" onclick="handleCreateGame()" class="btn-grotto w-full py-4 text-base rounded-lg cinzel relative z-10">
                                 Invoke Ritual
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Custom Challenge Panel -->
-                    <div class="grotto-glass p-6 rounded-xl border-2 border-yellow-600/30">
-                        <h2 class="cinzel text-sm text-yellow-400 mb-6 flex items-center gap-3 tracking-widest">
-                            <span class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></span>
-                            CHALLENGE SPECIFIC SOUL
-                        </h2>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label class="text-[11px] text-yellow-400/70 uppercase mb-2 block tracking-widest cinzel">Target Address</label>
-                                <input id="challenge-target" type="text" placeholder="0x..." 
-                                    class="w-full bg-black/50 border border-yellow-900/50 p-3 text-yellow-300 rounded-lg text-sm transition">
-                            </div>
-                            <div>
-                                <label class="text-[11px] text-yellow-400/70 uppercase mb-2 block tracking-widest cinzel">Challenge Message</label>
-                                <textarea id="challenge-message" maxlength="200" rows="3" placeholder="Your challenge message..."
-                                    class="w-full bg-black/50 border border-yellow-900/50 p-3 text-yellow-300 rounded-lg text-sm transition resize-none"></textarea>
-                            </div>
-                            <button onclick="createCustomChallenge()" class="btn-grotto w-full py-3 text-sm rounded-lg cinzel bg-gradient-to-r from-yellow-600 to-yellow-800">
-                                Send Challenge
                             </button>
                         </div>
                     </div>
@@ -824,79 +617,11 @@
             </div>
         </div>
 
-        <!-- Continue in part 3 with Marketplace, Challenges, etc. -->
+        <!-- Continue in part 3 -->
     </main>
-<!-- PART 3: MARKETPLACE + CHALLENGES + OTHER PAGES - Continue from part 2 -->
+<!-- PART 3: BLOOD RITE AND OTHER PAGES - Continue from part 2 -->
 
-        <!-- MARKETPLACE PAGE -->
-        <div id="page-marketplace" class="page-section">
-            <div class="max-w-6xl mx-auto">
-                <div class="grotto-glass p-8 rounded-xl mb-8">
-                    <h2 class="cinzel text-3xl text-purple-400 mb-4 flex items-center gap-4 tracking-wider">
-                        <span class="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></span>
-                        MYSTIC BAZAAR
-                    </h2>
-                    <p class="text-purple-300/70 text-sm mb-6">Acquire mystical enhancements for your soul's journey</p>
-
-                    <!-- HERESY Items -->
-                    <div class="mb-10">
-                        <h3 class="cinzel text-xl text-yellow-400 mb-6 flex items-center gap-2">
-                            💰 HERESY TREASURES
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- Premium Profile (Arcane Ascendance) -->
-                            <div class="marketplace-item p-6 rounded-xl">
-                                <div class="flex justify-between items-start mb-4">
-                                    <div class="text-5xl">✨</div>
-                                    <div id="premium-status-badge" class="text-xs text-purple-400/70 uppercase">Premium</div>
-                                </div>
-                                <h4 class="cinzel text-xl text-yellow-400 mb-2">Arcane Ascendance</h4>
-                                <p class="text-sm text-purple-300/70 mb-4">Ascend beyond mortal limits. Your name shimmers in gold, particles dance around your profile, and you radiate mystical power.</p>
-                                
-                                <div class="mb-4">
-                                    <div class="text-xs text-purple-400/70 uppercase mb-1">Effects:</div>
-                                    <ul class="text-xs text-purple-300 space-y-1">
-                                        <li>🌟 Gold shimmering username</li>
-                                        <li>✨ Mystical particle effects</li>
-                                        <li>🔮 Animated profile border</li>
-                                        <li>👑 Premium badge everywhere</li>
-                                    </ul>
-                                </div>
-
-                                <div class="mb-4 pb-4 border-b border-purple-900/30">
-                                    <div class="text-xs text-purple-400/70 uppercase mb-1">Duration:</div>
-                                    <div class="text-sm text-yellow-400 cinzel">30 Days</div>
-                                </div>
-
-                                <div class="flex justify-between items-end">
-                                    <div>
-                                        <div class="text-xs text-purple-400/70 uppercase">Price</div>
-                                        <div class="cinzel text-2xl text-yellow-400 font-bold">0.0001 $HERESY</div>
-                                    </div>
-                                    <button onclick="purchasePremiumProfile()" id="buy-premium-btn" class="btn-grotto px-6 py-3 text-xs rounded-lg cinzel bg-gradient-to-r from-yellow-600 to-yellow-800">
-                                        Acquire
-                                    </button>
-                                </div>
-
-                                <div id="premium-expires" class="mt-3 text-xs text-purple-400/70 italic hidden"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- BP Items -->
-                    <div>
-                        <h3 class="cinzel text-xl text-red-400 mb-6 flex items-center gap-2">
-                            🩸 BLOOD POINT COSMETICS
-                        </h3>
-                        <div id="cosmetics-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            <!-- Cosmetics will be populated via JavaScript -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BLOOD RITE PAGE -->
+        <!-- BLOOD RITE PAGE (NEW) -->
         <div id="page-bloodrite" class="page-section">
             <div class="grotto-glass p-8 rounded-xl max-w-6xl mx-auto">
                 <div class="flex justify-between items-center mb-8">
@@ -956,12 +681,12 @@
                             <div id="level-progress-bar" class="h-full bg-gradient-to-r from-red-600 to-purple-600 transition-all duration-500" style="width: 0%"></div>
                         </div>
                     </div>
-                    <p class="text-xs text-purple-400/70 italic">Blood points unlock mystical powers and exclusive cosmetics</p>
+                    <p class="text-xs text-purple-400/70 italic">Blood points unlock mystical powers and exclusive rewards</p>
                 </div>
             </div>
         </div>
 
-        <!-- LEADERBOARD PAGE -->
+        <!-- LEADERBOARD PAGE (PANTHEON) -->
         <div id="page-leaderboard" class="page-section">
             <div class="grotto-glass p-8 rounded-xl">
                 <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
@@ -992,7 +717,9 @@
                 <!-- Hall of Fame & Shame -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <div class="grotto-glass p-6 rounded-xl border-2 border-red-500/30">
-                        <h3 class="cinzel text-lg text-red-400 mb-4 flex items-center gap-2">💀 Fallen Champion</h3>
+                        <h3 class="cinzel text-lg text-red-400 mb-4 flex items-center gap-2">
+                            💀 Fallen Champion
+                        </h3>
                         <div id="biggest-loser" class="text-center">
                             <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
                             <div class="cinzel text-2xl text-red-400 font-bold mb-1">--</div>
@@ -1001,7 +728,9 @@
                     </div>
 
                     <div class="grotto-glass p-6 rounded-xl border-2 border-yellow-500/30">
-                        <h3 class="cinzel text-lg text-yellow-400 mb-4 flex items-center gap-2">🔥 Streak Master</h3>
+                        <h3 class="cinzel text-lg text-yellow-400 mb-4 flex items-center gap-2">
+                            🔥 Streak Master
+                        </h3>
                         <div id="streak-master" class="text-center">
                             <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
                             <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">--</div>
@@ -1010,7 +739,9 @@
                     </div>
 
                     <div class="grotto-glass p-6 rounded-xl border-2 border-blue-500/30">
-                        <h3 class="cinzel text-lg text-blue-400 mb-4 flex items-center gap-2">⚡ Dark Devotee</h3>
+                        <h3 class="cinzel text-lg text-blue-400 mb-4 flex items-center gap-2">
+                            ⚡ Dark Devotee
+                        </h3>
                         <div id="most-active" class="text-center">
                             <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
                             <div class="cinzel text-2xl text-blue-400 font-bold mb-1">--</div>
@@ -1038,38 +769,34 @@
             </div>
         </div>
 
-        <!-- PROFILE PAGE (with Challenges tab) -->
+        <!-- PROFILE PAGE (CHRONICLE) -->
         <div id="page-profile" class="page-section">
             <div class="grotto-glass p-8 rounded-xl max-w-5xl mx-auto">
                 <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
                     <span class="w-4 h-4 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
                     SOUL CHRONICLE
                 </h2>
-                
-                <!-- Profile Tabs -->
-                <div class="flex gap-2 mb-6 border-b border-purple-900/30">
-                    <button onclick="switchProfileTab('stats')" id="profile-tab-stats" class="tab-btn active px-6 py-3 text-sm cinzel">Statistics</button>
-                    <button onclick="switchProfileTab('challenges')" id="profile-tab-challenges" class="tab-btn px-6 py-3 text-sm cinzel">Challenges</button>
-                </div>
-
-                <div id="profile-stats-content" class="profile-tab-content"></div>
-                <div id="profile-challenges-content" class="profile-tab-content hidden"></div>
+                <div id="profile-content" class="space-y-6"></div>
             </div>
         </div>
 
-        <!-- HOW TO PLAY PAGE -->
+        <!-- HOW TO PLAY PAGE (DOCTRINE) -->
         <div id="page-howto" class="page-section">
             <div class="grotto-glass p-8 rounded-xl max-w-4xl mx-auto">
                 <h2 class="cinzel text-3xl text-purple-400 mb-8 tracking-wider">ANCIENT DOCTRINE</h2>
                 
                 <div class="space-y-8 text-purple-200/90 leading-relaxed">
                     <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">🎯 THE FORBIDDEN RITUAL</h3>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            🎯 THE FORBIDDEN RITUAL
+                        </h3>
                         <p class="text-base">The Grotto Gambit is a dark pact sealed in $HERESY tokens. Two souls enter the void with strategic intent—three mystical forces clash in eternal balance. The victor claims the offering, while the defeated soul learns humility.</p>
                     </section>
 
                     <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">⚔️ THREE FORCES OF CHAOS</h3>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            ⚔️ THREE FORCES OF CHAOS
+                        </h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
                                 <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_3_2026-02-11_10-02-39.jpg" alt="Greg" class="w-24 h-24 mx-auto mb-3 object-contain">
@@ -1089,8 +816,70 @@
                         </div>
                     </section>
 
+                    <section>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            📜 RITUAL SEQUENCE
+                        </h3>
+                        <div class="space-y-5">
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">1.</div>
+                                <div>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Invoke the Ritual (Host)</div>
+                                    <p class="text-[15px] text-purple-200/70">Select your force, set your $HERESY wager, and choose the timeout. Your choice is encrypted in dark magic and stored locally. Click "Invoke Ritual" to seal your intent.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">2.</div>
+                                <div>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Challenge the Void (Opponent)</div>
+                                    <p class="text-[15px] text-purple-200/70">Discover an open ritual in the sanctum. Choose your force and match the $HERESY offering to accept the challenge.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">3.</div>
+                                <div>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Reveal the Truth (Host)</div>
+                                    <p class="text-[15px] text-purple-200/70">Once challenged, unveil your hidden force. The ancient contract determines the victor based on eternal laws.</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-5 group">
+                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">4.</div>
+                                <div>
+                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Judgment & Reward</div>
+                                    <p class="text-[15px] text-purple-200/70">The winner claims 97% of the combined $HERESY. 1.5% is sacrificed to the void, 1.5% fills the vault. In draws, both receive their stake minus tribute (3%).</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            ⚠️ DARK WARNINGS
+                        </h3>
+                        <ul class="space-y-3 text-[15px] text-purple-200/70">
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>You must return to the same sanctum (browser/device) to reveal your force—the secret dwells within</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>Should the host fail to reveal before the timeout, the challenger may claim victory by forfeit</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>If no soul challenges within the timeout, the host may reclaim their $HERESY</span>
+                            </li>
+                            <li class="flex gap-3">
+                                <span class="text-purple-500 flex-shrink-0">→</span>
+                                <span>All pacts are sealed on The Grotto chain—immutable and verifiable through cryptographic proof</span>
+                            </li>
+                        </ul>
+                    </section>
+
                     <section class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl">
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">💰 TRIBUTE & REWARDS</h3>
+                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
+                            💰 TRIBUTE & REWARDS
+                        </h3>
                         <div class="space-y-3 text-[15px]">
                             <div class="flex justify-between py-2 border-b border-purple-900/20">
                                 <span class="text-purple-200/70">Victor's Claim:</span>
@@ -1126,23 +915,17 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl max-w-md text-center">
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl">
         SYSTEM MESSAGE
     </div>
 
-<!-- Continue in part 4a with JavaScript -->
-<!-- PART 4A: CORE JAVASCRIPT - Wallet, Config, Game Creation -->
+    <!-- Continue in part 4 with JavaScript -->
+<!-- PART 4: JAVASCRIPT - Main application logic -->
 <script>
-    // ============================================
-    // CONFIGURATION & GLOBALS
-    // ============================================
-    
     // The Grotto Chain Configuration
     const CHAIN_ID = "0x8E6F"; // 36463
     const RPC_URL = "https://subnets.avax.network/thegrotto/mainnet/rpc";
-    const CORE_CONTRACT_ADDR = "0x41a2AFd8A11ddff4ecC234E3c6529eDC9D2848BC";
-    const EXT_CONTRACT_ADDR = "0x12fe0DFc66DA66d2BA6a54D21210Dde6cB0c2603";
+    const CONTRACT_ADDR = "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c";
     const EXPLORER_URL = "https://subnets.avax.network/thegrotto";
     const CHAIN_NAME = "The Grotto";
     const CURRENCY_SYMBOL = "HERESY";
@@ -1152,8 +935,7 @@
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2tidGdnZ3N1d3h0bGdpbGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY2NDY0NSwiZXhwIjoyMDg2MjQwNjQ1fQ.DhvGNo3seKoRtDmeRod0gAP48yFZw_0-kAvY3eT_554"; 
     const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-    // GrottoCore Contract ABI
-    const CORE_ABI = [
+    const ABI = [
         "function createGame(bytes32 _hash, uint256 _timeout) external payable",
         "function challengeGame(uint256 _gameId, uint8 _move) external payable",
         "function resolveGame(uint256 _gameId, uint8 _move, string calldata _salt) external",
@@ -1161,46 +943,18 @@
         "function refundUnchallenged(uint256 _gameId) external",
         "function gameCounter() public view returns (uint256)",
         "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timeout, uint256 timestamp, uint8 status)",
-        "function getTimeRemaining(uint256 _gameId) external view returns (uint256)",
         "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager, uint256 timeout, bytes32 commitHash)",
         "event GameChallenged(uint256 indexed gameId, address indexed challenger)",
-        "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)",
-        "event GameForfeited(uint256 indexed gameId, address winner)",
-        "event GameRefunded(uint256 indexed gameId, address host)"
+        "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)"
     ];
 
-    // GrottoExtensions Contract ABI
-    const EXT_ABI = [
-        "function createCustomChallenge(address _target, string calldata _message, uint256 _timeout) external payable",
-        "function acceptCustomChallenge(uint256 _challengeId) external payable",
-        "function declineCustomChallenge(uint256 _challengeId) external",
-        "function counterOfferChallenge(uint256 _challengeId, uint256 _newAmount) external",
-        "function acceptCounterOffer(uint256 _challengeId) external payable",
-        "function refundExpiredChallenge(uint256 _challengeId) external",
-        "function purchasePremiumProfile() external payable",
-        "function hasPremiumProfile(address _user) external view returns (bool)",
-        "function challengeCounter() public view returns (uint256)",
-        "function customChallenges(uint256) public view returns (uint256 challengeId, address challenger, address target, uint256 wagerAmount, uint256 counterOfferAmount, string message, uint256 timeout, uint256 timestamp, uint8 status, uint256 gameId, bool challengerCommitted)",
-        "function getUserChallenges(address _user) external view returns (uint256[] memory)",
-        "function getUserTargetedChallenges(address _user) external view returns (uint256[] memory)",
-        "event CustomChallengeCreated(uint256 indexed challengeId, address indexed challenger, address indexed target, uint256 wager, string message)",
-        "event ChallengeAccepted(uint256 indexed challengeId, uint256 indexed gameId)",
-        "event ChallengeDeclined(uint256 indexed challengeId)",
-        "event ChallengeCounterOffered(uint256 indexed challengeId, uint256 newAmount)",
-        "event ChallengeRefunded(uint256 indexed challengeId, address recipient, uint256 amount)",
-        "event PremiumProfilePurchased(address indexed user, uint256 expiresAt)"
-    ];
-
-    // Global State
-    let provider, signer, coreContract, extContract, userAddress;
+    let provider, signer, contract, userAddress;
     let selectedMoveIdx = 0;
     let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval, dailyTimerInterval;
     let currentLobbyFilter = 'all';
     let userNotifications = [];
-    let lastLobbyData = null;
-    let lobbyRefreshTimeout = null;
 
-    // Move Configuration
+    // Move names
     const moveNames = ['', 'Greg', 'Bob', 'Disco'];
     const moveImages = [
         '',
@@ -1209,7 +963,7 @@
         'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_1_2026-02-11_10-02-39.jpg'
     ];
 
-    // Notification Messages
+    // Win/Loss Messages
     const winMessages = [
         "Victory is yours! The void smiles upon you—strike again while fortune favors! ⚡",
         "You won! Your enemies tremble. Don't waste this momentum! 🔥",
@@ -1232,42 +986,49 @@
         "Equilibrium achieved. The next ritual awaits! 🌀"
     ];
 
-    // ============================================
-    // INITIALIZATION
-    // ============================================
-    
+    // Blood Rite Achievements
+    const dailyAchievements = [
+        { id: 'daily_win', name: 'First Blood', desc: 'Win your first game today', points: 50, icon: '⚔️', check: (stats) => stats.dailyWins >= 1 },
+        { id: 'daily_3games', name: 'Ritual Devotee', desc: 'Play 3 games today', points: 30, icon: '🎯', check: (stats) => stats.dailyGames >= 3 },
+        { id: 'daily_streak', name: 'Unbroken', desc: 'Win 2 games in a row', points: 75, icon: '🔥', check: (stats) => stats.dailyStreak >= 2 },
+        { id: 'daily_wager', name: 'High Roller', desc: 'Wager 10+ HERESY today', points: 40, icon: '💰', check: (stats) => stats.dailyWagered >= 10 }
+    ];
+
+    const milestoneAchievements = [
+        { id: 'total_10wins', name: 'Apprentice', desc: 'Win 10 total games', points: 100, icon: '🌟', check: (stats) => stats.totalWins >= 10 },
+        { id: 'total_50wins', name: 'Adept', desc: 'Win 50 total games', points: 250, icon: '⭐', check: (stats) => stats.totalWins >= 50 },
+        { id: 'total_100wins', name: 'Master', desc: 'Win 100 total games', points: 500, icon: '✨', check: (stats) => stats.totalWins >= 100 },
+        { id: 'total_wager100', name: 'Whale', desc: 'Wager 100+ HERESY total', points: 200, icon: '🐋', check: (stats) => stats.totalWagered >= 100 },
+        { id: 'streak_5', name: 'Unstoppable', desc: 'Get a 5 win streak', points: 150, icon: '🔥', check: (stats) => stats.longestStreak >= 5 },
+        { id: 'perfect_day', name: 'Perfect Day', desc: '5 wins, 0 losses in one day', points: 300, icon: '👑', check: (stats) => stats.dailyWins >= 5 && stats.dailyLosses === 0 }
+    ];
+
     async function init() {
         if (window.ethereum) {
             provider = new ethers.BrowserProvider(window.ethereum);
             document.getElementById('connect-btn').addEventListener('click', connectWallet);
             
-            await debouncedRefreshLobby();
+            await refreshLobby();
             await refreshActivityFeed();
             await refreshChat();
             loadNotifications();
             updateDailyTimer();
             
-            lobbyRefreshInterval = setInterval(debouncedRefreshLobby, 15000); // Reduced frequency
-            activityRefreshInterval = setInterval(refreshActivityFeed, 10000);
-            chatRefreshInterval = setInterval(refreshChat, 5000);
+            lobbyRefreshInterval = setInterval(refreshLobby, 10000);
+            activityRefreshInterval = setInterval(refreshActivityFeed, 5000);
+            chatRefreshInterval = setInterval(refreshChat, 3000);
             dailyTimerInterval = setInterval(updateDailyTimer, 1000);
             
-            // Supabase Realtime
             _supabase.channel('grotto_game_updates')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'grotto_games' }, () => {
-                    debouncedRefreshLobby();
+                    refreshLobby();
                     refreshActivityFeed();
                 })
                 .subscribe();
 
             _supabase.channel('grotto_chat_updates')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'grotto_chat' }, refreshChat)
-                .subscribe();
-
-            _supabase.channel('grotto_challenges_updates')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'grotto_challenges' }, () => {
-                    loadUserChallenges();
-                    loadNotifications();
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'grotto_chat' }, () => {
+                    refreshChat();
                 })
                 .subscribe();
 
@@ -1276,16 +1037,6 @@
         }
     }
 
-    // Debounced lobby refresh to prevent flickering
-    function debouncedRefreshLobby() {
-        if (lobbyRefreshTimeout) clearTimeout(lobbyRefreshTimeout);
-        lobbyRefreshTimeout = setTimeout(refreshLobby, 300);
-    }
-
-    // ============================================
-    // WALLET CONNECTION
-    // ============================================
-    
     async function checkNetwork() {
         const network = await provider.getNetwork();
         const currentChainIdHex = "0x" + network.chainId.toString(16).toUpperCase();
@@ -1330,22 +1081,17 @@
             
             if (!(await checkNetwork())) return;
 
-            // Initialize both contracts
-            coreContract = new ethers.Contract(CORE_CONTRACT_ADDR, CORE_ABI, signer);
-            extContract = new ethers.Contract(EXT_CONTRACT_ADDR, EXT_ABI, signer);
-            
+            contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
             document.getElementById('connect-btn').classList.add('hidden');
             document.getElementById('account-info').classList.remove('hidden');
             
             const username = await getUsernameOrAddress(userAddress);
             document.getElementById('user-address').innerText = username;
             
-            await updateBalance();
-            await debouncedRefreshLobby();
-            await loadNotifications();
-            await loadBloodRite();
-            await checkPremiumStatus();
-            await loadUserChallenges();
+            updateBalance();
+            refreshLobby();
+            loadNotifications();
+            loadBloodRite();
         } catch (err) { 
             console.error(err);
             showToast("Portal summoning failed"); 
@@ -1370,23 +1116,17 @@
         } catch (e) { console.error("Balance error", e); }
     }
 
-    // ============================================
-    // USERNAME MANAGEMENT
-    // ============================================
-    
+    // Username Management
     async function getUsernameOrAddress(address) {
-        if (!address) return 'Unknown';
-        try {
-            const { data, error } = await _supabase
-                .from('grotto_usernames')
-                .select('username')
-                .eq('address', address.toLowerCase())
-                .single();
-            
-            if (data && data.username) {
-                return data.username;
-            }
-        } catch (e) {}
+        const { data, error } = await _supabase
+            .from('grotto_usernames')
+            .select('username')
+            .eq('address', address.toLowerCase())
+            .single();
+        
+        if (data && data.username) {
+            return data.username;
+        }
         return address.slice(0, 6) + '...' + address.slice(-4);
     }
 
@@ -1417,7 +1157,7 @@
             showToast("✓ Username updated");
             const username = await getUsernameOrAddress(userAddress);
             document.getElementById('user-address').innerText = username;
-            debouncedRefreshLobby();
+            refreshLobby();
             refreshChat();
         } catch (err) {
             console.error("Username update error:", err);
@@ -1425,10 +1165,6 @@
         }
     }
 
-    // ============================================
-    // GAME CREATION
-    // ============================================
-    
     function selectMove(idx) {
         selectedMoveIdx = idx;
         document.querySelectorAll('.move-select').forEach(btn => btn.classList.remove('selected'));
@@ -1442,7 +1178,6 @@
         
         const createBtn = document.getElementById('create-btn');
         createBtn.disabled = true;
-        createBtn.classList.add('loading');
         
         const wagerInput = document.getElementById('wager-amount').value;
         const wagerValue = ethers.parseEther(wagerInput);
@@ -1450,8 +1185,7 @@
         const salt = ethers.hexlify(ethers.randomBytes(32));
         
         try {
-            // Use coreContract for game creation
-            const nextGameId = (await coreContract.gameCounter()) + BigInt(1);
+            const nextGameId = (await contract.gameCounter()) + BigInt(1);
             
             const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
                 ["uint8", "string", "address", "uint256"],
@@ -1460,7 +1194,7 @@
             const hash = ethers.keccak256(encoded);
 
             showToast("Encrypting ritual...");
-            const tx = await coreContract.createGame(hash, timeoutValue, { value: wagerValue });
+            const tx = await contract.createGame(hash, timeoutValue, { value: wagerValue });
             
             showToast("Awaiting the void...");
             const receipt = await tx.wait();
@@ -1479,8 +1213,8 @@
             try {
                 for (const log of receipt.logs) {
                     try {
-                        if (log.address.toLowerCase() !== CORE_CONTRACT_ADDR.toLowerCase()) continue;
-                        const parsed = coreContract.interface.parseLog({
+                        if (log.address.toLowerCase() !== CONTRACT_ADDR.toLowerCase()) continue;
+                        const parsed = contract.interface.parseLog({
                             topics: log.topics,
                             data: log.data
                         });
@@ -1509,35 +1243,29 @@
                 showToast("✓ Ritual sealed in darkness");
             }
 
-            await updatePlayerStats('gameCreated', parseFloat(wagerInput));
-            await updateBalance();
+            updatePlayerStats('gameCreated', parseFloat(wagerInput));
 
             setTimeout(async () => {
-                await debouncedRefreshLobby();
+                await refreshLobby();
                 createBtn.disabled = false;
-                createBtn.classList.remove('loading');
             }, 2000);
             
         } catch (err) { 
             console.error("Creation error:", err);
-            showToast(err.reason || "Ritual invocation failed");
+            showToast("Ritual invocation failed");
             createBtn.disabled = false;
-            createBtn.classList.remove('loading');
         }
     }
 
-    // Continue in part 4b with game interactions and challenges...
+    // Continue with rest of JavaScript in your editor...
+    // This file is getting long. Let me split the remaining functions into a helper section.
 </script>
-<!-- PART 4B: GAME INTERACTIONS & CUSTOM CHALLENGES -->
+<!-- PART 4B: JAVASCRIPT CONTINUATION - Add after part 4 -->
 <script>
-    // ============================================
-    // LOBBY & GAME INTERACTIONS
-    // ============================================
-    
+    // LOBBY AND GAME MANAGEMENT FUNCTIONS
+
     async function refreshLobby() {
         const lobby = document.getElementById('lobby-list');
-        if (!lobby) return;
-        
         try {
             const { data: games, error } = await _supabase.from('grotto_games')
                 .select('*')
@@ -1548,11 +1276,6 @@
                 lobby.innerHTML = `<div class="text-center py-20 text-red-400 uppercase">Archive corrupted</div>`;
                 return;
             }
-
-            // Compare with last data to prevent unnecessary re-renders
-            const gamesJson = JSON.stringify(games);
-            if (gamesJson === lastLobbyData) return;
-            lastLobbyData = gamesJson;
 
             lobby.innerHTML = '';
             let displayedCount = 0;
@@ -1585,20 +1308,16 @@
                     const remaining = deadline - now;
                     
                     if (remaining > 0) {
-                        const hours = Math.floor(remaining / 3600);
-                        const minutes = Math.floor((remaining % 3600) / 60);
+                        const minutes = Math.floor(remaining / 60);
                         const seconds = remaining % 60;
                         const timeColor = remaining < 60 ? '#ef4444' : '#9333ea';
-                        const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`;
-                        countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${timeStr}</span>`;
+                        countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
                     } else {
                         countdownHTML = `<span class="text-[11px] text-red-500 ml-2 animate-pulse cinzel">⏱ EXPIRED</span>`;
                     }
                 }
                 
                 const hostName = await getUsernameOrAddress(game.host);
-                const isPremium = userAddress && await checkIfPremium(game.host);
-                const hostClass = isPremium ? 'premium-name' : '';
                 
                 let gameInfo = `
                     <div class="flex-1">
@@ -1609,7 +1328,7 @@
                         </div>
                         <div class="cinzel text-purple-200 text-base">
                             <span class="text-purple-400 font-bold">${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL}</span> 
-                            <span class="${hostClass} text-purple-600 text-[11px] ml-2">FROM ${hostName}</span>`;
+                            <span class="text-purple-600 text-[11px] ml-2">FROM ${hostName}</span>`;
                 
                 if (status == 2 && game.host_move && game.challenger_move) {
                     const hostMove = Number(game.host_move);
@@ -1653,6 +1372,7 @@
             }
         } catch (err) { 
             console.error("Lobby error:", err);
+            lobby.innerHTML = `<div class="text-center py-20 text-red-400">Archive error</div>`;
         }
     }
 
@@ -1660,7 +1380,6 @@
         currentLobbyFilter = filter;
         document.querySelectorAll('.lobby-filter').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`filter-${filter}`).classList.add('active');
-        lastLobbyData = null; // Force refresh
         refreshLobby();
     }
 
@@ -1718,13 +1437,12 @@
                 })
                 .eq('game_id', id);
             
-            await updatePlayerStats('gameChallenged', parseFloat(wager));
+            updatePlayerStats('gameChallenged', parseFloat(wager));
             showToast("✓ Challenge accepted");
-            await updateBalance();
-            setTimeout(debouncedRefreshLobby, 1500);
+            setTimeout(refreshLobby, 1500);
         } catch (err) { 
             console.error("Challenge error:", err);
-            showToast(err.reason || "Challenge failed"); 
+            showToast("Challenge failed"); 
         }
     }
 
@@ -1788,6 +1506,7 @@
                 isWin = false;
             }
             
+            // Add notification
             addNotification({
                 type: isDraw ? 'draw' : (isWin ? 'win' : 'loss'),
                 gameId: id,
@@ -1801,14 +1520,14 @@
                 challenger_move: challengerMove
             }).eq('game_id', id);
             
-            await updatePlayerStats(isWin ? 'gameWon' : (isDraw ? 'gameDraw' : 'gameLost'));
+            updatePlayerStats(isWin ? 'gameWon' : (isDraw ? 'gameDraw' : 'gameLost'));
             
-            setTimeout(debouncedRefreshLobby, 1000);
-            await updateBalance();
+            setTimeout(refreshLobby, 1000);
+            updateBalance();
             showToast(resultMsg);
         } catch (err) { 
             console.error("Resolve error:", err);
-            showToast(err.reason || "Reveal failed"); 
+            showToast("Reveal failed"); 
         }
     }
 
@@ -1822,12 +1541,12 @@
             await tx.wait();
             
             await _supabase.from('grotto_games').update({ status: 3 }).eq('game_id', id);
-            debouncedRefreshLobby();
-            await updateBalance();
+            refreshLobby();
+            updateBalance();
             showToast("Heresy returned");
         } catch (err) { 
             console.error(err);
-            showToast(err.reason || "Refund failed"); 
+            showToast("Refund failed"); 
         }
     }
 
@@ -1848,790 +1567,17 @@
             });
             
             await _supabase.from('grotto_games').update({ status: 4 }).eq('game_id', gameId);
-            await updatePlayerStats('gameWon');
-            debouncedRefreshLobby();
-            await updateBalance();
+            updatePlayerStats('gameWon');
+            refreshLobby();
+            updateBalance();
             showToast("🏆 Victory by forfeit!");
         } catch (err) {
             console.error("Forfeit error:", err);
-            showToast(err.reason || "Forfeit failed");
+            showToast("Forfeit failed");
         }
     }
 
-    // ============================================
-    // CUSTOM CHALLENGES
-    // ============================================
-    
-    async function createCustomChallenge() {
-        if (!signer) return showToast("Summon portal first");
-        if (selectedMoveIdx === 0) return showToast("Select your force first");
-        if (!(await checkNetwork())) return;
-        
-        const target = document.getElementById('challenge-target').value.trim();
-        const message = document.getElementById('challenge-message').value.trim();
-        const wagerInput = document.getElementById('wager-amount').value;
-        const timeout = document.getElementById('timeout-select').value;
-        
-        if (!target || !ethers.isAddress(target)) {
-            return showToast("Invalid target address");
-        }
-        
-        if (!message) {
-            return showToast("Enter a challenge message");
-        }
-        
-        if (message.length > 200) {
-            return showToast("Message too long (max 200)");
-        }
-        
-        try {
-            const wagerValue = ethers.parseEther(wagerInput);
-            
-            showToast("Sending challenge...");
-            const tx = await contract.createCustomChallenge(target, message, timeout, { value: wagerValue });
-            
-            showToast("Awaiting confirmation...");
-            const receipt = await tx.wait();
-            
-            let challengeId = 0;
-            for (const log of receipt.logs) {
-                try {
-                    const parsed = contract.interface.parseLog({
-                        topics: log.topics,
-                        data: log.data
-                    });
-                    if (parsed && parsed.name === 'CustomChallengeCreated') {
-                        challengeId = Number(parsed.args.challengeId);
-                        break;
-                    }
-                } catch(e) { continue; }
-            }
-            
-            if (challengeId > 0) {
-                await _supabase.from('grotto_challenges').insert([{
-                    challenge_id: challengeId,
-                    challenger: userAddress.toLowerCase(),
-                    target: target.toLowerCase(),
-                    wager_amount: wagerInput,
-                    message: message,
-                    timeout: parseInt(timeout),
-                    timestamp: Math.floor(Date.now() / 1000),
-                    status: 0
-                }]);
-            }
-            
-            showToast("✓ Challenge sent!");
-            document.getElementById('challenge-target').value = '';
-            document.getElementById('challenge-message').value = '';
-            await updateBalance();
-        } catch (err) {
-            console.error("Challenge creation error:", err);
-            showToast(err.reason || "Challenge failed");
-        }
-    }
-
-    // Continue in part 4c...
-</script>
-<!-- PARTS 4C & 4D COMBINED: Marketplace, Blood Rite, Profile, All Helpers -->
-<script>
-    // ============================================
-    // PART 4C: MARKETPLACE & PREMIUM PROFILES
-    // ============================================
-    
-    async function checkPremiumStatus() {
-        if (!userAddress || !contract) return;
-        try {
-            const isPremium = await contract.hasPremiumProfile(userAddress);
-            if (isPremium) {
-                document.getElementById('premium-status-badge').innerHTML = '<span class="premium-badge">ACTIVE</span>';
-                // Show expiry if we can get it
-            }
-        } catch (e) {
-            console.error("Premium check error:", e);
-        }
-    }
-
-    async function checkIfPremium(address) {
-        if (!contract) return false;
-        try {
-            return await contract.hasPremiumProfile(address);
-        } catch {
-            return false;
-        }
-    }
-
-    async function purchasePremiumProfile() {
-        if (!signer) return showToast("Connect wallet first");
-        if (!(await checkNetwork())) return;
-        
-        const btn = document.getElementById('buy-premium-btn');
-        btn.disabled = true;
-        
-        try {
-            showToast("Purchasing Arcane Ascendance...");
-            const tx = await contract.purchasePremiumProfile({ value: ethers.parseEther("0.0001") });
-            
-            showToast("Awaiting confirmation...");
-            await tx.wait();
-            
-            await _supabase.from('grotto_marketplace_purchases').insert([{
-                address: userAddress.toLowerCase(),
-                item_type: 'premium_profile',
-                item_name: 'Arcane Ascendance',
-                price_heresy: '0.0001',
-                expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-            }]);
-            
-            showToast("✨ Arcane Ascendance activated!");
-            await checkPremiumStatus();
-            await updateBalance();
-        } catch (err) {
-            console.error("Purchase error:", err);
-            showToast(err.reason || "Purchase failed");
-        } finally {
-            btn.disabled = false;
-        }
-    }
-
-    // ============================================
-    // PART 4D: BLOOD RITE SYSTEM
-    // ============================================
-    
-    const dailyAchievements = [
-        { id: 'daily_win', name: 'First Blood', desc: 'Win your first game today', points: 50, icon: '⚔️', check: (s) => s.dailyWins >= 1 },
-        { id: 'daily_3games', name: 'Ritual Devotee', desc: 'Play 3 games today', points: 30, icon: '🎯', check: (s) => s.dailyGames >= 3 },
-        { id: 'daily_streak', name: 'Unbroken', desc: 'Win 2 games in a row', points: 75, icon: '🔥', check: (s) => s.dailyStreak >= 2 },
-        { id: 'daily_wager', name: 'High Roller', desc: 'Wager 10+ HERESY today', points: 40, icon: '💰', check: (s) => s.dailyWagered >= 10 }
-    ];
-
-    const milestoneAchievements = [
-        { id: 'total_10wins', name: 'Apprentice', desc: 'Win 10 total games', points: 100, icon: '🌟', check: (s) => s.totalWins >= 10 },
-        { id: 'total_50wins', name: 'Adept', desc: 'Win 50 total games', points: 250, icon: '⭐', check: (s) => s.totalWins >= 50 },
-        { id: 'total_100wins', name: 'Master', desc: 'Win 100 total games', points: 500, icon: '✨', check: (s) => s.totalWins >= 100 },
-        { id: 'total_wager100', name: 'Whale', desc: 'Wager 100+ HERESY total', points: 200, icon: '🐋', check: (s) => s.totalWagered >= 100 },
-        { id: 'streak_5', name: 'Unstoppable', desc: 'Get a 5 win streak', points: 150, icon: '🔥', check: (s) => s.longestStreak >= 5 }
-    ];
-
-    function updateDailyTimer() {
-        const now = new Date();
-        const utcMidnight = new Date();
-        utcMidnight.setUTCHours(24, 0, 0, 0);
-        
-        const diff = utcMidnight - now;
-        const hours = Math.floor(diff / 3600000);
-        const minutes = Math.floor((diff % 3600000) / 60000);
-        const seconds = Math.floor((diff % 60000) / 1000);
-        
-        const el = document.getElementById('daily-timer');
-        if (el) el.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    async function updatePlayerStats(event, amount = 0) {
-        if (!userAddress) return;
-        
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            
-            let { data: stats } = await _supabase
-                .from('grotto_player_stats')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            if (!stats) {
-                stats = {
-                    address: userAddress.toLowerCase(),
-                    total_games: 0, total_wins: 0, total_losses: 0, total_draws: 0,
-                    total_wagered: '0', longest_streak: 0, current_streak: 0,
-                    daily_games: 0, daily_wins: 0, daily_losses: 0, daily_wagered: '0',
-                    daily_streak: 0, last_daily_reset: today
-                };
-            }
-            
-            if (stats.last_daily_reset !== today) {
-                stats.daily_games = 0;
-                stats.daily_wins = 0;
-                stats.daily_losses = 0;
-                stats.daily_wagered = '0';
-                stats.daily_streak = 0;
-                stats.last_daily_reset = today;
-            }
-            
-            switch(event) {
-                case 'gameCreated':
-                case 'gameChallenged':
-                    stats.daily_games++;
-                    stats.total_games++;
-                    stats.daily_wagered = (parseFloat(stats.daily_wagered) + amount).toString();
-                    stats.total_wagered = (parseFloat(stats.total_wagered) + amount).toString();
-                    break;
-                case 'gameWon':
-                    stats.daily_wins++;
-                    stats.total_wins++;
-                    stats.daily_streak++;
-                    stats.current_streak++;
-                    if (stats.current_streak > stats.longest_streak) {
-                        stats.longest_streak = stats.current_streak;
-                    }
-                    break;
-                case 'gameLost':
-                    stats.daily_losses++;
-                    stats.total_losses++;
-                    stats.daily_streak = 0;
-                    stats.current_streak = 0;
-                    break;
-                case 'gameDraw':
-                    stats.total_draws++;
-                    stats.daily_streak = 0;
-                    stats.current_streak = 0;
-                    break;
-            }
-            
-            await _supabase.from('grotto_player_stats').upsert(stats);
-            checkAchievements();
-        } catch (e) {
-            console.error("Stats update error:", e);
-        }
-    }
-
-    async function checkAchievements() {
-        if (!userAddress) return;
-        
-        const { data: stats } = await _supabase
-            .from('grotto_player_stats')
-            .select('*')
-            .eq('address', userAddress.toLowerCase())
-            .single();
-        
-        if (!stats) return;
-        
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { data: claimed } = await _supabase
-            .from('grotto_bp_achievements')
-            .select('achievement_id, achievement_type')
-            .eq('address', userAddress.toLowerCase());
-        
-        const claimedIds = claimed ? claimed.map(c => c.achievement_id) : [];
-        const dailyClaimed = claimed ? claimed.filter(c => c.achievement_type === 'daily' && c.claim_date === today).map(c => c.achievement_id) : [];
-        
-        let newCount = 0;
-        dailyAchievements.forEach(ach => {
-            if (!dailyClaimed.includes(ach.id) && ach.check(stats)) newCount++;
-        });
-        milestoneAchievements.forEach(ach => {
-            if (!claimedIds.includes(ach.id) && ach.check(stats)) newCount++;
-        });
-        
-        if (newCount > 0) {
-            showToast(`${newCount} achievement${newCount > 1 ? 's' : ''} ready!`);
-        }
-    }
-
-    async function claimAchievement(achievementId, isDaily, points) {
-        if (!userAddress) return;
-        
-        try {
-            const { data: existing } = await _supabase
-                .from('grotto_bp_achievements')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .eq('achievement_id', achievementId);
-            
-            if (existing && existing.length > 0) {
-                if (isDaily) {
-                    const today = new Date().toISOString().split('T')[0];
-                    const todayClaim = existing.find(e => e.claim_date === today);
-                    if (todayClaim) {
-                        showToast("Already claimed today");
-                        return;
-                    }
-                } else {
-                    showToast("Already claimed");
-                    return;
-                }
-            }
-            
-            await _supabase.from('grotto_bp_achievements').insert([{
-                address: userAddress.toLowerCase(),
-                achievement_id: achievementId,
-                achievement_type: isDaily ? 'daily' : 'milestone',
-                bp_awarded: points
-            }]);
-            
-            const { data: bp } = await _supabase
-                .from('grotto_blood_points')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            const currentBP = bp ? bp.total_bp : 0;
-            const newBP = currentBP + points;
-            const newLevel = Math.floor(newBP / 100) + 1;
-            
-            await _supabase.from('grotto_blood_points').upsert({
-                address: userAddress.toLowerCase(),
-                total_bp: newBP,
-                level: newLevel,
-                last_daily_reset: new Date().toISOString().split('T')[0]
-            });
-            
-            showToast(`✓ Claimed ${points} Blood Points!`);
-            loadBloodRite();
-        } catch (e) {
-            console.error("Claim error:", e);
-            showToast("Claim failed");
-        }
-    }
-
-    async function loadBloodRite() {
-        if (!userAddress) return;
-        
-        try {
-            const { data: bp } = await _supabase
-                .from('grotto_blood_points')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            const totalBP = bp ? bp.total_bp : 0;
-            const level = bp ? bp.level : 1;
-            
-            document.getElementById('blood-points-total').textContent = totalBP;
-            document.getElementById('blood-level').textContent = level;
-            document.getElementById('current-level').textContent = level;
-            document.getElementById('current-bp').textContent = totalBP % 100;
-            document.getElementById('next-level-bp').textContent = 100;
-            document.getElementById('level-progress-bar').style.width = ((totalBP % 100) / 100 * 100) + '%';
-            
-            const { data: stats } = await _supabase
-                .from('grotto_player_stats')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            const { data: claimed } = await _supabase
-                .from('grotto_bp_achievements')
-                .select('*')
-                .eq('address', userAddress.toLowerCase());
-            
-            const claimedIds = claimed ? claimed.map(c => c.achievement_id) : [];
-            const today = new Date().toISOString().split('T')[0];
-            const dailyClaimed = claimed ? claimed.filter(c => c.achievement_type === 'daily' && c.claim_date === today).map(c => c.achievement_id) : [];
-            
-            const dailyEl = document.getElementById('daily-achievements');
-            if (dailyEl) {
-                dailyEl.innerHTML = dailyAchievements.map(ach => {
-                    const completed = stats && ach.check(stats);
-                    const isClaimed = dailyClaimed.includes(ach.id);
-                    const canClaim = completed && !isClaimed;
-                    
-                    return `
-                        <div class="achievement-card ${isClaimed ? 'claimed' : completed ? 'completed' : ''} p-5 rounded-lg">
-                            <div class="flex items-start gap-4">
-                                <div class="text-4xl">${ach.icon}</div>
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                            <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                            <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                        </div>
-                                    </div>
-                                    ${canClaim ? 
-                                        `<button onclick="claimAchievement('${ach.id}', true, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim</button>` :
-                                        isClaimed ? 
-                                            `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                            `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">In Progress</div>`
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-            
-            const milestoneEl = document.getElementById('milestone-achievements');
-            if (milestoneEl) {
-                milestoneEl.innerHTML = milestoneAchievements.map(ach => {
-                    const completed = stats && ach.check(stats);
-                    const isClaimed = claimedIds.includes(ach.id);
-                    const canClaim = completed && !isClaimed;
-                    
-                    return `
-                        <div class="achievement-card ${isClaimed ? 'claimed' : completed ? 'completed' : ''} p-5 rounded-lg">
-                            <div class="flex items-start gap-4">
-                                <div class="text-4xl">${ach.icon}</div>
-                                <div class="flex-1">
-                                    <div class="flex justify-between items-start mb-2">
-                                        <div>
-                                            <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                            <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                            <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                        </div>
-                                    </div>
-                                    ${canClaim ? 
-                                        `<button onclick="claimAchievement('${ach.id}', false, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim</button>` :
-                                        isClaimed ? 
-                                            `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                            `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">Locked</div>`
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-        } catch (e) {
-            console.error("Blood Rite load error:", e);
-        }
-    }
-
-    // ============================================
-    // PROFILE & CHALLENGES
-    // ============================================
-    
-    async function loadProfile() {
-        const content = document.getElementById('profile-stats-content');
-        if (!content) return;
-        
-        if (!userAddress) {
-            content.innerHTML = `
-                <div class="text-center py-20">
-                    <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
-                    <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
-                    <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
-                </div>`;
-            return;
-        }
-
-        try {
-            const { data: stats } = await _supabase
-                .from('grotto_player_stats')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            const { data: bp } = await _supabase
-                .from('grotto_blood_points')
-                .select('*')
-                .eq('address', userAddress.toLowerCase())
-                .single();
-            
-            const isPremium = await checkIfPremium(userAddress);
-            const username = await getUsernameOrAddress(userAddress);
-            const totalBP = bp ? bp.total_bp : 0;
-            const level = bp ? bp.level : 1;
-
-            content.innerHTML = `
-                <div class="grotto-glass ${isPremium ? 'premium-profile' : ''} border-2 border-purple-500/30 p-8 rounded-xl mb-6 relative">
-                    ${isPremium ? '<div class="arcane-particles"></div>' : ''}
-                    <div class="flex justify-between items-start mb-6 relative z-10">
-                        <div>
-                            <h3 class="cinzel text-2xl ${isPremium ? 'premium-name' : 'text-purple-300'} mb-2">${username}</h3>
-                            <div class="text-sm text-purple-400/70">${userAddress}</div>
-                            ${isPremium ? '<div class="mt-2"><span class="premium-badge">✨ ARCANE ASCENDANCE</span></div>' : ''}
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs text-purple-400/70 uppercase mb-1">Blood Level</div>
-                            <div class="cinzel text-3xl text-red-400 font-bold">${level}</div>
-                            <div class="text-xs text-purple-500/50">${totalBP} BP</div>
-                        </div>
-                    </div>
-                    <button onclick="updateUsername()" class="btn-grotto px-6 py-2 text-xs rounded-lg cinzel relative z-10">
-                        Update Username
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div class="stat-card p-6 rounded-xl text-center">
-                        <div class="text-[11px] text-purple-400/70 uppercase mb-2 cinzel">Total Games</div>
-                        <div class="cinzel text-3xl text-purple-400 font-bold">${stats?.total_games || 0}</div>
-                    </div>
-                    <div class="stat-card p-6 rounded-xl text-center border-green-900/30">
-                        <div class="text-[11px] text-green-400/70 uppercase mb-2 cinzel">Wins</div>
-                        <div class="cinzel text-3xl text-green-400 font-bold">${stats?.total_wins || 0}</div>
-                    </div>
-                    <div class="stat-card p-6 rounded-xl text-center border-red-900/30">
-                        <div class="text-[11px] text-red-400/70 uppercase mb-2 cinzel">Losses</div>
-                        <div class="cinzel text-3xl text-red-400 font-bold">${stats?.total_losses || 0}</div>
-                    </div>
-                    <div class="stat-card p-6 rounded-xl text-center border-yellow-900/30">
-                        <div class="text-[11px] text-yellow-400/70 uppercase mb-2 cinzel">Best Streak</div>
-                        <div class="cinzel text-3xl text-yellow-400 font-bold">${stats?.longest_streak || 0}</div>
-                    </div>
-                </div>
-
-                <div class="grotto-glass p-6 rounded-xl">
-                    <h3 class="cinzel text-lg text-purple-300 mb-4">Statistics</h3>
-                    <div class="space-y-3">
-                        <div class="flex justify-between py-2 border-b border-purple-900/20">
-                            <span class="text-purple-300">Total Wagered:</span>
-                            <span class="cinzel text-purple-400 font-semibold">${parseFloat(stats?.total_wagered || 0).toFixed(5)} $HERESY</span>
-                        </div>
-                        <div class="flex justify-between py-2 border-b border-purple-900/20">
-                            <span class="text-purple-300">Win Rate:</span>
-                            <span class="cinzel font-semibold ${((stats?.total_wins || 0)/(stats?.total_games || 1)*100) >= 50 ? 'text-green-400' : 'text-red-400'}">${((stats?.total_wins || 0)/(stats?.total_games || 1)*100).toFixed(1)}%</span>
-                        </div>
-                        <div class="flex justify-between py-2">
-                            <span class="text-purple-300">Current Streak:</span>
-                            <span class="cinzel text-yellow-400 font-semibold">${stats?.current_streak || 0}</span>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            if (isPremium) {
-                createPremiumParticles();
-            }
-        } catch (e) {
-            console.error("Profile load error:", e);
-        }
-    }
-
-    function createPremiumParticles() {
-        const container = document.querySelector('.arcane-particles');
-        if (!container) return;
-        
-        for (let i = 0; i < 15; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'arcane-particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            particle.style.animationDelay = Math.random() * 2 + 's';
-            container.appendChild(particle);
-        }
-    }
-
-    async function loadUserChallenges() {
-        const content = document.getElementById('profile-challenges-content');
-        if (!content || !userAddress) return;
-        
-        try {
-            const { data: incoming } = await _supabase
-                .from('grotto_challenges')
-                .select('*')
-                .eq('target', userAddress.toLowerCase())
-                .order('created_at', { ascending: false });
-            
-            const { data: outgoing } = await _supabase
-                .from('grotto_challenges')
-                .select('*')
-                .eq('challenger', userAddress.toLowerCase())
-                .order('created_at', { ascending: false });
-            
-            content.innerHTML = `
-                <div class="mb-6">
-                    <h3 class="cinzel text-xl text-purple-300 mb-4">Incoming Challenges</h3>
-                    <div class="space-y-3">
-                        ${incoming && incoming.length > 0 ? incoming.map(c => renderChallenge(c, true)).join('') : '<div class="text-center text-purple-700/50 py-8">No incoming challenges</div>'}
-                    </div>
-                </div>
-                <div>
-                    <h3 class="cinzel text-xl text-purple-300 mb-4">Sent Challenges</h3>
-                    <div class="space-y-3">
-                        ${outgoing && outgoing.length > 0 ? outgoing.map(c => renderChallenge(c, false)).join('') : '<div class="text-center text-purple-700/50 py-8">No sent challenges</div>'}
-                    </div>
-                </div>
-            `;
-        } catch (e) {
-            console.error("Challenges load error:", e);
-        }
-    }
-
-    function renderChallenge(c, isIncoming) {
-        const statusColors = ['#f59e0b', '#22c55e', '#6b7280', '#f59e0b', '#6b7280', '#15803d'];
-        const statusTexts = ['Pending', 'Accepted', 'Declined', 'Counter-Offered', 'Expired', 'Resolved'];
-        
-        return `
-            <div class="challenge-card p-4 rounded-lg" style="border-left: 3px solid ${statusColors[c.status]}">
-                <div class="flex justify-between items-start mb-2">
-                    <div>
-                        <div class="text-sm font-semibold text-purple-300">${isIncoming ? 'From' : 'To'}: ${c[isIncoming ? 'challenger' : 'target'].slice(0,10)}...</div>
-                        <div class="text-xs text-purple-400/70">${parseFloat(c.wager_amount).toFixed(5)} $HERESY</div>
-                    </div>
-                    <div class="text-xs px-2 py-1 rounded" style="background: ${statusColors[c.status]}22; color: ${statusColors[c.status]}">${statusTexts[c.status]}</div>
-                </div>
-                <div class="text-sm text-purple-200 mb-2 italic">"${c.message}"</div>
-                ${c.status === 0 && isIncoming ? '<div class="flex gap-2"><button class="btn-grotto flex-1 py-2 text-xs rounded cinzel">Accept</button><button class="border border-purple-700 flex-1 py-2 text-xs rounded cinzel">Decline</button></div>' : ''}
-            </div>
-        `;
-    }
-
-    function switchProfileTab(tab) {
-        document.querySelectorAll('[id^="profile-tab-"]').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`profile-tab-${tab}`).classList.add('active');
-        
-        document.querySelectorAll('.profile-tab-content').forEach(content => content.classList.add('hidden'));
-        document.getElementById(`profile-${tab}-content`).classList.remove('hidden');
-        
-        if (tab === 'challenges') loadUserChallenges();
-    }
-
-    // ============================================
-    // CHAT, ACTIVITY, NOTIFICATIONS, HELPERS
-    // ============================================
-    
-    async function refreshChat() {
-        const chatMessages = document.getElementById('chat-messages');
-        if (!chatMessages) return;
-        
-        try {
-            const { data: messages } = await _supabase
-                .from('grotto_chat')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(50);
-
-            if (!messages) return;
-
-            const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
-
-            const items = await Promise.all(messages.reverse().map(async msg => {
-                const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
-                const senderName = await getUsernameOrAddress(msg.sender);
-                return `
-                    <div class="${isOwn ? 'text-right' : 'text-left'}">
-                        <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
-                            <div class="text-[10px] text-purple-400/70 mb-1 cinzel">${senderName}</div>
-                            <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
-                        </div>
-                    </div>
-                `;
-            }));
-
-            chatMessages.innerHTML = items.join('');
-
-            if (shouldScroll) {
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            }
-        } catch (err) {
-            console.error("Chat error:", err);
-        }
-    }
-
-    async function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const message = input.value.trim();
-        
-        if (!message || !userAddress) return;
-        
-        try {
-            await _supabase.from('grotto_chat').insert([{
-                sender: userAddress.toLowerCase(),
-                message: message
-            }]);
-            input.value = '';
-            refreshChat();
-        } catch (err) {
-            console.error("Send error:", err);
-            showToast("Message failed");
-        }
-    }
-
-    async function refreshActivityFeed() {
-        const feed = document.getElementById('activity-feed');
-        if (!feed) return;
-        
-        try {
-            const { data: games } = await _supabase
-                .from('grotto_games')
-                .select('*')
-                .eq('status', 2)
-                .order('updated_at', { ascending: false })
-                .limit(50);
-
-            if (!games) return;
-
-            const items = await Promise.all(games.map(async game => {
-                const hostMove = Number(game.host_move);
-                const challengerMove = Number(game.challenger_move);
-                
-                let result = '', resultColor = '';
-                const hostName = await getUsernameOrAddress(game.host);
-                const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
-                
-                if (hostMove === challengerMove) {
-                    result = 'STALEMATE';
-                    resultColor = 'text-yellow-400';
-                } else if (
-                    (hostMove === 1 && challengerMove === 2) ||
-                    (hostMove === 2 && challengerMove === 3) ||
-                    (hostMove === 3 && challengerMove === 1)
-                ) {
-                    result = `${hostName} PREVAILS`;
-                    resultColor = 'text-green-400';
-                } else {
-                    result = `${challengerName} PREVAILS`;
-                    resultColor = 'text-green-400';
-                }
-                
-                const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
-                
-                return `
-                    <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
-                        <div class="flex-1">
-                            <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
-                            <div class="text-[11px] text-purple-500/60 mt-1 flex items-center gap-2">
-                                <img src="${moveImages[hostMove]}" class="w-5 h-5 object-contain"> ${moveNames[hostMove]} vs 
-                                <img src="${moveImages[challengerMove]}" class="w-5 h-5 object-contain"> ${moveNames[challengerMove]} • 
-                                ${parseFloat(game.wager).toFixed(5)} $HERESY • ${timeAgo}
-                            </div>
-                        </div>
-                        <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
-                    </div>
-                `;
-            }));
-
-            feed.innerHTML = items.join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
-        } catch (err) {
-            console.error("Activity error:", err);
-        }
-    }
-
-    async function loadLeaderboard() {
-        try {
-            const { data: allStats } = await _supabase
-                .from('grotto_player_stats')
-                .select('*')
-                .order('total_wagered', { ascending: false })
-                .limit(100);
-
-            if (!allStats) return;
-
-            const tbody = document.getElementById('leaderboard-body');
-            const rows = await Promise.all(allStats.map(async (player, index) => {
-                const winRate = player.total_games > 0 ? ((player.total_wins / player.total_games) * 100).toFixed(1) : 0;
-                const playerName = await getUsernameOrAddress(player.address);
-                const isPremium = await checkIfPremium(player.address);
-                
-                return `
-                    <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition">
-                        <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
-                        <td class="p-4">
-                            <div class="text-sm ${isPremium ? 'premium-name' : 'text-purple-200'}">${playerName}</div>
-                            <div class="text-[11px] text-purple-600/60">${player.total_games} rituals</div>
-                        </td>
-                        <td class="p-4 text-right cinzel text-purple-400 font-semibold">${parseFloat(player.total_wagered).toFixed(5)}</td>
-                        <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
-                        <td class="p-4 text-right cinzel text-purple-400">${parseFloat(player.total_wagered).toFixed(5)}</td>
-                        <td class="p-4 text-right cinzel text-yellow-400">${player.longest_streak}</td>
-                    </tr>
-                `;
-            }));
-            
-            tbody.innerHTML = rows.join('');
-        } catch (err) {
-            console.error("Leaderboard error:", err);
-        }
-    }
-
+    // NOTIFICATION SYSTEM
     function addNotification(notif) {
         if (!userAddress) return;
         
@@ -2681,7 +1627,7 @@
         const list = document.getElementById('notification-list');
         
         if (userNotifications.length === 0) {
-            list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens...</div>';
+            list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens to reveal...</div>';
             return;
         }
         
@@ -2695,9 +1641,9 @@
                         <div class="flex-1">
                             <div class="text-sm font-semibold text-purple-300 mb-1">${notif.message}</div>
                             <div class="text-xs text-purple-400/70 mb-2">Game #${notif.gameId} • ${getTimeAgo(new Date(notif.timestamp))}</div>
-                            <div class="text-sm text-purple-200/80 italic">${notif.motivationalMessage}</div>
+                            <div class="text-sm text-purple-200/80 italic leading-relaxed">${notif.motivationalMessage}</div>
                         </div>
-                        ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full"></div>' : ''}
+                        ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>' : ''}
                     </div>
                 </div>
             `;
@@ -2705,11 +1651,13 @@
     }
 
     function toggleNotifications() {
-        document.getElementById('notification-panel').classList.toggle('active');
+        const panel = document.getElementById('notification-panel');
+        panel.classList.toggle('active');
     }
 
     function markAllRead() {
         if (!userAddress) return;
+        
         userNotifications = userNotifications.map(n => ({ ...n, read: true }));
         localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(userNotifications));
         loadNotifications();
@@ -2723,6 +1671,701 @@
         }
     });
 
+    // Continue in part 4c...
+</script>
+<!-- PART 4C: FINAL JAVASCRIPT - Blood Rite, Profile, Leaderboard, Helpers -->
+<script>
+    // BLOOD RITE SYSTEM
+    function updateDailyTimer() {
+        const now = new Date();
+        const utcMidnight = new Date();
+        utcMidnight.setUTCHours(24, 0, 0, 0);
+        
+        const diff = utcMidnight - now;
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        const timerEl = document.getElementById('daily-timer');
+        if (timerEl) {
+            timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    function getPlayerStats() {
+        if (!userAddress) return null;
+        
+        const today = new Date().toISOString().split('T')[0];
+        const stats = JSON.parse(localStorage.getItem(`grotto_stats_${userAddress}`) || '{}');
+        
+        if (stats.lastUpdate !== today) {
+            stats.dailyGames = 0;
+            stats.dailyWins = 0;
+            stats.dailyLosses = 0;
+            stats.dailyWagered = 0;
+            stats.dailyStreak = 0;
+            stats.lastUpdate = today;
+        }
+        
+        stats.totalWins = stats.totalWins || 0;
+        stats.totalLosses = stats.totalLosses || 0;
+        stats.totalGames = stats.totalGames || 0;
+        stats.totalWagered = stats.totalWagered || 0;
+        stats.longestStreak = stats.longestStreak || 0;
+        stats.currentStreak = stats.currentStreak || 0;
+        
+        return stats;
+    }
+
+    function updatePlayerStats(event, amount = 0) {
+        if (!userAddress) return;
+        
+        const stats = getPlayerStats();
+        
+        switch(event) {
+            case 'gameCreated':
+            case 'gameChallenged':
+                stats.dailyGames++;
+                stats.totalGames++;
+                stats.dailyWagered += amount;
+                stats.totalWagered += amount;
+                break;
+            case 'gameWon':
+                stats.dailyWins++;
+                stats.totalWins++;
+                stats.dailyStreak++;
+                stats.currentStreak++;
+                if (stats.currentStreak > stats.longestStreak) {
+                    stats.longestStreak = stats.currentStreak;
+                }
+                break;
+            case 'gameLost':
+                stats.dailyLosses++;
+                stats.totalLosses++;
+                stats.dailyStreak = 0;
+                stats.currentStreak = 0;
+                break;
+            case 'gameDraw':
+                stats.dailyStreak = 0;
+                stats.currentStreak = 0;
+                break;
+        }
+        
+        localStorage.setItem(`grotto_stats_${userAddress}`, JSON.stringify(stats));
+        checkAchievements();
+    }
+
+    function getBloodPoints() {
+        if (!userAddress) return 0;
+        return parseInt(localStorage.getItem(`grotto_bp_${userAddress}`) || '0');
+    }
+
+    function addBloodPoints(points) {
+        if (!userAddress) return;
+        const current = getBloodPoints();
+        localStorage.setItem(`grotto_bp_${userAddress}`, (current + points).toString());
+        updateBloodLevel();
+    }
+
+    function getClaimedAchievements() {
+        if (!userAddress) return [];
+        return JSON.parse(localStorage.getItem(`grotto_claimed_${userAddress}`) || '[]');
+    }
+
+    function markAchievementClaimed(achievementId) {
+        if (!userAddress) return;
+        const claimed = getClaimedAchievements();
+        if (!claimed.includes(achievementId)) {
+            claimed.push(achievementId);
+            localStorage.setItem(`grotto_claimed_${userAddress}`, JSON.stringify(claimed));
+        }
+    }
+
+    function checkAchievements() {
+        if (!userAddress) return;
+        const stats = getPlayerStats();
+        const claimed = getClaimedAchievements();
+        const today = new Date().toISOString().split('T')[0];
+        const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
+        
+        let newAchievements = 0;
+        
+        // Check daily achievements
+        dailyAchievements.forEach(ach => {
+            if (!dailyClaimed.includes(ach.id) && ach.check(stats)) {
+                newAchievements++;
+            }
+        });
+        
+        // Check milestone achievements
+        milestoneAchievements.forEach(ach => {
+            if (!claimed.includes(ach.id) && ach.check(stats)) {
+                newAchievements++;
+            }
+        });
+        
+        if (newAchievements > 0) {
+            showToast(`${newAchievements} new achievement${newAchievements > 1 ? 's' : ''} available!`);
+        }
+    }
+
+    function claimAchievement(achievementId, isDaily, points) {
+        if (!userAddress) return;
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (isDaily) {
+            const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
+            if (dailyClaimed.includes(achievementId)) {
+                showToast("Already claimed today");
+                return;
+            }
+            dailyClaimed.push(achievementId);
+            localStorage.setItem(`grotto_daily_claimed_${userAddress}_${today}`, JSON.stringify(dailyClaimed));
+        } else {
+            const claimed = getClaimedAchievements();
+            if (claimed.includes(achievementId)) {
+                showToast("Already claimed");
+                return;
+            }
+            markAchievementClaimed(achievementId);
+        }
+        
+        addBloodPoints(points);
+        showToast(`✓ Claimed ${points} Blood Points!`);
+        loadBloodRite();
+    }
+
+    function updateBloodLevel() {
+        const bp = getBloodPoints();
+        const level = Math.floor(bp / 100) + 1;
+        const currentLevelBP = bp % 100;
+        const nextLevelBP = 100;
+        const progress = (currentLevelBP / nextLevelBP) * 100;
+        
+        document.getElementById('blood-points-total').textContent = bp;
+        document.getElementById('blood-level').textContent = level;
+        document.getElementById('current-level').textContent = level;
+        document.getElementById('next-level-bp').textContent = nextLevelBP;
+        document.getElementById('current-bp').textContent = currentLevelBP;
+        document.getElementById('level-progress-bar').style.width = progress + '%';
+    }
+
+    function loadBloodRite() {
+        if (!userAddress) return;
+        
+        const stats = getPlayerStats();
+        const today = new Date().toISOString().split('T')[0];
+        const dailyClaimed = JSON.parse(localStorage.getItem(`grotto_daily_claimed_${userAddress}_${today}`) || '[]');
+        const claimed = getClaimedAchievements();
+        
+        // Update blood points display
+        updateBloodLevel();
+        
+        // Render daily achievements
+        const dailyContainer = document.getElementById('daily-achievements');
+        if (dailyContainer) {
+            dailyContainer.innerHTML = dailyAchievements.map(ach => {
+                const isCompleted = ach.check(stats);
+                const isClaimed = dailyClaimed.includes(ach.id);
+                const canClaim = isCompleted && !isClaimed;
+                
+                return `
+                    <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">${ach.icon}</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
+                                        <p class="text-sm text-purple-400/70">${ach.desc}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
+                                        <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
+                                    </div>
+                                </div>
+                                ${canClaim ? 
+                                    `<button onclick="claimAchievement('${ach.id}', true, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
+                                    isClaimed ? 
+                                        `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
+                                        `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">In Progress</div>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Render milestone achievements
+        const milestoneContainer = document.getElementById('milestone-achievements');
+        if (milestoneContainer) {
+            milestoneContainer.innerHTML = milestoneAchievements.map(ach => {
+                const isCompleted = ach.check(stats);
+                const isClaimed = claimed.includes(ach.id);
+                const canClaim = isCompleted && !isClaimed;
+                
+                return `
+                    <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
+                        <div class="flex items-start gap-4">
+                            <div class="text-4xl">${ach.icon}</div>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div>
+                                        <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
+                                        <p class="text-sm text-purple-400/70">${ach.desc}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
+                                        <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
+                                    </div>
+                                </div>
+                                ${canClaim ? 
+                                    `<button onclick="claimAchievement('${ach.id}', false, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
+                                    isClaimed ? 
+                                        `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
+                                        `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">Locked</div>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+
+    // ACTIVITY FEED
+    async function refreshActivityFeed() {
+        const feed = document.getElementById('activity-feed');
+        try {
+            const { data: games, error } = await _supabase
+                .from('grotto_games')
+                .select('*')
+                .eq('status', 2)
+                .order('updated_at', { ascending: false })
+                .limit(50);
+
+            if (error) return;
+
+            const feedItems = await Promise.all(games.map(async game => {
+                const hostMove = Number(game.host_move);
+                const challengerMove = Number(game.challenger_move);
+                
+                let result = '', resultColor = '';
+                const hostName = await getUsernameOrAddress(game.host);
+                const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
+                
+                if (hostMove === challengerMove) {
+                    result = 'STALEMATE';
+                    resultColor = 'text-yellow-400';
+                } else if (
+                    (hostMove === 1 && challengerMove === 2) ||
+                    (hostMove === 2 && challengerMove === 3) ||
+                    (hostMove === 3 && challengerMove === 1)
+                ) {
+                    result = `${hostName} PREVAILS`;
+                    resultColor = 'text-green-400';
+                } else {
+                    result = `${challengerName} PREVAILS`;
+                    resultColor = 'text-green-400';
+                }
+                
+                const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
+                
+                return `
+                    <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
+                        <div class="flex-1">
+                            <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
+                            <div class="text-[11px] text-purple-500/60 mt-1 flex items-center gap-2">
+                                <img src="${moveImages[hostMove]}" class="w-5 h-5 object-contain"> ${moveNames[hostMove]} vs 
+                                <img src="${moveImages[challengerMove]}" class="w-5 h-5 object-contain"> ${moveNames[challengerMove]} • 
+                                ${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL} • ${timeAgo}
+                            </div>
+                        </div>
+                        <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
+                    </div>
+                `;
+            }));
+
+            feed.innerHTML = feedItems.join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
+        } catch (err) {
+            console.error("Activity error:", err);
+        }
+    }
+
+    // CHAT SYSTEM
+    async function refreshChat() {
+        const chatMessages = document.getElementById('chat-messages');
+        try {
+            const { data: messages, error } = await _supabase
+                .from('grotto_chat')
+                .select('*')
+                .order('created_at', { ascending: false })
+                .limit(50);
+
+            if (error) return;
+
+            const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
+
+            const chatItems = await Promise.all(messages.reverse().map(async msg => {
+                const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
+                const senderName = await getUsernameOrAddress(msg.sender);
+                return `
+                    <div class="${isOwn ? 'text-right' : 'text-left'}">
+                        <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
+                            <div class="text-[10px] text-purple-400/70 mb-1 cinzel">${senderName}</div>
+                            <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
+                        </div>
+                    </div>
+                `;
+            }));
+
+            chatMessages.innerHTML = chatItems.join('');
+
+            if (shouldScroll) {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        } catch (err) {
+            console.error("Chat error:", err);
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('chat-input');
+        const message = input.value.trim();
+        
+        if (!message || !userAddress) return;
+        
+        try {
+            await _supabase.from('grotto_chat').insert([{
+                sender: userAddress.toLowerCase(),
+                message: message
+            }]);
+            input.value = '';
+            refreshChat();
+        } catch (err) {
+            console.error("Send error:", err);
+            showToast("Message failed");
+        }
+    }
+
+    // LEADERBOARD
+    async function loadLeaderboard() {
+        try {
+            const { data: games, error } = await _supabase
+                .from('grotto_games')
+                .select('*')
+                .eq('status', 2);
+
+            if (error) return;
+
+            const playerStats = {};
+            let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
+            let biggestLoser = { address: null, lost: 0 };
+            let streakMaster = { address: null, streak: 0 };
+            let mostActive = { address: null, games: 0 };
+
+            games.forEach(game => {
+                const wager = parseFloat(game.wager);
+                totalWagered += wager * 2;
+                const pot = wager * 2;
+                totalBurnt += pot * 0.015;
+                totalTreasury += pot * 0.015;
+
+                [game.host, game.challenger].forEach(addr => {
+                    if (!addr) return;
+                    if (!playerStats[addr]) {
+                        playerStats[addr] = {
+                            address: addr,
+                            totalWagered: 0,
+                            totalLost: 0,
+                            wins: 0,
+                            losses: 0,
+                            draws: 0,
+                            games: 0,
+                            biggestPot: 0,
+                            longestStreak: 0,
+                            currentStreak: 0
+                        };
+                    }
+                    playerStats[addr].totalWagered += wager;
+                    playerStats[addr].games++;
+                    if (wager * 2 > playerStats[addr].biggestPot) {
+                        playerStats[addr].biggestPot = wager * 2;
+                    }
+                });
+
+                const hostMove = Number(game.host_move);
+                const challengerMove = Number(game.challenger_move);
+
+                if (hostMove === challengerMove) {
+                    playerStats[game.host].draws++;
+                    if (game.challenger) playerStats[game.challenger].draws++;
+                    playerStats[game.host].currentStreak = 0;
+                    if (game.challenger) playerStats[game.challenger].currentStreak = 0;
+                } else {
+                    const hostWins = (
+                        (hostMove === 1 && challengerMove === 2) ||
+                        (hostMove === 2 && challengerMove === 3) ||
+                        (hostMove === 3 && challengerMove === 1)
+                    );
+                    if (hostWins) {
+                        playerStats[game.host].wins++;
+                        playerStats[game.host].currentStreak++;
+                        if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
+                            playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
+                        }
+                        if (game.challenger) {
+                            playerStats[game.challenger].losses++;
+                            playerStats[game.challenger].totalLost += wager;
+                            playerStats[game.challenger].currentStreak = 0;
+                        }
+                    } else if (game.challenger) {
+                        playerStats[game.challenger].wins++;
+                        playerStats[game.challenger].currentStreak++;
+                        if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
+                            playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
+                        }
+                        playerStats[game.host].losses++;
+                        playerStats[game.host].totalLost += wager;
+                        playerStats[game.host].currentStreak = 0;
+                    }
+                }
+            });
+
+            Object.values(playerStats).forEach(player => {
+                if (player.totalLost > biggestLoser.lost) {
+                    biggestLoser = { address: player.address, lost: player.totalLost };
+                }
+                if (player.longestStreak > streakMaster.streak) {
+                    streakMaster = { address: player.address, streak: player.longestStreak };
+                }
+                if (player.games > mostActive.games) {
+                    mostActive = { address: player.address, games: player.games };
+                }
+            });
+
+            document.getElementById('global-wagered').textContent = totalWagered.toFixed(5);
+            document.getElementById('global-burnt').textContent = totalBurnt.toFixed(5);
+            document.getElementById('global-treasury').textContent = totalTreasury.toFixed(5);
+            document.getElementById('global-games').textContent = games.length;
+
+            // Display special stats
+            if (biggestLoser.address) {
+                const loserName = await getUsernameOrAddress(biggestLoser.address);
+                document.getElementById('biggest-loser').innerHTML = `
+                    <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
+                    <div class="cinzel text-2xl text-red-400 font-bold mb-1">${loserName}</div>
+                    <div class="text-xs text-red-500/50">${biggestLoser.lost.toFixed(5)} $HERESY Lost</div>
+                `;
+            }
+
+            if (streakMaster.address) {
+                const streakName = await getUsernameOrAddress(streakMaster.address);
+                document.getElementById('streak-master').innerHTML = `
+                    <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
+                    <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">${streakName}</div>
+                    <div class="text-xs text-yellow-500/50">${streakMaster.streak} Consecutive Wins</div>
+                `;
+            }
+
+            if (mostActive.address) {
+                const activeName = await getUsernameOrAddress(mostActive.address);
+                document.getElementById('most-active').innerHTML = `
+                    <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
+                    <div class="cinzel text-2xl text-blue-400 font-bold mb-1">${activeName}</div>
+                    <div class="text-xs text-blue-500/50">${mostActive.games} Total Games</div>
+                `;
+            }
+
+            const leaderboard = Object.values(playerStats)
+                .sort((a, b) => b.totalWagered - a.totalWagered)
+                .slice(0, 50);
+
+            const tbody = document.getElementById('leaderboard-body');
+            const rows = await Promise.all(leaderboard.map(async (player, index) => {
+                const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
+                const playerName = await getUsernameOrAddress(player.address);
+                return `
+                    <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition" onclick="showPlayerProfile('${player.address}')">
+                        <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
+                        <td class="p-4">
+                            <div class="text-sm text-purple-200">${playerName}</div>
+                            <div class="text-[11px] text-purple-600/60">${player.games} rituals</div>
+                        </td>
+                        <td class="p-4 text-right cinzel text-purple-400 font-semibold">${player.totalWagered.toFixed(5)}</td>
+                        <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
+                        <td class="p-4 text-right cinzel text-purple-400">${player.biggestPot.toFixed(5)}</td>
+                        <td class="p-4 text-right cinzel text-yellow-400">${player.longestStreak}</td>
+                    </tr>
+                `;
+            }));
+            tbody.innerHTML = rows.join('');
+        } catch (err) {
+            console.error("Leaderboard error:", err);
+        }
+    }
+
+    // PROFILE
+    async function loadProfile() {
+        const profileContent = document.getElementById('profile-content');
+        
+        if (!userAddress) {
+            profileContent.innerHTML = `
+                <div class="text-center py-20">
+                    <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
+                    <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
+                    <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
+                </div>`;
+            return;
+        }
+
+        const stats = getPlayerStats();
+        const username = await getUsernameOrAddress(userAddress);
+        const bp = getBloodPoints();
+        const level = Math.floor(bp / 100) + 1;
+
+        profileContent.innerHTML = `
+            <div class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl mb-6">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h3 class="cinzel text-2xl text-purple-300 mb-2">${username}</h3>
+                        <div class="text-sm text-purple-400/70">${userAddress}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-purple-400/70 uppercase mb-1">Blood Level</div>
+                        <div class="cinzel text-3xl text-red-400 font-bold">${level}</div>
+                        <div class="text-xs text-purple-500/50">${bp} BP</div>
+                    </div>
+                </div>
+                <button onclick="updateUsername()" class="btn-grotto px-6 py-2 text-xs rounded-lg cinzel">
+                    Update Username
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card p-6 rounded-xl text-center">
+                    <div class="text-[11px] text-purple-400/70 uppercase mb-2 cinzel">Total Games</div>
+                    <div class="cinzel text-3xl text-purple-400 font-bold">${stats.totalGames || 0}</div>
+                </div>
+                <div class="stat-card p-6 rounded-xl text-center border-green-900/30">
+                    <div class="text-[11px] text-green-400/70 uppercase mb-2 cinzel">Wins</div>
+                    <div class="cinzel text-3xl text-green-400 font-bold">${stats.totalWins || 0}</div>
+                </div>
+                <div class="stat-card p-6 rounded-xl text-center border-red-900/30">
+                    <div class="text-[11px] text-red-400/70 uppercase mb-2 cinzel">Losses</div>
+                    <div class="cinzel text-3xl text-red-400 font-bold">${stats.totalLosses || 0}</div>
+                </div>
+                <div class="stat-card p-6 rounded-xl text-center border-yellow-900/30">
+                    <div class="text-[11px] text-yellow-400/70 uppercase mb-2 cinzel">Best Streak</div>
+                    <div class="cinzel text-3xl text-yellow-400 font-bold">${stats.longestStreak || 0}</div>
+                </div>
+            </div>
+
+            <div class="grotto-glass p-6 rounded-xl">
+                <h3 class="cinzel text-lg text-purple-300 mb-4">Statistics</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between py-2 border-b border-purple-900/20">
+                        <span class="text-purple-300">Total Wagered:</span>
+                        <span class="cinzel text-purple-400 font-semibold">${(stats.totalWagered || 0).toFixed(5)} $HERESY</span>
+                    </div>
+                    <div class="flex justify-between py-2 border-b border-purple-900/20">
+                        <span class="text-purple-300">Win Rate:</span>
+                        <span class="cinzel font-semibold ${(stats.totalWins/(stats.totalGames||1)*100) >= 50 ? 'text-green-400' : 'text-red-400'}">${((stats.totalWins/(stats.totalGames||1))*100).toFixed(1)}%</span>
+                    </div>
+                    <div class="flex justify-between py-2">
+                        <span class="text-purple-300">Current Streak:</span>
+                        <span class="cinzel text-yellow-400 font-semibold">${stats.currentStreak || 0}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function showPlayerProfile(address) {
+        document.getElementById('player-modal').classList.add('active');
+        const content = document.getElementById('player-modal-content');
+        content.innerHTML = '<div class="text-center py-8 text-purple-400">Summoning archive...</div>';
+        
+        try {
+            const { data: games } = await _supabase
+                .from('grotto_games')
+                .select('*')
+                .eq('status', 2)
+                .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`);
+
+            let wins = 0, losses = 0, draws = 0, totalWagered = 0;
+
+            games.forEach(game => {
+                const hostMove = Number(game.host_move);
+                const challengerMove = Number(game.challenger_move);
+                const isHost = game.host.toLowerCase() === address.toLowerCase();
+                
+                totalWagered += parseFloat(game.wager);
+
+                if (hostMove === challengerMove) {
+                    draws++;
+                } else {
+                    const hostWins = (
+                        (hostMove === 1 && challengerMove === 2) ||
+                        (hostMove === 2 && challengerMove === 3) ||
+                        (hostMove === 3 && challengerMove === 1)
+                    );
+                    if ((isHost && hostWins) || (!isHost && !hostWins)) {
+                        wins++;
+                    } else {
+                        losses++;
+                    }
+                }
+            });
+
+            const playerName = await getUsernameOrAddress(address);
+            const totalGames = wins + losses + draws;
+            const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
+
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="text-center">
+                        <h3 class="cinzel text-2xl text-purple-300 mb-2">${playerName}</h3>
+                        <div class="text-sm text-purple-400/70">${address}</div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="stat-card p-4 rounded-xl text-center">
+                            <div class="text-[10px] text-purple-400/70 uppercase mb-1 cinzel">Games</div>
+                            <div class="cinzel text-2xl text-purple-400 font-bold">${totalGames}</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-xl text-center border-green-900/30">
+                            <div class="text-[10px] text-green-400/70 uppercase mb-1 cinzel">Wins</div>
+                            <div class="cinzel text-2xl text-green-400 font-bold">${wins}</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-xl text-center border-red-900/30">
+                            <div class="text-[10px] text-red-400/70 uppercase mb-1 cinzel">Losses</div>
+                            <div class="cinzel text-2xl text-red-400 font-bold">${losses}</div>
+                        </div>
+                        <div class="stat-card p-4 rounded-xl text-center border-yellow-900/30">
+                            <div class="text-[10px] text-yellow-400/70 uppercase mb-1 cinzel">Win Rate</div>
+                            <div class="cinzel text-2xl font-bold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</div>
+                        </div>
+                    </div>
+
+                    <div class="grotto-glass p-4 rounded-xl">
+                        <div class="text-sm text-purple-300">Total Wagered:</div>
+                        <div class="cinzel text-xl text-purple-400 font-bold">${totalWagered.toFixed(5)} $HERESY</div>
+                    </div>
+                </div>
+            `;
+        } catch (err) {
+            content.innerHTML = '<div class="text-center py-8 text-red-400">Failed to load profile</div>';
+        }
+    }
+
+    function closePlayerModal() {
+        document.getElementById('player-modal').classList.remove('active');
+    }
+
+    // HELPER FUNCTIONS
     function getTimeAgo(date) {
         const seconds = Math.floor((new Date() - date) / 1000);
         if (seconds < 60) return `${seconds}s ago`;
@@ -2751,10 +2394,7 @@
         document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
         document.getElementById(`page-${tab}`).classList.add('active');
         
-        if (tab === 'profile') {
-            loadProfile();
-            loadUserChallenges();
-        }
+        if (tab === 'profile') loadProfile();
         if (tab === 'leaderboard') loadLeaderboard();
         if (tab === 'bloodrite') loadBloodRite();
     }
