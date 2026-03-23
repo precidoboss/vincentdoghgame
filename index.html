@@ -1,3050 +1,722 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Grotto Gambit | Dark Sanctum</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --grotto-purple: #9333ea;
-            --grotto-deep: #4c1d95;
-            --grotto-dark: #1a0a2e;
-            --grotto-darker: #0d0517;
-            --grotto-glow: rgba(147, 51, 234, 0.4);
-            --grotto-light: #c084fc;
-            --heresy-gold: #fbbf24;
-            --premium-gold: #ffd700;
-            --premium-glow: rgba(255, 215, 0, 0.4);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            background: linear-gradient(135deg, var(--grotto-darker) 0%, var(--grotto-dark) 50%, #1e1b4b 100%);
-            color: #e9d5ff;
-            font-family: 'Cormorant Garamond', serif;
-            min-height: 100vh;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 50%, rgba(147, 51, 234, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.08) 0%, transparent 50%),
-                radial-gradient(circle at 40% 20%, rgba(109, 40, 217, 0.05) 0%, transparent 40%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .cinzel { font-family: 'Cinzel', serif; }
-        
-        .grotto-glass {
-            background: rgba(13, 5, 23, 0.85);
-            border: 1px solid rgba(147, 51, 234, 0.3);
-            box-shadow: 0 8px 32px rgba(147, 51, 234, 0.15);
-            backdrop-filter: blur(12px);
-            position: relative;
-        }
-
-        /* PREMIUM STYLES */
-        .premium-username {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: goldShimmer 3s linear infinite;
-            font-weight: 900;
-            position: relative;
-            filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
-        }
-
-        @keyframes goldShimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .premium-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #1a0a2e;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 0 15px var(--premium-glow);
-            animation: premiumPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes premiumPulse {
-            0%, 100% { box-shadow: 0 0 15px var(--premium-glow); }
-            50% { box-shadow: 0 0 25px var(--premium-glow), 0 0 35px var(--premium-glow); }
-        }
-
-        .premium-row {
-            background: linear-gradient(90deg, 
-                rgba(255, 215, 0, 0.05) 0%, 
-                rgba(255, 215, 0, 0.15) 50%, 
-                rgba(255, 215, 0, 0.05) 100%) !important;
-            border: 2px solid var(--premium-gold) !important;
-            box-shadow: 0 0 30px var(--premium-glow), inset 0 0 20px rgba(255, 215, 0, 0.1) !important;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .premium-row::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, 
-                transparent 30%, 
-                rgba(255, 215, 0, 0.2) 50%, 
-                transparent 70%);
-            animation: premiumShine 3s linear infinite;
-            pointer-events: none;
-        }
-
-        @keyframes premiumShine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-
-        .premium-modal-content {
-            animation: premiumModalEntrance 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            position: relative;
-        }
-
-        @keyframes premiumModalEntrance {
-            0% { 
-                opacity: 0; 
-                transform: scale(0.7) rotateY(30deg) rotateX(20deg);
-            }
-            100% { 
-                opacity: 1; 
-                transform: scale(1) rotateY(0deg) rotateX(0deg);
-            }
-        }
-
-        .premium-modal-content::before {
-            content: '';
-            position: absolute;
-            inset: -3px;
-            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700, #ffed4e);
-            background-size: 400% 400%;
-            animation: premiumBorderFlow 4s linear infinite;
-            border-radius: inherit;
-            z-index: -1;
-            filter: blur(10px);
-        }
-
-        @keyframes premiumBorderFlow {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        .premium-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: var(--premium-gold);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--premium-gold);
-            pointer-events: none;
-        }
-
-        .btn-grotto {
-            background: linear-gradient(135deg, var(--grotto-purple) 0%, var(--grotto-deep) 100%);
-            color: white;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(147, 51, 234, 0.5);
-        }
-
-        .btn-grotto::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn-grotto:hover:not(:disabled)::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-grotto:hover:not(:disabled) {
-            box-shadow: 0 0 30px var(--grotto-glow), 0 0 60px rgba(147, 51, 234, 0.3);
-            transform: translateY(-2px);
-            border-color: var(--grotto-light);
-        }
-
-        .btn-grotto:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-premium {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            color: #1a0a2e !important;
-            box-shadow: 0 0 20px var(--premium-glow);
-            border: 2px solid #ffd700 !important;
-            font-weight: 900 !important;
-        }
-
-        .btn-premium:hover:not(:disabled) {
-            box-shadow: 0 0 40px var(--premium-glow), 0 0 60px rgba(255, 215, 0, 0.5);
-            transform: translateY(-3px) scale(1.05);
-        }
-
-        .move-select {
-            border: 2px solid rgba(147, 51, 234, 0.2);
-            background: rgba(13, 5, 23, 0.6);
-            transition: all 0.4s ease;
-            position: relative;
-        }
-
-        .move-select::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, transparent 0%, rgba(147, 51, 234, 0.1) 100%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .move-select:hover::after {
-            opacity: 1;
-        }
-
-        .move-select.selected {
-            border-color: var(--grotto-purple);
-            background: rgba(147, 51, 234, 0.2);
-            box-shadow: 0 0 30px var(--grotto-glow), inset 0 0 20px rgba(147, 51, 234, 0.2);
-            transform: scale(1.05);
-        }
-
-        .move-select.selected::after {
-            opacity: 1;
-        }
-
-        .mystical-particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-            overflow: hidden;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
-            50% { transform: translateY(-20px) translateX(10px); opacity: 0.6; }
-        }
-
-        .particle {
-            position: absolute;
-            width: 3px;
-            height: 3px;
-            background: var(--grotto-purple);
-            border-radius: 50%;
-            box-shadow: 0 0 10px var(--grotto-purple);
-            animation: float linear infinite;
-        }
-
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: var(--grotto-darker); }
-        ::-webkit-scrollbar-thumb { 
-            background: linear-gradient(180deg, var(--grotto-purple) 0%, var(--grotto-deep) 100%);
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover { background: var(--grotto-light); }
-
-        .tab-btn {
-            color: #6b7280;
-            background: transparent;
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .tab-btn::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--grotto-purple);
-            transition: all 0.3s;
-            transform: translateX(-50%);
-        }
-
-        .tab-btn:hover {
-            color: var(--grotto-light);
-        }
-
-        .tab-btn.active {
-            color: var(--grotto-purple);
-            background: rgba(147, 51, 234, 0.1);
-        }
-
-        .tab-btn.active::after {
-            width: 80%;
-        }
-
-        .lobby-filter {
-            color: #6b7280;
-            background: transparent;
-            transition: all 0.3s;
-        }
-
-        .lobby-filter:hover {
-            color: var(--grotto-light);
-            background: rgba(147, 51, 234, 0.05);
-        }
-
-        .lobby-filter.active {
-            color: var(--grotto-purple);
-            background: rgba(147, 51, 234, 0.2);
-            box-shadow: inset 0 0 10px rgba(147, 51, 234, 0.3);
-        }
-
-        .page-section {
-            display: none;
-            position: relative;
-            z-index: 2;
-        }
-
-        .page-section.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header-banner {
-            width: 100%;
-            height: 250px;
-            object-fit: cover;
-            border-bottom: 3px solid var(--grotto-purple);
-            box-shadow: 0 10px 40px rgba(147, 51, 234, 0.3);
-        }
-
-        .game-logo {
-            width: 80px;
-            height: 80px;
-            object-fit: contain;
-            border-radius: 12px;
-            border: 2px solid var(--grotto-purple);
-            box-shadow: 0 0 20px var(--grotto-glow);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            max-width: 600px;
-            max-height: 90vh;
-            overflow-y: auto;
-            margin: 20px;
-        }
-
-        .chat-messages {
-            height: 400px;
-            overflow-y: auto;
-            scroll-behavior: smooth;
-        }
-
-        .activity-feed {
-            height: 500px;
-            overflow-y: auto;
-        }
-
-        .lobby-item {
-            opacity: 1 !important;
-            will-change: auto;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            color: white;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: bold;
-            animation: pulse 2s infinite;
-            box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-
-        .notification-panel {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            margin-top: 10px;
-            width: 350px;
-            max-height: 500px;
-            overflow-y: auto;
-            display: none;
-            z-index: 1001;
-        }
-
-        .notification-panel.active {
-            display: block;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .notification-item {
-            border-left: 3px solid var(--grotto-purple);
-            transition: all 0.3s;
-        }
-
-        .notification-item:hover {
-            background: rgba(147, 51, 234, 0.1);
-            transform: translateX(5px);
-        }
-
-        .notification-item.win {
-            border-left-color: #22c55e;
-        }
-
-        .notification-item.loss {
-            border-left-color: #ef4444;
-        }
-
-        .stat-card {
-            background: rgba(13, 5, 23, 0.6);
-            border: 1px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .stat-card:hover::before {
-            opacity: 1;
-        }
-
-        .stat-card:hover {
-            border-color: var(--grotto-purple);
-            box-shadow: 0 0 30px var(--grotto-glow);
-            transform: translateY(-5px);
-        }
-
-        .achievement-card {
-            background: rgba(13, 5, 23, 0.7);
-            border: 2px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.3s;
-            position: relative;
-        }
-
-        .achievement-card.completed {
-            border-color: var(--heresy-gold);
-            box-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
-        }
-
-        .achievement-card.claimed {
-            opacity: 0.6;
-            border-color: rgba(107, 114, 128, 0.3);
-        }
-
-        @media (max-width: 768px) {
-            .header-banner { height: 150px; }
-            .game-logo { width: 60px; height: 60px; }
-            .chat-messages { height: 300px; }
-            .notification-panel { 
-                width: calc(100vw - 40px); 
-                right: 20px; 
-                left: 20px;
-                top: 70px;
-            }
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--grotto-purple) !important;
-            box-shadow: 0 0 20px var(--grotto-glow);
-        }
-
-        .market-item {
-            background: rgba(13, 5, 23, 0.7);
-            border: 2px solid rgba(147, 51, 234, 0.3);
-            transition: all 0.4s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .market-item:hover {
-            border-color: var(--premium-gold);
-            box-shadow: 0 0 30px var(--premium-glow);
-            transform: translateY(-5px);
-        }
-
-        .market-item::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 215, 0, 0.05) 50%, transparent 70%);
-            opacity: 0;
-            transition: opacity 0.4s;
-        }
-
-        .market-item:hover::before {
-            opacity: 1;
-            animation: shine 2s linear infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ZOMBIE ARENA - OWNER PANEL</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+<style>
+:root{--bg:#0a0a0a;--s:#111;--s2:#181818;--s3:#1f1f1f;--bd:#2a2a2a;--bd2:#333;--p:#7c3aed;--p2:#6d28d9;--p3:#a78bfa;--gold:#f59e0b;--grn:#10b981;--red:#ef4444;--blu:#3b82f6;--cyn:#06b6d4;--tx:#e5e5e5;--tx2:#a3a3a3;--tx3:#525252;--mono:"JetBrains Mono",monospace;--sans:"Rajdhani",sans-serif;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--tx);font-family:var(--sans);font-size:14px;overflow:hidden;}
+#app{display:grid;grid-template-rows:48px 1fr;grid-template-columns:210px 1fr 270px;height:100vh;}
+#topbar{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:var(--s);border-bottom:1px solid var(--bd);position:relative;}
+#topbar::after{content:"";position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--p),transparent);opacity:.4;}
+.brand{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--p3);letter-spacing:3px;}
+.brand span{color:var(--tx3);}
+.topstats{display:flex;gap:20px;align-items:center;}
+.ts-box{text-align:center;}
+.ts-lbl{font-size:8px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;font-family:var(--mono);}
+.ts-val{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--tx);margin-top:1px;}
+.ts-val.p{color:var(--p3);}.ts-val.g{color:var(--grn);}.ts-val.r{color:var(--red);}.ts-val.o{color:var(--gold);}
+.topright{display:flex;gap:10px;align-items:center;}
+#connectBtn{padding:6px 16px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:2px;background:transparent;border:1px solid var(--p);color:var(--p3);transition:all .15s;}
+#connectBtn:hover{background:rgba(124,58,237,.12);box-shadow:0 0 12px rgba(124,58,237,.3);}
+#connectBtn.on{border-color:var(--grn);color:var(--grn);background:rgba(16,185,129,.06);}
+.net-ind{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;color:var(--tx3);}
+.ndot{width:6px;height:6px;border-radius:50%;background:var(--red);}
+.ndot.on{background:var(--grn);box-shadow:0 0 6px var(--grn);}
+#nav{background:var(--s);border-right:1px solid var(--bd);padding:10px 0;overflow-y:auto;display:flex;flex-direction:column;gap:1px;}
+.ns{padding:14px 14px 5px;font-size:8px;letter-spacing:2px;color:var(--tx3);text-transform:uppercase;font-family:var(--mono);}
+.ni{padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:11px;color:var(--tx2);letter-spacing:.5px;transition:all .12s;border-left:2px solid transparent;}
+.ni:hover{background:var(--s2);color:var(--tx);border-left-color:var(--bd2);}
+.ni.active{background:rgba(124,58,237,.08);color:var(--p3);border-left-color:var(--p);}
+.ni.danger:hover,.ni.danger.active{color:var(--red);border-left-color:var(--red);}
+.ni.danger.active{background:rgba(239,68,68,.06);}
+.ni.ok:hover,.ni.ok.active{color:var(--grn);border-left-color:var(--grn);}
+.ni.ok.active{background:rgba(16,185,129,.06);}
+.ndot2{width:5px;height:5px;border-radius:50%;background:var(--bd2);flex-shrink:0;}
+.ni.active .ndot2{background:var(--p3);}
+.ni.danger .ndot2{background:rgba(239,68,68,.4);}
+.ni.ok .ndot2{background:rgba(16,185,129,.4);}
+.ndiv{height:1px;background:var(--bd);margin:6px 0;}
+#main{overflow-y:auto;padding:20px;background:var(--bg);display:flex;flex-direction:column;gap:16px;}
+#main::-webkit-scrollbar{width:3px;}
+#main::-webkit-scrollbar-thumb{background:var(--bd2);}
+.panel{background:var(--s);border:1px solid var(--bd);border-radius:3px;overflow:hidden;}
+.ph{padding:10px 14px;border-bottom:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;background:var(--s2);}
+.pt{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--tx);letter-spacing:1px;}
+.ps{font-size:9px;color:var(--tx3);margin-top:2px;}
+.pb{padding:14px;}
+.fl{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.fl-l{font-family:var(--mono);font-size:8px;font-weight:600;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;}
+.fi{padding:7px 10px;background:var(--s3);border:1px solid var(--bd);color:var(--tx);font-family:var(--mono);font-size:11px;border-radius:2px;outline:none;transition:border-color .15s;width:100%;}
+.fi:focus{border-color:var(--p);}
+.fi::placeholder{color:var(--tx3);}
+.fh{font-size:8px;color:var(--tx3);font-family:var(--mono);}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.fr3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.btn{padding:7px 16px;font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1.5px;cursor:pointer;border-radius:2px;transition:all .12s;text-transform:uppercase;border:1px solid;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.btn:active:not(:disabled){transform:scale(.97);}
+.bp{background:rgba(124,58,237,.1);border-color:var(--p);color:var(--p3);}
+.bp:hover:not(:disabled){background:rgba(124,58,237,.2);box-shadow:0 0 10px rgba(124,58,237,.2);}
+.bg{background:rgba(16,185,129,.08);border-color:var(--grn);color:var(--grn);}
+.bg:hover:not(:disabled){background:rgba(16,185,129,.16);}
+.br{background:rgba(239,68,68,.08);border-color:var(--red);color:var(--red);}
+.br:hover:not(:disabled){background:rgba(239,68,68,.16);}
+.bo{background:rgba(245,158,11,.08);border-color:var(--gold);color:var(--gold);}
+.bo:hover:not(:disabled){background:rgba(245,158,11,.16);}
+.bb{background:rgba(59,130,246,.08);border-color:var(--blu);color:var(--blu);}
+.bb:hover:not(:disabled){background:rgba(59,130,246,.16);}
+.bsm{padding:4px 10px;font-size:8px;}
+.bfw{width:100%;}
+.brow{display:flex;gap:8px;flex-wrap:wrap;}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:2px;font-family:var(--mono);font-size:8px;font-weight:700;letter-spacing:1px;}
+.tg{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);color:var(--grn);}
+.tr{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--red);}
+.to{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:var(--gold);}
+.tp{background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);color:var(--p3);}
+.tdot{width:4px;height:4px;border-radius:50%;background:currentColor;}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ig3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}
+.ib{background:var(--s2);border:1px solid var(--bd);border-radius:2px;padding:9px 11px;}
+.ibl{font-family:var(--mono);font-size:7px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;margin-bottom:3px;}
+.ibv{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--tx);}
+.ibv.p{color:var(--p3);}.ibv.g{color:var(--grn);}.ibv.r{color:var(--red);}.ibv.o{color:var(--gold);}
+.ir{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd);font-size:10px;}
+.ir:last-child{border-bottom:none;}
+.irk{color:var(--tx3);font-family:var(--mono);font-size:9px;}
+.irv{font-family:var(--mono);font-size:9px;color:var(--tx);word-break:break-all;text-align:right;max-width:60%;}
+.irv.p{color:var(--p3);}.irv.g{color:var(--grn);}.irv.r{color:var(--red);}.irv.o{color:var(--gold);}
+#logpanel{background:var(--s);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;}
+.lh{padding:9px 12px;border-bottom:1px solid var(--bd);font-family:var(--mono);font-size:9px;color:var(--tx3);letter-spacing:1px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.lcl{font-size:8px;cursor:pointer;color:var(--tx3);padding:2px 6px;border:1px solid var(--bd);border-radius:2px;background:transparent;}
+.lcl:hover{color:var(--tx2);}
+#logE{flex:1;overflow-y:auto;padding:6px;}
+#logE::-webkit-scrollbar{width:2px;}
+#logE::-webkit-scrollbar-thumb{background:var(--bd2);}
+.le{padding:5px 7px;margin-bottom:2px;border-radius:2px;font-family:var(--mono);font-size:9px;line-height:1.5;border-left:2px solid;}
+.le.info{border-color:var(--bd2);color:var(--tx3);}
+.le.success{border-color:var(--grn);color:var(--grn);background:rgba(16,185,129,.03);}
+.le.error{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.03);}
+.le.pending{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.03);}
+.le.tx{border-color:var(--p);color:var(--p3);background:rgba(124,58,237,.03);}
+.lts{font-size:7px;opacity:.5;margin-right:5px;}
+.ll{color:var(--blu);text-decoration:none;}.ll:hover{text-decoration:underline;}
+.sec{display:none;}
+.sec.on{display:flex;flex-direction:column;gap:16px;}
+.addrbox{font-family:var(--mono);font-size:10px;color:var(--p3);background:var(--s3);padding:5px 9px;border-radius:2px;border:1px solid var(--bd);word-break:break-all;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.cpbtn{font-size:8px;padding:2px 6px;cursor:pointer;background:transparent;border:1px solid var(--bd);color:var(--tx3);border-radius:2px;flex-shrink:0;}
+.cpbtn:hover{border-color:var(--p);color:var(--p3);}
+.warnbox{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.18);border-radius:2px;padding:9px 12px;font-size:10px;color:rgba(239,68,68,.75);display:flex;gap:7px;}
+.warnbox::before{content:"!";font-family:var(--mono);font-weight:700;flex-shrink:0;}
+.infoalert{background:rgba(124,58,237,.04);border:1px solid rgba(124,58,237,.18);border-radius:2px;padding:9px 12px;font-size:10px;color:var(--p3);}
+.divider{height:1px;background:var(--bd);margin:3px 0;}
+</style>
 </head>
-<body class="min-h-screen p-4">
-    <!-- Mystical Particles -->
-    <div class="mystical-particles" id="particles"></div>
+<body>
+<div id="app">
 
-    <!-- Header Banner -->
-    <div class="max-w-7xl mx-auto mb-6 relative z-10">
-        <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-11_07-20-57.jpg" 
-             alt="The Grotto Gambit Header" 
-             class="header-banner rounded-lg"
-             onerror="this.style.display='none'">
+<div id="topbar">
+  <div class="brand">ZMB<span>//</span>ADMIN</div>
+  <div class="topstats">
+    <div class="ts-box"><div class="ts-lbl">Match</div><div class="ts-val p" id="h-mid">-</div></div>
+    <div class="ts-box"><div class="ts-lbl">Status</div><div class="ts-val" id="h-status">-</div></div>
+    <div class="ts-box"><div class="ts-lbl">Time Left</div><div class="ts-val" id="h-time">-</div></div>
+    <div class="ts-box"><div class="ts-lbl">Players</div><div class="ts-val" id="h-plr">-</div></div>
+    <div class="ts-box"><div class="ts-lbl">ZMB Pool</div><div class="ts-val o" id="h-pool">-</div></div>
+  </div>
+  <div class="topright">
+    <div class="net-ind"><div class="ndot" id="ndot"></div><span id="nstat">Not connected</span></div>
+    <button id="connectBtn" onclick="connectWallet()">CONNECT</button>
+  </div>
+</div>
+
+<div id="nav">
+  <div class="ns">Arena</div>
+  <div class="ni active" onclick="go('overview')" id="nv-overview"><div class="ndot2"></div>Overview</div>
+  <div class="ni ok" onclick="go('match')" id="nv-match"><div class="ndot2"></div>Match Control</div>
+  <div class="ni" onclick="go('players')" id="nv-players"><div class="ndot2"></div>Players</div>
+  <div class="ni" onclick="go('history')" id="nv-history"><div class="ndot2"></div>Match History</div>
+  <div class="ndiv"></div>
+  <div class="ns">Token</div>
+  <div class="ni" onclick="go('token')" id="nv-token"><div class="ndot2"></div>ZMB Token</div>
+  <div class="ni" onclick="go('rewards')" id="nv-rewards"><div class="ndot2"></div>Reward Config</div>
+  <div class="ni" onclick="go('nfts')" id="nv-nfts"><div class="ndot2"></div>NFT Collections</div>
+  <div class="ndiv"></div>
+  <div class="ns">System</div>
+  <div class="ni" onclick="go('config')" id="nv-config"><div class="ndot2"></div>Configuration</div>
+  <div class="ni danger" onclick="go('emergency')" id="nv-emergency"><div class="ndot2"></div>Emergency</div>
+</div>
+
+<div id="main">
+
+  <!-- OVERVIEW -->
+  <div id="s-overview" class="sec on">
+    <div class="panel">
+      <div class="ph"><div><div class="pt">CONTRACT ADDRESSES</div><div class="ps">The Grotto L1 &middot; Chain 36463</div></div><button class="btn bp bsm" onclick="refreshAll()">REFRESH</button></div>
+      <div class="pb">
+        <div class="fl"><div class="fl-l">Arena Contract</div><div class="addrbox"><span>0x83Bd2ff09FC9072699093168Bc6611edfB772639</span><button class="cpbtn" onclick="cp('0x83Bd2ff09FC9072699093168Bc6611edfB772639')">COPY</button></div></div>
+        <div class="fl"><div class="fl-l">RewardToken (ZMB)</div><div class="addrbox"><span>0x7a1079d6BA880Cc3Ce13bE8408d1Bc842b7964CF</span><button class="cpbtn" onclick="cp('0x7a1079d6BA880Cc3Ce13bE8408d1Bc842b7964CF')">COPY</button></div></div>
+        <div class="fl"><div class="fl-l">Ticket NFT</div><div class="addrbox"><span>0x298B6A9B3cC2691De4de4B8843114915ae007851</span><button class="cpbtn" onclick="cp('0x298B6A9B3cC2691De4de4B8843114915ae007851')">COPY</button></div></div>
+        <div class="fl"><div class="fl-l">Game Access NFT</div><div class="addrbox"><span>0x2a6738ea6b972a1c68AeE601Da34B5328c6a50F0</span><button class="cpbtn" onclick="cp('0x2a6738ea6b972a1c68AeE601Da34B5328c6a50F0')">COPY</button></div></div>
+      </div>
     </div>
-
-    <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-8 py-6 border-b border-purple-900/30 relative z-10">
-        <div class="flex items-center gap-6">
-            <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2026-02-11_07-20-45.jpg" 
-                 alt="Grotto Logo" 
-                 class="game-logo"
-                 onerror="this.style.display='none'">
-            <div>
-                <h1 class="cinzel text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-purple-600 tracking-wider">
-                    THE GROTTO GAMBIT
-                </h1>
-                <p class="text-[11px] text-purple-500/60 uppercase tracking-[0.3em] mt-1">Dark Sanctum // Heresy Protocol</p>
-            </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">LIVE STATE</div></div>
+      <div class="pb">
+        <div class="ig3" style="margin-bottom:10px">
+          <div class="ib"><div class="ibl">Match ID</div><div class="ibv p" id="ov-mid">-</div></div>
+          <div class="ib"><div class="ibl">Status</div><div class="ibv" id="ov-status">-</div></div>
+          <div class="ib"><div class="ibl">Time Left</div><div class="ibv" id="ov-time">-</div></div>
+          <div class="ib"><div class="ibl">Players</div><div class="ibv" id="ov-plr">-</div></div>
+          <div class="ib"><div class="ibl">Leader Score</div><div class="ibv o" id="ov-ldr">-</div></div>
+          <div class="ib"><div class="ibl">Total Matches</div><div class="ibv" id="ov-total">-</div></div>
         </div>
-
-        <div class="flex items-center gap-6 mt-4 md:mt-0 flex-wrap">
-            <!-- Navigation Tabs -->
-            <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg flex-wrap">
-                <button onclick="switchTab('lobby')" id="tab-lobby" class="tab-btn active px-5 py-2 text-[11px] uppercase transition rounded cinzel">Sanctum</button>
-                <button onclick="switchTab('bloodrite')" id="tab-bloodrite" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Blood Rite</button>
-                <button onclick="switchTab('marketplace')" id="tab-marketplace" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Vault of Relics</button>
-                <button onclick="switchTab('leaderboard')" id="tab-leaderboard" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Pantheon</button>
-                <button onclick="switchTab('profile')" id="tab-profile" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Chronicle</button>
-                <button onclick="switchTab('howto')" id="tab-howto" class="tab-btn px-5 py-2 text-[11px] uppercase transition rounded cinzel">Doctrine</button>
-            </div>
-
-            <!-- Notification Bell -->
-            <div class="relative">
-                <button id="notification-btn" onclick="toggleNotifications()" class="relative p-3 rounded-full hover:bg-purple-900/20 transition">
-                    <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
-                    </svg>
-                    <span id="notification-badge" class="notification-badge hidden">0</span>
-                </button>
-                
-                <!-- Notification Panel -->
-                <div id="notification-panel" class="notification-panel grotto-glass rounded-lg shadow-2xl">
-                    <div class="p-4 border-b border-purple-900/30 flex justify-between items-center">
-                        <h3 class="cinzel font-bold text-purple-400">Omens & Portents</h3>
-                        <button onclick="markAllRead()" class="text-xs text-purple-500 hover:text-purple-300 transition uppercase tracking-wider">
-                            Mark Read
-                        </button>
-                    </div>
-                    <div id="notification-list" class="max-h-96 overflow-y-auto">
-                        <div class="p-8 text-center text-purple-700/50 italic">
-                            No omens to reveal...
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="connection-interface">
-                <button id="connect-btn" class="btn-grotto px-8 py-3 rounded-lg cinzel relative z-10">Summon Portal</button>
-                <div id="account-info" class="hidden flex items-center gap-4">
-                    <div class="text-right">
-                        <div class="flex items-center gap-2">
-                            <span id="user-address" class="text-[11px] text-purple-400/70 tracking-wider"></span>
-                            <span id="premium-indicator" class="hidden"></span>
-                            <button id="copy-address" class="text-purple-400 hover:text-purple-300 transition text-sm" onclick="copyAddress()" title="Copy Address">
-                                📋
-                            </button>
-                        </div>
-                        <div id="user-balance" class="cinzel text-purple-400 font-bold text-lg">0.00000 $HERESY</div>
-                    </div>
-                    <div class="h-12 w-1 bg-gradient-to-b from-purple-600 to-purple-900"></div>
-                </div>
-            </div>
+        <div class="ig3">
+          <div class="ib"><div class="ibl">Pool Remaining</div><div class="ibv o" id="ov-pool">-</div></div>
+          <div class="ib"><div class="ibl">Pool Minted</div><div class="ibv" id="ov-minted">-</div></div>
+          <div class="ib"><div class="ibl">My ZMB</div><div class="ibv g" id="ov-myzmb">-</div></div>
         </div>
-    </nav>
-
-    <script>
-        // Generate mystical particles
-        function createParticles() {
-            const container = document.getElementById('particles');
-            for (let i = 0; i < 30; i++) {
-                const particle = document.createElement('div');
-                particle.className = 'particle';
-                particle.style.left = Math.random() * 100 + '%';
-                particle.style.top = Math.random() * 100 + '%';
-                particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-                particle.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(particle);
-            }
-        }
-        createParticles();
-    </script>
-
-    <main class="max-w-7xl mx-auto relative z-10">
-        <!-- PAGE SECTIONS WILL BE INSERTED HERE IN PART 3 -->
-    </main>
-
-    <!-- Player Profile Modal -->
-    <div id="player-modal" class="modal">
-        <div id="player-modal-wrapper" class="modal-content grotto-glass p-8 w-full rounded-xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="cinzel text-2xl text-purple-400 tracking-wider">SOUL ARCHIVE</h2>
-                <button onclick="closePlayerModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
-            </div>
-            <div id="player-modal-content"></div>
-        </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Premium Purchase Modal -->
-    <div id="premium-modal" class="modal">
-        <div class="modal-content grotto-glass p-8 w-full rounded-xl max-w-2xl premium-modal-content relative">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="cinzel text-2xl premium-username">VAULT OF RELICS</h2>
-                <button onclick="closePremiumModal()" class="text-3xl text-purple-500 hover:text-purple-300 transition">&times;</button>
-            </div>
-            <div id="premium-modal-content"></div>
+  <!-- MATCH CONTROL -->
+  <div id="s-match" class="sec">
+    <div class="panel">
+      <div class="ph"><div><div class="pt">MATCH CONTROL</div><div class="ps">Start, pause, resume, end</div></div><div id="mbadge" class="tag tr"><div class="tdot"></div>IDLE</div></div>
+      <div class="pb">
+        <div class="ig" style="margin-bottom:14px">
+          <div class="ib"><div class="ibl">Current Match</div><div class="ibv p" id="mc-mid">-</div></div>
+          <div class="ib"><div class="ibl">Time Remaining</div><div class="ibv" id="mc-time">-</div></div>
+          <div class="ib"><div class="ibl">Players</div><div class="ibv" id="mc-plr">-</div></div>
+          <div class="ib"><div class="ibl">Match Started</div><div class="ibv" id="mc-start">-</div></div>
         </div>
+        <div class="brow">
+          <button class="btn bg" onclick="doStart()">START FIRST MATCH</button>
+          <button class="btn bo" onclick="doPause()">PAUSE</button>
+          <button class="btn bp" onclick="doResume()">RESUME</button>
+          <button class="btn bb" onclick="doEnd()">END MATCH</button>
+          <button class="btn br" onclick="doForce()">FORCE RESET</button>
+        </div>
+        <div style="margin-top:10px" class="infoalert">checkAndReset() is public and auto-runs after 24hrs. You only need startFirstMatch() once to begin the cycle.</div>
+      </div>
     </div>
-
-    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 grotto-glass border-2 border-purple-500 px-8 py-4 text-purple-300 cinzel text-sm transform translate-y-32 transition-all duration-300 z-[200] rounded-lg shadow-2xl">
-        SYSTEM MESSAGE
+    <div class="panel">
+      <div class="ph"><div class="pt">MATCH DURATION</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Hours</div><input class="fi" id="f-dur" type="number" placeholder="24" min="1" max="720"><div class="fh">Default 24h. Cannot change during active match.</div></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:20px"><button class="btn bp bfw" onclick="doSetDur()">SET DURATION</button></div>
+        </div>
+      </div>
     </div>
-        <!-- LOBBY PAGE (SANCTUM) -->
-        <div id="page-lobby" class="page-section active">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <aside class="lg:col-span-4 space-y-6">
-                    <div class="grotto-glass p-6 rounded-xl">
-                        <h2 class="cinzel text-sm text-purple-400 mb-6 flex items-center gap-3 tracking-widest">
-                            <span class="w-3 h-3 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
-                            INVOKE DARK RITUAL
-                        </h2>
-
-                        <div class="grid grid-cols-3 gap-4 mb-6">
-                            <button onclick="selectMove(1)" id="move-1" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_3_2026-02-11_10-02-39.jpg" alt="Greg" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform object-contain">
-                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Greg</span>
-                            </button>
-                            <button onclick="selectMove(2)" id="move-2" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2_2026-02-11_10-02-39.jpg" alt="Bob" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform object-contain">
-                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Bob</span>
-                            </button>
-                            <button onclick="selectMove(3)" id="move-3" class="move-select p-5 rounded-lg flex flex-col items-center cursor-pointer group">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_1_2026-02-11_10-02-39.jpg" alt="Disco" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform object-contain">
-                                <span class="text-[10px] uppercase tracking-wider text-purple-300">Disco</span>
-                            </button>
-                        </div>
-
-                        <div class="space-y-5">
-                            <div>
-                                <label class="text-[11px] text-purple-400/70 uppercase mb-3 block tracking-widest cinzel">Heresy Wager</label>
-                                <input id="wager-amount" type="number" step="0.00001" value="1.00000" 
-                                    class="w-full bg-black/50 border border-purple-900/50 p-4 text-purple-300 rounded-lg cinzel text-lg transition">
-                            </div>
-                            <div>
-                                <label class="text-[11px] text-purple-400/70 uppercase mb-3 block tracking-widest cinzel">Dark Timeout</label>
-                                <select id="timeout-select" 
-                                    class="w-full bg-black/50 border border-purple-900/50 p-4 text-purple-300 rounded-lg cinzel transition">
-                                    <option value="300">5 Minutes</option>
-                                    <option value="600">10 Minutes</option>
-                                    <option value="900" selected>15 Minutes</option>
-                                </select>
-                            </div>
-                            <button id="create-btn" onclick="handleCreateGame()" class="btn-grotto w-full py-4 text-base rounded-lg cinzel relative z-10">
-                                Invoke Ritual
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Global Chat -->
-                    <div class="grotto-glass p-6 rounded-xl">
-                        <h2 class="cinzel text-sm text-purple-400 mb-4 flex items-center gap-3 tracking-widest">
-                            <span class="w-3 h-3 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
-                            MYSTIC WHISPERS
-                        </h2>
-                        <div id="chat-messages" class="chat-messages mb-4 bg-black/40 border border-purple-900/30 rounded-lg p-4 space-y-3"></div>
-                        <div class="flex gap-2">
-                            <input id="chat-input" type="text" placeholder="Whisper into the void..." maxlength="200" 
-                                class="flex-1 bg-black/50 border border-purple-900/50 p-3 text-sm text-purple-300 rounded-lg transition" 
-                                onkeypress="if(event.key==='Enter') sendMessage()">
-                            <button onclick="sendMessage()" class="btn-grotto px-5 py-2 text-xs rounded-lg cinzel">Send</button>
-                        </div>
-                    </div>
-                </aside>
-
-                <section class="lg:col-span-8 space-y-6">
-                    <!-- Game Lobby -->
-                    <div class="grotto-glass p-6 rounded-xl min-h-[500px]">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-purple-900/20 pb-4 gap-4">
-                            <h2 class="cinzel text-xl text-purple-300 tracking-widest flex items-center gap-3">
-                                DARK FREQUENCIES
-                                <span class="text-[10px] bg-purple-900/30 px-3 py-1 text-purple-500 rounded-full">LIVE</span>
-                            </h2>
-                            
-                            <div class="flex items-center gap-3 flex-wrap">
-                                <div class="flex gap-1 bg-black/40 p-1 border border-purple-900/30 rounded-lg">
-                                    <button onclick="setLobbyFilter('all')" id="filter-all" class="lobby-filter active px-4 py-2 text-[10px] uppercase transition rounded">All</button>
-                                    <button onclick="setLobbyFilter('open')" id="filter-open" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Open</button>
-                                    <button onclick="setLobbyFilter('intercepted')" id="filter-intercepted" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Active</button>
-                                    <button onclick="setLobbyFilter('resolved')" id="filter-resolved" class="lobby-filter px-4 py-2 text-[10px] uppercase transition rounded">Sealed</button>
-                                </div>
-                                
-                                <button onclick="refreshLobby()" class="text-[11px] text-purple-400 hover:text-purple-300 border border-purple-500/30 px-4 py-2 uppercase transition rounded-lg hover:bg-purple-900/20">
-                                    Refresh
-                                </button>
-                            </div>
-                        </div>
-                        <div id="lobby-list" class="space-y-4"></div>
-                    </div>
-
-                    <!-- Live Activity Feed -->
-                    <div class="grotto-glass p-6 rounded-xl">
-                        <h2 class="cinzel text-xl text-purple-300 tracking-widest mb-6 flex items-center gap-3">
-                            CHRONICLE OF BATTLES
-                            <span class="w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg shadow-green-500/50"></span>
-                        </h2>
-                        <div id="activity-feed" class="activity-feed space-y-3"></div>
-                    </div>
-                </section>
-            </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">DECLARE WINNER (MANUAL)</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Match ID</div><input class="fi" id="f-wmid" type="number" placeholder="1"></div>
+          <div class="fl"><div class="fl-l">Winner Address</div><input class="fi" id="f-waddr" placeholder="0x..."></div>
         </div>
+        <button class="btn bo" onclick="doDeclare()">DECLARE WINNER</button>
+        <div style="margin-top:6px" class="fh">Records winner on-chain. You send the prize pool manually to their wallet.</div>
+      </div>
+    </div>
+  </div>
 
-        <!-- BLOOD RITE PAGE -->
-        <div id="page-bloodrite" class="page-section">
-            <div class="grotto-glass p-8 rounded-xl max-w-6xl mx-auto">
-                <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 class="cinzel text-3xl text-purple-400 mb-2 flex items-center gap-4 tracking-wider">
-                            <span class="w-4 h-4 bg-red-500 rounded-full animate-pulse shadow-lg shadow-red-500/50"></span>
-                            BLOOD RITE SANCTUM
-                        </h2>
-                        <p class="text-purple-300/70 text-sm">Claim your blood points through daily rituals and achievements</p>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[11px] text-purple-400/70 uppercase mb-1 tracking-widest cinzel">Your Blood Points</div>
-                        <div id="blood-points-total" class="cinzel text-4xl text-red-400 font-bold">0</div>
-                        <div class="text-[10px] text-purple-500/50 mt-1">Level <span id="blood-level">1</span></div>
-                    </div>
-                </div>
-
-                <!-- Daily Reset Timer -->
-                <div class="grotto-glass border-2 border-purple-500/30 p-6 rounded-xl mb-8">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="cinzel text-lg text-purple-300 mb-2">Daily Ritual Reset</h3>
-                            <p class="text-sm text-purple-400/70">New challenges await at midnight UTC</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-[11px] text-purple-400/70 uppercase mb-2 tracking-widest cinzel">Time Remaining</div>
-                            <div id="daily-timer" class="cinzel text-3xl text-purple-400 font-bold">--:--:--</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Daily Achievements -->
-                <div class="mb-8">
-                    <h3 class="cinzel text-xl text-purple-300 mb-4 flex items-center gap-2">
-                        ⚡ DAILY TRIALS
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="daily-achievements"></div>
-                </div>
-
-                <!-- Milestone Achievements -->
-                <div>
-                    <h3 class="cinzel text-xl text-purple-300 mb-4 flex items-center gap-2">
-                        🏆 ETERNAL ACHIEVEMENTS
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="milestone-achievements"></div>
-                </div>
-
-                <!-- Level Progress -->
-                <div class="grotto-glass border-2 border-yellow-500/30 p-6 rounded-xl mt-8">
-                    <h3 class="cinzel text-lg text-yellow-400 mb-4">Blood Ascension Progress</h3>
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm text-purple-300 mb-2">
-                            <span>Level <span id="current-level">1</span></span>
-                            <span><span id="current-bp">0</span> / <span id="next-level-bp">100</span> BP</span>
-                        </div>
-                        <div class="w-full bg-black/50 rounded-full h-4 overflow-hidden border border-purple-900/50">
-                            <div id="level-progress-bar" class="h-full bg-gradient-to-r from-red-600 to-purple-600 transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <p class="text-xs text-purple-400/70 italic">Blood points unlock mystical powers and exclusive rewards</p>
-                </div>
-            </div>
+  <!-- PLAYERS -->
+  <div id="s-players" class="sec">
+    <div class="panel">
+      <div class="ph"><div><div class="pt">CURRENT MATCH PLAYERS</div></div><button class="btn bp bsm" onclick="loadPlayers()">LOAD</button></div>
+      <div class="pb"><div id="plr-list"><div class="fh">Click LOAD to fetch.</div></div></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">PLAYER LOOKUP</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Wallet Address</div><input class="fi" id="f-plr-addr" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn bp bfw" onclick="lookupPlr()">LOOKUP</button></div>
         </div>
+        <div id="plr-result"></div>
+      </div>
+    </div>
+  </div>
 
-        <!-- MARKETPLACE PAGE (VAULT OF RELICS) -->
-        <div id="page-marketplace" class="page-section">
-            <div class="grotto-glass p-8 rounded-xl max-w-6xl mx-auto">
-                <div class="mb-8">
-                    <h2 class="cinzel text-3xl premium-username mb-2 flex items-center gap-4 tracking-wider">
-                        <span class="w-4 h-4 bg-yellow-500 rounded-full animate-pulse shadow-lg shadow-yellow-500/50"></span>
-                        VAULT OF RELICS
-                    </h2>
-                    <p class="text-purple-300/70 text-sm">Acquire mystical artifacts to enhance your presence in the grotto</p>
-                </div>
+  <!-- HISTORY -->
+  <div id="s-history" class="sec">
+    <div class="panel">
+      <div class="ph"><div class="pt">MATCH HISTORY</div><div style="display:flex;gap:8px"><input class="fi" id="f-hmid" type="number" placeholder="Match #" style="width:90px"><button class="btn bp bsm" onclick="loadHistory()">FETCH</button></div></div>
+      <div class="pb"><div id="hist-result"><div class="fh">Enter match ID and click FETCH.</div></div></div>
+    </div>
+  </div>
 
-                <!-- Premium Membership -->
-                <div class="market-item p-8 rounded-xl mb-6 border-4" style="border-color: var(--premium-gold)">
-                    <div class="flex flex-col md:flex-row gap-6 items-start">
-                        <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-4xl shadow-2xl" style="box-shadow: 0 0 40px var(--premium-glow)">
-                            👑
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="cinzel text-2xl premium-username mb-2 flex items-center gap-3">
-                                GILDED ASCENSION
-                                <span class="premium-badge">⭐ PREMIUM</span>
-                            </h3>
-                            <p class="text-purple-200/80 mb-4 leading-relaxed">
-                                Transcend mortality with the ultimate power. Your name shines in radiant gold across all realms, 
-                                commanding respect and awe. Premium souls receive exclusive visual effects, animated profiles, 
-                                and the coveted golden badge of supremacy.
-                            </p>
-                            
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                                <div class="bg-black/30 p-4 rounded-lg border border-yellow-500/30">
-                                    <div class="text-xs text-yellow-400/70 uppercase mb-2 cinzel">Features Included:</div>
-                                    <ul class="text-sm text-purple-200/70 space-y-2">
-                                        <li class="flex items-center gap-2">✨ Golden animated username</li>
-                                        <li class="flex items-center gap-2">👑 Premium badge everywhere</li>
-                                        <li class="flex items-center gap-2">🌟 Enhanced profile display</li>
-                                        <li class="flex items-center gap-2">⚡ Animated profile modal</li>
-                                        <li class="flex items-center gap-2">💫 Leaderboard distinction</li>
-                                    </ul>
-                                </div>
-                                <div class="bg-black/30 p-4 rounded-lg border border-yellow-500/30">
-                                    <div class="text-xs text-yellow-400/70 uppercase mb-2 cinzel">Duration & Price:</div>
-                                    <div class="text-3xl cinzel font-bold text-yellow-400 mb-1">30 Days</div>
-                                    <div class="text-xl cinzel text-purple-300">0.0001 $HERESY</div>
-                                    <div class="text-xs text-purple-400/60 mt-2">Direct to treasury vault</div>
-                                </div>
-                            </div>
-
-                            <div id="premium-status-display" class="mb-4"></div>
-                            
-                            <button onclick="purchasePremium()" id="purchase-premium-btn" class="btn-premium px-8 py-4 text-base rounded-lg cinzel w-full md:w-auto">
-                                ACQUIRE GILDED POWER
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Future Items Placeholder -->
-                <div class="grotto-glass border-2 border-purple-500/20 p-8 rounded-xl text-center">
-                    <div class="text-6xl mb-4 text-purple-500/30">🔮</div>
-                    <h3 class="cinzel text-xl text-purple-400 mb-2">MORE RELICS INCOMING</h3>
-                    <p class="text-purple-300/60 text-sm">
-                        Additional mystical artifacts and cosmetic enhancements are being forged in the depths of the grotto...
-                    </p>
-                </div>
-            </div>
+  <!-- TOKEN -->
+  <div id="s-token" class="sec">
+    <div class="panel">
+      <div class="ph"><div class="pt">ZMB TOKEN STATE</div><button class="btn bp bsm" onclick="loadTok()">REFRESH</button></div>
+      <div class="pb">
+        <div class="ig3" style="margin-bottom:10px">
+          <div class="ib"><div class="ibl">Total Supply</div><div class="ibv" id="tok-sup">-</div></div>
+          <div class="ib"><div class="ibl">Max Supply</div><div class="ibv">1,000,000</div></div>
+          <div class="ib"><div class="ibl">Founder (10%)</div><div class="ibv">100,000</div></div>
+          <div class="ib"><div class="ibl">Reward Pool</div><div class="ibv">900,000</div></div>
+          <div class="ib"><div class="ibl">Pool Minted</div><div class="ibv o" id="tok-minted">-</div></div>
+          <div class="ib"><div class="ibl">Pool Left</div><div class="ibv g" id="tok-left">-</div></div>
         </div>
-
-        <!-- LEADERBOARD PAGE (PANTHEON) - Continued from Part 3 -->
-        <div id="page-leaderboard" class="page-section">
-            <div class="grotto-glass p-8 rounded-xl">
-                <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
-                    <span class="w-4 h-4 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
-                    HALL OF LEGENDS
-                </h2>
-
-                <!-- Global Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card p-6 text-center rounded-xl">
-                        <div class="text-[11px] text-purple-400/70 uppercase mb-2 tracking-widest cinzel">Total Heresy</div>
-                        <div id="global-wagered" class="cinzel text-3xl text-purple-400 font-bold">--</div>
-                    </div>
-                    <div class="stat-card p-6 text-center rounded-xl border-red-900/30">
-                        <div class="text-[11px] text-red-400/70 uppercase mb-2 tracking-widest cinzel">Sacrificed</div>
-                        <div id="global-burnt" class="cinzel text-3xl text-red-400 font-bold">--</div>
-                    </div>
-                    <div class="stat-card p-6 text-center rounded-xl border-blue-900/30">
-                        <div class="text-[11px] text-blue-400/70 uppercase mb-2 tracking-widest cinzel">Vault</div>
-                        <div id="global-treasury" class="cinzel text-3xl text-blue-400 font-bold">--</div>
-                    </div>
-                    <div class="stat-card p-6 text-center rounded-xl border-green-900/30">
-                        <div class="text-[11px] text-green-400/70 uppercase mb-2 tracking-widest cinzel">Rituals</div>
-                        <div id="global-games" class="cinzel text-3xl text-green-400 font-bold">--</div>
-                    </div>
-                </div>
-
-                <!-- Hall of Fame & Shame -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="grotto-glass p-6 rounded-xl border-2 border-red-500/30">
-                        <h3 class="cinzel text-lg text-red-400 mb-4 flex items-center gap-2">
-                            💀 Fallen Champion
-                        </h3>
-                        <div id="biggest-loser" class="text-center">
-                            <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
-                            <div class="cinzel text-2xl text-red-400 font-bold mb-1">--</div>
-                            <div class="text-xs text-red-500/50">-- $HERESY Lost</div>
-                        </div>
-                    </div>
-
-                    <div class="grotto-glass p-6 rounded-xl border-2 border-yellow-500/30">
-                        <h3 class="cinzel text-lg text-yellow-400 mb-4 flex items-center gap-2">
-                            🔥 Streak Master
-                        </h3>
-                        <div id="streak-master" class="text-center">
-                            <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
-                            <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">--</div>
-                            <div class="text-xs text-yellow-500/50">-- Consecutive Wins</div>
-                        </div>
-                    </div>
-
-                    <div class="grotto-glass p-6 rounded-xl border-2 border-blue-500/30">
-                        <h3 class="cinzel text-lg text-blue-400 mb-4 flex items-center gap-2">
-                            ⚡ Dark Devotee
-                        </h3>
-                        <div id="most-active" class="text-center">
-                            <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
-                            <div class="cinzel text-2xl text-blue-400 font-bold mb-1">--</div>
-                            <div class="text-xs text-blue-500/50">-- Total Games</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Leaderboard Table -->
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="border-b border-purple-900/30">
-                                <th class="text-left p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Rank</th>
-                                <th class="text-left p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Soul</th>
-                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Heresy</th>
-                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Victory %</th>
-                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Greatest Pot</th>
-                                <th class="text-right p-4 text-[11px] text-purple-400/70 uppercase tracking-widest cinzel">Streak</th>
-                            </tr>
-                        </thead>
-                        <tbody id="leaderboard-body"></tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="ir"><span class="irk">Arena Address</span><span class="irv p" id="tok-arena">-</span></div>
+        <div class="ir"><span class="irk">Arena Locked</span><span class="irv" id="tok-alocked">-</span></div>
+        <div class="ir"><span class="irk">Min Lock Hours</span><span class="irv" id="tok-minl">-</span></div>
+        <div class="ir"><span class="irk">Max Lock Hours</span><span class="irv" id="tok-maxl">-</span></div>
+        <div class="ir"><span class="irk">Burn Fee</span><span class="irv" id="tok-bfee">-</span></div>
+        <div class="ir"><span class="irk">Owner Fee</span><span class="irv" id="tok-ofee">-</span></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">SET ARENA CONTRACT (ONE TIME)</div></div>
+      <div class="pb">
+        <div class="warnbox" style="margin-bottom:12px">Permanent. Sets and locks the arena address that can mint ZMB. Cannot be changed after.</div>
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Arena Address</div><input class="fi" id="f-set-arena" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn br bfw" onclick="doSetArena()">LOCK ARENA</button></div>
         </div>
-
-        <!-- PROFILE PAGE (CHRONICLE) -->
-        <div id="page-profile" class="page-section">
-            <div class="grotto-glass p-8 rounded-xl max-w-5xl mx-auto">
-                <h2 class="cinzel text-3xl text-purple-400 mb-8 flex items-center gap-4 tracking-wider">
-                    <span class="w-4 h-4 bg-purple-500 rounded-full animate-pulse shadow-lg shadow-purple-500/50"></span>
-                    SOUL CHRONICLE
-                </h2>
-                <div id="profile-content" class="space-y-6"></div>
-            </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">TOKEN LOOKUP</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Wallet Address</div><input class="fi" id="f-toklook" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn bp bfw" onclick="doTokLook()">LOOKUP</button></div>
         </div>
+        <div id="tok-result"></div>
+      </div>
+    </div>
+  </div>
 
-        <!-- HOW TO PLAY PAGE (DOCTRINE) -->
-        <div id="page-howto" class="page-section">
-            <div class="grotto-glass p-8 rounded-xl max-w-4xl mx-auto">
-                <h2 class="cinzel text-3xl text-purple-400 mb-8 tracking-wider">ANCIENT DOCTRINE</h2>
-                
-                <div class="space-y-8 text-purple-200/90 leading-relaxed">
-                    <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
-                            🎯 THE FORBIDDEN RITUAL
-                        </h3>
-                        <p class="text-base">The Grotto Gambit is a dark pact sealed in $HERESY tokens. Two souls enter the void with strategic intent—three mystical forces clash in eternal balance. The victor claims the offering, while the defeated soul learns humility.</p>
-                    </section>
-
-                    <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
-                            ⚔️ THREE FORCES OF CHAOS
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_3_2026-02-11_10-02-39.jpg" alt="Greg" class="w-24 h-24 mx-auto mb-3 object-contain">
-                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">GREG</div>
-                                <div class="text-[12px] text-purple-300/60 text-center">Defeats Bob</div>
-                            </div>
-                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2_2026-02-11_10-02-39.jpg" alt="Bob" class="w-24 h-24 mx-auto mb-3 object-contain">
-                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">BOB</div>
-                                <div class="text-[12px] text-purple-300/60 text-center">Defeats Disco</div>
-                            </div>
-                            <div class="grotto-glass p-6 rounded-lg border border-purple-900/30 hover:border-purple-500/50 transition">
-                                <img src="https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_1_2026-02-11_10-02-39.jpg" alt="Disco" class="w-24 h-24 mx-auto mb-3 object-contain">
-                                <div class="cinzel text-purple-400 mb-2 text-center text-lg">DISCO</div>
-                                <div class="text-[12px] text-purple-300/60 text-center">Defeats Greg</div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
-                            📜 RITUAL SEQUENCE
-                        </h3>
-                        <div class="space-y-5">
-                            <div class="flex gap-5 group">
-                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">1.</div>
-                                <div>
-                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Invoke the Ritual (Host)</div>
-                                    <p class="text-[15px] text-purple-200/70">Select your force, set your $HERESY wager, and choose the timeout. Your choice is encrypted in dark magic and stored locally. Click "Invoke Ritual" to seal your intent.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-5 group">
-                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">2.</div>
-                                <div>
-                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Challenge the Void (Opponent)</div>
-                                    <p class="text-[15px] text-purple-200/70">Discover an open ritual in the sanctum. Choose your force and match the $HERESY offering to accept the challenge.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-5 group">
-                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">3.</div>
-                                <div>
-                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Reveal the Truth (Host)</div>
-                                    <p class="text-[15px] text-purple-200/70">Once challenged, unveil your hidden force. The ancient contract determines the victor based on eternal laws.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-5 group">
-                                <div class="cinzel text-2xl text-purple-500 w-12 flex-shrink-0 group-hover:scale-110 transition">4.</div>
-                                <div>
-                                    <div class="font-semibold text-purple-300 mb-2 text-lg">Judgment & Reward</div>
-                                    <p class="text-[15px] text-purple-200/70">The winner claims 97% of the combined $HERESY. 1.5% is sacrificed to the void, 1.5% fills the vault. In draws, both receive their stake minus tribute (3%).</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section>
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
-                            ⚠️ DARK WARNINGS
-                        </h3>
-                        <ul class="space-y-3 text-[15px] text-purple-200/70">
-                            <li class="flex gap-3">
-                                <span class="text-purple-500 flex-shrink-0">→</span>
-                                <span>You must return to the same sanctum (browser/device) to reveal your force—the secret dwells within</span>
-                            </li>
-                            <li class="flex gap-3">
-                                <span class="text-purple-500 flex-shrink-0">→</span>
-                                <span>Should the host fail to reveal before the timeout, the challenger may claim victory by forfeit</span>
-                            </li>
-                            <li class="flex gap-3">
-                                <span class="text-purple-500 flex-shrink-0">→</span>
-                                <span>If no soul challenges within the timeout, the host may reclaim their $HERESY</span>
-                            </li>
-                            <li class="flex gap-3">
-                                <span class="text-purple-500 flex-shrink-0">→</span>
-                                <span>All pacts are sealed on The Grotto chain—immutable and verifiable through cryptographic proof</span>
-                            </li>
-                        </ul>
-                    </section>
-
-                    <section class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl">
-                        <h3 class="cinzel text-xl text-purple-400 mb-4 flex items-center gap-2">
-                            💰 TRIBUTE & REWARDS
-                        </h3>
-                        <div class="space-y-3 text-[15px]">
-                            <div class="flex justify-between py-2 border-b border-purple-900/20">
-                                <span class="text-purple-200/70">Victor's Claim:</span>
-                                <span class="text-purple-400 font-semibold cinzel">97% of pot</span>
-                            </div>
-                            <div class="flex justify-between py-2 border-b border-purple-900/20">
-                                <span class="text-purple-200/70">Vault Tribute:</span>
-                                <span class="text-purple-400 font-semibold cinzel">1.5%</span>
-                            </div>
-                            <div class="flex justify-between py-2 border-b border-purple-900/20">
-                                <span class="text-purple-200/70">Dark Sacrifice:</span>
-                                <span class="text-purple-400 font-semibold cinzel">1.5%</span>
-                            </div>
-                            <div class="flex justify-between py-2">
-                                <span class="text-purple-200/70">Draw (each soul):</span>
-                                <span class="text-purple-400 font-semibold cinzel">Stake - 3%</span>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
+  <!-- REWARDS CONFIG -->
+  <div id="s-rewards" class="sec">
+    <div class="panel">
+      <div class="ph"><div class="pt">LOCK TIME RANGE</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Min Hours</div><input class="fi" id="f-lmin" type="number" placeholder="1" min="1"></div>
+          <div class="fl"><div class="fl-l">Max Hours</div><input class="fi" id="f-lmax" type="number" placeholder="72" max="720"></div>
         </div>
+        <button class="btn bp" onclick="doLockRange()">UPDATE RANGE</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">TIER THRESHOLDS (hours)</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Tier 1 Max Hours</div><input class="fi" id="f-t1max" type="number" placeholder="24"><div class="fh">Locks up to this = Tier 1</div></div>
+          <div class="fl"><div class="fl-l">Tier 2 Max Hours</div><input class="fi" id="f-t2max" type="number" placeholder="48"><div class="fh">Above Tier 2 = Tier 3</div></div>
+        </div>
+        <button class="btn bp" onclick="doTierThresh()">UPDATE THRESHOLDS</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">ZMB REWARD RANGES (whole tokens)</div></div>
+      <div class="pb">
+        <div class="fl-l" style="margin-bottom:8px">TIER 1</div>
+        <div class="fr" style="margin-bottom:10px">
+          <div class="fl"><div class="fl-l">Min ZMB</div><input class="fi" id="f-t1mn" type="number" placeholder="50"></div>
+          <div class="fl"><div class="fl-l">Max ZMB</div><input class="fi" id="f-t1mx" type="number" placeholder="200"></div>
+        </div>
+        <button class="btn bp bsm" onclick="doT1()" style="margin-bottom:14px">SET TIER 1</button>
+        <div class="divider" style="margin-bottom:12px"></div>
+        <div class="fl-l" style="margin-bottom:8px">TIER 2</div>
+        <div class="fr" style="margin-bottom:10px">
+          <div class="fl"><div class="fl-l">Min ZMB</div><input class="fi" id="f-t2mn" type="number" placeholder="200"></div>
+          <div class="fl"><div class="fl-l">Max ZMB</div><input class="fi" id="f-t2mx" type="number" placeholder="500"></div>
+        </div>
+        <button class="btn bp bsm" onclick="doT2()" style="margin-bottom:14px">SET TIER 2</button>
+        <div class="divider" style="margin-bottom:12px"></div>
+        <div class="fl-l" style="margin-bottom:8px">TIER 3 (jackpot)</div>
+        <div class="fr" style="margin-bottom:10px">
+          <div class="fl"><div class="fl-l">Min ZMB</div><input class="fi" id="f-t3mn" type="number" placeholder="500"></div>
+          <div class="fl"><div class="fl-l">Max ZMB</div><input class="fi" id="f-t3mx" type="number" placeholder="1000"></div>
+        </div>
+        <button class="btn bp bsm" onclick="doT3()">SET TIER 3</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">FEE STRUCTURE (BPS &mdash; 100 = 1%)</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Burn Fee BPS</div><input class="fi" id="f-bfee" type="number" placeholder="100"><div class="fh">Sent to dead address</div></div>
+          <div class="fl"><div class="fl-l">Owner Fee BPS</div><input class="fi" id="f-ofee" type="number" placeholder="100"><div class="fh">Sent to your wallet</div></div>
+        </div>
+        <div class="fh" style="margin-bottom:8px">Combined cannot exceed 1000 BPS (10%). Winner gets remainder.</div>
+        <button class="btn bp" onclick="doFees()">UPDATE FEES</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NFTs -->
+  <div id="s-nfts" class="sec">
+    <div class="panel">
+      <div class="ph"><div><div class="pt">APPROVED NFT COLLECTIONS</div><div class="ps">Ticket NFTs players burn to earn ZMB</div></div><button class="btn bp bsm" onclick="loadNFTs()">LOAD</button></div>
+      <div class="pb"><div id="nft-list"><div class="fh">Click LOAD.</div></div></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">ADD NFT COLLECTION</div></div>
+      <div class="pb">
+        <div class="fl"><div class="fl-l">Contract Address</div><input class="fi" id="f-naddr" placeholder="0x..."></div>
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Token ID</div><input class="fi" id="f-nid" placeholder="0"><div class="fh">Use max uint256 for any ID</div></div>
+          <div class="fl"><div class="fl-l">Name</div><input class="fi" id="f-nname" placeholder="ZombieArenaTicket"></div>
+        </div>
+        <button class="btn bg" onclick="doAddNFT()">ADD COLLECTION</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">TOGGLE NFT STATUS</div></div>
+      <div class="pb">
+        <div class="fl"><div class="fl-l">Contract Address</div><input class="fi" id="f-ntoggle" placeholder="0x..."></div>
+        <div class="brow">
+          <button class="btn bg" onclick="doNFT(true)">ACTIVATE</button>
+          <button class="btn br" onclick="doNFT(false)">DEACTIVATE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div id="s-config" class="sec">
+    <div class="panel">
+      <div class="ph"><div class="pt">ARENA - SET REWARD TOKEN</div></div>
+      <div class="pb">
+        <div class="warnbox" style="margin-bottom:12px">One-time only. Permanent lock. Cannot change during active match.</div>
+        <div class="fr">
+          <div class="fl"><div class="fl-l">Reward Token Address</div><input class="fi" id="f-srt" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn br bfw" onclick="doSetRT()">LOCK</button></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">TRANSFER OWNERSHIP</div></div>
+      <div class="pb">
+        <div class="warnbox" style="margin-bottom:12px">Irreversible. Verify the address before confirming.</div>
+        <div class="fl-l" style="margin-bottom:8px">ARENA</div>
+        <div class="fr" style="margin-bottom:12px">
+          <div class="fl"><div class="fl-l">New Owner</div><input class="fi" id="f-aown" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn br bfw" onclick="doArenaOwn()">TRANSFER</button></div>
+        </div>
+        <div class="divider" style="margin-bottom:12px"></div>
+        <div class="fl-l" style="margin-bottom:8px">REWARD TOKEN</div>
+        <div class="fr">
+          <div class="fl"><div class="fl-l">New Owner</div><input class="fi" id="f-town" placeholder="0x..."></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:22px"><button class="btn br bfw" onclick="doTokOwn()">TRANSFER</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EMERGENCY -->
+  <div id="s-emergency" class="sec">
+    <div class="warnbox" style="font-size:12px">Emergency functions only. Some actions cannot be undone.</div>
+    <div class="panel">
+      <div class="ph"><div class="pt">ARENA EMERGENCY CONTROLS</div></div>
+      <div class="pb">
+        <div style="color:var(--tx2);font-size:11px;margin-bottom:12px;line-height:1.7">Emergency Stop ends the active match as a draw (no winner, no reward) and pauses the contract.</div>
+        <div class="brow">
+          <button class="btn br" onclick="doEStop()">EMERGENCY STOP</button>
+          <button class="btn bg" onclick="doEResume()">EMERGENCY RESUME</button>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">ARENA - WITHDRAW NATIVE (HERESY)</div></div>
+      <div class="pb">
+        <div class="fr">
+          <div class="fl"><div class="fl-l">To Address</div><input class="fi" id="f-anto" placeholder="0x..."></div>
+          <div class="fl"><div class="fl-l">Amount (HERESY)</div><input class="fi" id="f-anamt" type="number" placeholder="0.0"></div>
+        </div>
+        <button class="btn bo bsm" onclick="doWithdrawNative()">WITHDRAW</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">ARENA - WITHDRAW ERC-20</div></div>
+      <div class="pb">
+        <div class="fr3">
+          <div class="fl"><div class="fl-l">Token Address</div><input class="fi" id="f-ataddr" placeholder="0x..."></div>
+          <div class="fl"><div class="fl-l">To Address</div><input class="fi" id="f-atto" placeholder="0x..."></div>
+          <div class="fl"><div class="fl-l">Amount</div><input class="fi" id="f-atamt" type="number" placeholder="0.0"></div>
+        </div>
+        <button class="btn bo bsm" onclick="doWithdrawToken()">WITHDRAW TOKEN</button>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div class="pt">REWARD TOKEN - RESCUE ERC-20</div></div>
+      <div class="pb">
+        <div class="fr3">
+          <div class="fl"><div class="fl-l">Token Address</div><input class="fi" id="f-rtaddr" placeholder="0x..."></div>
+          <div class="fl"><div class="fl-l">To Address</div><input class="fi" id="f-rtto" placeholder="0x..."></div>
+          <div class="fl"><div class="fl-l">Amount</div><input class="fi" id="f-rtamt" type="number" placeholder="0.0"></div>
+        </div>
+        <button class="btn bo bsm" onclick="doRescue()">RESCUE</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div id="logpanel">
+  <div class="lh"><span>ACTIVITY LOG</span><button class="lcl" onclick="clrLog()">CLEAR</button></div>
+  <div id="logE"></div>
+</div>
+
+</div>
 <script>
-    // The Grotto Chain Configuration
-    const CHAIN_ID = "0x8E6F"; // 36463
-    const RPC_URL = "https://subnets.avax.network/thegrotto/mainnet/rpc";
-    const CONTRACT_ADDR = "0x62cF10284C9b4a5B3b68B2cCBB1EBaec3f86320c";
-    const TREASURY_ADDR = "0x46914d5dc59598801e435af2a08928da87c60df0";
-    const EXPLORER_URL = "https://subnets.avax.network/thegrotto";
-    const CHAIN_NAME = "The Grotto";
-    const CURRENCY_SYMBOL = "HERESY";
-    
-    // Supabase Configuration
-    const SB_URL = "https://tvckbtgggsuwxtlgilcl.supabase.co"; 
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2Y2tidGdnZ3N1d3h0bGdpbGNsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDY2NDY0NSwiZXhwIjoyMDg2MjQwNjQ1fQ.DhvGNo3seKoRtDmeRod0gAP48yFZw_0-kAvY3eT_554"; 
-    const _supabase = supabase.createClient(SB_URL, SB_KEY);
-
-    const ABI = [
-        "function createGame(bytes32 _hash, uint256 _timeout) external payable",
-        "function challengeGame(uint256 _gameId, uint8 _move) external payable",
-        "function resolveGame(uint256 _gameId, uint8 _move, string calldata _salt) external",
-        "function forceForfeit(uint256 _gameId) external",
-        "function refundUnchallenged(uint256 _gameId) external",
-        "function gameCounter() public view returns (uint256)",
-        "function games(uint256) public view returns (address host, address challenger, bytes32 commitHash, uint8 hostMove, uint8 challengerMove, uint256 wager, uint256 timeout, uint256 timestamp, uint8 status)",
-        "event GameCreated(uint256 indexed gameId, address indexed host, uint256 wager, uint256 timeout, bytes32 commitHash)",
-        "event GameChallenged(uint256 indexed gameId, address indexed challenger)",
-        "event GameResolved(uint256 indexed gameId, address winner, uint256 payout)"
-    ];
-
-    let provider, signer, contract, userAddress;
-    let selectedMoveIdx = 0;
-    let lobbyRefreshInterval, activityRefreshInterval, chatRefreshInterval, dailyTimerInterval;
-    let currentLobbyFilter = 'all';
-    let userNotifications = [];
-    let cachedLobbyHTML = '';
-    let cachedActivityHTML = '';
-    let userPremiumStatus = null;
-
-    // Move names
-    const moveNames = ['', 'Greg', 'Bob', 'Disco'];
-    const moveImages = [
-        '',
-        'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_3_2026-02-11_10-02-39.jpg',
-        'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_2_2026-02-11_10-02-39.jpg',
-        'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/photo_1_2026-02-11_10-02-39.jpg'
-    ];
-
-    // Win/Loss Messages
-    const winMessages = [
-        "Victory is yours! The void smiles upon you—strike again while fortune favors! ⚡",
-        "You won! Your enemies tremble. Don't waste this momentum! 🔥",
-        "Triumph! The dark forces align with you. Seize another victory! 🌟",
-        "Success! You're on a roll. The grotto demands more! 💀",
-        "Victory claimed! Your power grows. Continue the conquest! ⚔️"
-    ];
-
-    const lossMessages = [
-        "Defeat... but the night is young. Next time, darkness will be yours! 🌙",
-        "You fell this round. Every master has tasted defeat—rise again! 💪",
-        "Not this time... but the grotto rewards persistence. Try again! 🎯",
-        "Loss stings, but champions are forged in failure. Redeem yourself! ⚡",
-        "Defeat is temporary. Your comeback story begins now! 🔮"
-    ];
-
-    const drawMessages = [
-        "A stalemate! The forces were balanced. Break the tie! ⚖️",
-        "Draw! Neither victor nor vanquished. Seek another challenger! 🤝",
-        "Equilibrium achieved. The next ritual awaits! 🌀"
-    ];
-
-    // Blood Rite Achievements - UPDATED HIGH ROLLER THRESHOLD
-    const dailyAchievements = [
-        { id: 'daily_win', name: 'First Blood', desc: 'Win your first game today', points: 50, icon: '⚔️', check: (stats) => stats.dailyWins >= 1 },
-        { id: 'daily_3games', name: 'Ritual Devotee', desc: 'Play 3 games today', points: 30, icon: '🎯', check: (stats) => stats.dailyGames >= 3 },
-        { id: 'daily_streak', name: 'Unbroken', desc: 'Win 2 games in a row', points: 75, icon: '🔥', check: (stats) => stats.dailyStreak >= 2 },
-        { id: 'daily_wager', name: 'High Roller', desc: 'Wager 0.001+ HERESY today', points: 40, icon: '💰', check: (stats) => stats.dailyWagered >= 0.001 }
-    ];
-
-    const milestoneAchievements = [
-        { id: 'total_10wins', name: 'Apprentice', desc: 'Win 10 total games', points: 100, icon: '🌟', check: (stats) => stats.totalWins >= 10 },
-        { id: 'total_50wins', name: 'Adept', desc: 'Win 50 total games', points: 250, icon: '⭐', check: (stats) => stats.totalWins >= 50 },
-        { id: 'total_100wins', name: 'Master', desc: 'Win 100 total games', points: 500, icon: '✨', check: (stats) => stats.totalWins >= 100 },
-        { id: 'total_wager100', name: 'Whale', desc: 'Wager 100+ HERESY total', points: 200, icon: '🐋', check: (stats) => stats.totalWagered >= 100 },
-        { id: 'streak_5', name: 'Unstoppable', desc: 'Get a 5 win streak', points: 150, icon: '🔥', check: (stats) => stats.longestStreak >= 5 },
-        { id: 'perfect_day', name: 'Perfect Day', desc: '5 wins, 0 losses in one day', points: 300, icon: '👑', check: (stats) => stats.dailyWins >= 5 && stats.dailyLosses === 0 }
-    ];
-
-    async function init() {
-        if (window.ethereum) {
-            provider = new ethers.BrowserProvider(window.ethereum);
-            document.getElementById('connect-btn').addEventListener('click', connectWallet);
-            
-            await refreshLobby();
-            await refreshActivityFeed();
-            await refreshChat();
-            loadNotifications();
-            updateDailyTimer();
-            
-            lobbyRefreshInterval = setInterval(refreshLobby, 10000);
-            activityRefreshInterval = setInterval(refreshActivityFeed, 5000);
-            chatRefreshInterval = setInterval(refreshChat, 3000);
-            dailyTimerInterval = setInterval(updateDailyTimer, 1000);
-            
-            _supabase.channel('grotto_game_updates')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'grotto_games' }, () => {
-                    refreshLobby();
-                    refreshActivityFeed();
-                })
-                .subscribe();
-
-            _supabase.channel('grotto_chat_updates')
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'grotto_chat' }, () => {
-                    refreshChat();
-                })
-                .subscribe();
-
-            window.ethereum.on('accountsChanged', () => window.location.reload());
-            window.ethereum.on('chainChanged', () => window.location.reload());
-        }
-    }
-
-    async function checkNetwork() {
-        const network = await provider.getNetwork();
-        const currentChainIdHex = "0x" + network.chainId.toString(16).toUpperCase();
-        
-        if (currentChainIdHex !== CHAIN_ID.toUpperCase()) {
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: CHAIN_ID }],
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
-                    try {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: CHAIN_ID,
-                                chainName: CHAIN_NAME,
-                                nativeCurrency: { name: CURRENCY_SYMBOL, symbol: CURRENCY_SYMBOL, decimals: 18 },
-                                rpcUrls: [RPC_URL],
-                                blockExplorerUrls: [EXPLORER_URL]
-                            }]
-                        });
-                    } catch (addError) {
-                        showToast("Failed to add Grotto network");
-                        return false;
-                    }
-                } else {
-                    showToast("Switch to The Grotto");
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    async function connectWallet() {
-        try {
-            const accounts = await provider.send("eth_requestAccounts", []);
-            userAddress = accounts[0];
-            signer = await provider.getSigner();
-            
-            if (!(await checkNetwork())) return;
-
-            contract = new ethers.Contract(CONTRACT_ADDR, ABI, signer);
-            document.getElementById('connect-btn').classList.add('hidden');
-            document.getElementById('account-info').classList.remove('hidden');
-            
-            const username = await getUsernameOrAddress(userAddress);
-            const premiumStatus = await checkPremiumStatus(userAddress);
-            
-            // Display username with premium styling if applicable
-            const addressEl = document.getElementById('user-address');
-            if (premiumStatus && premiumStatus.is_active) {
-                addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
-                document.getElementById('premium-indicator').innerHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
-                document.getElementById('premium-indicator').classList.remove('hidden');
-            } else {
-                addressEl.innerText = username;
-            }
-            
-            updateBalance();
-            refreshLobby();
-            loadNotifications();
-            loadBloodRite();
-            updatePremiumDisplay();
-        } catch (err) { 
-            console.error(err);
-            showToast("Portal summoning failed"); 
-        }
-    }
-
-    function copyAddress() {
-        if (userAddress) {
-            navigator.clipboard.writeText(userAddress).then(() => {
-                showToast("Address copied to void");
-            }).catch(() => {
-                showToast("Copy failed");
-            });
-        }
-    }
-
-    async function updateBalance() {
-        if (!userAddress || !provider) return;
-        try {
-            const balance = await provider.getBalance(userAddress);
-            document.getElementById('user-balance').innerText = `${parseFloat(ethers.formatEther(balance)).toFixed(5)} $${CURRENCY_SYMBOL}`;
-        } catch (e) { console.error("Balance error", e); }
-    }
-
-    // Username Management
-    async function getUsernameOrAddress(address) {
-        const { data, error } = await _supabase
-            .from('grotto_usernames')
-            .select('username')
-            .eq('address', address.toLowerCase())
-            .single();
-        
-        if (data && data.username) {
-            return data.username;
-        }
-        return address.slice(0, 6) + '...' + address.slice(-4);
-    }
-
-    async function updateUsername() {
-        if (!userAddress) {
-            showToast("Connect wallet first");
-            return;
-        }
-
-        const newUsername = prompt("Enter your new username (max 20 characters):");
-        if (!newUsername || newUsername.trim() === '') return;
-        
-        if (newUsername.length > 20) {
-            showToast("Username too long (max 20)");
-            return;
-        }
-
-        try {
-            const { error } = await _supabase
-                .from('grotto_usernames')
-                .upsert({ 
-                    address: userAddress.toLowerCase(),
-                    username: newUsername.trim()
-                });
-
-            if (error) throw error;
-
-            showToast("✓ Username updated");
-            
-            // Update display
-            const username = await getUsernameOrAddress(userAddress);
-            const premiumStatus = await checkPremiumStatus(userAddress);
-            const addressEl = document.getElementById('user-address');
-            
-            if (premiumStatus && premiumStatus.is_active) {
-                addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
-            } else {
-                addressEl.innerText = username;
-            }
-            
-            refreshLobby();
-            refreshChat();
-        } catch (err) {
-            console.error("Username update error:", err);
-            showToast("Update failed");
-        }
-    }
-
-    function selectMove(idx) {
-        selectedMoveIdx = idx;
-        document.querySelectorAll('.move-select').forEach(btn => btn.classList.remove('selected'));
-        document.getElementById(`move-${idx}`).classList.add('selected');
-    }
-</script>
-<script>
-    // GAME CREATION AND MANAGEMENT
-    async function handleCreateGame() {
-        if (!signer) return showToast("Summon portal first");
-        if (selectedMoveIdx === 0) return showToast("Select your force");
-        if (!(await checkNetwork())) return;
-        
-        const createBtn = document.getElementById('create-btn');
-        createBtn.disabled = true;
-        
-        const wagerInput = document.getElementById('wager-amount').value;
-        const wagerValue = ethers.parseEther(wagerInput);
-        const timeoutValue = document.getElementById('timeout-select').value;
-        const salt = ethers.hexlify(ethers.randomBytes(32));
-        
-        try {
-            const nextGameId = (await contract.gameCounter()) + BigInt(1);
-            
-            const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-                ["uint8", "string", "address", "uint256"],
-                [selectedMoveIdx, salt, userAddress, nextGameId]
-            );
-            const hash = ethers.keccak256(encoded);
-
-            showToast("Encrypting ritual...");
-            const tx = await contract.createGame(hash, timeoutValue, { value: wagerValue });
-            
-            showToast("Awaiting the void...");
-            const receipt = await tx.wait();
-            
-            const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
-            secrets[hash] = { 
-                move: selectedMoveIdx, 
-                salt: salt,
-                gameId: nextGameId.toString(),
-                address: userAddress.toLowerCase()
-            };
-            localStorage.setItem('grotto_secrets', JSON.stringify(secrets));
-
-            let gameId = Number(nextGameId);
-
-            try {
-                for (const log of receipt.logs) {
-                    try {
-                        if (log.address.toLowerCase() !== CONTRACT_ADDR.toLowerCase()) continue;
-                        const parsed = contract.interface.parseLog({
-                            topics: log.topics,
-                            data: log.data
-                        });
-                        if (parsed && parsed.name === 'GameCreated') {
-                            gameId = Number(parsed.args.gameId);
-                            break;
-                        }
-                    } catch(e) { continue; }
-                }
-            } catch (e) { console.warn("Log parsing failed:", e); }
-
-            const { error: sbError } = await _supabase.from('grotto_games')
-                .insert([{
-                    game_id: gameId,
-                    host: userAddress.toLowerCase(),
-                    wager: wagerInput,
-                    timeout: parseInt(timeoutValue),
-                    status: 0,
-                    commit_hash: hash
-                }]);
-
-            if (sbError) {
-                console.error("Supabase error:", sbError);
-                showToast("⚠️ Ritual invoked but index failed");
-            } else {
-                showToast("✓ Ritual sealed in darkness");
-            }
-
-            await updatePlayerStatsDB('gameCreated', parseFloat(wagerInput));
-
-            setTimeout(async () => {
-                await refreshLobby();
-                createBtn.disabled = false;
-            }, 2000);
-            
-        } catch (err) { 
-            console.error("Creation error:", err);
-            showToast("Ritual invocation failed");
-            createBtn.disabled = false;
-        }
-    }
-
-    // LOBBY WITH STABLE RENDERING - NO FLICKER
-    let lobbyGames = [];
-    async function refreshLobby() {
-        const lobby = document.getElementById('lobby-list');
-        try {
-            const { data: games, error } = await _supabase.from('grotto_games')
-                .select('*')
-                .order('game_id', { ascending: false })
-                .limit(100);
-
-            if (error) {
-                if (!cachedLobbyHTML) {
-                    lobby.innerHTML = `<div class="text-center py-20 text-red-400 uppercase">Archive corrupted</div>`;
-                }
-                return;
-            }
-
-            // Create new HTML without clearing existing
-            const newHTML = await buildLobbyHTML(games);
-            
-            // Only update if content changed
-            if (newHTML !== cachedLobbyHTML) {
-                lobby.innerHTML = newHTML;
-                cachedLobbyHTML = newHTML;
-            }
-
-        } catch (err) { 
-            console.error("Lobby error:", err);
-            if (!cachedLobbyHTML) {
-                lobby.innerHTML = `<div class="text-center py-20 text-red-400">Archive error</div>`;
-            }
-        }
-    }
-
-    async function buildLobbyHTML(games) {
-        let html = '';
-        let displayedCount = 0;
-
-        for (const game of games) {
-            const status = Number(game.status);
-            const isHost = userAddress && game.host === userAddress.toLowerCase();
-            const isChallenger = userAddress && game.challenger === userAddress.toLowerCase();
-            
-            if (currentLobbyFilter === 'open' && status !== 0) continue;
-            if (currentLobbyFilter === 'intercepted' && status !== 1) continue;
-            if (currentLobbyFilter === 'resolved' && status !== 2) continue;
-            
-            if (status > 1 && !isHost && !isChallenger && currentLobbyFilter === 'all') continue;
-
-            displayedCount++;
-
-            const borderColor = status == 0 ? '#9333ea' : status == 1 ? '#eab308' : status == 2 ? '#15803d' : '#374151';
-            
-            let countdownHTML = '';
-            if (status === 0 || status === 1) {
-                const createdAt = new Date(game.created_at).getTime() / 1000;
-                const timeout = game.timeout || 900;
-                const deadline = createdAt + timeout;
-                const now = Math.floor(Date.now() / 1000);
-                const remaining = deadline - now;
-                
-                if (remaining > 0) {
-                    const minutes = Math.floor(remaining / 60);
-                    const seconds = remaining % 60;
-                    const timeColor = remaining < 60 ? '#ef4444' : '#9333ea';
-                    countdownHTML = `<span class="text-[11px] ml-2 cinzel" style="color: ${timeColor}">⏱ ${minutes}m ${seconds}s</span>`;
-                } else {
-                    countdownHTML = `<span class="text-[11px] text-red-500 ml-2 animate-pulse cinzel">⏱ EXPIRED</span>`;
-                }
-            }
-            
-            const hostName = await getUsernameOrAddress(game.host);
-            const isPremiumHost = await checkPremiumStatus(game.host);
-            
-            let hostDisplay = hostName;
-            if (isPremiumHost && isPremiumHost.is_active) {
-                hostDisplay = `<span class="premium-username">${hostName}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
-            }
-            
-            let gameInfo = `
-                <div class="lobby-item p-5 grotto-glass rounded-lg border-l-4 flex flex-col md:flex-row justify-between items-center gap-4 transition hover:bg-purple-900/10" style="border-left-color: ${borderColor}">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-3 mb-2 flex-wrap">
-                            <span class="text-[10px] px-3 py-1 border rounded-full uppercase cinzel tracking-wider" style="border-color: ${borderColor}; color: ${borderColor}">${getStatusText(status)}</span>
-                            <span class="text-[10px] text-purple-500/50 cinzel">ID: ${game.game_id}</span>
-                            ${countdownHTML}
-                        </div>
-                        <div class="cinzel text-purple-200 text-base">
-                            <span class="text-purple-400 font-bold">${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL}</span> 
-                            <span class="text-purple-600 text-[11px] ml-2">FROM ${hostDisplay}</span>`;
-            
-            if (status == 2 && game.host_move && game.challenger_move) {
-                const hostMove = Number(game.host_move);
-                const challengerMove = Number(game.challenger_move);
-                
-                let winner = '';
-                if (hostMove === challengerMove) {
-                    winner = '⚖️ STALEMATE';
-                } else if (
-                    (hostMove === 1 && challengerMove === 2) ||
-                    (hostMove === 2 && challengerMove === 3) ||
-                    (hostMove === 3 && challengerMove === 1)
-                ) {
-                    winner = `🏆 ${hostDisplay} PREVAILS`;
-                } else {
-                    const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
-                    const isPremiumChallenger = await checkPremiumStatus(game.challenger);
-                    let challengerDisplay = challengerName;
-                    if (isPremiumChallenger && isPremiumChallenger.is_active) {
-                        challengerDisplay = `<span class="premium-username">${challengerName}</span> <span class="premium-badge">⭐</span>`;
-                    }
-                    winner = `🏆 ${challengerDisplay} PREVAILS`;
-                }
-                
-                gameInfo += `
-                    <div class="text-[11px] mt-2 text-purple-300/60 flex gap-2 items-center">
-                        <img src="${moveImages[hostMove]}" class="w-6 h-6 object-contain"> ${moveNames[hostMove]} vs 
-                        <img src="${moveImages[challengerMove]}" class="w-6 h-6 object-contain"> ${moveNames[challengerMove]}
-                    </div>
-                    <div class="text-[12px] mt-1 font-bold ${hostMove === challengerMove ? 'text-yellow-400' : 'text-green-400'} cinzel">
-                        ${winner}
-                    </div>`;
-            }
-            
-            gameInfo += `
-                    </div>
-                </div>
-                <div class="flex gap-2">${await getActionButtons(game, isHost, isChallenger)}</div>
-            </div>`;
-            
-            html += gameInfo;
-        }
-        
-        if (displayedCount === 0) {
-            html = '<div class="text-center py-20 text-purple-700/50 uppercase italic cinzel">The void is silent...</div>';
-        }
-        
-        return html;
-    }
-
-    function setLobbyFilter(filter) {
-        currentLobbyFilter = filter;
-        document.querySelectorAll('.lobby-filter').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(`filter-${filter}`).classList.add('active');
-        cachedLobbyHTML = ''; // Force refresh
-        refreshLobby();
-    }
-
-    async function getActionButtons(game, isHost, isChallenger) {
-        if (game.status == 0) {
-            if (isHost) {
-                return `<button onclick="handleRefund(${game.game_id})" class="text-[10px] border border-purple-700 px-5 py-2 hover:bg-purple-900/20 uppercase rounded cinzel transition">Retract</button>`;
-            }
-            return `<button onclick="handleChallenge(${game.game_id}, '${game.wager}')" class="btn-grotto text-[11px] px-7 py-3 rounded-lg cinzel">Challenge</button>`;
-        }
-        if (game.status == 1) {
-            if (isHost) {
-                return `<button onclick="handleResolve(${game.game_id}, '${game.commit_hash}')" class="btn-grotto text-[11px] px-7 py-3 rounded-lg animate-pulse cinzel">Reveal</button>`;
-            }
-            if (isChallenger) {
-                const now = Math.floor(Date.now() / 1000);
-                const createdAt = new Date(game.created_at).getTime() / 1000;
-                const timeout = game.timeout || 900;
-                const deadline = createdAt + timeout;
-                
-                if (now >= deadline) {
-                    return `<button onclick="handleForceForfeit(${game.game_id})" class="btn-grotto text-[11px] px-7 py-3 rounded-lg animate-pulse cinzel">Claim Victory</button>`;
-                }
-                return `<span class="text-[10px] text-purple-400 uppercase italic cinzel">⚔️ Awaiting reveal...</span>`;
-            }
-            return `<span class="text-[10px] text-purple-600 uppercase italic cinzel">Ritual active</span>`;
-        }
-        if (game.status == 2) return `<span class="text-[10px] text-green-400 uppercase cinzel">✓ Sealed</span>`;
-        if (game.status == 3) return `<span class="text-[10px] text-gray-600 uppercase cinzel">Retracted</span>`;
-        if (game.status == 4) return `<span class="text-[10px] text-red-600 uppercase cinzel">⚡ Forfeited</span>`;
-        return `<span class="text-[10px] text-gray-700 uppercase cinzel">Dormant</span>`;
-    }
-</script>
-<script>
-// GROTTO GAMBIT - REMAINING JAVASCRIPT FUNCTIONS
-// Add this content after the previous script tags in your HTML
-
-// GAME CHALLENGE, RESOLVE, AND FORFEIT FUNCTIONS
-async function handleChallenge(id, wager) {
-    if (!signer) return showToast("Summon portal first");
-    if (!(await checkNetwork())) return;
-    
-    const move = prompt(`Select your force:\n1 - ${moveNames[1]}\n2 - ${moveNames[2]}\n3 - ${moveNames[3]}`);
-    if (!move || move < 1 || move > 3) return showToast("Invalid force");
-    
-    try {
-        showToast("Accepting challenge...");
-        const gameData = await contract.games(id);
-        const actualWager = gameData.wager;
-        
-        const tx = await contract.challengeGame(id, move, { value: actualWager });
-        showToast("Sealing pact...");
-        await tx.wait();
-        
-        await _supabase.from('grotto_games')
-            .update({ 
-                status: 1, 
-                challenger: userAddress.toLowerCase(),
-                challenger_move: parseInt(move)
-            })
-            .eq('game_id', id);
-        
-        await updatePlayerStatsDB('gameChallenged', parseFloat(wager));
-        showToast("✓ Challenge accepted");
-        cachedLobbyHTML = '';
-        setTimeout(refreshLobby, 1500);
-    } catch (err) { 
-        console.error("Challenge error:", err);
-        showToast("Challenge failed"); 
-    }
-}
-
-async function handleResolve(id, hash) {
-    if (!signer) return showToast("Summon portal first");
-    if (!(await checkNetwork())) return;
-    
-    const secrets = JSON.parse(localStorage.getItem('grotto_secrets') || '{}');
-    let secret = secrets[hash];
-    
-    if (!secret) {
-        const manualReveal = confirm("Secret not found in this sanctum. Enter manually?");
-        if (!manualReveal) {
-            showToast("⚠️ Secret not found");
-            return;
-        }
-        
-        const move = prompt("Enter your force (1-3):");
-        const salt = prompt("Enter your salt (hex):");
-        
-        if (!move || !salt) return showToast("Cancelled");
-        
-        const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-            ["uint8", "string", "address", "uint256"],
-            [parseInt(move), salt, userAddress, BigInt(id)]
-        );
-        const testHash = ethers.keccak256(encoded);
-        
-        if (testHash.toLowerCase() !== hash.toLowerCase()) {
-            return showToast("⚠️ Hash mismatch");
-        }
-        
-        secret = { move: parseInt(move), salt: salt };
-    }
-    
-    try {
-        showToast("Revealing truth...");
-        const tx = await contract.resolveGame(id, secret.move, secret.salt);
-        await tx.wait();
-        
-        const gameData = await contract.games(id);
-        const hostMove = Number(gameData.hostMove);
-        const challengerMove = Number(gameData.challengerMove);
-        
-        let resultMsg = "Ritual completed";
-        let isWin = false;
-        let isDraw = false;
-        
-        if (hostMove === challengerMove) {
-            resultMsg = "⚖️ STALEMATE";
-            isDraw = true;
-        } else if (
-            (hostMove === 1 && challengerMove === 2) ||
-            (hostMove === 2 && challengerMove === 3) ||
-            (hostMove === 3 && challengerMove === 1)
-        ) {
-            resultMsg = "🏆 VICTORY!";
-            isWin = true;
-        } else {
-            resultMsg = "💀 DEFEAT";
-            isWin = false;
-        }
-        
-        addNotification({
-            type: isDraw ? 'draw' : (isWin ? 'win' : 'loss'),
-            gameId: id,
-            message: resultMsg,
-            timestamp: Date.now()
-        });
-        
-        await _supabase.from('grotto_games').update({ 
-            status: 2,
-            host_move: hostMove,
-            challenger_move: challengerMove
-        }).eq('game_id', id);
-        
-        await updatePlayerStatsDB(isWin ? 'gameWon' : (isDraw ? 'gameDraw' : 'gameLost'));
-        
-        cachedLobbyHTML = '';
-        setTimeout(refreshLobby, 1000);
-        updateBalance();
-        showToast(resultMsg);
-    } catch (err) { 
-        console.error("Resolve error:", err);
-        showToast("Reveal failed"); 
-    }
-}
-
-async function handleRefund(id) {
-    if (!signer) return showToast("Summon portal first");
-    if (!(await checkNetwork())) return;
-    
-    try {
-        showToast("Retracting ritual...");
-        const tx = await contract.refundUnchallenged(id);
-        await tx.wait();
-        
-        await _supabase.from('grotto_games').update({ status: 3 }).eq('game_id', id);
-        cachedLobbyHTML = '';
-        refreshLobby();
-        updateBalance();
-        showToast("Heresy returned");
-    } catch (err) { 
-        console.error(err);
-        showToast("Refund failed"); 
-    }
-}
-
-async function handleForceForfeit(gameId) {
-    if (!signer) return showToast("Summon portal first");
-    if (!(await checkNetwork())) return;
-    
-    try {
-        showToast("Claiming victory...");
-        const tx = await contract.forceForfeit(gameId);
-        await tx.wait();
-        
-        addNotification({
-            type: 'win',
-            gameId: gameId,
-            message: '🏆 Victory by forfeit',
-            timestamp: Date.now()
-        });
-        
-        await _supabase.from('grotto_games').update({ status: 4 }).eq('game_id', gameId);
-        await updatePlayerStatsDB('gameWon');
-        cachedLobbyHTML = '';
-        refreshLobby();
-        updateBalance();
-        showToast("🏆 Victory by forfeit!");
-    } catch (err) {
-        console.error("Forfeit error:", err);
-        showToast("Forfeit failed");
-    }
-}
-
-// PREMIUM FUNCTIONS
-async function checkPremiumStatus(address) {
-    if (!address) return null;
-    
-    try {
-        const { data, error } = await _supabase
-            .from('grotto_premium')
-            .select('*')
-            .eq('address', address.toLowerCase())
-            .single();
-        
-        if (error || !data) return null;
-        
-        // Check if expired
-        if (data.is_active && new Date(data.expiry_date) < new Date()) {
-            // Update to inactive
-            await _supabase
-                .from('grotto_premium')
-                .update({ is_active: false })
-                .eq('address', address.toLowerCase());
-            return { ...data, is_active: false };
-        }
-        
-        return data;
-    } catch (err) {
-        console.error("Premium check error:", err);
-        return null;
-    }
-}
-
-async function purchasePremium() {
-    if (!signer || !userAddress) {
-        showToast("Summon portal first");
-        return;
-    }
-    
-    if (!(await checkNetwork())) return;
-    
-    const confirmPurchase = confirm(`Purchase Gilded Ascension for 30 days?\n\nPrice: 0.0001 $HERESY\n\nYour name will shimmer in gold across all realms!`);
-    if (!confirmPurchase) return;
-    
-    try {
-        showToast("Forging golden covenant...");
-        
-        const amount = ethers.parseEther("0.0001");
-        const tx = await signer.sendTransaction({
-            to: TREASURY_ADDR,
-            value: amount
-        });
-        
-        showToast("Awaiting divine confirmation...");
-        const receipt = await tx.wait();
-        
-        // Calculate expiry date (30 days from now)
-        const expiryDate = new Date();
-        expiryDate.setDate(expiryDate.getDate() + 30);
-        
-        // Save to database
-        const { error } = await _supabase
-            .from('grotto_premium')
-            .upsert({
-                address: userAddress.toLowerCase(),
-                is_active: true,
-                purchase_date: new Date().toISOString(),
-                expiry_date: expiryDate.toISOString(),
-                transaction_hash: receipt.hash,
-                amount_paid: "0.0001"
-            });
-        
-        if (error) {
-            console.error("Premium DB error:", error);
-            showToast("⚠️ Payment sent but activation failed - contact support");
-            return;
-        }
-        
-        userPremiumStatus = await checkPremiumStatus(userAddress);
-        
-        showToast("✨ GILDED ASCENSION GRANTED! ✨");
-        
-        // Update UI
-        const username = await getUsernameOrAddress(userAddress);
-        const addressEl = document.getElementById('user-address');
-        addressEl.innerHTML = `<span class="premium-username">${username}</span>`;
-        document.getElementById('premium-indicator').innerHTML = '<span class="premium-badge">⭐ PREMIUM</span>';
-        document.getElementById('premium-indicator').classList.remove('hidden');
-        
-        updatePremiumDisplay();
-        updateBalance();
-        
-        // Refresh displays
-        cachedLobbyHTML = '';
-        refreshLobby();
-        loadLeaderboard();
-        
-    } catch (err) {
-        console.error("Premium purchase error:", err);
-        showToast("Purchase failed");
-    }
-}
-
-async function updatePremiumDisplay() {
-    const statusDisplay = document.getElementById('premium-status-display');
-    const purchaseBtn = document.getElementById('purchase-premium-btn');
-    
-    if (!userAddress) {
-        statusDisplay.innerHTML = `
-            <div class="grotto-glass border border-purple-500/30 p-4 rounded-lg text-center">
-                <div class="text-purple-400 text-sm">Connect wallet to view premium status</div>
-            </div>
-        `;
-        purchaseBtn.disabled = true;
-        return;
-    }
-    
-    const premiumStatus = await checkPremiumStatus(userAddress);
-    
-    if (premiumStatus && premiumStatus.is_active) {
-        const expiryDate = new Date(premiumStatus.expiry_date);
-        const daysRemaining = Math.ceil((expiryDate - new Date()) / (1000 * 60 * 60 * 24));
-        
-        statusDisplay.innerHTML = `
-            <div class="grotto-glass border-2 border-yellow-500/50 p-6 rounded-lg">
-                <div class="flex items-center gap-3 mb-3">
-                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center text-2xl" style="box-shadow: 0 0 20px var(--premium-glow)">
-                        👑
-                    </div>
-                    <div>
-                        <div class="cinzel text-lg premium-username">ACTIVE PREMIUM</div>
-                        <div class="text-xs text-purple-400/70">${daysRemaining} days remaining</div>
-                    </div>
-                </div>
-                <div class="text-sm text-purple-300/80">
-                    Your gilded ascension expires on ${expiryDate.toLocaleDateString()}
-                </div>
-            </div>
-        `;
-        purchaseBtn.textContent = "RENEW GILDED POWER";
-    } else {
-        statusDisplay.innerHTML = `
-            <div class="grotto-glass border border-purple-500/30 p-4 rounded-lg">
-                <div class="text-purple-400 text-sm">You don't have premium status yet</div>
-            </div>
-        `;
-        purchaseBtn.textContent = "ACQUIRE GILDED POWER";
-        purchaseBtn.disabled = false;
-    }
-}
-
-function closePremiumModal() {
-    document.getElementById('premium-modal').classList.remove('active');
-}
-
-// PLAYER STATS IN SUPABASE
-async function updatePlayerStatsDB(event, amount = 0) {
-    if (!userAddress) return;
-    
-    try {
-        // Get current stats from DB
-        const { data: existingStats, error: fetchError } = await _supabase
-            .from('grotto_player_stats')
-            .select('*')
-            .eq('address', userAddress.toLowerCase())
-            .single();
-        
-        const today = new Date().toISOString().split('T')[0];
-        let stats = existingStats || {
-            address: userAddress.toLowerCase(),
-            total_games: 0,
-            total_wins: 0,
-            total_losses: 0,
-            total_draws: 0,
-            total_wagered: 0,
-            longest_streak: 0,
-            current_streak: 0,
-            biggest_pot: 0,
-            daily_games: 0,
-            daily_wins: 0,
-            daily_losses: 0,
-            daily_wagered: 0,
-            daily_streak: 0,
-            last_daily_reset: today
-        };
-        
-        // Reset daily stats if new day
-        if (stats.last_daily_reset !== today) {
-            stats.daily_games = 0;
-            stats.daily_wins = 0;
-            stats.daily_losses = 0;
-            stats.daily_wagered = 0;
-            stats.daily_streak = 0;
-            stats.last_daily_reset = today;
-        }
-        
-        // Update based on event
-        switch(event) {
-            case 'gameCreated':
-            case 'gameChallenged':
-                stats.daily_games++;
-                stats.total_games++;
-                stats.daily_wagered = parseFloat(stats.daily_wagered) + amount;
-                stats.total_wagered = parseFloat(stats.total_wagered) + amount;
-                if (amount * 2 > stats.biggest_pot) {
-                    stats.biggest_pot = amount * 2;
-                }
-                break;
-            case 'gameWon':
-                stats.daily_wins++;
-                stats.total_wins++;
-                stats.daily_streak++;
-                stats.current_streak++;
-                if (stats.current_streak > stats.longest_streak) {
-                    stats.longest_streak = stats.current_streak;
-                }
-                break;
-            case 'gameLost':
-                stats.daily_losses++;
-                stats.total_losses++;
-                stats.daily_streak = 0;
-                stats.current_streak = 0;
-                break;
-            case 'gameDraw':
-                stats.total_draws++;
-                stats.daily_streak = 0;
-                stats.current_streak = 0;
-                break;
-        }
-        
-        // Upsert to DB
-        const { error: upsertError } = await _supabase
-            .from('grotto_player_stats')
-            .upsert(stats);
-        
-        if (upsertError) {
-            console.error("Stats update error:", upsertError);
-        }
-        
-        checkAchievements();
-    } catch (err) {
-        console.error("Player stats DB error:", err);
-    }
-}
-
-// BLOOD RITE SYSTEM - SUPABASE VERSION
-async function getBloodPoints() {
-    if (!userAddress) return 0;
-    
-    try {
-        const { data, error } = await _supabase
-            .from('grotto_blood_points')
-            .select('total_points')
-            .eq('address', userAddress.toLowerCase())
-            .single();
-        
-        if (error || !data) return 0;
-        return data.total_points || 0;
-    } catch (err) {
-        return 0;
-    }
-}
-
-async function addBloodPoints(points) {
-    if (!userAddress) return;
-    
-    try {
-        const currentBP = await getBloodPoints();
-        const newTotal = currentBP + points;
-        const newLevel = Math.floor(newTotal / 100) + 1;
-        
-        const { error } = await _supabase
-            .from('grotto_blood_points')
-            .upsert({
-                address: userAddress.toLowerCase(),
-                total_points: newTotal,
-                current_level: newLevel
-            });
-        
-        if (error) {
-            console.error("Blood points add error:", error);
-        }
-        
-        await updateBloodLevel();
-    } catch (err) {
-        console.error("Add BP error:", err);
-    }
-}
-
-async function updateBloodLevel() {
-    const bp = await getBloodPoints();
-    const level = Math.floor(bp / 100) + 1;
-    const currentLevelBP = bp % 100;
-    const nextLevelBP = 100;
-    const progress = (currentLevelBP / nextLevelBP) * 100;
-    
-    const elements = {
-        'blood-points-total': bp,
-        'blood-level': level,
-        'current-level': level,
-        'next-level-bp': nextLevelBP,
-        'current-bp': currentLevelBP
-    };
-    
-    Object.entries(elements).forEach(([id, value]) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = value;
-    });
-    
-    const progressBar = document.getElementById('level-progress-bar');
-    if (progressBar) progressBar.style.width = progress + '%';
-}
-
-async function getClaimedAchievements() {
-    if (!userAddress) return { daily: [], milestone: [] };
-    
-    try {
-        const today = new Date().toISOString().split('T')[0];
-        
-        const { data, error } = await _supabase
-            .from('grotto_achievements')
-            .select('*')
-            .eq('address', userAddress.toLowerCase());
-        
-        if (error || !data) return { daily: [], milestone: [] };
-        
-        const daily = data
-            .filter(a => a.is_daily && a.claimed_date === today)
-            .map(a => a.achievement_id);
-        
-        const milestone = data
-            .filter(a => !a.is_daily)
-            .map(a => a.achievement_id);
-        
-        return { daily, milestone };
-    } catch (err) {
-        return { daily: [], milestone: [] };
-    }
-}
-
-async function claimAchievement(achievementId, isDaily, points) {
-    if (!userAddress) return;
-    
-    const today = new Date().toISOString().split('T')[0];
-    
-    try {
-        const { error } = await _supabase
-            .from('grotto_achievements')
-            .insert({
-                address: userAddress.toLowerCase(),
-                achievement_id: achievementId,
-                is_daily: isDaily,
-                claimed_date: today,
-                points_awarded: points
-            });
-        
-        if (error) {
-            if (error.code === '23505') { // Duplicate
-                showToast("Already claimed");
-            } else {
-                showToast("Claim failed");
-            }
-            return;
-        }
-        
-        await addBloodPoints(points);
-        showToast(`✓ Claimed ${points} Blood Points!`);
-        await loadBloodRite();
-    } catch (err) {
-        console.error("Claim error:", err);
-        showToast("Claim failed");
-    }
-}
-
-function updateDailyTimer() {
-    const now = new Date();
-    const utcMidnight = new Date();
-    utcMidnight.setUTCHours(24, 0, 0, 0);
-    
-    const diff = utcMidnight - now;
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    const timerEl = document.getElementById('daily-timer');
-    if (timerEl) {
-        timerEl.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-}
-
-async function getPlayerStatsForAchievements() {
-    if (!userAddress) return null;
-    
-    try {
-        const { data, error } = await _supabase
-            .from('grotto_player_stats')
-            .select('*')
-            .eq('address', userAddress.toLowerCase())
-            .single();
-        
-        if (error || !data) {
-            return {
-                dailyGames: 0,
-                dailyWins: 0,
-                dailyLosses: 0,
-                dailyWagered: 0,
-                dailyStreak: 0,
-                totalWins: 0,
-                totalLosses: 0,
-                totalGames: 0,
-                totalWagered: 0,
-                longestStreak: 0
-            };
-        }
-        
-        return {
-            dailyGames: data.daily_games || 0,
-            dailyWins: data.daily_wins || 0,
-            dailyLosses: data.daily_losses || 0,
-            dailyWagered: parseFloat(data.daily_wagered) || 0,
-            dailyStreak: data.daily_streak || 0,
-            totalWins: data.total_wins || 0,
-            totalLosses: data.total_losses || 0,
-            totalGames: data.total_games || 0,
-            totalWagered: parseFloat(data.total_wagered) || 0,
-            longestStreak: data.longest_streak || 0
-        };
-    } catch (err) {
-        console.error("Stats fetch error:", err);
-        return null;
-    }
-}
-
-async function checkAchievements() {
-    if (!userAddress) return;
-    const stats = await getPlayerStatsForAchievements();
-    if (!stats) return;
-    
-    const claimed = await getClaimedAchievements();
-    
-    let newAchievements = 0;
-    
-    dailyAchievements.forEach(ach => {
-        if (!claimed.daily.includes(ach.id) && ach.check(stats)) {
-            newAchievements++;
-        }
-    });
-    
-    milestoneAchievements.forEach(ach => {
-        if (!claimed.milestone.includes(ach.id) && ach.check(stats)) {
-            newAchievements++;
-        }
-    });
-    
-    if (newAchievements > 0) {
-        showToast(`${newAchievements} new achievement${newAchievements > 1 ? 's' : ''} available!`);
-    }
-}
-
-async function loadBloodRite() {
-    if (!userAddress) return;
-    
-    const stats = await getPlayerStatsForAchievements();
-    if (!stats) return;
-    
-    const claimed = await getClaimedAchievements();
-    
-    await updateBloodLevel();
-    
-    // Render daily achievements
-    const dailyContainer = document.getElementById('daily-achievements');
-    if (dailyContainer) {
-        dailyContainer.innerHTML = dailyAchievements.map(ach => {
-            const isCompleted = ach.check(stats);
-            const isClaimed = claimed.daily.includes(ach.id);
-            const canClaim = isCompleted && !isClaimed;
-            
-            return `
-                <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
-                    <div class="flex items-start gap-4">
-                        <div class="text-4xl">${ach.icon}</div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                    <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                    <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                </div>
-                            </div>
-                            ${canClaim ? 
-                                `<button onclick="claimAchievement('${ach.id}', true, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
-                                isClaimed ? 
-                                    `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                    `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">In Progress</div>`
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-    
-    // Render milestone achievements
-    const milestoneContainer = document.getElementById('milestone-achievements');
-    if (milestoneContainer) {
-        milestoneContainer.innerHTML = milestoneAchievements.map(ach => {
-            const isCompleted = ach.check(stats);
-            const isClaimed = claimed.milestone.includes(ach.id);
-            const canClaim = isCompleted && !isClaimed;
-            
-            return `
-                <div class="achievement-card ${isClaimed ? 'claimed' : isCompleted ? 'completed' : ''} p-5 rounded-lg">
-                    <div class="flex items-start gap-4">
-                        <div class="text-4xl">${ach.icon}</div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-start mb-2">
-                                <div>
-                                    <h4 class="cinzel text-purple-300 font-bold">${ach.name}</h4>
-                                    <p class="text-sm text-purple-400/70">${ach.desc}</p>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-xs text-purple-400/70 uppercase cinzel">Reward</div>
-                                    <div class="cinzel text-lg text-red-400 font-bold">${ach.points} BP</div>
-                                </div>
-                            </div>
-                            ${canClaim ? 
-                                `<button onclick="claimAchievement('${ach.id}', false, ${ach.points})" class="btn-grotto w-full py-2 text-xs rounded-lg cinzel mt-2">Claim Reward</button>` :
-                                isClaimed ? 
-                                    `<div class="text-xs text-gray-500 uppercase cinzel text-center mt-2">✓ Claimed</div>` :
-                                    `<div class="text-xs text-purple-600/50 uppercase cinzel text-center mt-2">Locked</div>`
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    }
-}
-
-// ACTIVITY FEED - STABLE VERSION
-async function refreshActivityFeed() {
-    const feed = document.getElementById('activity-feed');
-    try {
-        const { data: games, error } = await _supabase
-            .from('grotto_games')
-            .select('*')
-            .eq('status', 2)
-            .order('updated_at', { ascending: false })
-            .limit(50);
-
-        if (error) return;
-
-        const feedHTML = await buildActivityHTML(games);
-        
-        if (feedHTML !== cachedActivityHTML) {
-            feed.innerHTML = feedHTML;
-            cachedActivityHTML = feedHTML;
-        }
-    } catch (err) {
-        console.error("Activity error:", err);
-    }
-}
-
-async function buildActivityHTML(games) {
-    const feedItems = await Promise.all(games.map(async game => {
-        const hostMove = Number(game.host_move);
-        const challengerMove = Number(game.challenger_move);
-        
-        let result = '', resultColor = '';
-        const hostName = await getUsernameOrAddress(game.host);
-        const challengerName = await getUsernameOrAddress(game.challenger || 'Unknown');
-        
-        if (hostMove === challengerMove) {
-            result = 'STALEMATE';
-            resultColor = 'text-yellow-400';
-        } else if (
-            (hostMove === 1 && challengerMove === 2) ||
-            (hostMove === 2 && challengerMove === 3) ||
-            (hostMove === 3 && challengerMove === 1)
-        ) {
-            result = `${hostName} PREVAILS`;
-            resultColor = 'text-green-400';
-        } else {
-            result = `${challengerName} PREVAILS`;
-            resultColor = 'text-green-400';
-        }
-        
-        const timeAgo = getTimeAgo(new Date(game.updated_at || game.created_at));
-        
-        return `
-            <div class="grotto-glass border-l-4 border-purple-600 p-4 rounded-lg flex justify-between items-center hover:bg-purple-900/10 transition">
-                <div class="flex-1">
-                    <div class="text-sm ${resultColor} font-bold cinzel">${result}</div>
-                    <div class="text-[11px] text-purple-500/60 mt-1 flex items-center gap-2">
-                        <img src="${moveImages[hostMove]}" class="w-5 h-5 object-contain"> ${moveNames[hostMove]} vs 
-                        <img src="${moveImages[challengerMove]}" class="w-5 h-5 object-contain"> ${moveNames[challengerMove]} • 
-                        ${parseFloat(game.wager).toFixed(5)} $${CURRENCY_SYMBOL} • ${timeAgo}
-                    </div>
-                </div>
-                <div class="text-3xl">${result.includes('STALEMATE') ? '⚖️' : '🏆'}</div>
-            </div>
-        `;
-    }));
-
-    return feedItems.join('') || '<div class="text-center text-purple-700/50 py-8 italic">No recent battles...</div>';
-}
-
-// CHAT SYSTEM
-async function refreshChat() {
-    const chatMessages = document.getElementById('chat-messages');
-    try {
-        const { data: messages, error } = await _supabase
-            .from('grotto_chat')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(50);
-
-        if (error) return;
-
-        const shouldScroll = chatMessages.scrollHeight - chatMessages.scrollTop === chatMessages.clientHeight;
-
-        const chatItems = await Promise.all(messages.reverse().map(async msg => {
-            const isOwn = userAddress && msg.sender.toLowerCase() === userAddress.toLowerCase();
-            const senderName = await getUsernameOrAddress(msg.sender);
-            const isPremium = await checkPremiumStatus(msg.sender);
-            
-            let senderDisplay = senderName;
-            if (isPremium && isPremium.is_active) {
-                senderDisplay = `<span class="premium-username text-[10px]">${senderName}</span> <span class="premium-badge" style="font-size: 7px;">⭐</span>`;
-            } else {
-                senderDisplay = `<span class="text-[10px] text-purple-400/70 cinzel">${senderName}</span>`;
-            }
-            
-            return `
-                <div class="${isOwn ? 'text-right' : 'text-left'}">
-                    <div class="inline-block max-w-[80%] px-4 py-3 rounded-lg" style="background: ${isOwn ? 'rgba(147, 51, 234, 0.3)' : 'rgba(76, 29, 149, 0.3)'}">
-                        <div class="mb-1">${senderDisplay}</div>
-                        <div class="text-sm text-purple-100">${escapeHtml(msg.message)}</div>
-                    </div>
-                </div>
-            `;
-        }));
-
-        chatMessages.innerHTML = chatItems.join('');
-
-        if (shouldScroll) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    } catch (err) {
-        console.error("Chat error:", err);
-    }
-}
-
-async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const message = input.value.trim();
-    
-    if (!message || !userAddress) return;
-    
-    try {
-        await _supabase.from('grotto_chat').insert([{
-            sender: userAddress.toLowerCase(),
-            message: message
-        }]);
-        input.value = '';
-        refreshChat();
-    } catch (err) {
-        console.error("Send error:", err);
-        showToast("Message failed");
-    }
-}
-
-// NOTIFICATIONS
-function addNotification(notif) {
-    if (!userAddress) return;
-    
-    const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
-    
-    let message = '';
-    if (notif.type === 'win') {
-        message = winMessages[Math.floor(Math.random() * winMessages.length)];
-    } else if (notif.type === 'loss') {
-        message = lossMessages[Math.floor(Math.random() * lossMessages.length)];
-    } else {
-        message = drawMessages[Math.floor(Math.random() * drawMessages.length)];
-    }
-    
-    const newNotif = {
-        ...notif,
-        motivationalMessage: message,
-        read: false
-    };
-    
-    notifications.unshift(newNotif);
-    localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(notifications.slice(0, 50)));
-    
-    loadNotifications();
-}
-
-function loadNotifications() {
-    if (!userAddress) return;
-    
-    const notifications = JSON.parse(localStorage.getItem(`grotto_notifs_${userAddress}`) || '[]');
-    userNotifications = notifications;
-    
-    const unreadCount = notifications.filter(n => !n.read).length;
-    const badge = document.getElementById('notification-badge');
-    
-    if (unreadCount > 0) {
-        badge.textContent = unreadCount;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
-    }
-    
-    renderNotifications();
-}
-
-function renderNotifications() {
-    const list = document.getElementById('notification-list');
-    
-    if (userNotifications.length === 0) {
-        list.innerHTML = '<div class="p-8 text-center text-purple-700/50 italic">No omens to reveal...</div>';
-        return;
-    }
-    
-    list.innerHTML = userNotifications.map(notif => {
-        const bgClass = notif.type === 'win' ? 'bg-green-900/10' : notif.type === 'loss' ? 'bg-red-900/10' : 'bg-yellow-900/10';
-        const borderClass = notif.type === 'win' ? 'win' : notif.type === 'loss' ? 'loss' : '';
-        
-        return `
-            <div class="notification-item ${borderClass} p-4 ${bgClass} ${notif.read ? 'opacity-50' : ''}">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="flex-1">
-                        <div class="text-sm font-semibold text-purple-300 mb-1">${notif.message}</div>
-                        <div class="text-xs text-purple-400/70 mb-2">Game #${notif.gameId} • ${getTimeAgo(new Date(notif.timestamp))}</div>
-                        <div class="text-sm text-purple-200/80 italic leading-relaxed">${notif.motivationalMessage}</div>
-                    </div>
-                    ${!notif.read ? '<div class="w-2 h-2 bg-purple-500 rounded-full flex-shrink-0"></div>' : ''}
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function toggleNotifications() {
-    const panel = document.getElementById('notification-panel');
-    panel.classList.toggle('active');
-}
-
-function markAllRead() {
-    if (!userAddress) return;
-    
-    userNotifications = userNotifications.map(n => ({ ...n, read: true }));
-    localStorage.setItem(`grotto_notifs_${userAddress}`, JSON.stringify(userNotifications));
-    loadNotifications();
-}
-
-document.addEventListener('click', (e) => {
-    const panel = document.getElementById('notification-panel');
-    const btn = document.getElementById('notification-btn');
-    if (!panel.contains(e.target) && !btn.contains(e.target)) {
-        panel.classList.remove('active');
-    }
+(function(){
+"use strict";
+var AA="0x83Bd2ff09FC9072699093168Bc6611edfB772639";
+var RA="0x7a1079d6BA880Cc3Ce13bE8408d1Bc842b7964CF";
+var CHAIN=36463,RPC="https://subnets.avax.network/thegrotto/mainnet/rpc";
+var EXPL="https://explorer.avax.network/thegrotto";
+
+var AABI=["function getMatchState() view returns (uint256,bool,bool,uint256,uint256,uint256,uint256)","function getLeaderboard() view returns (address[],uint256[],uint256[])","function getCurrentLeader() view returns (address,uint256)","function getPlayerScore(address) view returns (uint256)","function getPlayerBurnCount(address) view returns (uint256)","function hasPlayerParticipated(address) view returns (bool)","function matchHistory(uint256) view returns (uint256,address,uint256,uint256,uint256,uint256,bool)","function totalMatchesPlayed() view returns (uint256)","function matchDuration() view returns (uint256)","function owner() view returns (address)","function startFirstMatch()","function pauseMatch()","function resumeMatch()","function endMatch()","function forceReset()","function emergencyStop()","function emergencyResume()","function emergencyWithdrawNative(address,uint256)","function emergencyWithdrawToken(address,address,uint256)","function setMatchDuration(uint256)","function setRewardToken(address)","function declareWinner(uint256,address)","function transferOwnership(address)"];
+var RABI=["function balanceOf(address) view returns (uint256)","function totalSupply() view returns (uint256)","function totalRewardMinted() view returns (uint256)","function rewardPoolRemaining() view returns (uint256)","function arenaContract() view returns (address)","function arenaLocked() view returns (bool)","function minLockHours() view returns (uint256)","function maxLockHours() view returns (uint256)","function burnFeeBps() view returns (uint256)","function ownerFeeBps() view returns (uint256)","function owner() view returns (address)","function getPlayerLocks(address) view returns (tuple(uint256,uint256,uint256,uint256,bool)[])","function getLockedBalance(address) view returns (uint256)","function getAvailableBalance(address) view returns (uint256)","function approvedNFTs(uint256) view returns (address,uint256,bool,string)","function getApprovedNFTCount() view returns (uint256)","function isNFTApproved(address) view returns (bool)","function setArenaContract(address)","function setLockRange(uint256,uint256)","function setTierThresholds(uint256,uint256)","function setTier1Rewards(uint256,uint256)","function setTier2Rewards(uint256,uint256)","function setTier3Rewards(uint256,uint256)","function setFees(uint256,uint256)","function addApprovedNFT(address,uint256,string)","function setNFTActive(address,bool)","function rescueToken(address,address,uint256)","function transferOwnership(address)"];
+
+var sgn,wallet,aW,rW,aR,rR,rp,lc=0;
+
+window.addEventListener("load",function(){
+  try{rp=new ethers.JsonRpcProvider(RPC);aR=new ethers.Contract(AA,AABI,rp);rR=new ethers.Contract(RA,RABI,rp);net(true,"Read-only");log("info","Provider connected.");}
+  catch(e){net(false,"RPC Error");}
+  refreshAll();setInterval(refreshAll,10000);
 });
 
-// LEADERBOARD - WITH PREMIUM STYLING
-async function loadLeaderboard() {
-    try {
-        const { data: games, error } = await _supabase
-            .from('grotto_games')
-            .select('*')
-            .eq('status', 2);
-
-        if (error) return;
-
-        const playerStats = {};
-        let totalWagered = 0, totalBurnt = 0, totalTreasury = 0;
-        let biggestLoser = { address: null, lost: 0 };
-        let streakMaster = { address: null, streak: 0 };
-        let mostActive = { address: null, games: 0 };
-
-        games.forEach(game => {
-            const wager = parseFloat(game.wager);
-            totalWagered += wager * 2;
-            const pot = wager * 2;
-            totalBurnt += pot * 0.015;
-            totalTreasury += pot * 0.015;
-
-            [game.host, game.challenger].forEach(addr => {
-                if (!addr) return;
-                if (!playerStats[addr]) {
-                    playerStats[addr] = {
-                        address: addr,
-                        totalWagered: 0,
-                        totalLost: 0,
-                        wins: 0,
-                        losses: 0,
-                        draws: 0,
-                        games: 0,
-                        biggestPot: 0,
-                        longestStreak: 0,
-                        currentStreak: 0
-                    };
-                }
-                playerStats[addr].totalWagered += wager;
-                playerStats[addr].games++;
-                if (wager * 2 > playerStats[addr].biggestPot) {
-                    playerStats[addr].biggestPot = wager * 2;
-                }
-            });
-
-            const hostMove = Number(game.host_move);
-            const challengerMove = Number(game.challenger_move);
-
-            if (hostMove === challengerMove) {
-                playerStats[game.host].draws++;
-                if (game.challenger) playerStats[game.challenger].draws++;
-                playerStats[game.host].currentStreak = 0;
-                if (game.challenger) playerStats[game.challenger].currentStreak = 0;
-            } else {
-                const hostWins = (
-                    (hostMove === 1 && challengerMove === 2) ||
-                    (hostMove === 2 && challengerMove === 3) ||
-                    (hostMove === 3 && challengerMove === 1)
-                );
-                if (hostWins) {
-                    playerStats[game.host].wins++;
-                    playerStats[game.host].currentStreak++;
-                    if (playerStats[game.host].currentStreak > playerStats[game.host].longestStreak) {
-                        playerStats[game.host].longestStreak = playerStats[game.host].currentStreak;
-                    }
-                    if (game.challenger) {
-                        playerStats[game.challenger].losses++;
-                        playerStats[game.challenger].totalLost += wager;
-                        playerStats[game.challenger].currentStreak = 0;
-                    }
-                } else if (game.challenger) {
-                    playerStats[game.challenger].wins++;
-                    playerStats[game.challenger].currentStreak++;
-                    if (playerStats[game.challenger].currentStreak > playerStats[game.challenger].longestStreak) {
-                        playerStats[game.challenger].longestStreak = playerStats[game.challenger].currentStreak;
-                    }
-                    playerStats[game.host].losses++;
-                    playerStats[game.host].totalLost += wager;
-                    playerStats[game.host].currentStreak = 0;
-                }
-            }
-        });
-
-        Object.values(playerStats).forEach(player => {
-            if (player.totalLost > biggestLoser.lost) {
-                biggestLoser = { address: player.address, lost: player.totalLost };
-            }
-            if (player.longestStreak > streakMaster.streak) {
-                streakMaster = { address: player.address, streak: player.longestStreak };
-            }
-            if (player.games > mostActive.games) {
-                mostActive = { address: player.address, games: player.games };
-            }
-        });
-
-        document.getElementById('global-wagered').textContent = totalWagered.toFixed(5);
-        document.getElementById('global-burnt').textContent = totalBurnt.toFixed(5);
-        document.getElementById('global-treasury').textContent = totalTreasury.toFixed(5);
-        document.getElementById('global-games').textContent = games.length;
-
-        // Display special stats
-        if (biggestLoser.address) {
-            const loserName = await getUsernameOrAddress(biggestLoser.address);
-            document.getElementById('biggest-loser').innerHTML = `
-                <div class="text-sm text-red-300/70 mb-2">Most Lost</div>
-                <div class="cinzel text-2xl text-red-400 font-bold mb-1">${loserName}</div>
-                <div class="text-xs text-red-500/50">${biggestLoser.lost.toFixed(5)} $HERESY Lost</div>
-            `;
-        }
-
-        if (streakMaster.address) {
-            const streakName = await getUsernameOrAddress(streakMaster.address);
-            document.getElementById('streak-master').innerHTML = `
-                <div class="text-sm text-yellow-300/70 mb-2">Longest Streak</div>
-                <div class="cinzel text-2xl text-yellow-400 font-bold mb-1">${streakName}</div>
-                <div class="text-xs text-yellow-500/50">${streakMaster.streak} Consecutive Wins</div>
-            `;
-        }
-
-        if (mostActive.address) {
-            const activeName = await getUsernameOrAddress(mostActive.address);
-            document.getElementById('most-active').innerHTML = `
-                <div class="text-sm text-blue-300/70 mb-2">Most Rituals</div>
-                <div class="cinzel text-2xl text-blue-400 font-bold mb-1">${activeName}</div>
-                <div class="text-xs text-blue-500/50">${mostActive.games} Total Games</div>
-            `;
-        }
-
-        const leaderboard = Object.values(playerStats)
-            .sort((a, b) => b.totalWagered - a.totalWagered)
-            .slice(0, 50);
-
-        const tbody = document.getElementById('leaderboard-body');
-        const rows = await Promise.all(leaderboard.map(async (player, index) => {
-            const winRate = player.games > 0 ? ((player.wins / player.games) * 100).toFixed(1) : 0;
-            const playerName = await getUsernameOrAddress(player.address);
-            const isPremium = await checkPremiumStatus(player.address);
-            
-            let nameDisplay = playerName;
-            let rowClass = '';
-            
-            if (isPremium && isPremium.is_active) {
-                nameDisplay = `<span class="premium-username">${playerName}</span> <span class="premium-badge">⭐</span>`;
-                rowClass = 'premium-row';
-            }
-            
-            return `
-                <tr class="border-b border-purple-900/20 hover:bg-purple-900/10 cursor-pointer transition ${rowClass}" onclick="showPlayerProfile('${player.address}')">
-                    <td class="p-4 text-purple-400 cinzel font-bold">#${index + 1}</td>
-                    <td class="p-4">
-                        <div class="text-sm text-purple-200">${nameDisplay}</div>
-                        <div class="text-[11px] text-purple-600/60">${player.games} rituals</div>
-                    </td>
-                    <td class="p-4 text-right cinzel text-purple-400 font-semibold">${player.totalWagered.toFixed(5)}</td>
-                    <td class="p-4 text-right cinzel font-semibold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</td>
-                    <td class="p-4 text-right cinzel text-purple-400">${player.biggestPot.toFixed(5)}</td>
-                    <td class="p-4 text-right cinzel text-yellow-400">${player.longestStreak}</td>
-                </tr>
-            `;
-        }));
-        tbody.innerHTML = rows.join('');
-    } catch (err) {
-        console.error("Leaderboard error:", err);
-    }
-}
-
-// PROFILE
-async function loadProfile() {
-    const profileContent = document.getElementById('profile-content');
-    
-    if (!userAddress) {
-        profileContent.innerHTML = `
-            <div class="text-center py-20">
-                <div class="text-7xl mb-4 text-purple-500/30">🔒</div>
-                <div class="cinzel text-xl mb-2 text-purple-400">PORTAL REQUIRED</div>
-                <div class="text-purple-500/70 text-sm">Summon portal to view your chronicle</div>
-            </div>`;
-        return;
-    }
-
-    const stats = await getPlayerStatsForAchievements();
-    const username = await getUsernameOrAddress(userAddress);
-    const bp = await getBloodPoints();
-    const level = Math.floor(bp / 100) + 1;
-    const isPremium = await checkPremiumStatus(userAddress);
-    
-    let usernameDisplay = username;
-    if (isPremium && isPremium.is_active) {
-        usernameDisplay = `<span class="premium-username">${username}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
-    }
-
-    profileContent.innerHTML = `
-        <div class="grotto-glass border-2 border-purple-500/30 p-8 rounded-xl mb-6">
-            <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="cinzel text-2xl text-purple-300 mb-2">${usernameDisplay}</h3>
-                    <div class="text-sm text-purple-400/70">${userAddress}</div>
-                </div>
-                <div class="text-right">
-                    <div class="text-xs text-purple-400/70 uppercase mb-1">Blood Level</div>
-                    <div class="cinzel text-3xl text-red-400 font-bold">${level}</div>
-                    <div class="text-xs text-purple-500/50">${bp} BP</div>
-                </div>
-            </div>
-            <button onclick="updateUsername()" class="btn-grotto px-6 py-2 text-xs rounded-lg cinzel">
-                Update Username
-            </button>
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="stat-card p-6 rounded-xl text-center">
-                <div class="text-[11px] text-purple-400/70 uppercase mb-2 cinzel">Total Games</div>
-                <div class="cinzel text-3xl text-purple-400 font-bold">${stats.totalGames || 0}</div>
-            </div>
-            <div class="stat-card p-6 rounded-xl text-center border-green-900/30">
-                <div class="text-[11px] text-green-400/70 uppercase mb-2 cinzel">Wins</div>
-                <div class="cinzel text-3xl text-green-400 font-bold">${stats.totalWins || 0}</div>
-            </div>
-            <div class="stat-card p-6 rounded-xl text-center border-red-900/30">
-                <div class="text-[11px] text-red-400/70 uppercase mb-2 cinzel">Losses</div>
-                <div class="cinzel text-3xl text-red-400 font-bold">${stats.totalLosses || 0}</div>
-            </div>
-            <div class="stat-card p-6 rounded-xl text-center border-yellow-900/30">
-                <div class="text-[11px] text-yellow-400/70 uppercase mb-2 cinzel">Best Streak</div>
-                <div class="cinzel text-3xl text-yellow-400 font-bold">${stats.longestStreak || 0}</div>
-            </div>
-        </div>
-
-        <div class="grotto-glass p-6 rounded-xl">
-            <h3 class="cinzel text-lg text-purple-300 mb-4">Statistics</h3>
-            <div class="space-y-3">
-                <div class="flex justify-between py-2 border-b border-purple-900/20">
-                    <span class="text-purple-300">Total Wagered:</span>
-                    <span class="cinzel text-purple-400 font-semibold">${(stats.totalWagered || 0).toFixed(5)} $HERESY</span>
-                </div>
-                <div class="flex justify-between py-2 border-b border-purple-900/20">
-                    <span class="text-purple-300">Win Rate:</span>
-                    <span class="cinzel font-semibold ${(stats.totalWins/(stats.totalGames||1)*100) >= 50 ? 'text-green-400' : 'text-red-400'}">${((stats.totalWins/(stats.totalGames||1))*100).toFixed(1)}%</span>
-                </div>
-                <div class="flex justify-between py-2">
-                    <span class="text-purple-300">Current Streak:</span>
-                    <span class="cinzel text-yellow-400 font-semibold">${stats.currentStreak || 0}</span>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function showPlayerProfile(address) {
-    const modal = document.getElementById('player-modal');
-    const wrapper = document.getElementById('player-modal-wrapper');
-    const content = document.getElementById('player-modal-content');
-    
-    modal.classList.add('active');
-    content.innerHTML = '<div class="text-center py-8 text-purple-400">Summoning archive...</div>';
-    
-    const isPremium = await checkPremiumStatus(address);
-    
-    // Add premium styling to modal if player is premium
-    if (isPremium && isPremium.is_active) {
-        wrapper.classList.add('premium-modal-content');
-        
-        // Add premium particles
-        for (let i = 0; i < 10; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'premium-particle';
-            particle.style.left = Math.random() * 100 + '%';
-            particle.style.top = Math.random() * 100 + '%';
-            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
-            particle.style.animationDelay = Math.random() * 2 + 's';
-            particle.style.animation = `floatGold ${Math.random() * 3 + 2}s ease-in-out infinite`;
-            wrapper.appendChild(particle);
-        }
-    } else {
-        wrapper.classList.remove('premium-modal-content');
-        // Remove any existing particles
-        wrapper.querySelectorAll('.premium-particle').forEach(p => p.remove());
-    }
-    
-    try {
-        const { data: games } = await _supabase
-            .from('grotto_games')
-            .select('*')
-            .eq('status', 2)
-            .or(`host.eq.${address.toLowerCase()},challenger.eq.${address.toLowerCase()}`);
-
-        let wins = 0, losses = 0, draws = 0, totalWagered = 0;
-
-        games.forEach(game => {
-            const hostMove = Number(game.host_move);
-            const challengerMove = Number(game.challenger_move);
-            const isHost = game.host.toLowerCase() === address.toLowerCase();
-            
-            totalWagered += parseFloat(game.wager);
-
-            if (hostMove === challengerMove) {
-                draws++;
-            } else {
-                const hostWins = (
-                    (hostMove === 1 && challengerMove === 2) ||
-                    (hostMove === 2 && challengerMove === 3) ||
-                    (hostMove === 3 && challengerMove === 1)
-                );
-                if ((isHost && hostWins) || (!isHost && !hostWins)) {
-                    wins++;
-                } else {
-                    losses++;
-                }
-            }
-        });
-
-        const playerName = await getUsernameOrAddress(address);
-        const totalGames = wins + losses + draws;
-        const winRate = totalGames > 0 ? ((wins / totalGames) * 100).toFixed(1) : 0;
-        
-        let nameDisplay = playerName;
-        if (isPremium && isPremium.is_active) {
-            nameDisplay = `<span class="premium-username">${playerName}</span> <span class="premium-badge">⭐ PREMIUM</span>`;
-        }
-
-        content.innerHTML = `
-            <div class="space-y-6">
-                <div class="text-center">
-                    <h3 class="cinzel text-2xl text-purple-300 mb-2">${nameDisplay}</h3>
-                    <div class="text-sm text-purple-400/70">${address}</div>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="stat-card p-4 rounded-xl text-center">
-                        <div class="text-[10px] text-purple-400/70 uppercase mb-1 cinzel">Games</div>
-                        <div class="cinzel text-2xl text-purple-400 font-bold">${totalGames}</div>
-                    </div>
-                    <div class="stat-card p-4 rounded-xl text-center border-green-900/30">
-                        <div class="text-[10px] text-green-400/70 uppercase mb-1 cinzel">Wins</div>
-                        <div class="cinzel text-2xl text-green-400 font-bold">${wins}</div>
-                    </div>
-                    <div class="stat-card p-4 rounded-xl text-center border-red-900/30">
-                        <div class="text-[10px] text-red-400/70 uppercase mb-1 cinzel">Losses</div>
-                        <div class="cinzel text-2xl text-red-400 font-bold">${losses}</div>
-                    </div>
-                    <div class="stat-card p-4 rounded-xl text-center border-yellow-900/30">
-                        <div class="text-[10px] text-yellow-400/70 uppercase mb-1 cinzel">Win Rate</div>
-                        <div class="cinzel text-2xl font-bold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}">${winRate}%</div>
-                    </div>
-                </div>
-
-                <div class="grotto-glass p-4 rounded-xl">
-                    <div class="text-sm text-purple-300">Total Wagered:</div>
-                    <div class="cinzel text-xl text-purple-400 font-bold">${totalWagered.toFixed(5)} $HERESY</div>
-                </div>
-            </div>
-        `;
-    } catch (err) {
-        content.innerHTML = '<div class="text-center py-8 text-red-400">Failed to load profile</div>';
-    }
-}
-
-function closePlayerModal() {
-    const modal = document.getElementById('player-modal');
-    const wrapper = document.getElementById('player-modal-wrapper');
-    modal.classList.remove('active');
-    wrapper.classList.remove('premium-modal-content');
-    wrapper.querySelectorAll('.premium-particle').forEach(p => p.remove());
-}
-
-// HELPER FUNCTIONS
-function getTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-    if (seconds < 60) return `${seconds}s ago`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function getStatusText(s) { 
-    return ["Open", "Active", "Sealed", "Retracted", "Forfeited"][s]; 
-}
-
-function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    document.getElementById(`tab-${tab}`).classList.add('active');
-    
-    document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
-    document.getElementById(`page-${tab}`).classList.add('active');
-    
-    if (tab === 'profile') loadProfile();
-    if (tab === 'leaderboard') loadLeaderboard();
-    if (tab === 'bloodrite') loadBloodRite();
-    if (tab === 'marketplace') updatePremiumDisplay();
-}
-
-function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.innerText = msg;
-    t.classList.remove('translate-y-32');
-    setTimeout(() => t.classList.add('translate-y-32'), 4000);
-}
-
-window.onload = init;
-
-window.onbeforeunload = () => {
-    if (lobbyRefreshInterval) clearInterval(lobbyRefreshInterval);
-    if (activityRefreshInterval) clearInterval(activityRefreshInterval);
-    if (chatRefreshInterval) clearInterval(chatRefreshInterval);
-    if (dailyTimerInterval) clearInterval(dailyTimerInterval);
+window.connectWallet=async function(){
+  if(!window.ethereum){alert("MetaMask required.");return;}
+  try{
+    await window.ethereum.request({method:"eth_requestAccounts"});
+    var p=new ethers.BrowserProvider(window.ethereum);
+    sgn=await p.getSigner();wallet=(await sgn.getAddress()).toLowerCase();
+    try{await window.ethereum.request({method:"wallet_switchEthereumChain",params:[{chainId:"0x"+CHAIN.toString(16)}]});}
+    catch(se){if(se.code===4902)await window.ethereum.request({method:"wallet_addEthereumChain",params:[{chainId:"0x"+CHAIN.toString(16),chainName:"The Grotto",nativeCurrency:{name:"HERESY",symbol:"HERESY",decimals:18},rpcUrls:[RPC],blockExplorerUrls:[EXPL]}]});}
+    aW=new ethers.Contract(AA,AABI,sgn);rW=new ethers.Contract(RA,RABI,sgn);
+    var sh=wallet.slice(0,8)+"..."+wallet.slice(-6);
+    var b=document.getElementById("connectBtn");b.textContent=sh;b.classList.add("on");
+    net(true,"Connected");log("success","Wallet: "+sh);refreshAll();
+  }catch(e){log("error","Connect failed: "+(e.message||"").slice(0,60));}
 };
+
+window.refreshAll=async function(){
+  try{
+    var s=await aR.getMatchState();
+    var mid=Number(s[0]),act=s[1],pau=s[2],tl=Number(s[3]),plr=Number(s[4]);
+    var st=!act?"IDLE":pau?"PAUSED":"LIVE";
+    var sc=!act?"r":pau?"o":"g";
+    S("h-mid","#"+mid);S("h-status",st,sc);S("h-time",ft(tl));S("h-plr",plr);
+    S("ov-mid","#"+mid);S("ov-status",st,sc);S("ov-time",ft(tl));S("ov-plr",plr);
+    S("mc-mid","#"+mid);S("mc-time",ft(tl));S("mc-plr",plr);
+    var badge=document.getElementById("mbadge");
+    if(badge){badge.className="tag "+(!act?"tr":pau?"to":"tg");badge.innerHTML="<div class='tdot'></div>"+st;}
+    try{var h=await aR.matchHistory(mid);S("mc-start",Number(h[3])>0?fd(Number(h[3])):"Not started");}catch(_){}
+    var ldr=await aR.getCurrentLeader();
+    var la=ldr[0].toLowerCase(),ls=Number(ldr[1]);
+    var z0=la==="0x0000000000000000000000000000000000000000";
+    S("ov-ldr",z0?"-":(sa(la)+" ("+ls+"hrs)"),"o");S("h-pool","");
+    var pool=await rR.rewardPoolRemaining();
+    S("h-pool",fz(pool));S("ov-pool",fz(pool),"o");
+    var tot=await aR.totalMatchesPlayed();S("ov-total",Number(tot));
+    var minted=await rR.totalRewardMinted();S("ov-minted",fz(minted));
+    if(wallet){var mz=await rR.balanceOf(wallet);S("ov-myzmb",fz(mz),"g");}
+    net(true,wallet?"Connected":"Read-only");
+  }catch(e){net(false,"Error");console.error(e);}
+};
+
+// Match
+window.doStart=async function(){await tx(aW,"startFirstMatch",[],"Starting match...","Match started!");};
+window.doPause=async function(){await tx(aW,"pauseMatch",[],"Pausing...","Match paused.");};
+window.doResume=async function(){await tx(aW,"resumeMatch",[],"Resuming...","Match resumed.");};
+window.doEnd=async function(){await tx(aW,"endMatch",[],"Ending match...","Match ended.");};
+window.doForce=async function(){if(!confirm("Force reset ends match as draw. Continue?"))return;await tx(aW,"forceReset",[],"Force resetting...","Force reset done.");};
+window.doSetDur=async function(){var h=Number(document.getElementById("f-dur").value);if(!h||h<1){log("error","Invalid hours.");return;}await tx(aW,"setMatchDuration",[h*3600],"Setting duration...","Duration: "+h+"h.");};
+window.doDeclare=async function(){var m=document.getElementById("f-wmid").value,a=document.getElementById("f-waddr").value.trim();if(!m||!a){log("error","Fill all fields.");return;}await tx(aW,"declareWinner",[Number(m),a],"Declaring winner...","Winner set for #"+m+".");};
+
+// Players
+window.loadPlayers=async function(){
+  var c=document.getElementById("plr-list");c.innerHTML="<div class='fh'>Loading...</div>";
+  try{
+    var lb=await aR.getLeaderboard();var ps=lb[0],sc=lb[1],bn=lb[2];
+    if(!ps.length){c.innerHTML="<div class='fh'>No players this match.</div>";return;}
+    var ldr=await aR.getCurrentLeader();var la=ldr[0].toLowerCase();
+    c.innerHTML="";
+    for(var i=0;i<ps.length;i++){
+      var a=ps[i].toLowerCase();var row=document.createElement("div");row.className="ir";
+      row.innerHTML="<span class='irk'>"+(i+1)+". "+sa(a)+(a===la?" [LEAD]":"")+"</span><span class='irv "+(a===la?"o":"p")+"'>"+Number(sc[i])+"hrs &middot; "+Number(bn[i])+" burns</span>";
+      c.appendChild(row);
+    }
+  }catch(e){c.innerHTML="<div style='color:var(--red);font-family:var(--mono);font-size:9px'>"+e.message+"</div>";}
+};
+window.lookupPlr=async function(){
+  var addr=document.getElementById("f-plr-addr").value.trim();if(!addr){log("error","Enter address.");return;}
+  var c=document.getElementById("plr-result");c.innerHTML="<div class='fh'>Loading...</div>";
+  try{
+    var[sc,bn,pt,zmb,lck,fre]=await Promise.all([aR.getPlayerScore(addr),aR.getPlayerBurnCount(addr),aR.hasPlayerParticipated(addr),rR.balanceOf(addr),rR.getLockedBalance(addr),rR.getAvailableBalance(addr)]);
+    c.innerHTML="<div class='ir'><span class='irk'>Participated</span><span class='irv "+(pt?"g":"r")+"'>"+(pt?"YES":"NO")+"</span></div>"+
+      "<div class='ir'><span class='irk'>Score</span><span class='irv o'>"+Number(sc)+" hours</span></div>"+
+      "<div class='ir'><span class='irk'>Burns</span><span class='irv'>"+Number(bn)+"</span></div>"+
+      "<div class='ir'><span class='irk'>ZMB Balance</span><span class='irv'>"+fz(zmb)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Locked ZMB</span><span class='irv r'>"+fz(lck)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Free ZMB</span><span class='irv g'>"+fz(fre)+"</span></div>";
+  }catch(e){c.innerHTML="<div style='color:var(--red);font-family:var(--mono);font-size:9px'>"+e.message+"</div>";}
+};
+
+// History
+window.loadHistory=async function(){
+  var mid=Number(document.getElementById("f-hmid").value);if(!mid){log("error","Enter match ID.");return;}
+  var c=document.getElementById("hist-result");c.innerHTML="<div class='fh'>Loading...</div>";
+  try{
+    var h=await aR.matchHistory(mid);
+    var winner=h[1],isDraw=h[6],ws=Number(h[2]),st=Number(h[3]),et=Number(h[4]),pc=Number(h[5]);
+    var z0=winner==="0x0000000000000000000000000000000000000000";
+    c.innerHTML="<div class='ir'><span class='irk'>Match</span><span class='irv p'>#"+Number(h[0])+"</span></div>"+
+      "<div class='ir'><span class='irk'>Result</span><span class='irv "+(isDraw?"r":"g")+"'>"+(isDraw?"DRAW":"WIN")+"</span></div>"+
+      "<div class='ir'><span class='irk'>Winner</span><span class='irv o'>"+(isDraw||z0?"None":winner)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Winner Score</span><span class='irv'>"+ws+" hours</span></div>"+
+      "<div class='ir'><span class='irk'>Players</span><span class='irv'>"+pc+"</span></div>"+
+      "<div class='ir'><span class='irk'>Start</span><span class='irv'>"+(st>0?fd(st):"N/A")+"</span></div>"+
+      "<div class='ir'><span class='irk'>End</span><span class='irv'>"+(et>0?fd(et):"N/A")+"</span></div>";
+  }catch(e){c.innerHTML="<div style='color:var(--red);font-family:var(--mono);font-size:9px'>"+e.message+"</div>";}
+};
+
+// Token
+window.loadTok=async function(){
+  try{
+    var[sup,minted,rem,arenaA,alocked,minl,maxl,bfee,ofee]=await Promise.all([rR.totalSupply(),rR.totalRewardMinted(),rR.rewardPoolRemaining(),rR.arenaContract(),rR.arenaLocked(),rR.minLockHours(),rR.maxLockHours(),rR.burnFeeBps(),rR.ownerFeeBps()]);
+    S("tok-sup",fz(sup));S("tok-minted",fz(minted),"o");S("tok-left",fz(rem),"g");
+    S("tok-arena",arenaA==="0x0000000000000000000000000000000000000000"?"NOT SET":sa(arenaA),"p");
+    S("tok-alocked",alocked?"YES (permanent)":"NO",alocked?"g":"r");
+    S("tok-minl",Number(minl)+"h");S("tok-maxl",Number(maxl)+"h");
+    S("tok-bfee",Number(bfee)+" bps ("+Number(bfee)/100+"%)");
+    S("tok-ofee",Number(ofee)+" bps ("+Number(ofee)/100+"%)");
+    log("success","Token state loaded.");
+  }catch(e){log("error","loadTok: "+e.message);}
+};
+window.doSetArena=async function(){
+  var a=document.getElementById("f-set-arena").value.trim();if(!a){log("error","Enter address.");return;}
+  if(!confirm("Permanently lock arena to "+a+"?"))return;
+  await tx(rW,"setArenaContract",[a],"Locking arena...","Arena locked permanently.");
+};
+window.doTokLook=async function(){
+  var addr=document.getElementById("f-toklook").value.trim();if(!addr){log("error","Enter address.");return;}
+  var c=document.getElementById("tok-result");
+  try{
+    var[zmb,lck,fre,locks]=await Promise.all([rR.balanceOf(addr),rR.getLockedBalance(addr),rR.getAvailableBalance(addr),rR.getPlayerLocks(addr)]);
+    c.innerHTML="<div class='ir'><span class='irk'>ZMB Balance</span><span class='irv'>"+fz(zmb)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Locked ZMB</span><span class='irv r'>"+fz(lck)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Free ZMB</span><span class='irv g'>"+fz(fre)+"</span></div>"+
+      "<div class='ir'><span class='irk'>Lock Entries</span><span class='irv'>"+(locks?locks.length:0)+"</span></div>";
+  }catch(e){c.innerHTML="<div style='color:var(--red);font-size:9px'>"+e.message+"</div>";}
+};
+
+// Reward config
+window.doLockRange=async function(){var mn=Number(document.getElementById("f-lmin").value),mx=Number(document.getElementById("f-lmax").value);if(!mn||!mx||mn>=mx){log("error","Invalid range.");return;}await tx(rW,"setLockRange",[mn,mx],"Updating range...","Lock range: "+mn+"-"+mx+"h.");};
+window.doTierThresh=async function(){var t1=Number(document.getElementById("f-t1max").value),t2=Number(document.getElementById("f-t2max").value);if(!t1||!t2||t1>=t2){log("error","Invalid.");return;}await tx(rW,"setTierThresholds",[t1,t2],"Updating thresholds...","T1<="+t1+"h T2<="+t2+"h.");};
+window.doT1=async function(){var mn=Number(document.getElementById("f-t1mn").value),mx=Number(document.getElementById("f-t1mx").value);if(!mn||!mx||mn>=mx){log("error","Invalid.");return;}await tx(rW,"setTier1Rewards",[mn,mx],"Setting T1...","T1: "+mn+"-"+mx+" ZMB.");};
+window.doT2=async function(){var mn=Number(document.getElementById("f-t2mn").value),mx=Number(document.getElementById("f-t2mx").value);if(!mn||!mx||mn>=mx){log("error","Invalid.");return;}await tx(rW,"setTier2Rewards",[mn,mx],"Setting T2...","T2: "+mn+"-"+mx+" ZMB.");};
+window.doT3=async function(){var mn=Number(document.getElementById("f-t3mn").value),mx=Number(document.getElementById("f-t3mx").value);if(!mn||!mx||mn>=mx){log("error","Invalid.");return;}await tx(rW,"setTier3Rewards",[mn,mx],"Setting T3...","T3: "+mn+"-"+mx+" ZMB.");};
+window.doFees=async function(){var bf=Number(document.getElementById("f-bfee").value),of=Number(document.getElementById("f-ofee").value);if(isNaN(bf)||isNaN(of)||bf+of>1000){log("error","Invalid or exceeds 10%.");return;}await tx(rW,"setFees",[bf,of],"Setting fees...","Fees updated.");};
+
+// NFTs
+window.loadNFTs=async function(){
+  var c=document.getElementById("nft-list");c.innerHTML="<div class='fh'>Loading...</div>";
+  try{
+    var cnt=Number(await rR.getApprovedNFTCount());
+    if(!cnt){c.innerHTML="<div class='fh'>No approved NFTs.</div>";return;}
+    c.innerHTML="";
+    for(var i=0;i<cnt;i++){
+      var n=await rR.approvedNFTs(i);var r=document.createElement("div");r.className="ir";
+      r.innerHTML="<span class='irk'>"+n[3]+" &middot; "+sa(n[0])+"</span><span class='irv "+(n[2]?"g":"r")+"'>"+(n[2]?"ACTIVE":"INACTIVE")+"</span>";
+      c.appendChild(r);
+    }
+  }catch(e){c.innerHTML="<div style='color:var(--red);font-size:9px'>"+e.message+"</div>";}
+};
+window.doAddNFT=async function(){
+  var addr=document.getElementById("f-naddr").value.trim();
+  var id=document.getElementById("f-nid").value.trim()||"0";
+  var nm=document.getElementById("f-nname").value.trim()||"NFT";
+  if(!addr){log("error","Enter address.");return;}
+  await tx(rW,"addApprovedNFT",[addr,BigInt(id),nm],"Adding NFT...","NFT added: "+nm+".");
+};
+window.doNFT=async function(active){
+  var addr=document.getElementById("f-ntoggle").value.trim();if(!addr){log("error","Enter address.");return;}
+  await tx(rW,"setNFTActive",[addr,active],(active?"Activating":"Deactivating")+"...",addr+" "+(active?"activated":"deactivated")+".");
+};
+
+// Config
+window.doSetRT=async function(){var a=document.getElementById("f-srt").value.trim();if(!a){log("error","Enter address.");return;}if(!confirm("Set reward token to "+a+"? Permanent."))return;await tx(aW,"setRewardToken",[a],"Setting reward token...","Reward token set.");};
+window.doArenaOwn=async function(){var a=document.getElementById("f-aown").value.trim();if(!a)return;if(!confirm("Transfer arena ownership to "+a+"?"))return;await tx(aW,"transferOwnership",[a],"Transferring...","Arena ownership transferred.");};
+window.doTokOwn=async function(){var a=document.getElementById("f-town").value.trim();if(!a)return;if(!confirm("Transfer token ownership to "+a+"?"))return;await tx(rW,"transferOwnership",[a],"Transferring...","Token ownership transferred.");};
+
+// Emergency
+window.doEStop=async function(){if(!confirm("EMERGENCY STOP: ends match as draw and pauses. Continue?"))return;await tx(aW,"emergencyStop",[],"Emergency stopping...","Emergency stop done.");};
+window.doEResume=async function(){await tx(aW,"emergencyResume",[],"Resuming...","Resumed from emergency.");};
+window.doWithdrawNative=async function(){
+  var to=document.getElementById("f-anto").value.trim(),amt=document.getElementById("f-anamt").value;
+  if(!to||!amt){log("error","Fill all fields.");return;}
+  await tx(aW,"emergencyWithdrawNative",[to,ethers.parseEther(amt)],"Withdrawing...","Withdrawn.");
+};
+window.doWithdrawToken=async function(){
+  var ta=document.getElementById("f-ataddr").value.trim(),to=document.getElementById("f-atto").value.trim(),amt=document.getElementById("f-atamt").value;
+  if(!ta||!to||!amt){log("error","Fill all fields.");return;}
+  await tx(aW,"emergencyWithdrawToken",[ta,to,ethers.parseEther(amt)],"Withdrawing...","Token withdrawn.");
+};
+window.doRescue=async function(){
+  var ta=document.getElementById("f-rtaddr").value.trim(),to=document.getElementById("f-rtto").value.trim(),amt=document.getElementById("f-rtamt").value;
+  if(!ta||!to||!amt){log("error","Fill all fields.");return;}
+  await tx(rW,"rescueToken",[ta,to,ethers.parseEther(amt)],"Rescuing...","Rescued.");
+};
+
+// TX helper
+async function tx(contract,method,args,pendMsg,okMsg){
+  if(!sgn){log("error","Connect wallet first.");return;}
+  if(!contract){log("error","Contract not ready.");return;}
+  log("pending",pendMsg);
+  try{
+    var t=await contract[method](...args);
+    log("tx","Tx: <a class='ll' href='"+EXPL+"/tx/"+t.hash+"' target='_blank'>"+t.hash.slice(0,14)+"...</a>");
+    var r=await t.wait();
+    if(r.status===1){log("success",okMsg);setTimeout(refreshAll,2000);}
+    else log("error","Tx reverted.");
+  }catch(e){log("error","Failed: "+(e.reason||e.message||"").slice(0,100));}
+}
+
+// Nav
+window.go=function(id){
+  document.querySelectorAll(".sec").forEach(function(s){s.classList.remove("on");});
+  document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("active");});
+  var s=document.getElementById("s-"+id);var n=document.getElementById("nv-"+id);
+  if(s)s.classList.add("on");if(n)n.classList.add("active");
+  if(id==="token")loadTok();
+};
+
+// Log
+function log(type,msg){
+  var c=document.getElementById("logE"),d=document.createElement("div");d.className="le "+type;
+  var ts=new Date().toLocaleTimeString("en-US",{hour12:false});
+  d.innerHTML="<span class='lts'>"+ts+"</span>"+msg;
+  c.appendChild(d);lc++;if(lc>120){c.removeChild(c.firstChild);lc--;}c.scrollTop=c.scrollHeight;
+}
+window.clrLog=function(){document.getElementById("logE").innerHTML="";lc=0;};
+
+// Helpers
+function S(id,val,cls){var e=document.getElementById(id);if(!e)return;e.textContent=val;if(cls){e.className=e.className.replace(/ [grob]$/,"")+(" "+cls);}}
+function net(ok,msg){var d=document.getElementById("ndot"),l=document.getElementById("nstat");if(d)d.className="ndot"+(ok?" on":"");if(l)l.textContent=msg;}
+function sa(a){return a?a.slice(0,8)+"..."+a.slice(-6):"---";}
+function fz(raw){try{var n=Number(ethers.formatUnits(raw,18));return n>=1000000?(n/1000000).toFixed(2)+"M":n>=1000?(n/1000).toFixed(2)+"k":n.toFixed(2);}catch(e){return"0";}}
+function ft(s){s=Number(s);if(s<=0)return"ENDED";var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;return h>0?h+"h "+pad(m)+"m":pad(m)+":"+pad(sec);}
+function fd(ts){return new Date(ts*1000).toLocaleString();}
+function pad(n){return n<10?"0"+n:""+n;}
+window.cp=function(t){navigator.clipboard.writeText(t).then(function(){log("success","Copied.");});};
+
+})();
 </script>
-</body></html>
+</body>
+</html>
