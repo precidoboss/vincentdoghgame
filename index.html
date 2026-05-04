@@ -1885,11 +1885,11 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
         <div id="wiCartItems" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.6rem"></div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <select id="wi-facilityLevel" class="inp" style="flex:1;min-width:160px;font-size:var(--fs-xs)" onchange="wiOnFacilityChange()">
-            <option value="8.87" data-lv="1">Lv1 (2×2 · 4 slots · 400W) — 8.87 hCASH/kWh</option>
-            <option value="7.09" data-lv="2">Lv2 (2×3 · 6 slots · 1,000W) — 7.09 hCASH/kWh</option>
-            <option value="6.21" data-lv="3" selected>Lv3 (3×3 · 9 slots · 2,000W) — 6.21 hCASH/kWh</option>
-            <option value="7.09" data-lv="4">Lv4 (3×4 · 12 slots · 6,000W) — 7.09 hCASH/kWh</option>
-            <option value="3.55" data-lv="5">Lv5 (4×4 · 16 slots · 15,000W) — 3.55 hCASH/kWh ⚡ best</option>
+            <option value="" data-lv="1">Lv1 — loading...</option>
+            <option value="" data-lv="2">Lv2 — loading...</option>
+            <option value="" data-lv="3" selected>Lv3 — loading...</option>
+            <option value="" data-lv="4">Lv4 — loading...</option>
+            <option value="" data-lv="5">Lv5 — loading...</option>
           </select>
           <button class="btn btn-sm" onclick="wiRunWithCart()">⚡ Run Simulation →</button>
         </div>
@@ -2131,11 +2131,11 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
             <span id="bd-rateSourceBadge" style="margin-left:6px;font-size:var(--fs-xs);color:var(--mut)"></span>
           </div>
           <select id="bd-facilityLevel" class="inp" style="flex:1;min-width:160px;font-size:var(--fs-xs)" onchange="bdOnFacilityChange()">
-            <option value="8.87" data-lv="1">Lv1 (2×2 · 4 slots · 400W) — 8.87 hCASH/kWh</option>
-            <option value="7.09" data-lv="2">Lv2 (2×3 · 6 slots · 1,000W) — 7.09 hCASH/kWh</option>
-            <option value="6.21" data-lv="3" selected>Lv3 (3×3 · 9 slots · 2,000W) — 6.21 hCASH/kWh</option>
-            <option value="7.09" data-lv="4">Lv4 (3×4 · 12 slots · 6,000W) — 7.09 hCASH/kWh</option>
-            <option value="3.55" data-lv="5">Lv5 (4×4 · 16 slots · 15,000W) — 3.55 hCASH/kWh ⚡ best</option>
+            <option value="" data-lv="1">Lv1 — loading...</option>
+            <option value="" data-lv="2">Lv2 — loading...</option>
+            <option value="" data-lv="3" selected>Lv3 — loading...</option>
+            <option value="" data-lv="4">Lv4 — loading...</option>
+            <option value="" data-lv="5">Lv5 — loading...</option>
           </select>
           <div id="bd-rateNote" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px"></div>
         </div>
@@ -6691,17 +6691,9 @@ let _wiSelectedMiner = null;
 let _wiLockDaysVal = 180;
 let _wiChart = null;
 
-// ── Facility rates fetched from API (keyed by level 1-5) ──
-// Real facility data from hashcash.club — fetched live, these are fallback defaults
-let _wiFacilityRates = { 1: 8.87, 2: 7.09, 3: 6.21, 4: 7.09, 5: 3.55 };
-// Slots and power cap per facility level (fetched live, fallback below)
-let _wiFacilityData = {
-  1: { slots: 4,  watts: 400,   rate: 8.87, dims: '2×2', upgradeCost: 500,   upgradeTo: 2 },
-  2: { slots: 6,  watts: 1000,  rate: 7.09, dims: '2×3', upgradeCost: 2500,  upgradeTo: 3 },
-  3: { slots: 9,  watts: 2000,  rate: 6.21, dims: '3×3', upgradeCost: 7500,  upgradeTo: 4 },
-  4: { slots: 12, watts: 6000,  rate: 7.09, dims: '3×4', upgradeCost: 15000, upgradeTo: 5 },
-  5: { slots: 16, watts: 15000, rate: 3.55, dims: '4×4', upgradeCost: null,  upgradeTo: null },
-};
+// ── Facility rates keyed by level 1-5 — populated entirely from on-chain ──
+let _wiFacilityRates = {};
+let _wiFacilityData  = { 1:{}, 2:{}, 3:{}, 4:{}, 5:{} };
 let _wiFacilityRatesLoaded = false;
 // Historical min/max per facility level from FacilityElectricityCostChanged events
 // Used to compute trend band: Normal / Medium / High / Surge
@@ -6809,15 +6801,19 @@ async function wiFetchFacilityRatesOnChain() {
 
       // powerOutput stored as watts/100 (verified: 4→400W, 10→1000W, 20→2000W, 60→6000W)
       const watts   = Number(fac[1]) * 100;
-      // electricityCost stored as standard 18-decimal fixed-point (same as ERC-20 amounts)
-      // e.g. 100000000000000 raw = 0.0001 hCASH/kWh  →  use ethers.formatEther
-      const elecRaw = fac[6];  // keep as BigInt-compatible for formatEther
-      const rate    = elecRaw > 0n ? parseFloat(ethers.formatEther(elecRaw)) : 0;
+      // electricityCost stored as hCASH per power-unit (100W) per block, scaled by 1e18.
+      // Display conversion to hCASH/kWh:
+      //   = formatEther(raw) × (1000W/kW ÷ 100W/unit) × blocks_per_hour
+      //   = formatEther(raw) × 10 × 3336
+      // Verified against live display: Lv1 0.00025→8.34, Lv5 0.0001→3.34 ✓
+      const BLOCKS_PER_HOUR = 3336; // Grotto L1: ~80,064 blocks/day ÷ 24
+      const elecRaw = fac[6];  // BigInt
+      const rate    = elecRaw > 0n ? parseFloat(ethers.formatEther(elecRaw)) * 10 * BLOCKS_PER_HOUR : 0;
 
       console.log(`[Chain] facilities(${i}) → Lv${lv}: ${maxMiners} slots, ${watts}W, ${rate.toFixed(4)} hCASH/kWh ✓`);
 
       if (rate > 0 && rate < 1000) {
-        _wiFacilityRates[lv] = parseFloat(rate.toFixed(6));
+        _wiFacilityRates[lv] = parseFloat(rate.toFixed(4));
         _wiFacilityRatesLoaded = true;
         found = true;
       }
@@ -6891,7 +6887,7 @@ async function wiFetchFacilityRateTrend() {
           const facIdx = Number(BigInt(log.topics[1]));
           if (facIdx < 1 || facIdx > 5) continue;
           const newCostRaw = BigInt(log.data);
-          const rate = parseFloat(ethers.formatEther(newCostRaw));
+          const rate = parseFloat(ethers.formatEther(newCostRaw)) * 10 * 3336;
           if (rate <= 0 || rate >= 1000) continue;
           const h = _wiFacilityRateHistory[facIdx];
           if (h.min === null || rate < h.min) h.min = rate;
@@ -7664,7 +7660,7 @@ function wiCalc() {
 
   // Facility electricity rate — read from select, which is kept in sync by wiFacilityRatesUpdateUI
   const selEl   = document.getElementById('wi-facilityLevel');
-  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
+  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 0 : 0;
 
   // Convert miner price to USD
   // When miners come from the cart (_wiCart), ALL prices are already in _wiSlots — use those directly.
@@ -8565,7 +8561,7 @@ function bdCalc() {
   const avaxUsd   = priceData?.avaxPrice || 0;
 
   const selEl    = document.getElementById('bd-facilityLevel');
-  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 5.77 : 5.77;
+  const elecRate = selEl ? parseFloat(selEl.options[selEl.selectedIndex]?.value) || 0 : 0;
 
   let minerUsd = 0;
   if (_bdSlots.length > 0) {
