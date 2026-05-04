@@ -2133,22 +2133,21 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
       <!-- Add miner search -->
       <div style="background:rgba(229,62,62,.04);border:1px dashed rgba(229,62,62,.22);border-radius:8px;padding:.75rem">
         <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">➕ Add Miner to Slot</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <div style="position:relative;flex:2;min-width:180px">
-            <input id="bd-slotMinerSearch" type="text" class="inp" placeholder="🔍 Search miners by name…"
-              oninput="bdSlotFilterMiners(this.value)"
-              onfocus="bdSlotFilterMiners(this.value);document.getElementById('bd-slotDropdown').style.display='block'"
-              autocomplete="off" style="width:100%;font-size:var(--fs-sm)">
-            <div id="bd-slotDropdown" style="display:none;position:absolute;z-index:500;left:0;right:0;max-height:320px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:10px;box-shadow:0 -8px 32px rgba(0,0,0,.6);bottom:calc(100% + 3px)">
-              <div id="bd-slotDropdownList"></div>
-            </div>
-          </div>
+        <!-- Search + controls row -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px">
+          <input id="bd-slotMinerSearch" type="text" class="inp" placeholder="🔍 Search miners by name…"
+            oninput="bdSlotFilterMiners(this.value)"
+            autocomplete="off" style="flex:2;min-width:180px;font-size:var(--fs-sm)">
           <select id="bd-slotSource" class="inp" style="width:100px;font-size:var(--fs-xs);flex-shrink:0">
             <option value="own">I own it</option>
             <option value="buy">Will buy</option>
           </select>
           <input id="bd-slotMinerPrice" type="number" class="inp" placeholder="Price (hCASH)" style="width:130px;font-size:var(--fs-xs);flex-shrink:0" oninput="bdCalc()">
           <button class="btn btn-sm" onclick="bdAddSlotMiner()" style="white-space:nowrap;flex-shrink:0;padding:.4rem 1.1rem">+ Add</button>
+        </div>
+        <!-- Inline miner list — always visible, no dropdown -->
+        <div id="bd-slotMinerList" style="border:1px solid var(--bor);border-radius:8px;overflow:hidden;max-height:280px;overflow-y:auto;background:var(--card)">
+          <div id="bd-slotDropdownList"></div>
         </div>
       </div>
 
@@ -8462,7 +8461,7 @@ function bdAddSlotMiner() {
   _bdSlots.push({ miner: _bdSlotSelectedMiner, source, price, watts });
   const inp = document.getElementById('bd-slotMinerSearch');
   if (inp) inp.value = '';
-  document.getElementById('bd-slotDropdown').style.display = 'none';
+  bdSlotFilterMiners(''); // repopulate inline list after add
   _bdSlotSelectedMiner = null;
   document.getElementById('bd-slotMinerPrice').value = '';
   bdRenderSlotTable();
@@ -8471,8 +8470,7 @@ function bdAddSlotMiner() {
 
 function bdSlotFilterMiners(q) {
   const list = document.getElementById('bd-slotDropdownList');
-  const dd   = document.getElementById('bd-slotDropdown');
-  if (!list || !dd) return;
+  if (!list) return;
 
   const filtered = q
     ? _wiMiners.filter(m => m.name?.toLowerCase().includes(q.toLowerCase()))
@@ -8480,17 +8478,16 @@ function bdSlotFilterMiners(q) {
 
   if (!filtered.length) {
     list.innerHTML = `<div style="padding:14px 16px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);text-align:center">No miners found</div>`;
-    dd.style.display = 'block';
     return;
   }
 
   list.innerHTML = filtered.map(m => {
-    const idx  = _wiMiners.indexOf(m);
-    const s    = m.minerStats || {};
-    const mhs  = s.hashrateMhps ?? s.hashrateRaw ?? 0;
+    const idx   = _wiMiners.indexOf(m);
+    const s     = m.minerStats || {};
+    const mhs   = s.hashrateMhps ?? s.hashrateRaw ?? 0;
     const watts = s.powerWatts ?? s.powerUnits ?? 0;
-    const eff  = (mhs && watts) ? (mhs / watts * 1000).toFixed(2) : null;
-    const img  = m.imageUrl
+    const eff   = (mhs && watts) ? (mhs / watts * 1000).toFixed(2) : null;
+    const img   = m.imageUrl
       ? `<img src="${m.imageUrl}" style="width:44px;height:44px;object-fit:cover;border-radius:7px;flex-shrink:0;border:1px solid var(--bor)" onerror="this.outerHTML='<div style=\\'width:44px;height:44px;border-radius:7px;background:rgba(229,62,62,.1);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0\\'>⛏</div>'" alt="">`
       : `<div style="width:44px;height:44px;border-radius:7px;background:rgba(229,62,62,.1);border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">⛏</div>`;
     return `
@@ -8500,27 +8497,22 @@ function bdSlotFilterMiners(q) {
         ${img}
         <div style="flex:1;min-width:0">
           <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.9rem;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;align-items:center">
             <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--red)">${mhs} MH/s</span>
             <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mut)">·</span>
             <span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mut)">${watts}W</span>
             ${eff ? `<span style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--grn)">${eff} MH/W</span>` : ''}
+            ${m.category === 'miner_nft' ? '<span style="font-family:\'Share Tech Mono\',monospace;font-size:8px;color:var(--gold);border:1px solid rgba(212,168,67,.3);border-radius:4px;padding:0 4px">NFT</span>' : ''}
           </div>
-        </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mut);flex-shrink:0;text-align:right">
-          ${m.category === 'miner_nft' ? '<span style="color:var(--gold)">NFT</span>' : ''}
         </div>
       </div>`;
   }).join('');
-
-  dd.style.display = 'block';
 }
 
 function bdSlotSelectMiner(idx) {
   _bdSlotSelectedMiner = _wiMiners[idx];
   const inp = document.getElementById('bd-slotMinerSearch');
   if (inp) inp.value = _bdSlotSelectedMiner.name;
-  document.getElementById('bd-slotDropdown').style.display = 'none';
   const s = _bdSlotSelectedMiner.minerStats || {};
   const price = s.priceHcash || s.price || '';
   const priceEl = document.getElementById('bd-slotMinerPrice');
@@ -8812,8 +8804,7 @@ function bdClearAll() {
   if (slotSearch) slotSearch.value = '';
   if (slotPrice)  slotPrice.value  = '';
   if (slotSource) slotSource.value = 'buy';
-  const slotDd = document.getElementById('bd-slotDropdown');
-  if (slotDd) slotDd.style.display = 'none';
+  bdSlotFilterMiners(''); // repopulate after clear
   // Reset price input
   const priceEl = document.getElementById('bd-price');
   if (priceEl) priceEl.value = '';
@@ -8958,9 +8949,7 @@ document.addEventListener('click', function(e) {
   const dd = document.getElementById('bd-minerDropdown');
   const search = document.getElementById('bd-minerSearch');
   if (dd && search && !dd.contains(e.target) && e.target !== search) dd.style.display = 'none';
-  const dd2 = document.getElementById('bd-slotDropdown');
-  const inp2 = document.getElementById('bd-slotMinerSearch');
-  if (dd2 && inp2 && !dd2.contains(e.target) && e.target !== inp2) dd2.style.display = 'none';
+
 });
 
 </script>
