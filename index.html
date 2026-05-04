@@ -6787,7 +6787,7 @@ async function wiFetchFacilityRatesOnChain() {
     // ── 2. Facility slots: index 0 = starter (skip), index 1-N = Lv1-LvN ──
     const facCount = Number(facilityCountRaw) || 6;
     const facCalls = [];
-    for (let i = 0; i < facCount; i++) facCalls.push(game.facilities(i).catch(() => null));
+    for (let i = 0; i <= facCount; i++) facCalls.push(game.facilities(i).catch(() => null));
     const facResults = await Promise.all(facCalls);
 
     let found = false;
@@ -6817,7 +6817,7 @@ async function wiFetchFacilityRatesOnChain() {
       console.log(`[Chain] facilities(${i}) → Lv${lv}: ${maxMiners} slots, ${watts}W, ${rate.toFixed(4)} hCASH/kWh ✓`);
 
       if (rate > 0 && rate < 1000) {
-        _wiFacilityRates[lv] = parseFloat(rate.toFixed(2));
+        _wiFacilityRates[lv] = parseFloat(rate.toFixed(6));
         _wiFacilityRatesLoaded = true;
         found = true;
       }
@@ -6856,25 +6856,17 @@ async function wiFetchFacilityRateTrend() {
   // FacilityElectricityCostChanged(uint256 indexed facilityIndex, uint256 newCost)
   const EVENT_SIG = ethers.id('FacilityElectricityCostChanged(uint256,uint256)');
   const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+  const MAX_CHUNK = 2048;
+  // ~85,000 blocks/day on Grotto L1 → 30 days ≈ 2,550,000 blocks; cap at feasible depth
+  const HISTORY_BLOCKS = 200000; // ~2.3 days — enough for trend without hundreds of calls
+  // For deeper history use up to 100 chunks (~200k blocks)
+  const MAX_CHUNKS = 100;
 
   try {
-    // Read last ~500k blocks (about 60+ days) for history
     const latest = await prov.getBlockNumber();
-    const fromBlock = Math.max(0, latest - 500000);
+    const oldest = Math.max(0, latest - HISTORY_BLOCKS);
 
-    const logs = await prov.getLogs({
-      address: MAIN_CONTRACT,
-      topics: [EVENT_SIG],
-      fromBlock,
-      toBlock: 'latest',
-    });
-
-    if (!logs.length) {
-      console.log('[Trend] No FacilityElectricityCostChanged events found in range');
-      return;
-    }
-
-    // Also seed current live rates into history
+    // Seed current live rates as baseline min/max
     for (let lv = 1; lv <= 5; lv++) {
       const cur = _wiFacilityRates[lv];
       if (cur > 0) {
@@ -6883,22 +6875,43 @@ async function wiFetchFacilityRateTrend() {
       }
     }
 
-    for (const log of logs) {
-      // facilityIndex is indexed topic[1], newCost is data
-      const facIdx = Number(BigInt(log.topics[1]));
-      if (facIdx < 1 || facIdx > 5) continue;
-      const newCostRaw = BigInt(log.data);
-      const rate = parseFloat(ethers.formatEther(newCostRaw));
-      if (rate <= 0 || rate >= 1000) continue;
-      const h = _wiFacilityRateHistory[facIdx];
-      if (h.min === null || rate < h.min) h.min = rate;
-      if (h.max === null || rate > h.max) h.max = rate;
+    let found = false;
+    let chunksDone = 0;
+    // Walk backwards from latest in 2048-block chunks
+    for (let toBlock = latest; toBlock > oldest && chunksDone < MAX_CHUNKS; toBlock -= MAX_CHUNK) {
+      const fromBlock = Math.max(oldest, toBlock - MAX_CHUNK + 1);
+      try {
+        const logs = await prov.getLogs({
+          address: MAIN_CONTRACT,
+          topics: [EVENT_SIG],
+          fromBlock,
+          toBlock,
+        });
+        for (const log of logs) {
+          const facIdx = Number(BigInt(log.topics[1]));
+          if (facIdx < 1 || facIdx > 5) continue;
+          const newCostRaw = BigInt(log.data);
+          const rate = parseFloat(ethers.formatEther(newCostRaw));
+          if (rate <= 0 || rate >= 1000) continue;
+          const h = _wiFacilityRateHistory[facIdx];
+          if (h.min === null || rate < h.min) h.min = rate;
+          if (h.max === null || rate > h.max) h.max = rate;
+          found = true;
+        }
+      } catch(chunkErr) {
+        console.warn(`[Trend] chunk ${fromBlock}-${toBlock} failed:`, chunkErr.message);
+      }
+      chunksDone++;
     }
 
-    console.log('[Trend] ✅ Rate history:', JSON.stringify(_wiFacilityRateHistory));
+    if (found) {
+      console.log('[Trend] ✅ Rate history:', JSON.stringify(_wiFacilityRateHistory));
+    } else {
+      console.log('[Trend] No FacilityElectricityCostChanged events found — trend unavailable');
+    }
     wiFacilityRatesUpdateUI();
   } catch(e) {
-    console.warn('[Trend] getLogs failed:', e.message);
+    console.warn('[Trend] trend fetch failed:', e.message);
   }
 }
 
