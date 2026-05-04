@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#0a0a0f">
 <title>hCASH Moat — Liquidity Intelligence</title>
 <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/precidoboss/HCASHMOAT/main/HCASH%20MOAT%20APP%20LOGO.png">
-<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/precidoboss/HCASHMOAT/main/HCASH%20MOAT%20APP%20LOGO.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=DM+Mono:wght@300;400;500&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -248,7 +247,7 @@ html.light header { box-shadow: 0 1px 0 var(--bor); }
   color: var(--txt); flex-shrink: 0; text-decoration: none;
 }
 .logo-img {
-  width: 34px; height: 34px; border-radius: 8px; object-fit: cover;
+  width: 34px; height: 34px; border-radius: 8px; object-fit: contain;
   flex-shrink: 0; border: 1px solid var(--bor);
   transition: border-color var(--mid); animation: none;
 }
@@ -909,6 +908,37 @@ html.light .banner { background: linear-gradient(135deg, rgba(204,32,32,.05), rg
 }
 .lp-hero::before { content: '💧'; position: absolute; right: 1rem; top: .8rem; font-size: 4rem; opacity: .05; pointer-events: none; }
 
+/* ── FACILITY BUTTON ── */
+#bd-facilityBtn:hover {
+  border-color: rgba(229,62,62,.4);
+  background: rgba(229,62,62,.06);
+}
+
+/* ── FACILITY MODAL ITEM ── */
+.fac-modal-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: .9rem 1rem;
+  background: var(--sur); border: 1.5px solid var(--bor);
+  border-radius: 12px; cursor: pointer;
+  transition: all var(--mid);
+}
+.fac-modal-item:hover, .fac-modal-item.active {
+  border-color: rgba(229,62,62,.45);
+  background: rgba(229,62,62,.06);
+}
+.fac-modal-item.active { border-color: var(--acc); box-shadow: var(--glow-red); }
+
+/* ── ADD MINER MODAL ITEM ── */
+.miner-modal-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: .75rem .9rem;
+  background: var(--card); border: 1px solid var(--bor);
+  border-radius: 10px; cursor: pointer;
+  transition: all var(--fast);
+}
+.miner-modal-item:hover { border-color: rgba(229,62,62,.35); background: rgba(229,62,62,.04); }
+.miner-modal-item.selected { border-color: var(--acc); background: rgba(229,62,62,.07); }
+
 /* ── MOBILE RESPONSIVE ── */
 @media(max-width: 640px) {
   :root {
@@ -1039,7 +1069,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
     <img class="logo-img"
       src="https://raw.githubusercontent.com/precidoboss/HCASHMOAT/main/HCASH%20MOAT%20APP%20LOGO.png"
       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
-      alt="hCASH Moat">
+      alt="hCASH">
     <span style="width:38px;height:38px;border-radius:8px;background:var(--red);display:none;align-items:center;justify-content:center;font-size:1.55rem;flex-shrink:0">💧</span>
     <span>
       h<em>CASH</em> MOAT
@@ -2086,125 +2116,135 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
 
   <!-- Page header -->
   <div class="sh">
-    <div class="sh-t">🔨 Build — Facility Simulator</div>
+    <div class="sh-t">🔨 Manual Build — Custom Facility Simulator</div>
     <span class="live"><span class="ld"></span>Live Prices</span>
   </div>
 
-  <!-- ── Facility picker modal ── -->
-  <div id="bd-facilityModal" onclick="if(event.target===this)bdCloseFacilityModal()" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem">
-    <div style="background:var(--card);border:1px solid var(--bor2);border-radius:18px;width:100%;max-width:460px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,.8)">
-      <div style="padding:1rem 1.2rem .85rem;border-bottom:1px solid var(--bor);display:flex;align-items:center;justify-content:space-between;gap:8px">
-        <div>
-          <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.15rem;color:var(--txt)">Choose Facility Level</div>
-          <div id="bd-modalRateNote" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--mut);margin-top:2px"></div>
+  <!-- Explainer banner -->
+  <div class="banner" style="margin-bottom:1rem">
+    <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="font-size:1.8rem;flex-shrink:0">🔨</div>
+      <div style="flex:1;min-width:220px">
+        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-lg);margin-bottom:4px">Build Your Own Facility — Manual Entry</div>
+        <div style="font-size:var(--fs-sm);color:var(--dim);line-height:1.65">
+          Add any miner by name and price yourself. Build a full facility load-out, set your facility level, and compare your custom build against LP staking.
         </div>
-        <button onclick="bdCloseFacilityModal()" style="background:rgba(255,255,255,.07);border:1px solid var(--bor);border-radius:8px;color:var(--mut);cursor:pointer;padding:4px 10px;font-size:.95rem;line-height:1.4;flex-shrink:0">✕</button>
       </div>
-      <div id="bd-facilityCards" style="padding:.75rem;display:flex;flex-direction:column;gap:.5rem;max-height:72vh;overflow-y:auto"></div>
     </div>
   </div>
 
-  <!-- Hidden select — kept for JS compatibility -->
-  <select id="bd-facilityLevel" style="display:none" onchange="bdOnFacilityChange()">
-    <option value="" data-lv="1">Lv1</option>
-    <option value="" data-lv="2">Lv2</option>
-    <option value="" data-lv="3" selected>Lv3</option>
-    <option value="" data-lv="4">Lv4</option>
-    <option value="" data-lv="5">Lv5</option>
-  </select>
-  <div id="bd-rateNote" style="display:none"></div>
+  <!-- ── STEP 1: Manual miner input ── -->
+  <div style="margin-bottom:1rem">
 
-  <!-- ── SLOT BUILDER CARD ── -->
-  <div class="card" style="margin-bottom:1rem">
-    <div class="ch" style="flex-wrap:wrap;gap:8px">
-      <div class="ctitle" style="color:var(--red)">⛏ Slot Builder</div>
-      <!-- Facility pill -->
-      <button id="bd-facilityPill" onclick="bdOpenFacilityModal()" style="display:flex;align-items:center;gap:8px;background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.28);border-radius:20px;padding:.28rem .9rem .28rem .6rem;cursor:pointer;transition:all .18s;margin-left:auto" onmouseover="this.style.background='rgba(229,62,62,.16)'" onmouseout="this.style.background='rgba(229,62,62,.08)'">
-        <span id="bd-facilityPillIcon" style="font-size:1rem">🏭</span>
-        <div style="text-align:left">
-          <div id="bd-facilityPillLabel" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:.85rem;color:var(--txt);white-space:nowrap">Lv3 — loading…</div>
-          <div style="font-family:'Share Tech Mono',monospace;font-size:8.5px;color:var(--mut)">tap to change ▾</div>
+    <!-- Manual Build card — always open on Build page -->
+    <div class="card" style="margin-bottom:.85rem">
+      <div class="ch">
+        <div class="ctitle" style="color:var(--red)">⛏ Manual Build — Custom Miner + Price</div>
+      </div>
+      <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
+
+        <!-- Hidden price inputs for backward compat — price is set per-slot -->
+        <input id="bd-price" type="hidden" value="0">
+        <input id="bd-priceCurrency" type="hidden" value="hcash">
+        <div id="bd-priceUsdDisplay" style="display:none">≈ $— USD</div>
+
+        <!-- Facility level — modal picker -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">
+            Facility Level
+            <span id="bd-rateSourceBadge" style="margin-left:6px;font-size:var(--fs-xs);color:var(--mut)"></span>
+          </div>
+          <!-- Hidden actual select for logic compatibility -->
+          <select id="bd-facilityLevel" style="display:none" onchange="bdOnFacilityChange()">
+            <option value="" data-lv="1">Lv1 — loading...</option>
+            <option value="" data-lv="2">Lv2 — loading...</option>
+            <option value="" data-lv="3" selected>Lv3 — loading...</option>
+            <option value="" data-lv="4">Lv4 — loading...</option>
+            <option value="" data-lv="5">Lv5 — loading...</option>
+          </select>
+          <!-- Visual button that opens modal -->
+          <button id="bd-facilityBtn" onclick="bdOpenFacilityModal()"
+            style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--sur);border:1px solid var(--bor);border-radius:var(--r-md);padding:.6rem .85rem;cursor:pointer;transition:all var(--mid);text-align:left">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span id="bd-facilityIcon" style="font-size:1.4rem">🏭</span>
+              <div>
+                <div id="bd-facilityLabel" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-md);color:var(--txt)">Level 3</div>
+                <div id="bd-facilitySubLabel" style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut)">Loading facility data…</div>
+              </div>
+            </div>
+            <span style="color:var(--acc);font-size:1.1rem;flex-shrink:0">›</span>
+          </button>
+          <div id="bd-rateNote" style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-top:4px"></div>
         </div>
-      </button>
-      <span id="bd-rateSourceBadge" style="font-size:var(--fs-xs);color:var(--mut);align-self:center"></span>
-    </div>
-    <div class="cbody" style="display:flex;flex-direction:column;gap:.85rem">
 
-      <!-- Add miner search -->
-      <div style="background:rgba(229,62,62,.04);border:1px dashed rgba(229,62,62,.22);border-radius:8px;padding:.75rem">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:8px;text-transform:uppercase;letter-spacing:.08em">➕ Add Miner to Slot</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <div style="position:relative;flex:2;min-width:180px">
-            <input id="bd-slotMinerSearch" type="text" class="inp" placeholder="🔍 Search miners by name…"
-              oninput="bdSlotFilterMiners(this.value)"
-              onfocus="bdSlotFilterMiners(this.value);document.getElementById('bd-slotDropdown').style.display='block'"
-              autocomplete="off" style="width:100%;font-size:var(--fs-sm)">
-            <div id="bd-slotDropdown" style="display:none;position:absolute;z-index:500;left:0;right:0;max-height:260px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.5);top:calc(100% + 3px)">
-              <div id="bd-slotDropdownList"></div>
+        <!-- Add miner to slot — triggers full-screen modal -->
+        <button onclick="bdOpenAddMinerModal()"
+          style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:rgba(229,62,62,.05);border:1.5px dashed rgba(229,62,62,.3);border-radius:10px;padding:.75rem 1rem;cursor:pointer;transition:all var(--mid);text-align:left">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-size:1.4rem">⛏</span>
+            <div>
+              <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-md);color:var(--txt)">Add Miner to Slot</div>
+              <div id="bd-addMinerHint" style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut)">Tap to browse and add miners</div>
             </div>
           </div>
-          <select id="bd-slotSource" class="inp" style="width:100px;font-size:var(--fs-xs);flex-shrink:0">
-            <option value="own">I own it</option>
-            <option value="buy">Will buy</option>
-          </select>
-          <input id="bd-slotMinerPrice" type="number" class="inp" placeholder="Price (hCASH)" style="width:130px;font-size:var(--fs-xs);flex-shrink:0" oninput="bdCalc()">
-          <button class="btn btn-sm" onclick="bdAddSlotMiner()" style="white-space:nowrap;flex-shrink:0;padding:.4rem 1.1rem">+ Add</button>
-        </div>
-      </div>
+          <span style="color:var(--acc);font-size:1.3rem;flex-shrink:0">+</span>
+        </button>
 
-      <!-- Slot table -->
-      <div id="bd-slotTableWrap" style="display:none">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
-          <span>FACILITY SLOTS</span>
-          <div style="display:flex;align-items:center;gap:6px">
-            <span id="bd-slotSummary" style="color:var(--grn)"></span>
-            <button onclick="bdClearAll()" style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 8px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);border-radius:4px;color:var(--red);cursor:pointer;white-space:nowrap">✕ Clear All</button>
+        <!-- Override hashrate -->
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:5px;text-transform:uppercase;letter-spacing:.08em">Override Hashrate (MH/s) — optional</div>
+          <input id="bd-customMhs" type="number" class="inp" placeholder="Leave blank to use API value" min="0" oninput="bdCalc()">
+        </div>
+
+        <!-- Slot grid — shown inline below the button -->
+        <div id="bd-slotTableWrap" style="display:none">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
+            <span style="letter-spacing:.08em">FACILITY SLOTS</span>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span id="bd-slotSummary" style="color:var(--grn)"></span>
+              <button onclick="bdClearAll()" style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:2px 7px;background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);border-radius:4px;color:var(--red);cursor:pointer;white-space:nowrap">✕ Clear All</button>
+            </div>
           </div>
+          <div style="background:var(--bor);border-radius:4px;height:4px;overflow:hidden;margin-bottom:8px">
+            <div id="bd-slotPowerBar" style="height:100%;background:linear-gradient(90deg,var(--grn),var(--gold));border-radius:4px;width:0%;transition:width .5s var(--ease)"></div>
+          </div>
+          <div id="bd-slotGrid" style="display:grid;gap:7px;min-width:0"></div>
         </div>
-        <div style="background:var(--bor);border-radius:4px;height:5px;overflow:hidden;margin-bottom:8px">
-          <div id="bd-slotPowerBar" style="height:100%;background:linear-gradient(90deg,var(--grn),var(--gold));border-radius:4px;width:0%;transition:width .4s"></div>
-        </div>
-        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-          <div id="bd-slotGrid" style="display:grid;gap:5px"></div>
-        </div>
-      </div>
 
-      <!-- Override MH/s + run -->
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <input id="bd-customMhs" type="number" class="inp" placeholder="Override MH/s (optional)" min="0" oninput="bdCalc()" style="flex:1;min-width:160px">
-        <button class="btn" onclick="bdCalc()" style="white-space:nowrap;padding:.45rem 1.2rem;flex-shrink:0">⚡ Run Comparison →</button>
+        <button class="btn btn-sm" style="align-self:flex-start" onclick="bdCalc()">⚡ Run Comparison →</button>
+
       </div>
     </div>
-  </div>
 
-  <!-- Path B: LP setup -->
-  <div class="card" style="margin-bottom:1rem">
-    <div class="ch">
-      <div class="ctitle" style="color:var(--gold)">💧 Path B — Stake the Same $ into LP</div>
-    </div>
-    <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
-      <div style="background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:8px;padding:.75rem;font-size:var(--fs-sm);color:var(--dim);line-height:1.65">
-        We take the <strong style="color:var(--gold)">same total USD value</strong> you're spending on miners and split it 50% AVAX + 50% hCASH,
-        add it to the Pharaoh LP pool, then stake those LP tokens in the hCASH Moat.
+    <!-- Path B: LP setup -->
+    <div class="card">
+      <div class="ch">
+        <div class="ctitle" style="color:var(--gold)">💧 Path B — Stake the Same $ into LP</div>
       </div>
-      <div id="bd-lpCalcBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Auto-Calculated Split</div>
-        <div class="calc-row"><span class="calc-lbl">Total budget (USD)</span><span class="calc-val cw" id="bd-lpTotalUsd">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">AVAX side (50%)</span><span class="calc-val" id="bd-lpAvaxAmt">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">hCASH side (50%)</span><span class="calc-val cg" id="bd-lpHcashAmt">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">Est. LP tokens</span><span class="calc-val cd" id="bd-lpTokens">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">Pool share</span><span class="calc-val" id="bd-lpPoolShare">—</span></div>
-      </div>
-      <div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Lock Duration (Moat multiplier)</div>
-        <div class="dur-grid" id="bd-lockGrid" style="grid-template-columns:repeat(4,1fr)"></div>
-        <input type="hidden" id="bd-lockDays" value="180">
-      </div>
-      <div id="bd-lpStakeBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">LP Moat Projections</div>
-        <div class="calc-row"><span class="calc-lbl">Lock multiplier</span><span class="calc-val cg" id="bd-lpMult">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">Moat points (total held)</span><span class="calc-val cr" id="bd-lpPoints">—</span></div>
-        <div class="calc-row"><span class="calc-lbl">Swap fees/day (est.)</span><span class="calc-val cg" id="bd-lpFees">—</span></div>
+      <div class="cbody" style="display:flex;flex-direction:column;gap:.75rem">
+        <div style="background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:8px;padding:.75rem;font-size:var(--fs-sm);color:var(--dim);line-height:1.65">
+          We take the <strong style="color:var(--gold)">same total USD value</strong> you're spending on the miner and split it 50% AVAX + 50% hCASH,
+          add it to the Pharaoh LP pool, then stake those LP tokens in the hCASH Moat.
+        </div>
+        <div id="bd-lpCalcBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Auto-Calculated Split</div>
+          <div class="calc-row"><span class="calc-lbl">Total budget (USD)</span><span class="calc-val cw" id="bd-lpTotalUsd">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">AVAX side (50%)</span><span class="calc-val" id="bd-lpAvaxAmt">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">hCASH side (50%)</span><span class="calc-val cg" id="bd-lpHcashAmt">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Est. LP tokens</span><span class="calc-val cd" id="bd-lpTokens">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Pool share</span><span class="calc-val" id="bd-lpPoolShare">—</span></div>
+        </div>
+        <div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">Lock Duration (Moat multiplier)</div>
+          <div class="dur-grid" id="bd-lockGrid" style="grid-template-columns:repeat(4,1fr)"></div>
+          <input type="hidden" id="bd-lockDays" value="180">
+        </div>
+        <div id="bd-lpStakeBox" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;padding:.65rem">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em">LP Moat Projections</div>
+          <div class="calc-row"><span class="calc-lbl">Lock multiplier</span><span class="calc-val cg" id="bd-lpMult">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Moat points (total held)</span><span class="calc-val cr" id="bd-lpPoints">—</span></div>
+          <div class="calc-row"><span class="calc-lbl">Swap fees/day (est.)</span><span class="calc-val cg" id="bd-lpFees">—</span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2327,15 +2367,113 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
 
   <!-- Empty state -->
   <div id="bd-emptyState" style="text-align:center;padding:3rem 1rem;color:var(--mut)">
-    <div style="font-size:3rem;margin-bottom:.75rem">⛏</div>
-    <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-lg);margin-bottom:.4rem">Add miners to your facility slots</div>
-    <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs)">Search for a miner above, choose your facility level, then run the comparison.</div>
+    <div style="font-size:3rem;margin-bottom:.75rem">🔨</div>
+    <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:var(--fs-lg);margin-bottom:.4rem">Add miners and run comparison</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs)">Enter a miner, set a price, and click Run Comparison.</div>
   </div>
 
 </div><!-- /view-build -->
 
-
 </main>
+
+<!-- ═══════════════════════════════════════════════════════
+     FACILITY LEVEL MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="bd-facilityModal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.72);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:1rem;overflow-y:auto;animation:fadeIn .18s ease" onclick="if(event.target===this)bdCloseFacilityModal()">
+  <div style="max-width:440px;margin:0 auto;background:var(--card);border:1px solid var(--bor2);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7);animation:fadeUp .22s ease">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.25rem;border-bottom:1px solid var(--bor);background:linear-gradient(135deg,rgba(229,62,62,.06),transparent)">
+      <div>
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-lg);color:var(--txt)">⚡ Select Facility Level</div>
+        <div style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);margin-top:2px">Higher level = lower electricity rate</div>
+      </div>
+      <button onclick="bdCloseFacilityModal()" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--dim);font-size:1rem;flex-shrink:0;transition:all var(--fast)" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--bor)';this.style.color='var(--dim)'">✕</button>
+    </div>
+    <!-- Facility options -->
+    <div id="bd-facilityModalList" style="padding:1rem;display:flex;flex-direction:column;gap:.6rem"></div>
+    <!-- Footer note -->
+    <div style="padding:.75rem 1.25rem;border-top:1px solid var(--bor);font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);line-height:1.6;background:var(--sur)">
+      ⚡ Electricity rates fetched live from the HashCash API. Higher facility levels reduce your energy costs, improving miner profitability.
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD MINER FULL-SCREEN MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="bd-addMinerModal" style="display:none;position:fixed;inset:0;z-index:9000;background:var(--bg);animation:fadeIn .18s ease;display:none;flex-direction:column">
+  <!-- Modal header -->
+  <div style="position:sticky;top:0;z-index:10;background:var(--header-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--bor);padding:.75rem 1rem;display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button onclick="bdCloseAddMinerModal()" style="background:var(--sur);border:1px solid var(--bor);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--dim);font-size:1.1rem;flex-shrink:0;transition:all var(--fast)">←</button>
+    <div style="flex:1;min-width:0">
+      <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-md);color:var(--txt)">⛏ Add Miner to Slot</div>
+      <div id="bd-modalSlotStatus" style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut)">Loading slots…</div>
+    </div>
+    <button onclick="bdCloseAddMinerModal()" style="background:rgba(229,62,62,.1);border:1px solid rgba(229,62,62,.3);border-radius:8px;padding:5px 14px;color:var(--acc);font-family:'DM Mono',monospace;font-size:var(--t-xs);cursor:pointer;white-space:nowrap;font-weight:600">Done</button>
+  </div>
+
+  <!-- Search bar -->
+  <div style="padding:.75rem 1rem;border-bottom:1px solid var(--bor);background:var(--sur);flex-shrink:0">
+    <div style="position:relative">
+      <input id="bd-modalMinerSearch" type="text" class="inp" placeholder="🔍 Search miners by name…"
+        oninput="bdModalFilterMiners(this.value)" autocomplete="off"
+        style="width:100%;padding-left:2.5rem;font-size:var(--t-base)">
+      <span style="position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--mut);pointer-events:none">🔍</span>
+    </div>
+    <div style="display:flex;gap:6px;margin-top:.5rem;flex-wrap:wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);align-self:center">Source:</div>
+      <select id="bd-modalSlotSource" class="inp" style="width:auto;font-size:var(--t-xs)">
+        <option value="buy">Will buy</option>
+        <option value="own">I own it</option>
+      </select>
+      <input id="bd-modalSlotPrice" type="number" class="inp" placeholder="Price in hCASH" style="flex:1;min-width:100px;font-size:var(--t-xs)" oninput="">
+      <span id="bd-modalMinerCount" style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);align-self:center"></span>
+    </div>
+  </div>
+
+  <!-- Miner list — scrollable -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.6rem .75rem">
+    <div id="bd-modalMinerList" style="display:flex;flex-direction:column;gap:.45rem">
+      <div style="text-align:center;padding:2rem;color:var(--mut)">
+        <div class="spin" style="display:inline-block;width:20px;height:20px;border:2px solid var(--bor);border-top-color:var(--acc);border-radius:50%;animation:spinR .7s linear infinite"></div>
+        <div style="font-family:'DM Mono',monospace;font-size:var(--t-xs);margin-top:.5rem">Loading miners…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sticky bottom: current slot summary + add button -->
+  <div style="border-top:1px solid var(--bor);background:var(--sur);padding:.75rem 1rem;flex-shrink:0">
+    <div id="bd-modalSelectedMiner" style="display:none;background:rgba(229,62,62,.06);border:1px solid rgba(229,62,62,.2);border-radius:10px;padding:.6rem .85rem;margin-bottom:.6rem;display:none;align-items:center;gap:10px">
+      <img id="bd-modalSelImg" src="" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--bor);flex-shrink:0" onerror="this.style.display='none'" alt="">
+      <div style="flex:1;min-width:0">
+        <div id="bd-modalSelName" style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-base);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+        <div id="bd-modalSelStats" style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut)"></div>
+      </div>
+      <button onclick="bdModalClearSelection()" style="background:none;border:none;color:var(--mut);cursor:pointer;font-size:1.1rem;padding:2px;flex-shrink:0">✕</button>
+    </div>
+    <button id="bd-modalAddBtn" onclick="bdModalAddMiner()" disabled
+      style="width:100%;padding:.75rem;border-radius:10px;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-md);background:rgba(229,62,62,.12);border:1.5px solid rgba(229,62,62,.25);color:var(--mut);cursor:not-allowed;transition:all var(--mid)">
+      Select a miner first
+    </button>
+  </div>
+</div>
+
+<!-- Hidden stubs for build page backward-compat -->
+<input id="bd-slotMinerSearch" type="hidden">
+<input id="bd-slotMinerPrice" type="hidden">
+<select id="bd-slotSource" style="display:none"><option value="buy">Will buy</option><option value="own">I own it</option></select>
+<div id="bd-slotDropdown" style="display:none"><div id="bd-slotDropdownList"></div></div>
+<!-- Hidden stubs for legacy bd-minerSearch (main miner search removed) -->
+<input id="bd-minerSearch" type="hidden">
+<div id="bd-minerDropdown" style="display:none"><div id="bd-minerDropdownList"></div></div>
+<div id="bd-selectedChip" style="display:none"><span id="bd-selectedChipName"></span></div>
+<div id="bd-minerStats" style="display:none">
+  <div id="bd-minerImgEl" style="display:none"><img id="bd-minerImgEl" src="" alt=""></div>
+  <div id="bd-minerImg" style="display:none"><img src="" alt=""></div>
+  <span id="bd-mhsDisplay"></span>
+  <span id="bd-wattsDisplay"></span>
+  <span id="bd-effDisplay"></span>
+</div>
 
 <!-- FOOTER -->
 <div style="position:relative;z-index:1;text-align:center;padding:1rem .85rem 2rem;margin-top:.5rem;border-top:1px solid var(--bor);box-sizing:border-box;width:100%;overflow-x:hidden">
@@ -6915,36 +7053,34 @@ let _wiSlots = [];           // array of slot objects: { miner, source, price }
 let _wiSlotSelectedMiner = null;
 
 function wiFacilityRatesUpdateUI() {
-  // Update both the WhatIf and Build page facility selects
-  ['wi-facilityLevel', 'bd-facilityLevel'].forEach(selId => {
-    const sel = document.getElementById(selId);
-    if (!sel) return;
-    const prevIdx = sel.selectedIndex >= 0 ? sel.selectedIndex : 2;
-    for (const opt of sel.options) {
-      const lv = parseInt(opt.dataset.lv);
-      if (!lv) continue;
-      const d = _wiFacilityData[lv];
-      const rate = d?.rate || _wiFacilityRates[lv];
-      if (rate) {
-        const trend = wiGetElecTrend(lv);
-        const trendTag = trend ? ` · ${trend.label}` : (lv === 5 ? ' ⚡ best' : '');
-        opt.value = String(rate);
-        opt.textContent = `Lv${lv} (${d?.dims||''} · ${d?.slots||'?'} slots · ${d?.watts ? (d.watts >= 1000 ? (d.watts/1000)+'kW' : d.watts+'W') : '?'}) — ${rate} hCASH/kWh${trendTag}`;
-      }
-    }
-    sel.selectedIndex = prevIdx;
-  });
-
-  // Update WI-specific badge/note
   const sel = document.getElementById('wi-facilityLevel');
+  if (!sel) return;
   const badge = document.getElementById('wi-rateSourceBadge');
   const note  = document.getElementById('wi-rateNote');
+
+  const prevIdx = sel.selectedIndex >= 0 ? sel.selectedIndex : 2;
+
+  for (const opt of sel.options) {
+    const lv = parseInt(opt.dataset.lv);
+    if (!lv) continue;
+    const d = _wiFacilityData[lv];
+    const rate = d?.rate || _wiFacilityRates[lv];
+    if (rate) {
+      const trend = wiGetElecTrend(lv);
+      const trendTag = trend ? ` · ${trend.label}` : (lv === 5 ? ' ⚡ best' : '');
+      opt.value = String(rate);
+      opt.textContent = `Lv${lv} (${d?.dims||''} · ${d?.slots||'?'} slots · ${d?.watts ? (d.watts >= 1000 ? (d.watts/1000)+'kW' : d.watts+'W') : '?'}) — ${rate} hCASH/kWh${trendTag}`;
+    }
+  }
+
+  sel.selectedIndex = prevIdx;
 
   if (badge) {
     badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● defaults';
     badge.style.color  = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
   }
-  if (note && sel) {
+  if (note) {
+    // Show trend for currently selected facility
     const selLv = parseInt(sel.options[sel.selectedIndex]?.dataset?.lv);
     const trend = selLv ? wiGetElecTrend(selLv) : null;
     const src = _wiFacilityRatesLoaded
@@ -6955,27 +7091,33 @@ function wiFacilityRatesUpdateUI() {
       : '';
     note.innerHTML = src + trendStr;
   }
-
-  // Update BD-specific badge/note
-  const bdSel   = document.getElementById('bd-facilityLevel');
-  const bdBadge = document.getElementById('bd-rateSourceBadge');
-  const bdNote  = document.getElementById('bd-rateNote');
-  if (bdBadge) {
-    bdBadge.textContent = _wiFacilityRatesLoaded ? '● live' : '● loading...';
-    bdBadge.style.color  = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
-  }
-  if (bdNote && bdSel) {
-    const bdLv = parseInt(bdSel.options[bdSel.selectedIndex]?.dataset?.lv);
-    const bdTrend = bdLv ? wiGetElecTrend(bdLv) : null;
-    const bdSrc = _wiFacilityRatesLoaded ? 'Rates fetched live from on-chain contract' : 'Fetching from chain…';
-    const bdTrendStr = bdTrend
-      ? ` · Electricity trend: <span style="color:${bdTrend.color};font-weight:700">${bdTrend.label}</span>`
-      : '';
-    bdNote.innerHTML = bdSrc + bdTrendStr;
-  }
-
   wiRenderSlotTable();
   wiCalc();
+  // Also sync bd- (Build page) facility select + button
+  bdFacilityRatesUpdateUI();
+}
+
+function bdFacilityRatesUpdateUI() {
+  const sel = document.getElementById('bd-facilityLevel');
+  if (!sel) return;
+  const prevIdx = sel.selectedIndex >= 0 ? sel.selectedIndex : 2;
+  for (const opt of sel.options) {
+    const lv = parseInt(opt.dataset.lv);
+    if (!lv) continue;
+    const d = _wiFacilityData[lv];
+    const rate = d?.rate || _wiFacilityRates[lv];
+    if (rate) {
+      opt.value = String(rate);
+      opt.textContent = `Lv${lv} (${d?.slots||'?'} slots · ${d?.watts||'?'}W) — ${rate} hCASH/kWh`;
+    }
+  }
+  sel.selectedIndex = prevIdx;
+  bdUpdateFacilityBtn();
+  const badge = document.getElementById('bd-rateSourceBadge');
+  if (badge) {
+    badge.textContent = _wiFacilityRatesLoaded ? '● live' : '● defaults';
+    badge.style.color = _wiFacilityRatesLoaded ? 'var(--grn)' : 'var(--mut)';
+  }
 }
 
 // Called when facility level changes — fully reset everything
@@ -6996,7 +7138,6 @@ function wiOnFacilityChange() {
   renderWiCart();
   wiRenderSlotTable();
   wiCalc();
-  if (typeof bdUpdateFacilityPill === 'function') bdUpdateFacilityPill();
 }
 
 // Get current facility data (live or defaults)
@@ -8775,8 +8916,299 @@ function bdDrawChart(netUsdDay, lpFeeUsdDay, cost, breakevenDays) {
   });
 }
 
-// ── Init Build page when tab activated ──
-function bdClearAll() {
+// ══════════════════════════════════════════════════════
+//  BUILD PAGE — FACILITY MODAL
+// ══════════════════════════════════════════════════════
+
+const BD_FAC_ICONS = ['','🏚️','🏠','🏭','🏗️','⚡'];
+const BD_FAC_NAMES = ['','Basic Shelter','Home Setup','Industrial','Advanced Plant','Power Station'];
+const BD_FAC_DESC  = ['','Low-grade facility · 9 slots · high electricity cost','Small home facility · 9 slots · moderate cost','Mid-tier industrial · 16 slots · balanced rates','Large plant · 25 slots · efficient power','Top-tier station · max slots · lowest electricity'];
+
+function bdUpdateFacilityBtn() {
+  const sel = document.getElementById('bd-facilityLevel');
+  if (!sel) return;
+  const idx = sel.selectedIndex;
+  const lv = parseInt(sel.options[idx]?.dataset?.lv) || 3;
+  const rate = parseFloat(sel.options[idx]?.value) || 0;
+  const icon = BD_FAC_ICONS[lv] || '🏭';
+  const name = BD_FAC_NAMES[lv] || `Level ${lv}`;
+  const lbl = document.getElementById('bd-facilityLabel');
+  const sub = document.getElementById('bd-facilitySubLabel');
+  const iconEl = document.getElementById('bd-facilityIcon');
+  if (lbl) lbl.textContent = name;
+  if (sub) sub.textContent = rate > 0 ? `Level ${lv} · ${rate} hCASH/kWh` : `Level ${lv} · loading rates…`;
+  if (iconEl) iconEl.textContent = icon;
+}
+
+function bdOpenFacilityModal() {
+  const modal = document.getElementById('bd-facilityModal');
+  if (!modal) return;
+  const list = document.getElementById('bd-facilityModalList');
+  if (!list) return;
+  const sel = document.getElementById('bd-facilityLevel');
+  const currentLv = parseInt(sel?.options[sel.selectedIndex]?.dataset?.lv) || 3;
+  let html = '';
+  for (let lv = 1; lv <= 5; lv++) {
+    const opt = sel ? Array.from(sel.options).find(o => parseInt(o.dataset.lv) === lv) : null;
+    const rate = opt ? parseFloat(opt.value) : 0;
+    const isActive = lv === currentLv;
+    const icon = BD_FAC_ICONS[lv];
+    const name = BD_FAC_NAMES[lv];
+    const desc = BD_FAC_DESC[lv];
+    const fac = _wiFacilityData?.[lv] || {};
+    const slots = fac.slots || (lv === 1 ? 9 : lv === 2 ? 9 : lv === 3 ? 16 : lv === 4 ? 25 : 36);
+    const watts = fac.watts || (lv * 400 + 600);
+    html += `<div class="fac-modal-item${isActive?' active':''}" onclick="bdSelectFacilityFromModal(${lv},this)">
+      <div style="width:44px;height:44px;border-radius:10px;background:${isActive?'rgba(229,62,62,.12)':'var(--card)'};border:1px solid ${isActive?'rgba(229,62,62,.35)':'var(--bor)'};display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;transition:all var(--mid)">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <span style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-md);color:${isActive?'var(--acc)':'var(--txt)'}">${name}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);background:${isActive?'rgba(229,62,62,.12)':'var(--sur)'};border:1px solid ${isActive?'rgba(229,62,62,.3)':'var(--bor)'};border-radius:4px;padding:1px 6px;color:${isActive?'var(--acc)':'var(--mut)'}">Lv${lv}</span>
+          ${isActive ? '<span style="font-size:.7rem;color:var(--grn);font-family:\'DM Mono\',monospace">✓ ACTIVE</span>' : ''}
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--mut);margin-top:2px">${desc.split('·').slice(1).join('·').trim()}</div>
+        <div style="display:flex;gap:10px;margin-top:5px;flex-wrap:wrap">
+          <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--grn)">⛏ ${slots} slots</span>
+          <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--gold)">⚡ ${watts}W max</span>
+          <span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:${rate>0?'var(--acc)':'var(--mut)'}">🔋 ${rate > 0 ? rate + ' hCASH/kWh' : 'loading…'}</span>
+        </div>
+      </div>
+      <div style="width:22px;height:22px;border-radius:50%;border:2px solid ${isActive?'var(--acc)':'var(--bor)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all var(--mid)">
+        ${isActive ? '<div style="width:10px;height:10px;border-radius:50%;background:var(--acc)"></div>' : ''}
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html;
+  modal.style.display = 'flex';
+  modal.style.flexDirection = 'column';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'flex-start';
+  modal.style.paddingTop = '4rem';
+  modal.style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function bdSelectFacilityFromModal(lv, el) {
+  const sel = document.getElementById('bd-facilityLevel');
+  if (sel) {
+    for (let i = 0; i < sel.options.length; i++) {
+      if (parseInt(sel.options[i].dataset.lv) === lv) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  // Update active styles in modal
+  document.querySelectorAll('.fac-modal-item').forEach(item => item.classList.remove('active'));
+  if (el) el.classList.add('active');
+  bdUpdateFacilityBtn();
+  bdOnFacilityChange();
+  setTimeout(bdCloseFacilityModal, 220);
+}
+
+function bdCloseFacilityModal() {
+  const modal = document.getElementById('bd-facilityModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════════════════
+//  BUILD PAGE — ADD MINER FULL-SCREEN MODAL
+// ══════════════════════════════════════════════════════
+
+let _bdModalSelectedMiner = null;
+
+function bdUpdateAddMinerHint() {
+  const hint = document.getElementById('bd-addMinerHint');
+  if (!hint) return;
+  const fac = bdGetFacility();
+  const totalSlots = fac.slots || 9;
+  const filled = _bdSlots.length;
+  hint.textContent = _wiMiners.length
+    ? `${_wiMiners.length} miners available · ${filled}/${totalSlots} slots filled`
+    : 'Tap to browse and add miners';
+}
+
+function bdOpenAddMinerModal() {
+  const modal = document.getElementById('bd-addMinerModal');
+  if (!modal) return;
+  _bdModalSelectedMiner = null;
+  // Reset search
+  const searchEl = document.getElementById('bd-modalMinerSearch');
+  if (searchEl) searchEl.value = '';
+  // Reset price
+  const priceEl = document.getElementById('bd-modalSlotPrice');
+  if (priceEl) priceEl.value = '';
+  // Show modal
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Update slot status
+  bdUpdateModalSlotStatus();
+  // Render miner list
+  if (_wiMiners.length) {
+    bdModalFilterMiners('');
+  } else {
+    // Load miners then render
+    wiLoadMiners().then(() => bdModalFilterMiners(''));
+  }
+  // Focus search
+  setTimeout(() => searchEl?.focus(), 200);
+}
+
+function bdCloseAddMinerModal() {
+  const modal = document.getElementById('bd-addMinerModal');
+  if (modal) modal.style.display = 'none';
+  document.body.style.overflow = '';
+  // Refresh slot table and hint
+  bdRenderSlotTable();
+  bdUpdateAddMinerHint();
+  bdCalc();
+}
+
+function bdUpdateModalSlotStatus() {
+  const fac = bdGetFacility();
+  const totalSlots = fac.slots || 9;
+  const maxWatts = fac.watts || 2000;
+  const usedWatts = _bdSlots.reduce((s, sl) => s + (sl.watts || 0), 0);
+  const el = document.getElementById('bd-modalSlotStatus');
+  if (el) el.textContent = `${_bdSlots.length}/${totalSlots} slots · ${usedWatts}/${maxWatts}W`;
+}
+
+function bdModalFilterMiners(q) {
+  const list = document.getElementById('bd-modalMinerList');
+  const countEl = document.getElementById('bd-modalMinerCount');
+  if (!list) return;
+  const query = q.trim().toLowerCase();
+  const filtered = query
+    ? _wiMiners.filter(m => m.name?.toLowerCase().includes(query) || (m.minerStats?.hashrateFormatted || '').toLowerCase().includes(query))
+    : _wiMiners;
+  if (countEl) countEl.textContent = `${filtered.length} miner${filtered.length !== 1 ? 's' : ''}`;
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--mut)">
+      <div style="font-size:2rem;margin-bottom:.5rem">🔍</div>
+      <div style="font-family:'DM Mono',monospace;font-size:var(--t-xs)">No miners match "${q}"</div>
+    </div>`;
+    return;
+  }
+  list.innerHTML = filtered.map((m, i) => {
+    const s = m.minerStats || {};
+    const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+    const watts = s.powerWatts || s.powerRaw || 0;
+    const mhsStr = mhs >= 1000 ? (mhs/1000).toFixed(2)+' GH/s' : mhs ? mhs+' MH/s' : '?';
+    const effStr = mhs && watts ? (mhs/watts*100).toFixed(1)+' MH/W' : watts === 0 ? 'Free power' : '';
+    const idx = _wiMiners.indexOf(m);
+    const isSelected = _bdModalSelectedMiner === m;
+    const imgHtml = m.imageUrl
+      ? `<img src="${m.imageUrl}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid var(--bor)" onerror="this.style.display='none'" alt="">`
+      : `<div style="width:40px;height:40px;border-radius:8px;background:rgba(229,62,62,.1);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0">⛏</div>`;
+    return `<div class="miner-modal-item${isSelected?' selected':''}" onclick="bdModalSelectMiner(${idx})" data-idx="${idx}">
+      ${imgHtml}
+      <div style="flex:1;min-width:0">
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:var(--t-base);color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+        <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+          ${mhsStr ? `<span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--acc)">${mhsStr}</span>` : ''}
+          ${watts ? `<span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--gold)">${watts}W</span>` : ''}
+          ${effStr ? `<span style="font-family:'DM Mono',monospace;font-size:var(--t-xs);color:var(--grn)">${effStr}</span>` : ''}
+        </div>
+      </div>
+      ${isSelected ? '<span style="color:var(--acc);font-size:1.2rem;flex-shrink:0">✓</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function bdModalSelectMiner(idx) {
+  _bdModalSelectedMiner = _wiMiners[idx];
+  if (!_bdModalSelectedMiner) return;
+  // Refresh list to show selection
+  const searchEl = document.getElementById('bd-modalMinerSearch');
+  bdModalFilterMiners(searchEl?.value || '');
+  // Show selected miner bar
+  const selectedBar = document.getElementById('bd-modalSelectedMiner');
+  const selImg = document.getElementById('bd-modalSelImg');
+  const selName = document.getElementById('bd-modalSelName');
+  const selStats = document.getElementById('bd-modalSelStats');
+  const addBtn = document.getElementById('bd-modalAddBtn');
+  if (selectedBar) selectedBar.style.display = 'flex';
+  const s = _bdModalSelectedMiner.minerStats || {};
+  const mhs = s.hashrateMhps || s.hashrateRaw || 0;
+  const watts = s.powerWatts || s.powerRaw || 0;
+  if (selImg && _bdModalSelectedMiner.imageUrl) { selImg.src = _bdModalSelectedMiner.imageUrl; selImg.style.display = ''; }
+  else if (selImg) selImg.style.display = 'none';
+  if (selName) selName.textContent = _bdModalSelectedMiner.name;
+  if (selStats) selStats.textContent = `${mhs >= 1000 ? (mhs/1000).toFixed(2)+' GH/s' : mhs+' MH/s'} · ${watts ? watts+'W' : 'Free power'}`;
+  // Pre-fill price
+  const priceEl = document.getElementById('bd-modalSlotPrice');
+  if (priceEl) {
+    const p = s.priceHcash || s.price || '';
+    if (p && !priceEl.value) priceEl.value = p;
+  }
+  // Enable add button
+  if (addBtn) {
+    addBtn.disabled = false;
+    addBtn.style.background = 'rgba(229,62,62,.14)';
+    addBtn.style.borderColor = 'var(--acc)';
+    addBtn.style.color = 'var(--acc)';
+    addBtn.style.cursor = 'pointer';
+    addBtn.textContent = `+ Add ${_bdModalSelectedMiner.name} to Slot`;
+  }
+}
+
+function bdModalClearSelection() {
+  _bdModalSelectedMiner = null;
+  const selectedBar = document.getElementById('bd-modalSelectedMiner');
+  const addBtn = document.getElementById('bd-modalAddBtn');
+  if (selectedBar) selectedBar.style.display = 'none';
+  if (addBtn) {
+    addBtn.disabled = true;
+    addBtn.style.background = 'rgba(229,62,62,.12)';
+    addBtn.style.borderColor = 'rgba(229,62,62,.25)';
+    addBtn.style.color = 'var(--mut)';
+    addBtn.style.cursor = 'not-allowed';
+    addBtn.textContent = 'Select a miner first';
+  }
+  const searchEl = document.getElementById('bd-modalMinerSearch');
+  bdModalFilterMiners(searchEl?.value || '');
+}
+
+function bdModalAddMiner() {
+  if (!_bdModalSelectedMiner) { notif('Select a miner first', 'warn'); return; }
+  const fac = bdGetFacility();
+  const maxWatts = fac.watts || 2000;
+  const totalSlots = fac.slots || 9;
+  if (_bdSlots.length >= totalSlots) { notif(`All ${totalSlots} slots filled`, 'warn'); return; }
+  const s = _bdModalSelectedMiner.minerStats || {};
+  const watts = s.powerWatts || s.powerRaw || 0;
+  const usedWatts = _bdSlots.reduce((acc, sl) => acc + (sl.watts || 0), 0);
+  if (watts > 0 && usedWatts + watts > maxWatts) {
+    notif(`⚡ Power overload: only ${maxWatts - usedWatts}W free`, 'warn'); return;
+  }
+  const source = document.getElementById('bd-modalSlotSource')?.value || 'buy';
+  const price = parseFloat(document.getElementById('bd-modalSlotPrice')?.value) || 0;
+  _bdSlots.push({ miner: _bdModalSelectedMiner, source, price, watts });
+  notif(`✓ ${_bdModalSelectedMiner.name} added to slot ${_bdSlots.length}`, 'info', 2000);
+  // Update slot status
+  bdUpdateModalSlotStatus();
+  // Clear selection for next pick
+  bdModalClearSelection();
+  document.getElementById('bd-modalSlotPrice').value = '';
+  // Check if facility is now full
+  if (_bdSlots.length >= totalSlots) {
+    notif('All slots filled! Tap Done to close.', 'info', 2500);
+    bdCloseAddMinerModal();
+  }
+}
+
+// Keep backward-compat: bd-slotMinerSearch and bd-slotDropdown used by bdAddSlotMiner()
+// Provide stub elements to avoid JS errors
+function bdSlotFilterMiners(q) {
+  // Now uses modal — filter modal list if modal is open
+  const modal = document.getElementById('bd-addMinerModal');
+  if (modal && modal.style.display !== 'none') {
+    bdModalFilterMiners(q);
+  }
+}
+
+
   // Reset all slot state
   _bdSlots = [];
   _bdSlotSelectedMiner = null;
@@ -8814,113 +9246,26 @@ function bdClearAll() {
   notif('Facility cleared', 'info', 2000);
 }
 
-async function initBuildPage() {
-  wiFacilityRatesUpdateUI();
-  if (!_wiMiners.length) {
-    await wiLoadMiners().catch(e => console.warn('[Build] miner load failed:', e.message));
-  }
+function initBuildPage() {
   bdBuildLockGrid();
-  bdRenderDropdown();
-  bdSlotFilterMiners('');
-  bdUpdateFacilityPill();
+  // Ensure miners are loaded (shared with What If page)
+  if (!_wiMiners.length) {
+    wiLoadMiners().then(() => {
+      bdUpdateAddMinerHint();
+    });
+  } else {
+    bdUpdateAddMinerHint();
+  }
+  // Ensure live price + pool data
+  wiEnsureLiveData();
+  // Ensure facility rates
+  if (!_wiFacilityRatesLoaded) {
+    wiFetchFacilityRates();
+    wiSyncLiveData();
+  } else {
+    bdUpdateFacilityBtn();
+  }
   bdRenderSlotTable();
-}
-
-function bdOpenFacilityModal() {
-  const modal = document.getElementById('bd-facilityModal');
-  const cards = document.getElementById('bd-facilityCards');
-  const note  = document.getElementById('bd-modalRateNote');
-  if (!modal || !cards) return;
-
-  // Set note
-  if (note) note.textContent = _wiFacilityRatesLoaded ? '✓ Live rates from on-chain' : 'Fetching live rates…';
-
-  // Render one card per facility level
-  const sel = document.getElementById('bd-facilityLevel');
-  const currentLv = parseInt(sel?.options[sel.selectedIndex]?.dataset?.lv) || 3;
-  const lvIcons = { 1:'🏠', 2:'🏭', 3:'🏗️', 4:'🏢', 5:'⚡' };
-  const lvColors = { 1:'var(--mut)', 2:'var(--dim)', 3:'var(--red)', 4:'var(--gold)', 5:'var(--grn)' };
-
-  cards.innerHTML = '';
-  for (let lv = 1; lv <= 5; lv++) {
-    const d = _wiFacilityData[lv] || {};
-    const rate = _wiFacilityRates[lv] || 0;
-    const trend = wiGetElecTrend(lv);
-    const isSelected = lv === currentLv;
-    const color = lvColors[lv];
-
-    const card = document.createElement('div');
-    card.onclick = () => bdSelectFacility(lv);
-    card.style.cssText = `
-      background:${isSelected ? 'rgba(229,62,62,.1)' : 'var(--sur)'};
-      border:1.5px solid ${isSelected ? 'rgba(229,62,62,.5)' : 'var(--bor)'};
-      border-radius:12px;padding:.75rem 1rem;cursor:pointer;
-      transition:all .15s;display:flex;align-items:center;gap:12px;
-    `;
-    card.onmouseover = () => { if (!isSelected) card.style.background = 'rgba(255,255,255,.04)'; };
-    card.onmouseout  = () => { if (!isSelected) card.style.background = 'var(--sur)'; };
-
-    const watts = d.watts || 0;
-    const wattsStr = watts >= 1000 ? (watts/1000).toFixed(1)+'kW' : watts+'W';
-    const trendStr = trend ? `<span style="color:${trend.color};font-size:10px">${trend.label}</span>` : '';
-
-    card.innerHTML = `
-      <div style="font-size:1.6rem;flex-shrink:0">${lvIcons[lv]}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:${color}">
-          Level ${lv} ${isSelected ? '<span style="font-size:.7rem;background:rgba(229,62,62,.2);color:var(--red);padding:1px 6px;border-radius:8px;vertical-align:middle">selected</span>' : ''}
-        </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--mut);margin-top:2px">
-          ${d.dims || '—'} · ${d.slots || '?'} slots · ${wattsStr}
-        </div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:10px;margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <span style="color:var(--txt)">${rate ? rate+' hCASH/kWh' : 'loading…'}</span>
-          ${trendStr}
-        </div>
-      </div>
-      <div style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1.3rem;color:${color};flex-shrink:0">Lv${lv}</div>
-    `;
-    cards.appendChild(card);
-  }
-
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function bdCloseFacilityModal() {
-  const modal = document.getElementById('bd-facilityModal');
-  if (modal) modal.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function bdSelectFacility(lv) {
-  const sel = document.getElementById('bd-facilityLevel');
-  if (sel) {
-    for (let i = 0; i < sel.options.length; i++) {
-      if (parseInt(sel.options[i].dataset.lv) === lv) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-    bdOnFacilityChange();
-  }
-  bdCloseFacilityModal();
-  bdUpdateFacilityPill();
-}
-
-function bdUpdateFacilityPill() {
-  const sel   = document.getElementById('bd-facilityLevel');
-  const pill  = document.getElementById('bd-facilityPill');
-  const label = document.getElementById('bd-facilityPillLabel');
-  if (!sel || !pill || !label) return;
-  const lv = parseInt(sel.options[sel.selectedIndex]?.dataset?.lv) || 3;
-  const d  = _wiFacilityData[lv] || {};
-  const rate = _wiFacilityRates[lv];
-  const watts = d.watts || 0;
-  const wattsStr = watts >= 1000 ? (watts/1000).toFixed(1)+'kW' : (watts ? watts+'W' : '');
-  const rateStr = rate ? ` · ${rate} hCASH/kWh` : '';
-  label.textContent = `Lv${lv}${d.dims ? ' · '+d.dims : ''}${d.slots ? ' · '+d.slots+' slots' : ''}${wattsStr ? ' · '+wattsStr : ''}${rateStr}`;
-  document.getElementById('bd-facilityPillIcon').textContent = ['','🏠','🏭','🏗️','🏢','⚡'][lv] || '🏭';
 }
 
 // Close bd dropdowns on outside click
