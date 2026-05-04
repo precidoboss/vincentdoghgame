@@ -2139,7 +2139,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
               oninput="bdSlotFilterMiners(this.value)"
               onfocus="bdSlotFilterMiners(this.value);document.getElementById('bd-slotDropdown').style.display='block'"
               autocomplete="off" style="width:100%;font-size:var(--fs-sm)">
-            <div id="bd-slotDropdown" style="display:none;position:absolute;z-index:500;left:0;right:0;max-height:320px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:10px;box-shadow:0 12px 32px rgba(0,0,0,.6);top:calc(100% + 3px)">
+            <div id="bd-slotDropdown" style="display:none;position:absolute;z-index:500;left:0;right:0;max-height:320px;overflow-y:auto;background:var(--card);border:1px solid var(--bor2);border-radius:10px;box-shadow:0 -8px 32px rgba(0,0,0,.6);bottom:calc(100% + 3px)">
               <div id="bd-slotDropdownList"></div>
             </div>
           </div>
@@ -8843,6 +8843,10 @@ async function initBuildPage() {
   wiFacilityRatesUpdateUI();
   if (!_wiMiners.length) {
     await wiLoadMiners().catch(e => console.warn('[Build] miner load failed:', e.message));
+  }
+  // Load facility rates if not already fetched (WhatIf page may not have been visited)
+  if (!_wiFacilityRatesLoaded) {
+    wiFetchFacilityRates();
   }
   bdBuildLockGrid();
   bdRenderDropdown();
