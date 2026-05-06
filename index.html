@@ -1893,6 +1893,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
             <option value="" data-lv="4">Lv4 — loading...</option>
             <option value="" data-lv="5">Lv5 — loading...</option>
           </select>
+          <button id="wi-elecRefreshBtn" onclick="wiRefreshElecRate()" title="Refresh electricity rates" style="flex-shrink:0;background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.25);border-radius:8px;color:var(--red);cursor:pointer;padding:.3rem .65rem;font-size:.85rem;transition:all .2s" onmouseover="this.style.background='rgba(229,62,62,.18)'" onmouseout="this.style.background='rgba(229,62,62,.08)'">⟳</button>
           <button class="btn btn-sm" onclick="wiRunWithCart()">⚡ Run Simulation →</button>
         </div>
         <!-- Slot grid preview -->
@@ -2127,6 +2128,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
         </div>
       </button>
       <span id="bd-rateSourceBadge" style="font-size:var(--fs-xs);color:var(--mut);align-self:center"></span>
+      <button id="bd-elecRefreshBtn" onclick="wiRefreshElecRate()" title="Refresh electricity rates" style="flex-shrink:0;background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.25);border-radius:8px;color:var(--red);cursor:pointer;padding:.3rem .65rem;font-size:.85rem;transition:all .2s;margin-left:auto" onmouseover="this.style.background='rgba(229,62,62,.18)'" onmouseout="this.style.background='rgba(229,62,62,.08)'">⟳</button>
     </div>
     <div class="cbody" style="display:flex;flex-direction:column;gap:.85rem">
 
@@ -2363,6 +2365,9 @@ const HCASH_API_KEY  = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
 const DSC_PAIR       = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/';
 const AVAX_RPC       = 'https://api.avax.network/ext/bc/C/rpc';
 const SNOWTRACE      = 'https://api.snowtrace.io/api';
+const SNOWTRACE_KEY  = 'rs_1caf6cdfedd13407191c09b4';
+// Build authenticated Snowtrace URL — appends apikey to any query string
+function stUrl(params) { return stUrl(`${params}&apikey=${SNOWTRACE_KEY}`); }
 
 const PHARAOH_IMG = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg';
 // hCASH Moat
@@ -2924,9 +2929,9 @@ async function loadEvents() {
 
     // Fetch normal txs (gives method sig + timestamp) AND token transfers (gives exact LP amount)
     const [txRes, tokenTxRes] = await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
+      fetch(stUrl(`module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`))
         .then(r=>r.json()),
-      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`)
+      fetch(stUrl(`module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`))
         .then(r=>r.json()),
     ]);
 
@@ -3216,7 +3221,7 @@ async function loadLpHolders(totalLpSupply) {
     addressSet.add(HCASH_MOAT_ADDR.toLowerCase());
 
     // Also query Snowtrace in parallel for additional addresses
-    const snowtracePromise=fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
+    const snowtracePromise=fetch(stUrl(`module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`))
       .then(r=>r.json()).catch(()=>null);
 
     // Immediately query balanceOf for known profiles (fast, no waiting)
@@ -3562,7 +3567,7 @@ async function loadMarketplaceListings(marketContract, miners) {
     // ── STRATEGY 2: Parse NewListing events via Snowtrace logs ──
     if(!listings.length){
       try{
-        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
+        const logsRes = await fetch(stUrl(`module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`))
           .then(r=>r.json()).catch(()=>null);
         const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
         const now = Math.floor(Date.now()/1000);
@@ -4246,7 +4251,7 @@ async function loadMinerHolders() {
       if(linkEl) linkEl.href=`https://snowtrace.io/token/${contractAddr}`;
 
       // ── STRATEGY 1: Snowtrace NFT transfer API ──
-      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`)
+      const txRes=await fetch(stUrl(`module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`))
         .then(r=>r.json()).catch(()=>null);
 
       let holders=[];
@@ -5095,20 +5100,32 @@ async function loadChainStats() {
     const prov = new ethers.JsonRpcProvider(AVAX_RPC);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
-    // Fetch block number and chain stats in parallel
-    const [blockHex, hashRaw, bpbRaw, halvRaw, halvIntRaw] = await Promise.all([
-      prov.send('eth_blockNumber', []),
+    // Fetch block number first, then parallel fetch everything else including block time sample
+    const blockHex = await prov.send('eth_blockNumber', []);
+    const curBlock = parseInt(blockHex, 16);
+    const sampleBlock = Math.max(1, curBlock - 100);
+
+    const [hashRaw, bpbRaw, halvRaw, halvIntRaw, latestBlock, oldBlock] = await Promise.all([
       game.totalHashrate().catch(() => 0n),
       game.getBigcoinPerBlock().catch(() => 0n),
       game.blocksUntilNextHalving().catch(() => 0n),
       game.HALVING_INTERVAL().catch(() => 0n),
+      prov.getBlock(curBlock),
+      prov.getBlock(sampleBlock).catch(() => null),
     ]);
 
+    // Update live block time global used by electricity rate decode and halving countdown
+    if (latestBlock && oldBlock && latestBlock.timestamp > oldBlock.timestamp) {
+      const secPer100 = latestBlock.timestamp - oldBlock.timestamp;
+      _wiBlocksPerHour = 3600 / (secPer100 / 100);
+      console.log(`[Dashboard] Live block time: ${(secPer100/100).toFixed(2)}s → ${_wiBlocksPerHour.toFixed(0)} BPH`);
+    }
+
     // Current block
-    const curBlock = parseInt(blockHex, 16);
     if (curBlock > 0) {
       setTxt('d_block', curBlock.toLocaleString());
-      setTxt('d_blockTime', '~1s avg · live');
+      const secPB = _wiBlocksPerHour > 0 ? (3600 / _wiBlocksPerHour).toFixed(2) : '?';
+      setTxt('d_blockTime', `~${secPB}s avg · live`);
     }
 
     // Network hashrate (in MH/s)
@@ -5133,7 +5150,9 @@ async function loadChainStats() {
     // Halving countdown
     const halvBlocks = Number(halvRaw);
     if (halvBlocks > 0) {
-      const secsLeft = halvBlocks * 1; // ~1s/block on Avalanche
+      // Use live block time from _wiBlocksPerHour; fallback to fetched block time
+      const secPerBlock = _wiBlocksPerHour > 0 ? 3600 / _wiBlocksPerHour : 1.17;
+      const secsLeft = halvBlocks * secPerBlock;
       const daysLeft = secsLeft / 86400;
       const hrsLeft  = (secsLeft % 86400) / 3600;
       const minsLeft = (secsLeft % 3600)  / 60;
@@ -5160,8 +5179,8 @@ async function loadActiveFacilityCount(MAIN_CONTRACT) {
   try {
     // Use Snowtrace getLogs API — handles full range without block limit issues
     const [initialRes, boughtRes] = await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(stUrl(`module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`), { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(stUrl(`module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`),  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
     ]);
 
     // Players who purchased a paid facility (Lv1-Lv5) via FacilityBought
@@ -6327,7 +6346,7 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
 
     // Fallback: Snowtrace event logs
     if (!listings.length) {
-      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
+      const logsRes = await fetch(stUrl(`module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`))
         .then(r=>r.json()).catch(()=>null);
       const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
       const now = Math.floor(Date.now()/1000);
@@ -6693,6 +6712,23 @@ let _wiFacilityRateHistory = {
   4: { min: null, max: null },
   5: { min: null, max: null },
 };
+
+// Manual refresh of electricity rates — called from ⟳ button on WI and Build pages
+async function wiRefreshElecRate() {
+  // Spin both buttons
+  ['wi-elecRefreshBtn','bd-elecRefreshBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) { btn.style.opacity = '0.5'; btn.style.pointerEvents = 'none'; btn.textContent = '…'; }
+  });
+  _wiFacilityRatesLoaded = false;
+  await wiFetchFacilityRates();
+  wiFetchFacilityRateTrend().catch(() => {});
+  // Restore buttons
+  ['wi-elecRefreshBtn','bd-elecRefreshBtn'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) { btn.style.opacity = '1'; btn.style.pointerEvents = ''; btn.textContent = '⟳'; }
+  });
+}
 
 // Fetch live facility data (rates, slots, power) directly from on-chain.
 // The HashCash public API contracts endpoint does not include electricityCost/facilityLevels data,
