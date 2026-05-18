@@ -1038,7 +1038,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
   <a class="logo" href="#">
     <img class="logo-img"
       src="https://raw.githubusercontent.com/precidoboss/HCASHMOAT/main/HCASH%20MOAT%20APP%20LOGO.png"
-      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"
+      onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex'"
       alt="hCASH Moat">
     <span style="width:38px;height:38px;border-radius:8px;background:var(--red);display:none;align-items:center;justify-content:center;font-size:1.55rem;flex-shrink:0">💧</span>
     <span>
@@ -1565,7 +1565,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
   <!-- Live on-chain data -->
   <div class="g2">
     <div class="card">
-      <div class="ch"><div class="ctitle">📊 On-Chain Stats</div><button class="btn btn-g btn-sm" onclick="loadExplorerData()">↺ Refresh</button></div>
+      <div class="ch"><div class="ctitle">📊 On-Chain Stats</div><button class="btn btn-g btn-sm" onclick="(window._loadExplorerAndMoat||loadExplorerData)()">↺ Refresh</button></div>
       <div class="cbody" id="explorerStats">
         <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading…</div>
       </div>
@@ -2494,7 +2494,15 @@ const MOATS_API      = 'https://moat-api.fortifi.network/api';
 const HCASH_API      = 'https://api.hashcash.club/api/v1/public';
 const HCASH_API_KEY  = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
 const DSC_PAIR       = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/';
-const AVAX_RPC       = 'https://api.avax.network/ext/bc/C/rpc';
+// FIXED: api.avax.network is rate-limited (429) and blocks CORS from browser.
+// Use Ankr public RPC as primary; fallback to official endpoint via wallet.
+const AVAX_RPC       = 'https://rpc.ankr.com/avalanche';
+const AVAX_RPC_FALLBACKS = [
+  'https://rpc.ankr.com/avalanche',
+  'https://avalanche.public-rpc.com',
+  'https://avax.meowrpc.com',
+  'https://api.avax.network/ext/bc/C/rpc',
+];
 const SNOWTRACE      = 'https://api.snowtrace.io/api';
 
 const PHARAOH_IMG = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg';
@@ -2510,6 +2518,28 @@ const PHARAOH_V2_ROUTER    = '0x5acc354dEe55a5d75EF6430c1c2eBE3d6765b4E6'; // V2
 const PHARAOH_FACTORY_ADDR = ethers.getAddress('0x85448bf2f589ab1f56225df5167c63f57758f8c1');
 
 let walletProvider = null, walletSigner = null, walletAddress = null;
+
+// FIXED: Returns a working JsonRpcProvider by trying fallback RPCs in order.
+// Avoids CORS/429 errors from api.avax.network when no wallet is connected.
+let _cachedRpcProvider = null;
+async function getReadProvider() {
+  if (walletProvider) return walletProvider;
+  if (_cachedRpcProvider) return _cachedRpcProvider;
+  for (const rpc of AVAX_RPC_FALLBACKS) {
+    try {
+      const p = new ethers.JsonRpcProvider(rpc);
+      // Quick liveness check
+      await Promise.race([
+        p.getBlockNumber(),
+        new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+      ]);
+      _cachedRpcProvider = p;
+      return p;
+    } catch(e) { /* try next */ }
+  }
+  // Last resort — return provider even if not verified
+  return new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
+}
 let hcashTokenAddr = null;
 let priceData = null, poolData = null, moatPoints = [], moatEvents = [];
 let allLbData = [], filteredLbData = [], allEvData = [], filteredEvData = [];
@@ -2747,7 +2777,7 @@ function nav(el) {
   if(v==='miners')loadMiners();
   if(v==='minerdetail'){/* handled by showMinerDetail */}
   if(v==='walletprofile'){/* handled by openWalletProfile */}
-  if(v==='explorer')loadExplorerData();
+  if(v==='explorer')(window._loadExplorerAndMoat||loadExplorerData)();
   if(v==='calculator'){buildCalcDurGrid();buildLockDurGrid();}
   if(v==='whatif'){initWhatIf();}
   if(v==='build'){initBuildPage();}
@@ -2824,7 +2854,7 @@ function updateWalletUI() {
 
 async function updateLpBalances() {
   if(!walletAddress)return;
-  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   try {
     // Resolve hCASH token address — use known fallback if LP call fails
     let hcashAddr = HCASH_TOKEN_FALLBACK;
@@ -2894,7 +2924,7 @@ async function resolveHcashToken() {
   const override = document.getElementById('hcashTokenOverride')?.value?.trim();
   if(override&&override.startsWith('0x')&&override.length===42) return ethers.getAddress(override);
   if(hcashTokenAddr) return hcashTokenAddr;
-  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   const lp = new ethers.Contract(HCASH_LP_ADDR,['function token0() view returns (address)','function token1() view returns (address)'],prov);
   const [t0,t1] = await Promise.all([lp.token0(),lp.token1()]);
   hcashTokenAddr = ethers.getAddress(t0.toLowerCase()===WAVAX_ADDR.toLowerCase()?t1:t0);
@@ -2928,7 +2958,7 @@ async function loadPriceData() {
     else {
       // fetch totalSupply on-chain and compute mcap
       try {
-        const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+        const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
         const hcashAddr = await resolveHcashToken().catch(()=>null);
         if(hcashAddr) {
           const tok = new ethers.Contract(hcashAddr,ERC20_ABI,prov);
@@ -2945,7 +2975,7 @@ async function loadPriceData() {
 
 async function loadPoolComposition() {
   try {
-    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const hcashAddr = await resolveHcashToken();
     const lp = new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov);
     const [res,t0,ts] = await Promise.all([lp.getReserves(),lp.token0(),lp.totalSupply()]);
@@ -3277,7 +3307,7 @@ async function loadExplorerData() {
   setHtml('explorerStats','<div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading on-chain data…</div>');
   let lpSup = poolData?.lpSupply || 0;  // fallback to already-loaded value
   try {
-    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const lp = new ethers.Contract(HCASH_LP_ADDR,LP_ABI,prov);
     const [res,ts,t0] = await Promise.all([lp.getReserves(),lp.totalSupply(),lp.token0()]);
     const isWavaxT0 = t0.toLowerCase()===WAVAX_ADDR.toLowerCase();
@@ -3342,7 +3372,7 @@ async function loadLpHolders(totalLpSupply) {
   if(!holdersEl)return;
   holdersEl.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span>Loading LP holders…</td></tr>';
   try{
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
 
     // Start immediately with known profiles + connected wallet
@@ -3506,7 +3536,7 @@ async function loadMiners() {
           const mid=m.id||m.name||'';
           const eff=s.hashrateMhps&&s.powerWatts?`${(s.hashrateMhps/s.powerWatts*100).toFixed(1)} MH/W`:'';
           return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-            ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+            ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';if(this.nextSibling)this.nextSibling.style.display='flex'">`:''}
             <div class="miner-img-fb" style="${img?'display:none':''}">⛏</div>
             <div class="miner-info">
               <div class="miner-name">${m.name||m.id||'Miner'}</div>
@@ -3533,7 +3563,7 @@ async function loadMiners() {
         const pw=s.powerWatts||s.powerRaw||0;
         const eff=mhs&&pw?`${(mhs/pw*100).toFixed(1)} MH/W`:'';
         return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-          ${img?`<img class="miner-img" src="${img}" alt="${r.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+          ${img?`<img class="miner-img" src="${img}" alt="${r.name}" onerror="this.style.display='none';if(this.nextSibling)this.nextSibling.style.display='flex'">`:''}
           <div class="miner-img-fb" style="${img?'display:none':''}">🔧</div>
           <div class="miner-info">
             <div class="miner-name">${r.name||r.id}</div>
@@ -3563,7 +3593,7 @@ async function loadMiners() {
         const pw=s.powerWatts||s.powerRaw||0;
         const eff=mhs&&pw?`${(mhs/pw*100).toFixed(1)} MH/W`:'';
         return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-          ${img?`<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}
+          ${img?`<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';if(this.nextSibling)this.nextSibling.style.display='flex'">`:''}
           <div class="miner-img-fb" style="${img?'display:none':''}">🌐</div>
           <div class="miner-info">
             <div class="miner-name">${m.name||m.id||'External NFT'}</div>
@@ -3613,7 +3643,7 @@ async function loadMarketplaceListings(marketContract, miners) {
   mktDiv.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading marketplace listings…</div>';
 
   try{
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
 
     // Build miner address→name map (include external NFTs like Jarmer Jorn)
     const minerByAddr={};
@@ -3807,7 +3837,7 @@ let _contractsCacheTs = 0;
 async function getContracts() {
   const AGE = 60000; // 60s cache
   if (_contractsCache && Date.now() - _contractsCacheTs < AGE) return _contractsCache;
-  const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(8000) }).then(r => r.json());
+  const resp = await fetch(`${HCASH_API}/contracts`, { headers: { 'x-api-key': HCASH_API_KEY }, signal: AbortSignal.timeout(20000) }).then(r => r.json());
   _contractsCache = Array.isArray(resp) ? resp : (resp?.contracts || []);
   _contractsCacheTs = Date.now();
   return _contractsCache;
@@ -3843,7 +3873,7 @@ async function quoteLPFromAVAX() {
     const hcashInp=document.getElementById('hcashTokenAmt');
     if(!avaxAmt){if(preview)preview.textContent='';return;}
     if(preview)preview.innerHTML='<span class="spin"></span>Quoting…';
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     try {
       const hcashAddr=await resolveHcashToken();
       const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,prov);
@@ -3892,7 +3922,7 @@ async function quoteLPFromToken() {
     const preview=document.getElementById('hcashLpPreview');
     if(!hcashAmt){if(avaxInp)avaxInp.value='';if(preview)preview.textContent='';return;}
     if(preview)preview.innerHTML='<span class="spin"></span>Reverse quoting…';
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     try{
       const lp=new ethers.Contract(HCASH_LP_ADDR,['function getReserves() view returns (uint256,uint256,uint256)','function token0() view returns (address)','function totalSupply() view returns (uint256)'],prov);
       const [res,t0,ts]=await Promise.all([lp.getReserves(),lp.token0(),lp.totalSupply()]);
@@ -3919,7 +3949,7 @@ async function quoteRemoveLP() {
   const lpAmt=parseFloat(document.getElementById('hcashRemoveAmt')?.value)||0;
   const preview=document.getElementById('hcashRemovePreview');
   if(!lpAmt){if(preview)preview.textContent='';return;}
-  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   try{
     const hcashAddr=await resolveHcashToken();
     const router=new ethers.Contract(PHARAOH_ROUTER_ADDR,PHARAOH_ROUTER_ABI,prov);
@@ -3969,7 +3999,7 @@ async function hcashAddLiquidity() {
     const WAVAX=ga(WAVAX_ADDR);
     const FACTORY=ga(PHARAOH_FACTORY_ADDR);
     const ROUTER=ga(PHARAOH_ROUTER_ADDR);
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const factory=new ethers.Contract(FACTORY,PHARAOH_FACTORY_ABI,prov);
     const router=new ethers.Contract(ROUTER,PHARAOH_ROUTER_ABI,walletSigner);
     const hcash=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
@@ -4071,7 +4101,7 @@ async function hcashRemoveLiquidity() {
     const WAVAX=ga(WAVAX_ADDR);
     const ROUTER=ga(PHARAOH_ROUTER_ADDR);
     const FACTORY=ga(PHARAOH_FACTORY_ADDR);
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const factory=new ethers.Contract(FACTORY,PHARAOH_FACTORY_ABI,prov);
     const router=new ethers.Contract(ROUTER,PHARAOH_ROUTER_ABI,walletSigner);
     const lpC=new ethers.Contract(ga(HCASH_LP_ADDR),ERC20_ABI,walletSigner);
@@ -4349,7 +4379,7 @@ async function loadRewards() {
   if(!walletAddress){setHtml('rewardsContent','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Connect wallet to see rewards.</div>');loadMinerHolders();return;}
   if(el)el.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span>Loading rewards…</div>';
   try{
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const res=await moatC.getAllPendingRewards(walletAddress);
     const tokens=res[0]||[],amounts=res[1]||[];
@@ -4375,7 +4405,7 @@ async function loadMinerHolders() {
     el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)"><span class="spin"></span> Loading holders…</div>';
     if(!contractAddr){el.innerHTML='<div class="mono" style="font-size:.80rem;color:var(--mut)">Address pending API</div>';return;}
     try{
-      const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+      const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
 
       // Update Snowtrace link immediately
       const linkEl=document.getElementById(linkElId);
@@ -4499,7 +4529,7 @@ async function loadMinerHolders() {
     async function fetchRewardCardImg(contractAddr, imgId, wrapId) {
       if (!contractAddr) return;
       try {
-        const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+        const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
         const nft = new ethers.Contract(ethers.getAddress(contractAddr),
           ['function tokenURI(uint256) view returns (string)'], prov);
         let uri = '';
@@ -4563,7 +4593,7 @@ async function renderActiveLocks() {
   if(!walletAddress){el.innerHTML='';return;}
   el.innerHTML='<div class="mono" style="font-size:.85rem;color:var(--mut);text-align:center;margin-top:.5rem"><span class="spin"></span>Loading locks…</div>';
   try{
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     // getUserAllLocks returns parallel arrays: amounts, endTimestamps, lockPoints, origDurations, lockIndexes, active
     const lockData=await moatC.getUserAllLocks(walletAddress).catch(()=>null);
@@ -4751,7 +4781,7 @@ function runCalc() {
   (async () => {
     let lpEst = 0;
     try {
-      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
       const hcashAddr = await resolveHcashToken();
       const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(()=>18));
       // avaxAmt is the AVAX side (halfUsd / avaxPrice)
@@ -4765,7 +4795,7 @@ function runCalc() {
     } catch(e) {
       // Fallback to reserve math (same as quoteLPFromAVAX fallback)
       try {
-        const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+        const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
         const lp = new ethers.Contract(HCASH_LP_ADDR, ['function getReserves() view returns (uint256,uint256,uint256)','function token0() view returns (address)','function totalSupply() view returns (uint256)'], prov);
         const [res, t0, ts] = await Promise.all([lp.getReserves(), lp.token0(), lp.totalSupply()]);
         const isW0 = t0.toLowerCase() === WAVAX_ADDR.toLowerCase();
@@ -4848,7 +4878,7 @@ function addCouncilRow() {
 // ══════════════════════════════════════════════════════
 async function updatePositionSummary() {
   if(!walletAddress){setHtml('positionSummary','<div class="mono" style="font-size:1.35rem;color:var(--mut)">Connect wallet to see your position.</div>');return;}
-  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   try{
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
@@ -4907,7 +4937,7 @@ async function loadUserPosition() {
   if(!el||!walletAddress)return;
   el.innerHTML='<div class="mono" style="font-size:1.35rem;color:var(--mut);padding:1rem;text-align:center"><span class="spin"></span>Loading…</div>';
   try{
-    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const moatC=new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const lpC=new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
     const [info,pts,lockData,lpBalRaw]=await Promise.all([
@@ -5041,7 +5071,7 @@ async function loadFortScoreOptimizer() {
   el.innerHTML='<div class="mono" style="font-size:.92rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading on-chain position…</div>';
 
   try {
-    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const moatC = new ethers.Contract(HCASH_MOAT_ADDR,MOAT_ABI,prov);
     const lpC   = new ethers.Contract(HCASH_LP_ADDR,ERC20_ABI,prov);
 
@@ -5228,7 +5258,7 @@ async function loadChainStats() {
       'function totalFacilities() view returns (uint256)',
       'function getActiveFacilityCount() view returns (uint256)',
     ];
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
     // Fetch block number and chain stats in parallel
@@ -5296,8 +5326,8 @@ async function loadActiveFacilityCount(MAIN_CONTRACT) {
   try {
     // Use Snowtrace getLogs API — handles full range without block limit issues
     const [initialRes, boughtRes] = await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
     ]);
 
     // Players who purchased a paid facility (Lv1-Lv5) via FacilityBought
@@ -5353,7 +5383,7 @@ async function loadActiveFacilityCount(MAIN_CONTRACT) {
 
   // Fallback: ethers getLogs in block chunks (Avalanche limits range to ~2048 blocks per call)
   try {
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const latestBlock = Number(await prov.getBlockNumber());
     const CHUNK = 100000; // large chunks, RPC may return partial
     const playerLevel = new Map();
@@ -5488,7 +5518,7 @@ async function quoteSwap() {
     if(!amt||!el){if(el)el.textContent='';return;}
     el.innerHTML='<span class="spin"></span>Quoting…';
     try {
-      const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+      const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
       const hcashAddr = await resolveHcashToken();
       // Detect stable flag — check both pairs but verify reserves before trusting stable
       const factory = new ethers.Contract(ethers.getAddress(PHARAOH_FACTORY_ADDR),PHARAOH_FACTORY_ABI,prov);
@@ -5589,7 +5619,7 @@ async function execSwap() {
   // ── legacy paths kept below (unreachable) ──
   const WAVAX=ethers.getAddress(WAVAX_ADDR);
   const ROUTER=ethers.getAddress(PHARAOH_ROUTER_ADDR);
-  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov=walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   const hcashTok=new ethers.Contract(hcashAddr,ERC20_ABI,walletSigner);
   const dec=Number(await hcashTok.decimals().catch(()=>18));
   const slip=_slippage/100;
@@ -5882,7 +5912,7 @@ async function showMinerDetail(id) {
   el.innerHTML = '<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:2rem"><span class="spin"></span>Loading on-chain data…</div>';
 
   const miner = _minerData[id];
-  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = walletProvider||new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
 
   let onChainHtml = '';
   if(miner?.address) {
@@ -5990,7 +6020,7 @@ async function showMinerDetail(id) {
 // Fetch Jarmer Jorn image from on-chain tokenURI and update _minerData + patch any cached listings
 async function fetchJarmerJornImage() {
   try {
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const nft = new ethers.Contract(JARMER_JORN_ADDR, [
       'function tokenURI(uint256 tokenId) view returns (string)',
       'function name() view returns (string)',
@@ -6346,7 +6376,7 @@ function filterMinerGrid() {
       const mid = m.id||m.name||'';
       const eff = s.hashrateMhps && s.powerWatts ? `${(s.hashrateMhps/s.powerWatts*100).toFixed(1)} MH/W` : '';
       return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-        ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">` :''}
+        ${img?`<img class="miner-img" src="${img}" alt="${m.name||'Miner'}" onerror="this.style.display='none';if(this.nextSibling)this.nextSibling.style.display='flex'">` :''}
         <div class="miner-img-fb" style="${img?'display:none':''}">⛏</div>
         <div class="miner-info">
           <div class="miner-name">${m.name||m.id||'Miner'}</div>
@@ -6414,7 +6444,7 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
   const listings = [];
 
   try {
-    const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const TW_ABI = [
       'function getAllValidListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
       'function getAllListings(uint256 startId, uint256 endId) view returns (tuple(uint256 listingId, uint256 tokenId, uint256 quantity, uint256 pricePerToken, uint128 startTimestamp, uint128 endTimestamp, address listingCreator, address assetContract, address currency, uint8 tokenType, uint8 status, bool reserved)[])',
@@ -6870,7 +6900,7 @@ async function wiFetchFacilityRates() {
 // electricityCost display = formatEther(raw) × 10 × BPH, so accuracy depends on live BPH.
 async function wiFetchLiveBlocksPerHour() {
   try {
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const latest = await prov.getBlockNumber();
     // Sample 100 blocks apart for a stable average
     const [b1, b2] = await Promise.all([
@@ -6907,7 +6937,7 @@ async function wiFetchFacilityRatesOnChain() {
   try {
     // Fetch live block rate first so electricity decode is accurate
     await wiFetchLiveBlocksPerHour();
-    const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+    const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
     // ── 1. Network stats (all in parallel) ──
     const [totalHashRaw, bigcoinPerBlockRaw, blocksToHalvingRaw, halvingIntervalRaw, facilityCountRaw] =
@@ -7012,7 +7042,7 @@ async function wiFetchFacilityRateTrend() {
   const MAIN_CONTRACT = '0x105fecae0c48d683dA63620De1f2d1582De9e98a';
   // FacilityElectricityCostChanged(uint256 indexed facilityIndex, uint256 newCost)
   const EVENT_SIG = ethers.id('FacilityElectricityCostChanged(uint256,uint256)');
-  const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   const MAX_CHUNK = 2048;
   // ~85,000 blocks/day on Grotto L1 → 30 days ≈ 2,550,000 blocks; cap at feasible depth
   const HISTORY_BLOCKS = 200000; // ~2.3 days — enough for trend without hundreds of calls
@@ -7748,7 +7778,7 @@ async function wiEnsureLiveData() {
   // 3. Pool composition (LP supply, reserves) from on-chain
   if (!poolData?.lpSupply) {
     try {
-      const prov = new ethers.JsonRpcProvider(AVAX_RPC);
+      const prov = new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
       const lp = new ethers.Contract(HCASH_LP_ADDR, LP_ABI, prov);
       const [res, t0, ts] = await Promise.all([lp.getReserves(), lp.token0(), lp.totalSupply()]);
       const isWavaxT0 = t0.toLowerCase() === WAVAX_ADDR.toLowerCase();
@@ -7773,7 +7803,7 @@ async function wiQuoteLpFromPharaoh(avaxSide, hcashSide, lpTotalSupply, lockDays
   clearTimeout(_wiLpQuoteTimer);
   _wiLpQuoteTimer = setTimeout(async () => {
     try {
-      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+      const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
       const hcashAddr = await resolveHcashToken();
       const hcashDec = Number(await new ethers.Contract(hcashAddr, ERC20_ABI, prov).decimals().catch(() => 18));
       const avaxWei = ethers.parseEther(safeNum(avaxSide));
@@ -8379,7 +8409,7 @@ async function fetchJarmerJorn() {
         const pw  = s.powerWatts  || s.powerRaw    || 0;
         const eff = mhs && pw ? `${(mhs/pw*100).toFixed(1)} MH/W` : '';
         return `<div class="miner-card" onclick="showMinerDetail('${mid}')">
-          ${img ? `<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">` : ''}
+          ${img ? `<img class="miner-img" src="${img}" alt="${m.name||'NFT'}" onerror="this.style.display='none';if(this.nextSibling)this.nextSibling.style.display='flex'">` : ''}
           <div class="miner-img-fb" style="${img?'display:none':''}">🌐</div>
           <div class="miner-info">
             <div class="miner-name">${m.name || 'Jarmer Jorn'}</div>
@@ -9190,7 +9220,7 @@ async function refreshWalletProfile() {
 }
 
 async function fetchWalletProfileOnChain(address) {
-  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   const moatC = new ethers.Contract(HCASH_MOAT_ADDR, MOAT_ABI, prov);
   const lpC   = new ethers.Contract(HCASH_LP_ADDR,   ERC20_ABI, prov);
 
@@ -9408,7 +9438,7 @@ async function loadMoatLpAnalysis() {
   document.getElementById('moatBarLocked').style.width='0%';
   document.getElementById('moatAnalysisText').style.display='none';
 
-  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC_FALLBACKS[0]);
   const lpC  = new ethers.Contract(HCASH_LP_ADDR,   ERC20_ABI, prov);
   const moatC= new ethers.Contract(HCASH_MOAT_ADDR, MOAT_ABI,  prov);
 
@@ -9586,11 +9616,19 @@ async function loadMoatLpAnalysis() {
 }
 
 // Auto-trigger moat LP analysis when explorer page loads
-const _origLoadExplorerData = loadExplorerData;
-async function loadExplorerData() {
+// FIXED: was causing infinite recursion — function declaration hoisting meant
+// loadExplorerData always referred to the new wrapper, not the original.
+// Solution: capture the original before any redeclaration using a stable reference.
+const _origLoadExplorerData = (function() {
+  const orig = loadExplorerData;
+  return orig;
+})();
+// Replace nav trigger to call combined loader
+const _explorerNav_orig = window.nav;
+window._loadExplorerAndMoat = async function() {
   await _origLoadExplorerData();
   loadMoatLpAnalysis();
-}
+};
 
 // Close bd dropdowns on outside click
 document.addEventListener('click', function(e) {
