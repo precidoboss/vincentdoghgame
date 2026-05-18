@@ -2503,7 +2503,8 @@ const AVAX_RPC_FALLBACKS = [
   'https://avax.meowrpc.com',
   'https://api.avax.network/ext/bc/C/rpc',
 ];
-const SNOWTRACE      = 'https://api.snowtrace.io/api';
+const SNOWTRACE_API_KEY = 'rs_1caf6cdfedd13407191c09b4';
+const SNOWTRACE      = 'https://api.snowtrace.io/api?apikey=' + SNOWTRACE_API_KEY;
 
 const PHARAOH_IMG = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg';
 // hCASH Moat
@@ -3088,9 +3089,9 @@ async function loadEvents() {
 
     // Fetch normal txs (gives method sig + timestamp) AND token transfers (gives exact LP amount)
     const [txRes, tokenTxRes] = await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
+      fetch(`${SNOWTRACE}&module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
         .then(r=>r.json()),
-      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`)
+      fetch(`${SNOWTRACE}&module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`)
         .then(r=>r.json()),
     ]);
 
@@ -3382,7 +3383,7 @@ async function loadLpHolders(totalLpSupply) {
     addressSet.add(HCASH_MOAT_ADDR.toLowerCase());
 
     // Also query Snowtrace in parallel for additional addresses
-    const snowtracePromise=fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
+    const snowtracePromise=fetch(`${SNOWTRACE}&module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
       .then(r=>r.json()).catch(()=>null);
 
     // Immediately query balanceOf for known profiles (fast, no waiting)
@@ -3728,7 +3729,7 @@ async function loadMarketplaceListings(marketContract, miners) {
     // ── STRATEGY 2: Parse NewListing events via Snowtrace logs ──
     if(!listings.length){
       try{
-        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
+        const logsRes = await fetch(`${SNOWTRACE}&module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
           .then(r=>r.json()).catch(()=>null);
         const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
         const now = Math.floor(Date.now()/1000);
@@ -4412,7 +4413,7 @@ async function loadMinerHolders() {
       if(linkEl) linkEl.href=`https://snowtrace.io/token/${contractAddr}`;
 
       // ── STRATEGY 1: Snowtrace NFT transfer API ──
-      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`)
+      const txRes=await fetch(`${SNOWTRACE}&module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`)
         .then(r=>r.json()).catch(()=>null);
 
       let holders=[];
@@ -5326,8 +5327,8 @@ async function loadActiveFacilityCount(MAIN_CONTRACT) {
   try {
     // Use Snowtrace getLogs API — handles full range without block limit issues
     const [initialRes, boughtRes] = await Promise.allSettled([
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
-      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}&module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}&module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(20000) }).then(r => r.json()),
     ]);
 
     // Players who purchased a paid facility (Lv1-Lv5) via FacilityBought
@@ -6493,7 +6494,7 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
 
     // Fallback: Snowtrace event logs
     if (!listings.length) {
-      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
+      const logsRes = await fetch(`${SNOWTRACE}&module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
         .then(r=>r.json()).catch(()=>null);
       const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
       const now = Math.floor(Date.now()/1000);
@@ -9462,7 +9463,7 @@ async function loadMoatLpAnalysis() {
 
     // Try Snowtrace for moat staked/locked events
     try {
-      const stakeRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${HCASH_MOAT_ADDR}&fromBlock=0&toBlock=99999999&sort=desc&offset=500`)
+      const stakeRes = await fetch(`${SNOWTRACE}&module=logs&action=getLogs&address=${HCASH_MOAT_ADDR}&fromBlock=0&toBlock=99999999&sort=desc&offset=500`)
         .then(r=>r.json()).catch(()=>null);
       if(stakeRes?.status==='1') {
         for(const log of (stakeRes.result||[])) {
