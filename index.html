@@ -1571,7 +1571,7 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
       </div>
     </div>
     <div class="card">
-      <div class="ch"><div class="ctitle">🏆 Top LP Stakers (Points)</div></div>
+      <div class="ch"><div class="ctitle">🏆 Top LP Stakers (Points)</div><span class="mono" style="font-size:.62rem;color:var(--mut)">tap row → wallet profile</span></div>
       <div class="cbody">
         <div class="tw"><table class="tbl" id="explorerLbTbl">
           <thead><tr><th>#</th><th>Wallet</th><th>Points</th><th>Share</th></tr></thead>
@@ -1580,6 +1580,60 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
       </div>
     </div>
   </div>
+  <!-- ══ LP MOAT STAKED/LOCKED ANALYSIS ══ -->
+  <div class="card" style="margin-top:.85rem;border-color:rgba(232,53,53,.22)">
+    <div class="ch" style="background:linear-gradient(90deg,rgba(232,53,53,.06),transparent)">
+      <div class="ctitle" style="color:var(--red)">🏦 LP Tokens in the Moat — Full On-Chain Analysis</div>
+      <button class="btn btn-g btn-sm" onclick="loadMoatLpAnalysis()">↺ Refresh</button>
+    </div>
+    <div class="cbody">
+      <!-- Summary bar -->
+      <div class="sg" id="moatLpSummaryGrid" style="margin-bottom:1rem">
+        <div class="sc"><div class="sl">Total Staked LP</div><div class="sv cr" id="moatTotalStaked">—</div><div class="ss">Flexible positions</div></div>
+        <div class="sc"><div class="sl">Total Locked LP</div><div class="sv cg" id="moatTotalLocked">—</div><div class="ss">Time-committed</div></div>
+        <div class="sc"><div class="sl">Total in Moat</div><div class="sv cw" id="moatTotalLP">—</div><div class="ss">Staked + Locked</div></div>
+        <div class="sc"><div class="sl">% of LP Supply</div><div class="sv cgn" id="moatPctOfSupply">—</div><div class="ss">LP in Moat vs total</div></div>
+        <div class="sc"><div class="sl">Moat TVL (USD)</div><div class="sv" style="color:var(--gold)" id="moatTVLusd">—</div><div class="ss">Live pool valuation</div></div>
+        <div class="sc"><div class="sl">Unique Depositors</div><div class="sv" id="moatUniqueDeps">—</div><div class="ss">Wallets with LP in Moat</div></div>
+      </div>
+
+      <!-- Pool bar — staked vs locked vs free -->
+      <div style="margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span class="mono" style="font-size:.68rem;color:var(--mut)">LP DISTRIBUTION ACROSS MOAT</span>
+          <span class="mono" style="font-size:.68rem;color:var(--mut)" id="moatBarLabel">—</span>
+        </div>
+        <div style="background:var(--bor);border-radius:99px;height:8px;overflow:hidden;display:flex">
+          <div id="moatBarStaked" style="height:100%;background:var(--red);border-radius:99px 0 0 99px;transition:width .8s var(--ease);width:0%"></div>
+          <div id="moatBarLocked" style="height:100%;background:var(--gold);transition:width .8s var(--ease);width:0%"></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:5px;flex-wrap:wrap">
+          <span style="display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--dim)"><span style="width:8px;height:8px;background:var(--red);border-radius:2px;display:inline-block"></span>Staked (flexible)</span>
+          <span style="display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--dim)"><span style="width:8px;height:8px;background:var(--gold);border-radius:2px;display:inline-block"></span>Locked (time-committed)</span>
+          <span style="display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:.62rem;color:var(--dim)"><span style="width:8px;height:8px;background:var(--bor2);border-radius:2px;display:inline-block"></span>Free (in wallets)</span>
+        </div>
+      </div>
+
+      <!-- Lock duration breakdown -->
+      <div id="moatLockBreakdown" style="margin-bottom:1rem">
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.6rem">Lock Duration Breakdown</div>
+        <div id="moatLockDurRows" class="mono" style="font-size:1.35rem;color:var(--mut);padding:.5rem;text-align:center"><span class="spin"></span></div>
+      </div>
+
+      <!-- Top stakers in moat (from allLbData) -->
+      <div>
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);margin-bottom:.6rem">Top LP Depositors in Moat</div>
+        <div class="tw"><table class="tbl">
+          <thead><tr><th>#</th><th>Wallet</th><th>LP Staked</th><th>LP Locked</th><th>Total LP</th><th>Pts</th></tr></thead>
+          <tbody id="moatTopDepBody"><tr><td colspan="6" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span></td></tr></tbody>
+        </table></div>
+      </div>
+
+      <!-- Analysis text -->
+      <div id="moatAnalysisText" style="margin-top:.85rem;background:rgba(232,53,53,.04);border:1px solid rgba(232,53,53,.12);border-radius:8px;padding:.85rem;font-size:.75rem;color:var(--dim);line-height:1.7;display:none"></div>
+    </div>
+  </div>
+
   <!-- LP Token Holders -->
   <div class="card" id="lpHoldersCard" style="margin-top:.85rem">
     <div class="ch">
@@ -1765,12 +1819,89 @@ html.light .tab.on  { color: var(--acc); background: rgba(232,53,53,.08); }
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:.85rem;flex-wrap:wrap">
         <input id="lbSearch" type="text" class="inp" placeholder="Search wallet…" style="max-width:220px" oninput="filterLb()">
         <span class="mono" style="font-size:.80rem;color:var(--mut)" id="lbCount"></span>
+        <span class="mono" style="font-size:.62rem;color:var(--mut);margin-left:auto">👆 Tap any row for full wallet analysis</span>
       </div>
       <div class="tw">
         <table class="tbl">
           <thead><tr><th>#</th><th>Wallet</th><th>Points</th><th>Share</th><th>Method</th></tr></thead>
           <tbody id="lbBody"><tr><td colspan="5" style="text-align:center;color:var(--mut);padding:1.5rem"><span class="spin"></span></td></tr></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  WALLET PROFILE (from leaderboard click)  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="view-walletprofile" class="view">
+  <div class="sh">
+    <div class="sh-t" id="wpTitle">🔍 Wallet Analysis</div>
+    <button class="btn btn-g btn-sm" onclick="navBackToBoard()">← Back to Board</button>
+  </div>
+
+  <!-- Hero address card -->
+  <div class="explorer-hero" id="wpHero" style="margin-bottom:1.1rem">
+    <div id="wpPfpWrap" style="flex-shrink:0"></div>
+    <div style="flex:1;min-width:180px">
+      <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.25rem;color:var(--txt)" id="wpDisplayName">—</div>
+      <div class="mono" style="font-size:.72rem;color:var(--dim);margin-top:3px;word-break:break-all" id="wpFullAddress">—</div>
+      <div style="display:flex;gap:6px;margin-top:.55rem;flex-wrap:wrap" id="wpLinks"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+      <div style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.35rem;color:var(--red)" id="wpPoints">— pts</div>
+      <div class="mono" style="font-size:.68rem;color:var(--mut)" id="wpRank">—</div>
+      <div class="mono" style="font-size:.68rem;color:var(--grn)" id="wpShare">—% of pool</div>
+    </div>
+  </div>
+
+  <!-- Stats grid -->
+  <div class="sg" id="wpStatGrid" style="margin-bottom:1rem">
+    <div class="sc"><div class="sl">LP Staked</div><div class="sv cr" id="wpStaked">—</div><div class="ss">Flexible · 1× pts</div></div>
+    <div class="sc"><div class="sl">LP Locked</div><div class="sv cg" id="wpLockedTotal">—</div><div class="ss">Time-committed</div></div>
+    <div class="sc"><div class="sl">LP in Wallet</div><div class="sv cw" id="wpWalletBal">—</div><div class="ss">Not in Moat</div></div>
+    <div class="sc"><div class="sl">Total LP</div><div class="sv" id="wpTotalLp">—</div><div class="ss">Wallet + Moat</div></div>
+    <div class="sc"><div class="sl">Moat Points</div><div class="sv cr" id="wpMoatPts">—</div><div class="ss">hCASH Moat</div></div>
+    <div class="sc"><div class="sl">Pool Share</div><div class="sv cgn" id="wpPoolShare">—</div><div class="ss">Of total LP in Moat</div></div>
+  </div>
+
+  <div class="g2">
+    <!-- LP Staked / Locked breakdown -->
+    <div>
+      <div class="card">
+        <div class="ch">
+          <div class="ctitle">⚡ LP Position Breakdown</div>
+          <button class="btn btn-g btn-sm" id="wpRefreshBtn" onclick="refreshWalletProfile()">↺ Refresh</button>
+        </div>
+        <div class="cbody" id="wpPositionBreakdown">
+          <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1.5rem"><span class="spin"></span>Loading…</div>
+        </div>
+      </div>
+
+      <!-- Active locks detail -->
+      <div class="card" style="margin-top:0">
+        <div class="ch"><div class="ctitle">⏳ Active Locks</div><span class="live"><span class="ld"></span>On-Chain</span></div>
+        <div class="cbody" id="wpLocksDetail">
+          <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading locks…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Activity history for this wallet -->
+    <div>
+      <div class="card">
+        <div class="ch"><div class="ctitle">📡 Wallet Activity</div></div>
+        <div class="evf" id="wpActivityFeed" style="max-height:280px">
+          <div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span></div>
+        </div>
+      </div>
+
+      <!-- Moat value estimates -->
+      <div class="card" style="margin-top:0">
+        <div class="ch"><div class="ctitle">💰 Value Estimates</div><span class="mono" style="font-size:.68rem;color:var(--mut)">Based on live pool prices</span></div>
+        <div class="cbody" id="wpValueEst">
+          <div class="mono" style="font-size:1.35rem;color:var(--mut)"><span class="spin"></span></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2365,9 +2496,6 @@ const HCASH_API_KEY  = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
 const DSC_PAIR       = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/';
 const AVAX_RPC       = 'https://api.avax.network/ext/bc/C/rpc';
 const SNOWTRACE      = 'https://api.snowtrace.io/api';
-const SNOWTRACE_KEY  = 'rs_1caf6cdfedd13407191c09b4';
-// Build authenticated Snowtrace URL — appends apikey to any query string
-function stUrl(params) { return stUrl(`${params}&apikey=${SNOWTRACE_KEY}`); }
 
 const PHARAOH_IMG = 'https://raw.githubusercontent.com/precidoboss/my-game-sprites/main/pharoah%20image.jpg';
 // hCASH Moat
@@ -2618,6 +2746,7 @@ function nav(el) {
   if(v==='activity')loadEvents();
   if(v==='miners')loadMiners();
   if(v==='minerdetail'){/* handled by showMinerDetail */}
+  if(v==='walletprofile'){/* handled by openWalletProfile */}
   if(v==='explorer')loadExplorerData();
   if(v==='calculator'){buildCalcDurGrid();buildLockDurGrid();}
   if(v==='whatif'){initWhatIf();}
@@ -2929,9 +3058,9 @@ async function loadEvents() {
 
     // Fetch normal txs (gives method sig + timestamp) AND token transfers (gives exact LP amount)
     const [txRes, tokenTxRes] = await Promise.allSettled([
-      fetch(stUrl(`module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`))
+      fetch(`${SNOWTRACE}?module=account&action=txlist&address=${HCASH_MOAT_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
         .then(r=>r.json()),
-      fetch(stUrl(`module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`))
+      fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&address=${HCASH_MOAT_ADDR}&sort=desc&offset=300`)
         .then(r=>r.json()),
     ]);
 
@@ -3122,7 +3251,8 @@ function renderLb() {
     const twitterHtml = prof
       ? `<a href="https://x.com/${prof.twitter}" target="_blank" style="font-family:'Rajdhani',sans-serif;font-weight:700;font-size:1rem;color:var(--red);text-decoration:none">@${prof.twitter}</a>`
       : `<span class="mono" style="font-size:1.4rem;color:var(--txt)">${shortA(x.wallet)}</span>`;
-    return `<tr>
+    return `<tr style="cursor:pointer;transition:background .14s" onclick="openWalletProfile('${x.wallet}')"
+      onmouseover="this.style.background='rgba(232,53,53,.06)'" onmouseout="this.style.background=''">
       <td><span class="rk ${rkCls}">${rank}</span></td>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
@@ -3191,7 +3321,8 @@ async function loadExplorerData() {
     const nameHtml=prof
       ?`<a href="https://x.com/${prof.twitter}" target="_blank" style="color:var(--red);text-decoration:none;font-size:1.4rem">@${prof.twitter}</a>`
       :`<span class="mono" style="font-size:.85rem;color:var(--dim)">${shortA(x.wallet)}</span>`;
-    return `<tr>
+    return `<tr style="cursor:pointer;transition:background .14s" onclick="openWalletProfile('${x.wallet}')"
+      onmouseover="this.style.background='rgba(232,53,53,.06)'" onmouseout="this.style.background=''">
       <td><span class="rk ${rkCls}">${i+1}</span></td>
       <td style="display:flex;align-items:center;gap:6px">
         ${prof?`<img src="${prof.pic}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
@@ -3221,7 +3352,7 @@ async function loadLpHolders(totalLpSupply) {
     addressSet.add(HCASH_MOAT_ADDR.toLowerCase());
 
     // Also query Snowtrace in parallel for additional addresses
-    const snowtracePromise=fetch(stUrl(`module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`))
+    const snowtracePromise=fetch(`${SNOWTRACE}?module=account&action=tokentx&contractaddress=${HCASH_LP_ADDR}&startblock=0&endblock=99999999&sort=desc&offset=300`)
       .then(r=>r.json()).catch(()=>null);
 
     // Immediately query balanceOf for known profiles (fast, no waiting)
@@ -3567,7 +3698,7 @@ async function loadMarketplaceListings(marketContract, miners) {
     // ── STRATEGY 2: Parse NewListing events via Snowtrace logs ──
     if(!listings.length){
       try{
-        const logsRes = await fetch(stUrl(`module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`))
+        const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
           .then(r=>r.json()).catch(()=>null);
         const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
         const now = Math.floor(Date.now()/1000);
@@ -4251,7 +4382,7 @@ async function loadMinerHolders() {
       if(linkEl) linkEl.href=`https://snowtrace.io/token/${contractAddr}`;
 
       // ── STRATEGY 1: Snowtrace NFT transfer API ──
-      const txRes=await fetch(stUrl(`module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`))
+      const txRes=await fetch(`${SNOWTRACE}?module=account&action=tokennfttx&contractaddress=${contractAddr}&startblock=0&endblock=99999999&sort=desc&offset=500`)
         .then(r=>r.json()).catch(()=>null);
 
       let holders=[];
@@ -5100,32 +5231,20 @@ async function loadChainStats() {
     const prov = new ethers.JsonRpcProvider(AVAX_RPC);
     const game = new ethers.Contract(MAIN_CONTRACT, MAIN_ABI, prov);
 
-    // Fetch block number first, then parallel fetch everything else including block time sample
-    const blockHex = await prov.send('eth_blockNumber', []);
-    const curBlock = parseInt(blockHex, 16);
-    const sampleBlock = Math.max(1, curBlock - 100);
-
-    const [hashRaw, bpbRaw, halvRaw, halvIntRaw, latestBlock, oldBlock] = await Promise.all([
+    // Fetch block number and chain stats in parallel
+    const [blockHex, hashRaw, bpbRaw, halvRaw, halvIntRaw] = await Promise.all([
+      prov.send('eth_blockNumber', []),
       game.totalHashrate().catch(() => 0n),
       game.getBigcoinPerBlock().catch(() => 0n),
       game.blocksUntilNextHalving().catch(() => 0n),
       game.HALVING_INTERVAL().catch(() => 0n),
-      prov.getBlock(curBlock),
-      prov.getBlock(sampleBlock).catch(() => null),
     ]);
 
-    // Update live block time global used by electricity rate decode and halving countdown
-    if (latestBlock && oldBlock && latestBlock.timestamp > oldBlock.timestamp) {
-      const secPer100 = latestBlock.timestamp - oldBlock.timestamp;
-      _wiBlocksPerHour = 3600 / (secPer100 / 100);
-      console.log(`[Dashboard] Live block time: ${(secPer100/100).toFixed(2)}s → ${_wiBlocksPerHour.toFixed(0)} BPH`);
-    }
-
     // Current block
+    const curBlock = parseInt(blockHex, 16);
     if (curBlock > 0) {
       setTxt('d_block', curBlock.toLocaleString());
-      const secPB = _wiBlocksPerHour > 0 ? (3600 / _wiBlocksPerHour).toFixed(2) : '?';
-      setTxt('d_blockTime', `~${secPB}s avg · live`);
+      setTxt('d_blockTime', '~1s avg · live');
     }
 
     // Network hashrate (in MH/s)
@@ -5150,9 +5269,7 @@ async function loadChainStats() {
     // Halving countdown
     const halvBlocks = Number(halvRaw);
     if (halvBlocks > 0) {
-      // Use live block time from _wiBlocksPerHour; fallback to fetched block time
-      const secPerBlock = _wiBlocksPerHour > 0 ? 3600 / _wiBlocksPerHour : 1.17;
-      const secsLeft = halvBlocks * secPerBlock;
+      const secsLeft = halvBlocks * 1; // ~1s/block on Avalanche
       const daysLeft = secsLeft / 86400;
       const hrsLeft  = (secsLeft % 86400) / 3600;
       const minsLeft = (secsLeft % 3600)  / 60;
@@ -5179,8 +5296,8 @@ async function loadActiveFacilityCount(MAIN_CONTRACT) {
   try {
     // Use Snowtrace getLogs API — handles full range without block limit issues
     const [initialRes, boughtRes] = await Promise.allSettled([
-      fetch(stUrl(`module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`), { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
-      fetch(stUrl(`module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`),  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_INITIAL}&fromBlock=0&toBlock=99999999&offset=5000`, { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
+      fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${MAIN_CONTRACT}&topic0=${TOPIC_BOUGHT}&fromBlock=0&toBlock=99999999&offset=5000`,  { signal: AbortSignal.timeout(10000) }).then(r => r.json()),
     ]);
 
     // Players who purchased a paid facility (Lv1-Lv5) via FacilityBought
@@ -6346,7 +6463,7 @@ async function loadMarketplaceListingsForWi(marketContract, miners) {
 
     // Fallback: Snowtrace event logs
     if (!listings.length) {
-      const logsRes = await fetch(stUrl(`module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`))
+      const logsRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${addr}&topic0=0xef309e3999c4dd6a4c1e4af6221896b7e5ccf9e7fc4fe5b218b883ce9190d7ad&fromBlock=0&toBlock=99999999&offset=500`)
         .then(r=>r.json()).catch(()=>null);
       const logs = (logsRes?.status==='1') ? (logsRes.result||[]) : [];
       const now = Math.floor(Date.now()/1000);
@@ -9000,6 +9117,479 @@ function bdUpdateFacilityPill() {
   const rateStr = rate ? ` · ${rate} hCASH/kWh` : '';
   label.textContent = `Lv${lv}${d.dims ? ' · '+d.dims : ''}${d.slots ? ' · '+d.slots+' slots' : ''}${wattsStr ? ' · '+wattsStr : ''}${rateStr}`;
   document.getElementById('bd-facilityPillIcon').textContent = ['','🏠','🏭','🏗️','🏢','⚡'][lv] || '🏭';
+}
+
+// ══════════════════════════════════════════════════════
+//  WALLET PROFILE — from leaderboard click
+// ══════════════════════════════════════════════════════
+let _wpCurrentAddress = null;
+let _wpPrevView = 'leaderboard'; // which view to return to
+
+function navBackToBoard() {
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  const prevView = document.getElementById('view-'+_wpPrevView);
+  const prevTab  = document.querySelector(`.tab[data-v="${_wpPrevView}"]`);
+  if(prevView) prevView.classList.add('on');
+  if(prevTab)  prevTab.classList.add('on');
+}
+
+async function openWalletProfile(address) {
+  // Figure out which tab we came from
+  const activeTab = document.querySelector('.tab.on');
+  _wpPrevView = activeTab?.dataset?.v || 'leaderboard';
+
+  _wpCurrentAddress = address.toLowerCase();
+  document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.getElementById('view-walletprofile').classList.add('on');
+
+  // Scroll to top
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  // Fill hero immediately with what we know
+  const prof  = getKnownProfile(_wpCurrentAddress);
+  const lbEntry = allLbData.find(x=>x.wallet===_wpCurrentAddress);
+  const rank  = lbEntry ? allLbData.indexOf(lbEntry)+1 : null;
+  const total = allLbData.reduce((s,x)=>s+x.points,0);
+
+  setTxt('wpTitle', '🔍 Wallet Analysis');
+  setTxt('wpFullAddress', address);
+  setTxt('wpDisplayName', prof ? '@'+prof.twitter : (lbEntry?.username||shortA(address)));
+  setTxt('wpPoints', lbEntry ? fmtP(lbEntry.points)+' pts' : '— pts');
+  setTxt('wpRank', rank ? `Rank #${rank} of ${allLbData.length}` : 'Not on leaderboard');
+  setTxt('wpShare', lbEntry && total ? (lbEntry.points/total*100).toFixed(3)+'% of pool' : '—');
+
+  // Profile picture
+  const pfpWrap = document.getElementById('wpPfpWrap');
+  if(pfpWrap) {
+    if(prof) {
+      pfpWrap.innerHTML = `<img src="${prof.pic}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid rgba(232,53,53,.35)" onerror="this.outerHTML='<div style=\'width:56px;height:56px;border-radius:50%;background:rgba(232,53,53,.1);border:2px solid rgba(232,53,53,.25);display:flex;align-items:center;justify-content:center;font-size:1.6rem\'>👤</div>'">`;
+    } else {
+      const initials = shortA(address).slice(0,2).toUpperCase();
+      pfpWrap.innerHTML = `<div style="width:56px;height:56px;border-radius:50%;background:rgba(232,53,53,.1);border:2px solid rgba(232,53,53,.25);display:flex;align-items:center;justify-content:center;font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.1rem;color:var(--red)">${initials}</div>`;
+    }
+  }
+
+  // Links
+  const linksEl = document.getElementById('wpLinks');
+  if(linksEl) {
+    linksEl.innerHTML = `
+      <a href="https://snowtrace.io/address/${address}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none">Snowtrace ↗</a>
+      <a href="https://moats.app/moat/0x501f6e7bec3db63d8dacbc9fa0ce42d5d2329d53?wallet=${address}" target="_blank" class="btn btn-g btn-sm" style="text-decoration:none">moats.app ↗</a>
+      ${prof?`<a href="https://x.com/${prof.twitter}" target="_blank" class="btn btn-sm" style="text-decoration:none;background:rgba(29,161,242,.1);border-color:rgba(29,161,242,.3);color:#1da1f2">𝕏 @${prof.twitter} ↗</a>`:''}
+    `;
+  }
+
+  // Now fetch on-chain data
+  await fetchWalletProfileOnChain(address);
+}
+
+async function refreshWalletProfile() {
+  if(_wpCurrentAddress) await fetchWalletProfileOnChain(_wpCurrentAddress);
+}
+
+async function fetchWalletProfileOnChain(address) {
+  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+  const moatC = new ethers.Contract(HCASH_MOAT_ADDR, MOAT_ABI, prov);
+  const lpC   = new ethers.Contract(HCASH_LP_ADDR,   ERC20_ABI, prov);
+
+  // Show loading states
+  ['wpPositionBreakdown','wpLocksDetail','wpActivityFeed','wpValueEst'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = `<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:1rem"><span class="spin"></span>Loading…</div>`;
+  });
+  ['wpStaked','wpLockedTotal','wpWalletBal','wpTotalLp','wpMoatPts','wpPoolShare'].forEach(id=>setTxt(id,'—'));
+
+  try {
+    // Parallel fetch: userInfo, locks, wallet LP balance
+    const [infoRes, lockRes, walletLpRes, lpSupplyRes] = await Promise.allSettled([
+      moatC.userInfo(address),
+      moatC.getUserAllLocks(address),
+      lpC.balanceOf(address),
+      lpC.totalSupply(),
+    ]);
+
+    const staked = infoRes.status==='fulfilled' ? parseFloat(ethers.formatEther(infoRes.value[0]||0n)) : 0;
+    const stakePts = infoRes.status==='fulfilled' ? parseFloat(ethers.formatEther(infoRes.value[2]||0n)) : 0;
+    const walletLp = walletLpRes.status==='fulfilled' ? parseFloat(ethers.formatEther(walletLpRes.value)) : 0;
+    const lpSupply = lpSupplyRes.status==='fulfilled' ? parseFloat(ethers.formatEther(lpSupplyRes.value)) : poolData?.lpSupply||1;
+
+    // Parse locks
+    let lockedTotal = 0;
+    let lockDetails = [];
+    const now = Math.floor(Date.now()/1000);
+
+    if(lockRes.status==='fulfilled' && lockRes.value) {
+      const [amounts, lockDurations, lockStarts, , lockPts, actives, lockIdxs] = lockRes.value;
+      const len = amounts?.length || 0;
+      for(let i=0;i<len;i++){
+        if(!actives[i]) continue;
+        const amt    = parseFloat(ethers.formatEther(amounts[i]));
+        const durSec = Number(lockDurations[i]);
+        const start  = Number(lockStarts[i]);
+        const end    = start + durSec;
+        const origDays = Math.round(durSec/86400);
+        const daysLeft = Math.max(0, Math.round((end - now)/86400));
+        const done = now >= end;
+        const pct  = durSec>0 ? Math.min(100, ((now-start)/durSec)*100) : 100;
+        const mult = lockMultiplier(origDays);
+        const pts  = lockPts ? parseFloat(ethers.formatEther(lockPts[i])) : 0;
+        const lockIdx = lockIdxs ? Number(lockIdxs[i]) : i;
+        lockedTotal += amt;
+        lockDetails.push({amt, origDays, daysLeft, done, pct, mult, pts, lockIdx, start, end});
+      }
+    }
+
+    const totalLp = staked + lockedTotal + walletLp;
+    const moatTotal = staked + lockedTotal;
+    // Estimate moat points from leaderboard if available
+    const lbEntry = allLbData.find(x=>x.wallet===address.toLowerCase());
+    const totalPts = lbEntry?.points || stakePts || 0;
+
+    // Update stat grid
+    setTxt('wpStaked',       fmtLP(staked)+' LP');
+    setTxt('wpLockedTotal',  fmtLP(lockedTotal)+' LP');
+    setTxt('wpWalletBal',    fmtLP(walletLp)+' LP');
+    setTxt('wpTotalLp',      fmtLP(totalLp)+' LP');
+    setTxt('wpMoatPts',      fmtP(totalPts)+' pts');
+
+    // Moat pool share — use moat contract balance for denominator
+    let moatContractBal = 0;
+    try{ const mb=await lpC.balanceOf(HCASH_MOAT_ADDR); moatContractBal=parseFloat(ethers.formatEther(mb)); }catch(e){}
+    const poolShare = moatContractBal>0 ? (moatTotal/moatContractBal*100) : 0;
+    setTxt('wpPoolShare', poolShare>0 ? poolShare.toFixed(3)+'%' : '—');
+
+    // ── Position Breakdown card ──
+    const posEl = document.getElementById('wpPositionBreakdown');
+    if(posEl) {
+      const lpUsdPerToken = poolData && priceData ? ((poolData.avaxReserve*(priceData.avaxPrice||0) + poolData.hcashReserve*(priceData.price||0)) / (lpSupply||1)) : 0;
+      const stakedUsd  = staked * lpUsdPerToken;
+      const lockedUsd  = lockedTotal * lpUsdPerToken;
+      const walletUsd  = walletLp * lpUsdPerToken;
+      const totalUsd   = totalLp * lpUsdPerToken;
+
+      const barStakedPct = totalLp>0 ? (staked/totalLp*100).toFixed(1) : 0;
+      const barLockedPct = totalLp>0 ? (lockedTotal/totalLp*100).toFixed(1) : 0;
+      const barFreePct   = totalLp>0 ? (walletLp/totalLp*100).toFixed(1) : 0;
+
+      posEl.innerHTML = `
+        <div style="display:flex;gap:4px;margin-bottom:8px;border-radius:8px;overflow:hidden;height:10px">
+          <div style="width:${barStakedPct}%;background:var(--red);transition:width .8s var(--ease)"></div>
+          <div style="width:${barLockedPct}%;background:var(--gold);transition:width .8s var(--ease)"></div>
+          <div style="flex:1;background:var(--bor)"></div>
+        </div>
+        <div class="calc-row"><span class="calc-lbl">🔒 Staked (1×, flexible)</span><span class="calc-val cr">${fmtLP(staked)} LP ${lpUsdPerToken>0?'<span style="color:var(--mut)">≈'+fmtK(stakedUsd)+'</span>':''}</span></div>
+        <div class="calc-row"><span class="calc-lbl">⏳ Locked (${lockDetails.length} position${lockDetails.length!==1?'s':''})</span><span class="calc-val cg">${fmtLP(lockedTotal)} LP ${lpUsdPerToken>0?'<span style="color:var(--mut)">≈'+fmtK(lockedUsd)+'</span>':''}</span></div>
+        <div class="calc-row"><span class="calc-lbl">💼 In Wallet (not in Moat)</span><span class="calc-val cw">${fmtLP(walletLp)} LP ${lpUsdPerToken>0?'<span style="color:var(--mut)">≈'+fmtK(walletUsd)+'</span>':''}</span></div>
+        <div style="border-top:1px solid var(--bor);margin:.55rem 0"></div>
+        <div class="calc-row"><span class="calc-lbl">Total LP held</span><span class="calc-val">${fmtLP(totalLp)} LP ${lpUsdPerToken>0?'<span style="color:var(--grn)">≈'+fmtK(totalUsd)+'</span>':''}</span></div>
+        <div class="calc-row"><span class="calc-lbl">Total Moat Points</span><span class="calc-val cr">${fmtP(totalPts)}</span></div>
+        <div class="calc-row"><span class="calc-lbl">Pool share (in Moat)</span><span class="calc-val cgn">${poolShare.toFixed(3)}%</span></div>
+        ${moatTotal===0&&walletLp>0 ? `<div style="margin-top:.65rem;padding:.55rem .75rem;background:rgba(212,168,67,.06);border:1px solid rgba(212,168,67,.18);border-radius:8px;font-size:.75rem;color:var(--gold)">
+          💡 This wallet has ${fmtLP(walletLp)} LP in their wallet but none staked or locked in the Moat yet.
+        </div>` : ''}
+      `;
+    }
+
+    // ── Locks Detail card ──
+    const lockEl = document.getElementById('wpLocksDetail');
+    if(lockEl) {
+      if(!lockDetails.length) {
+        lockEl.innerHTML = staked>0
+          ? `<div class="mono" style="font-size:.82rem;color:var(--mut);padding:.75rem;text-align:center">No active locks — ${fmtLP(staked)} LP staked flexibly (1× points, unstake anytime)</div>`
+          : `<div class="mono" style="font-size:.82rem;color:var(--mut);padding:.75rem;text-align:center">No locks found for this wallet</div>`;
+      } else {
+        lockEl.innerHTML = lockDetails.map(l => {
+          const penPct = eelPenalty(l.pct);
+          const barColor = l.done ? 'var(--grn)' : 'linear-gradient(90deg,var(--gold),var(--red2))';
+          const endDate = new Date(l.end*1000).toLocaleDateString([],{year:'numeric',month:'short',day:'numeric'});
+          const startDate = new Date(l.start*1000).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'});
+          return `<div class="lock-row">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px">
+              <div>
+                <span style="font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.25rem;color:var(--gold)">${fmtLP(l.amt)} LP</span>
+                <span class="mono" style="font-size:.62rem;color:var(--pur);background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.2);border-radius:3px;padding:1px 5px;margin-left:5px">${l.mult}×</span>
+              </div>
+              <span class="mono" style="font-size:.75rem;color:${l.done?'var(--grn)':'var(--gold)'}">${l.done?'✅ Matured':l.daysLeft+'d left'}</span>
+            </div>
+            <div class="lock-prog"><div class="lock-prog-fill" style="width:${l.pct.toFixed(1)}%;background:${barColor}"></div></div>
+            <div class="mono" style="font-size:.62rem;color:var(--mut);display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px">
+              <span>${l.pct.toFixed(1)}% done · ${l.origDays}d lock</span>
+              <span>📅 ${startDate} → ${endDate}</span>
+            </div>
+            <div class="mono" style="font-size:.62rem;margin-top:3px;display:flex;justify-content:space-between">
+              <span style="color:${l.done?'var(--grn)':'var(--red)'}">EEL penalty: ${l.done?'0%':'~'+penPct+'%'}</span>
+              ${l.pts>0?`<span style="color:var(--pur)">~${fmtP(l.pts)} pts</span>`:''}
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    // ── Value Estimates ──
+    const valEl = document.getElementById('wpValueEst');
+    if(valEl && priceData && poolData) {
+      const lpUsd = poolData && priceData ? ((poolData.avaxReserve*(priceData.avaxPrice||0) + poolData.hcashReserve*(priceData.price||0)) / (lpSupply||1)) : 0;
+      const lpShare = moatTotal / (lpSupply||1);
+      const myAvax  = lpShare * (poolData.avaxReserve||0);
+      const myHcash = lpShare * (poolData.hcashReserve||0);
+      const moatUsd = moatTotal * lpUsd;
+      valEl.innerHTML = `
+        <div class="calc-row"><span class="calc-lbl">LP token price</span><span class="calc-val cg">${lpUsd>0?fmtK(lpUsd)+' per LP':'—'}</span></div>
+        <div class="calc-row"><span class="calc-lbl">Total in Moat (USD)</span><span class="calc-val cgn">${moatUsd>0?fmtK(moatUsd):'—'}</span></div>
+        <div class="calc-row"><span class="calc-lbl">AVAX backing (in Moat)</span><span class="calc-val cw">${f4(myAvax)} AVAX</span></div>
+        <div class="calc-row"><span class="calc-lbl">hCASH backing (in Moat)</span><span class="calc-val cg">${fmtP(myHcash)} hCASH</span></div>
+        <div class="calc-row"><span class="calc-lbl">hCASH price</span><span class="calc-val cr">${priceData.price>0?'$'+fmtPrice(priceData.price):'—'}</span></div>
+        <div class="calc-row"><span class="calc-lbl">AVAX price</span><span class="calc-val">${priceData.avaxPrice>0?'$'+f2(priceData.avaxPrice):'—'}</span></div>
+        <div style="margin-top:.6rem;padding:.5rem .65rem;background:rgba(109,184,122,.05);border:1px solid rgba(109,184,122,.15);border-radius:6px;font-size:.72rem;color:var(--dim);line-height:1.6">
+          ⚠ Values are estimates based on current pool reserves and live prices. Actual LP value may differ due to IL and price changes.
+        </div>
+      `;
+    } else if(valEl) {
+      valEl.innerHTML = `<div class="mono" style="font-size:.82rem;color:var(--mut)">Price data unavailable — visit LP page to load prices first.</div>`;
+    }
+
+    // ── Activity Feed for this wallet ──
+    const actEl = document.getElementById('wpActivityFeed');
+    if(actEl) {
+      const walletEvs = allEvData.filter(e=>{
+        const w = (e.user||e.from||e.wallet||e.address||'').toLowerCase();
+        return w === address.toLowerCase();
+      }).slice(0,30);
+
+      if(!walletEvs.length) {
+        actEl.innerHTML = `<div class="mono" style="font-size:.82rem;color:var(--mut);padding:1rem;text-align:center">No activity events found for this wallet in the loaded data.</div>`;
+      } else {
+        const TYPE_COLOR={staked:'var(--red)',locked:'var(--gold)',burned:'var(--red)',reward:'var(--grn)',claim:'var(--grn)',withdraw:'var(--dim)',unstake:'var(--dim)',eel:'var(--pur)',exit:'var(--pur)'};
+        const TYPE_ICON={staked:'🔒',locked:'⏳',burned:'🔥',reward:'💰',claim:'💰',unstake:'↩',eel:'⚡',exit:'↩'};
+        actEl.innerHTML = walletEvs.map(e=>{
+          const t=(e.eventType||e.type||'activity').toLowerCase();
+          const col=TYPE_COLOR[t]||'var(--mut)';
+          const ico=TYPE_ICON[t]||'·';
+          const tsNum=e.timestamp?Number(e.timestamp>1e12?e.timestamp:e.timestamp*1000):0;
+          const ts=tsNum?new Date(tsNum).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+          const amtNum=Number(e.amount||0);
+          const txhash=e.transactionHash||e.txHash||'';
+          return `<div class="ei">
+            <span style="font-size:.9rem;flex-shrink:0">${ico}</span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                <span class="mono" style="font-size:.62rem;color:${col};font-weight:700;text-transform:uppercase">${t}</span>
+                ${amtNum>0?`<span class="mono" style="font-size:.72rem;color:var(--txt)">${amtNum.toFixed(6)} LP</span>`:''}
+                ${e.lockDays?`<span class="mono" style="font-size:.62rem;color:var(--gold)">🔒${e.lockDays}d</span>`:''}
+              </div>
+              <div style="display:flex;gap:5px;align-items:center;margin-top:2px">
+                <span class="mono" style="font-size:.62rem;color:var(--dim)">${ts}</span>
+                ${txhash?`<a href="https://snowtrace.io/tx/${txhash}" target="_blank" class="mono" style="font-size:.62rem;color:var(--red);text-decoration:none">${txhash.slice(0,8)}…↗</a>`:''}
+              </div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+  } catch(err) {
+    console.error('[WalletProfile]', err);
+    const posEl = document.getElementById('wpPositionBreakdown');
+    if(posEl) posEl.innerHTML = `<div class="mono" style="font-size:.82rem;color:var(--red);padding:.75rem">Error loading data: ${err.message?.slice(0,120)}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  MOAT LP ANALYSIS — Explorer page
+// ══════════════════════════════════════════════════════
+async function loadMoatLpAnalysis() {
+  // Reset UI to loading state
+  ['moatTotalStaked','moatTotalLocked','moatTotalLP','moatPctOfSupply','moatTVLusd','moatUniqueDeps'].forEach(id=>setTxt(id,'…'));
+  setHtml('moatLockDurRows','<div class="mono" style="font-size:1.35rem;color:var(--mut);text-align:center;padding:.5rem"><span class="spin"></span></div>');
+  setHtml('moatTopDepBody','<tr><td colspan="6" style="text-align:center;color:var(--mut);padding:1rem"><span class="spin"></span></td></tr>');
+  document.getElementById('moatBarStaked').style.width='0%';
+  document.getElementById('moatBarLocked').style.width='0%';
+  document.getElementById('moatAnalysisText').style.display='none';
+
+  const prov = walletProvider || new ethers.JsonRpcProvider(AVAX_RPC);
+  const lpC  = new ethers.Contract(HCASH_LP_ADDR,   ERC20_ABI, prov);
+  const moatC= new ethers.Contract(HCASH_MOAT_ADDR, MOAT_ABI,  prov);
+
+  try {
+    // Get LP supply and moat contract LP balance
+    const [lpSupplyR, moatBal] = await Promise.all([
+      lpC.totalSupply(),
+      lpC.balanceOf(HCASH_MOAT_ADDR),
+    ]);
+    const lpSupply = parseFloat(ethers.formatEther(lpSupplyR));
+    const moatLpBal = parseFloat(ethers.formatEther(moatBal));
+
+    // Get USD per LP token
+    const lpUsd = poolData && priceData
+      ? ((poolData.avaxReserve*(priceData.avaxPrice||0) + poolData.hcashReserve*(priceData.price||0)) / (lpSupply||1))
+      : 0;
+
+    // Scan Stake/Lock events to get all depositor addresses
+    let depositors = new Set(Object.keys(KNOWN_PROFILES));
+    if(walletAddress) depositors.add(walletAddress.toLowerCase());
+
+    // Try Snowtrace for moat staked/locked events
+    try {
+      const stakeRes = await fetch(`${SNOWTRACE}?module=logs&action=getLogs&address=${HCASH_MOAT_ADDR}&fromBlock=0&toBlock=99999999&sort=desc&offset=500`)
+        .then(r=>r.json()).catch(()=>null);
+      if(stakeRes?.status==='1') {
+        for(const log of (stakeRes.result||[])) {
+          const addr = log.topics?.[1] ? '0x'+log.topics[1].slice(26).toLowerCase() : null;
+          if(addr && addr!=='0x0000000000000000000000000000000000000000') depositors.add(addr);
+        }
+      }
+    } catch(e) {}
+
+    // Also pull from allLbData (most reliable source of depositor list)
+    allLbData.forEach(x => depositors.add(x.wallet.toLowerCase()));
+
+    // Query userInfo for each depositor to get staked amount
+    const depositorsArr = [...depositors].filter(a=>a.length===42);
+    let totalStaked = 0, totalLocked = 0;
+    let depositorDetails = [];
+    const lockDurBuckets = {};
+
+    const BATCH = 20;
+    for(let i=0; i<depositorsArr.length; i+=BATCH) {
+      const batch = depositorsArr.slice(i, i+BATCH);
+      const results = await Promise.allSettled(batch.map(addr => Promise.all([
+        moatC.userInfo(addr).catch(()=>null),
+        moatC.getUserAllLocks(addr).catch(()=>null),
+      ])));
+      for(let j=0;j<batch.length;j++){
+        const addr = batch[j];
+        if(results[j].status!=='fulfilled') continue;
+        const [info, lockData] = results[j].value;
+        if(!info && !lockData) continue;
+        const staked = info ? parseFloat(ethers.formatEther(info[0]||0n)) : 0;
+        let locked = 0;
+        if(lockData) {
+          const [amounts, lockDurations, , , , actives] = lockData;
+          const len = amounts?.length||0;
+          for(let k=0;k<len;k++){
+            if(!actives[k]) continue;
+            const a = parseFloat(ethers.formatEther(amounts[k]));
+            const d = Math.round(Number(lockDurations[k])/86400);
+            locked += a;
+            // bucket by duration
+            let bucket = d<=1?'1d':d<=7?'7d':d<=30?'30d':d<=90?'90d':d<=180?'180d':d<=365?'365d':d<=416?'416d':'730d+';
+            lockDurBuckets[bucket] = (lockDurBuckets[bucket]||0) + a;
+          }
+        }
+        const lbEnt = allLbData.find(x=>x.wallet===addr);
+        if(staked>0.000001 || locked>0.000001) {
+          totalStaked += staked;
+          totalLocked += locked;
+          depositorDetails.push({addr, staked, locked, total: staked+locked, pts: lbEnt?.points||0});
+        }
+      }
+    }
+
+    const moatTotal = totalStaked + totalLocked;
+    const pctOfSupply = lpSupply>0 ? (moatLpBal/lpSupply*100) : 0;
+    const moatTVL = moatLpBal * lpUsd;
+
+    // Update summary stats
+    setTxt('moatTotalStaked', fmtLP(totalStaked)+' LP');
+    setTxt('moatTotalLocked', fmtLP(totalLocked)+' LP');
+    setTxt('moatTotalLP',     fmtLP(moatLpBal)+' LP');
+    setTxt('moatPctOfSupply', pctOfSupply.toFixed(2)+'%');
+    setTxt('moatTVLusd',      lpUsd>0 ? fmtK(moatTVL) : '—');
+    setTxt('moatUniqueDeps',  depositorDetails.length.toString());
+
+    // Update bar
+    const stakedPct = moatLpBal>0 ? Math.min(100,totalStaked/moatLpBal*100) : 0;
+    const lockedPct = moatLpBal>0 ? Math.min(100,totalLocked/moatLpBal*100) : 0;
+    setTxt('moatBarLabel', `${stakedPct.toFixed(1)}% staked · ${lockedPct.toFixed(1)}% locked`);
+    setTimeout(()=>{
+      document.getElementById('moatBarStaked').style.width = stakedPct.toFixed(1)+'%';
+      document.getElementById('moatBarLocked').style.width = lockedPct.toFixed(1)+'%';
+    }, 80);
+
+    // Lock duration breakdown rows
+    const bucketOrder = ['1d','7d','30d','90d','180d','365d','416d','730d+'];
+    const buckHtml = bucketOrder
+      .filter(b => lockDurBuckets[b]>0)
+      .map(b => {
+        const amt = lockDurBuckets[b];
+        const mult = lockMultiplier(b==='730d+'?730:parseInt(b));
+        const pct = moatLpBal>0 ? (amt/moatLpBal*100).toFixed(2) : '0';
+        const barW = moatLpBal>0 ? Math.min(100,amt/moatLpBal*100) : 0;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:.35rem 0;border-bottom:1px solid rgba(51,46,40,.2)">
+          <span class="mono" style="font-size:.68rem;color:var(--dim);width:44px;flex-shrink:0">${b}</span>
+          <div style="flex:1;background:var(--bor);border-radius:99px;height:5px;overflow:hidden">
+            <div style="width:${barW.toFixed(1)}%;height:100%;background:var(--gold);border-radius:99px;transition:width .8s var(--ease)"></div>
+          </div>
+          <span class="mono" style="font-size:.68rem;color:var(--gold);width:70px;text-align:right;flex-shrink:0">${fmtLP(amt)} LP</span>
+          <span class="mono" style="font-size:.62rem;color:var(--pur);width:28px;flex-shrink:0">${mult}×</span>
+          <span class="mono" style="font-size:.62rem;color:var(--mut);width:40px;flex-shrink:0;text-align:right">${pct}%</span>
+        </div>`;
+      }).join('');
+    setHtml('moatLockDurRows', buckHtml || '<div class="mono" style="font-size:.82rem;color:var(--mut);padding:.5rem;text-align:center">No lock data found</div>');
+
+    // Top depositors table
+    depositorDetails.sort((a,b)=>b.total-a.total);
+    const totalAllPts = allLbData.reduce((s,x)=>s+x.points,0);
+    setHtml('moatTopDepBody', depositorDetails.slice(0,15).map((d,i)=>{
+      const prof = getKnownProfile(d.addr);
+      const rkCls = i===0?'r1':i===1?'r2':i===2?'r3':'rn';
+      const nameHtml = prof
+        ? `<a href="#" onclick="event.preventDefault();openWalletProfile('${d.addr}')" style="color:var(--red);text-decoration:none;font-family:'Chakra Petch',sans-serif;font-weight:700">@${prof.twitter}</a>`
+        : `<a href="#" onclick="event.preventDefault();openWalletProfile('${d.addr}')" class="mono" style="font-size:.75rem;color:var(--acc);text-decoration:none">${shortA(d.addr)}</a>`;
+      const ptsShare = totalAllPts>0 ? (d.pts/totalAllPts*100).toFixed(2)+'%' : '—';
+      return `<tr>
+        <td><span class="rk ${rkCls}">${i+1}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:5px">
+            ${prof?`<img src="${prof.pic}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;border:1px solid var(--bor)" onerror="this.style.display='none'">`:'' }
+            ${nameHtml}
+          </div>
+          <div class="mono" style="font-size:.6rem;color:var(--mut)">${shortA(d.addr)}</div>
+        </td>
+        <td style="font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--red)">${fmtLP(d.staked)}</td>
+        <td style="font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--gold)">${fmtLP(d.locked)}</td>
+        <td style="font-family:'Chakra Petch',sans-serif;font-weight:700;color:var(--txt)">${fmtLP(d.total)}</td>
+        <td class="mono" style="font-size:.72rem;color:var(--mut)">${fmtP(d.pts)}<br><span style="font-size:.6rem;color:var(--dim)">${ptsShare}</span></td>
+      </tr>`;
+    }).join(''));
+
+    // Analysis text
+    const avgLock = totalLocked > 0 && depositorDetails.length > 0
+      ? depositorDetails.reduce((s,d)=>s+d.locked,0)/depositorDetails.filter(d=>d.locked>0).length
+      : 0;
+    const lockRatio = moatTotal>0 ? totalLocked/moatTotal*100 : 0;
+    const analysisEl = document.getElementById('moatAnalysisText');
+    if(analysisEl) {
+      analysisEl.innerHTML = `
+        <div style="font-family:'Chakra Petch',sans-serif;font-weight:600;font-size:.80rem;color:var(--txt);margin-bottom:.45rem">📊 Moat Intelligence Report</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem">
+          <div>
+            <span style="color:var(--mut)">Lock commitment ratio:</span> <span style="color:${lockRatio>50?'var(--grn)':'var(--gold)'};font-weight:700">${lockRatio.toFixed(1)}%</span>
+            of all LP in Moat is locked (vs staked). ${lockRatio>60?'Strong community conviction.':lockRatio>30?'Moderate locking activity.':'Mostly flexible stakers.'}
+          </div>
+          <div>
+            <span style="color:var(--mut)">Moat concentration:</span> <span style="color:var(--txt);font-weight:700">${pctOfSupply.toFixed(2)}%</span>
+            of all LP supply is deposited in the Moat. ${pctOfSupply>30?'High protocol usage.':pctOfSupply>15?'Growing moat depth.':'Room for more LP providers.'}
+          </div>
+        </div>
+        <div>${depositorDetails.length} wallets found with LP in the Moat. Average lock per locking wallet: ${avgLock>0?fmtLP(avgLock)+' LP':'—'}. Total Moat TVL: <span style="color:var(--grn)">${lpUsd>0?fmtK(moatTVL):'—'}</span> USD.</div>
+      `;
+      analysisEl.style.display = 'block';
+    }
+
+  } catch(err) {
+    console.error('[MoatLpAnalysis]', err);
+    setHtml('moatLockDurRows', `<div class="mono" style="font-size:.82rem;color:var(--red);padding:.5rem">Error: ${err.message?.slice(0,80)}</div>`);
+  }
+}
+
+// Auto-trigger moat LP analysis when explorer page loads
+const _origLoadExplorerData = loadExplorerData;
+async function loadExplorerData() {
+  await _origLoadExplorerData();
+  loadMoatLpAnalysis();
 }
 
 // Close bd dropdowns on outside click
