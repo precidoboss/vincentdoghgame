@@ -2494,13 +2494,12 @@ const MOATS_API      = 'https://moat-api.fortifi.network/api';
 const HCASH_API      = 'https://api.hashcash.club/api/v1/public';
 const HCASH_API_KEY  = 'hc_live_C9jUxh9Knr3Qn-ZEo4SSO-ga0SLjFFjX';
 const DSC_PAIR       = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/';
-// FIXED: api.avax.network is rate-limited (429) and blocks CORS from browser.
-// Use Ankr public RPC as primary; fallback to official endpoint via wallet.
-const AVAX_RPC       = 'https://rpc.ankr.com/avalanche';
+// Public no-auth Avalanche C-Chain RPCs (CORS-open, no API key needed)
+const AVAX_RPC       = 'https://avalanche-c-chain-rpc.publicnode.com';
 const AVAX_RPC_FALLBACKS = [
-  'https://rpc.ankr.com/avalanche',
-  'https://avalanche.public-rpc.com',
+  'https://avalanche-c-chain-rpc.publicnode.com',
   'https://avax.meowrpc.com',
+  'https://avalanche.drpc.org',
   'https://api.avax.network/ext/bc/C/rpc',
 ];
 const SNOWTRACE_API_KEY = 'rs_1caf6cdfedd13407191c09b4';
