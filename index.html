@@ -299,6 +299,137 @@
     text-transform: uppercase; margin-bottom: 14px; margin-top: 28px;
   }
   .section-label:first-of-type { margin-top: 0; }
+
+  /* ── Wallet Connect Modal ── */
+  .wc-overlay {
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(4,7,12,0.85);
+    backdrop-filter: blur(16px);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .wc-overlay.open { opacity: 1; pointer-events: all; }
+  .wc-modal {
+    background: var(--panel);
+    border: 1px solid rgba(0,229,255,0.18);
+    border-radius: 20px;
+    padding: 40px 36px 32px;
+    width: 380px; max-width: 95vw;
+    position: relative;
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.06), 0 32px 80px rgba(0,0,0,0.8), 0 0 60px rgba(0,229,255,0.04);
+    transform: translateY(8px);
+    transition: transform 0.25s;
+  }
+  .wc-overlay.open .wc-modal { transform: translateY(0); }
+  .wc-modal::before {
+    content: '';
+    position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  }
+  .wc-close {
+    position: absolute; top: 16px; right: 16px;
+    background: var(--slate); border: 1px solid var(--border);
+    color: var(--steel); width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .wc-close:hover { border-color: var(--cyan); color: var(--cyan); }
+  .wc-logo {
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+  }
+  .wc-logo-hex {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--cyan-dim), var(--cyan));
+    clip-path: polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 28px rgba(0,229,255,0.3);
+  }
+  .wc-title {
+    text-align: center; font-size: 20px; font-weight: 700; color: var(--text);
+    margin-bottom: 6px; letter-spacing: 0.01em;
+  }
+  .wc-sub {
+    text-align: center; font-size: 13px; color: var(--steel); margin-bottom: 28px;
+    line-height: 1.5;
+  }
+  .wc-options { display: flex; flex-direction: column; gap: 10px; }
+  .wc-option {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--slate); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    text-align: left; width: 100%;
+  }
+  .wc-option:hover { border-color: var(--cyan); background: rgba(0,229,255,0.04); transform: translateX(2px); }
+  .wc-option:active { transform: scale(0.98); }
+  .wc-option-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; flex-shrink: 0;
+    background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.15);
+  }
+  .wc-option-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .wc-option-desc { font-size: 11px; color: var(--steel); }
+  .wc-option-arrow { margin-left: auto; color: var(--steel); font-size: 16px; transition: color 0.15s; }
+  .wc-option:hover .wc-option-arrow { color: var(--cyan); }
+  .wc-divider {
+    display: flex; align-items: center; gap: 12px; margin: 4px 0;
+    font-size: 11px; color: var(--steel); letter-spacing: 0.08em;
+  }
+  .wc-divider::before, .wc-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .wc-footer {
+    text-align: center; font-size: 11px; color: var(--steel); margin-top: 20px;
+    line-height: 1.6;
+  }
+  .wc-footer a { color: var(--cyan-dim); text-decoration: none; }
+  .wc-footer a:hover { color: var(--cyan); }
+
+  /* ── Wallet Badge ── */
+  .wallet-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--slate); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .wallet-badge:hover { border-color: var(--cyan-dim); }
+  .wallet-badge-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--success); box-shadow: 0 0 6px var(--success); flex-shrink: 0;
+  }
+  .wallet-badge-addr {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text);
+  }
+
+  /* ── My Passes Banner ── */
+  .my-passes-banner {
+    background: linear-gradient(135deg, rgba(0,229,255,0.07), rgba(0,229,255,0.03));
+    border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 12px; padding: 16px 20px;
+    margin-bottom: 20px; display: none;
+  }
+  .my-passes-banner.visible { display: block; }
+  .my-passes-banner-head {
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--cyan); margin-bottom: 10px; font-weight: 600;
+  }
+  .my-passes-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+  .my-passes-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.2);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 12px; color: var(--cyan);
+  }
+  .my-passes-chip-bal {
+    font-family: 'JetBrains Mono', monospace; font-weight: 600;
+  }
+  .my-passes-chip-name { color: var(--text); }
+
 </style>
 </head>
 <body>
@@ -311,7 +442,7 @@
     PASS<span>BANK</span>
   </div>
   <div id="walletSection">
-    <button id="connectBtn">Connect Wallet</button>
+    <button id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
   </div>
 </header>
 
@@ -361,6 +492,10 @@
   <!-- Browse Tab -->
   <div id="tab-browse" class="panel panel-full visible">
     <div class="panel-head">Available Game Passes</div>
+        <div class="my-passes-banner" id="myPassesBanner">
+      <div class="my-passes-banner-head">🎮 Detected In Your Wallet</div>
+      <div class="my-passes-chips" id="myPassesChips"></div>
+    </div>
     <div id="passGrid" class="pass-grid">
       <div class="empty-state" style="grid-column:1/-1">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="#8899AA" stroke-width="2"/><path d="M24 16V24M24 32H24.01" stroke="#8899AA" stroke-width="2" stroke-linecap="round"/></svg>
@@ -483,6 +618,47 @@
     </div>
   </div>
 
+
+<!-- Wallet Connect Modal -->
+<div class="wc-overlay" id="wcOverlay" onclick="handleOverlayClick(event)">
+  <div class="wc-modal">
+    <button class="wc-close" onclick="closeWalletModal()">✕</button>
+    <div class="wc-logo">
+      <div class="wc-logo-hex">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none">
+          <path d="M12 3L21 7.5V16.5L12 21L3 16.5V7.5L12 3Z" fill="#080B10"/>
+          <path d="M12 8V12M12 16H12.01" stroke="#00E5FF" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+    <div class="wc-title">Connect Your Wallet</div>
+    <div class="wc-sub">Choose how you'd like to connect to the<br><strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank</div>
+    <div class="wc-options">
+      <button class="wc-option" onclick="connectWith('metamask')">
+        <div class="wc-option-icon">🦊</div>
+        <div>
+          <div class="wc-option-name">MetaMask</div>
+          <div class="wc-option-desc">Browser extension wallet</div>
+        </div>
+        <div class="wc-option-arrow">›</div>
+      </button>
+      <div class="wc-divider">or</div>
+      <button class="wc-option" onclick="connectWith('injected')">
+        <div class="wc-option-icon">💎</div>
+        <div>
+          <div class="wc-option-name">Other Wallet</div>
+          <div class="wc-option-desc">Coinbase, Rabby, Rainbow & more</div>
+        </div>
+        <div class="wc-option-arrow">›</div>
+      </button>
+    </div>
+    <div class="wc-footer">
+      By connecting you agree to our<br>
+      <a href="#">Terms of Service</a> · <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+</div>
+
 </main>
 
 <div id="toast"></div>
@@ -520,7 +696,8 @@ const BANK_ABI = [
 
 const ERC1155_ABI = [
   "function isApprovedForAll(address owner,address operator) view returns (bool)",
-  "function setApprovalForAll(address operator,bool approved)"
+  "function setApprovalForAll(address operator,bool approved)",
+  "function balanceOf(address account,uint256 id) view returns (uint256)"
 ];
 
 // ── State ───────────────────────────────────────────────────────────────────
@@ -561,9 +738,27 @@ function switchTab(name) {
   });
 }
 
-// ── Connect ───────────────────────────────────────────────────────────────────
-document.getElementById('connectBtn').addEventListener('click', connectWallet);
+// ── Wallet Modal ─────────────────────────────────────────────────────────────
+function openWalletModal() {
+  document.getElementById('wcOverlay').classList.add('open');
+}
+function closeWalletModal() {
+  document.getElementById('wcOverlay').classList.remove('open');
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('wcOverlay')) closeWalletModal();
+}
+window.openWalletModal = openWalletModal;
+window.closeWalletModal = closeWalletModal;
+window.handleOverlayClick = handleOverlayClick;
 
+async function connectWith(type) {
+  closeWalletModal();
+  await connectWallet();
+}
+window.connectWith = connectWith;
+
+// ── Connect ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
   try {
     await loadEthers();
@@ -576,7 +771,6 @@ async function connectWallet() {
     const network = await provider.getNetwork();
     if (Number(network.chainId) !== GROTTO_CHAIN_ID) {
       toast(`Wrong network. Please switch to Grotto L1 (chain ${GROTTO_CHAIN_ID})`, 'warn');
-      // Attempt to switch
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
@@ -591,9 +785,12 @@ async function connectWallet() {
     // Admin = hardcoded address only
     isOwner = walletAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
 
-    // Update UI
+    // Update UI — replace button with badge
     const ws = document.getElementById('walletSection');
-    ws.innerHTML = `<div id="walletAddr">${walletAddress.slice(0,6)}…${walletAddress.slice(-4)} ${isOwner ? '👑' : ''}</div>`;
+    ws.innerHTML = `<div class="wallet-badge" onclick="openWalletModal()">
+      <div class="wallet-badge-dot"></div>
+      <div class="wallet-badge-addr">${walletAddress.slice(0,6)}…${walletAddress.slice(-4)} ${isOwner ? '👑' : ''}</div>
+    </div>`;
 
     // Show admin tab only for admin wallet
     document.getElementById('adminTab').style.display = isOwner ? '' : 'none';
@@ -601,6 +798,7 @@ async function connectWallet() {
     enableButtons();
     await loadPasses();
     await updateStats();
+    await detectWalletPasses();
     if (isOwner) await loadAdminState();
 
     toast('Wallet connected ✓', 'ok');
@@ -608,6 +806,35 @@ async function connectWallet() {
   } catch(e) {
     console.error(e);
     toast('Connection failed: ' + (e.message || e), 'err');
+  }
+}
+
+// ── Auto-detect passes in wallet ──────────────────────────────────────────────
+async function detectWalletPasses() {
+  if (!walletAddress || !passes.length) return;
+  const chips = [];
+  try {
+    const detections = await Promise.all(passes.map(async (p) => {
+      try {
+        const tokenContract = new ethers.Contract(p.tokenContract, ERC1155_ABI, provider);
+        const bal = Number(await tokenContract.balanceOf(walletAddress, p.tokenId));
+        return bal > 0 ? { name: p.name || ('Pass #' + p.tokenId), balance: bal } : null;
+      } catch(e) { return null; }
+    }));
+    detections.filter(Boolean).forEach(d => {
+      chips.push(`<div class="my-passes-chip">
+        <span class="my-passes-chip-bal">${d.balance}×</span>
+        <span class="my-passes-chip-name">${d.name}</span>
+      </div>`);
+    });
+  } catch(e) {}
+
+  const banner = document.getElementById('myPassesBanner');
+  const chipsEl = document.getElementById('myPassesChips');
+  if (chips.length) {
+    chipsEl.innerHTML = chips.join('');
+    banner.classList.add('visible');
+    toast(`${chips.length} pass type(s) detected in your wallet`, 'ok');
   }
 }
 
