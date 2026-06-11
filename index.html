@@ -430,6 +430,8 @@
   }
   .my-passes-chip-name { color: var(--text); }
 
+
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
@@ -491,7 +493,16 @@
 
   <!-- Browse Tab -->
   <div id="tab-browse" class="panel panel-full visible">
-    <div class="panel-head">Available Game Passes</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="panel-head" style="margin-bottom:0;">Available Game Passes</div>
+      <button id="refreshBtn" onclick="refreshAll()"
+        style="background:transparent;border:1px solid var(--border);color:var(--steel);
+          padding:6px 14px;border-radius:6px;font-family:'Space Grotesk',sans-serif;
+          font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
+          transition:border-color 0.15s,color 0.15s;">
+        <span id="refreshIcon">↻</span> Refresh
+      </button>
+    </div>
         <div class="my-passes-banner" id="myPassesBanner">
       <div class="my-passes-banner-head">🎮 Detected In Your Wallet</div>
       <div class="my-passes-chips" id="myPassesChips"></div>
@@ -824,22 +835,52 @@ const GAMEPASS_CONTRACT = "0xFA01e077a78FcA556015B7193baF04bEF58edbC1";
 let grottoGames = [];
 let gamesLoaded = false;
 
-async function fetchGrottoGames() {
-  if (gamesLoaded) return grottoGames;
-  try {
-    const res = await fetch(`${GROTTO_API}/api/games/?limit=100`);
-    if (!res.ok) throw new Error(res.status);
-    const data = await res.json();
-    // API may return array directly or {games:[...]} or {data:[...]}
-    grottoGames = Array.isArray(data) ? data
-      : (data.games || data.data || data.results || []);
-    gamesLoaded = true;
-    console.log('[PassBank] Loaded', grottoGames.length, 'games from Grotto API');
-  } catch(e) {
-    console.warn('[PassBank] Could not fetch games:', e.message);
-    grottoGames = [];
+async function fetchGrottoGames(force = false) {
+  if (gamesLoaded && !force) return grottoGames;
+  // Try multiple endpoints — the API returns different shapes
+  const endpoints = [
+    `${GROTTO_API}/api/games/summaries`,
+    `${GROTTO_API}/api/games/popular`,
+    `${GROTTO_API}/api/games/recent`,
+    `${GROTTO_API}/api/games/`,
+  ];
+  const seen = new Set();
+  grottoGames = [];
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data
+        : (data.games || data.data || data.results || data.items || []);
+      for (const g of arr) {
+        const id = g.id || g._id || g.slug;
+        if (id && !seen.has(String(id))) {
+          seen.add(String(id));
+          grottoGames.push(g);
+        }
+      }
+    } catch(e) { console.warn('[PassBank] games endpoint failed:', url, e.message); }
   }
+  gamesLoaded = true;
+  console.log('[PassBank] Loaded', grottoGames.length, 'unique games from Grotto API');
   return grottoGames;
+}
+
+// Resolve image URL for a game object — tries all known field names
+function getGameImageUrl(game) {
+  if (!game) return null;
+  // Try all common image field names the Grotto API might use
+  const raw = game.coverImage || game.cover_image || game.coverUrl || game.cover
+    || game.imageUrl || game.image_url || game.image || game.thumbnail
+    || game.thumbnailUrl || game.banner || game.bannerUrl || game.logoUrl || game.logo
+    || (game.images && (game.images.cover || game.images.thumbnail || game.images[0]))
+    || null;
+  if (!raw) return null;
+  if (typeof raw === 'object') return raw.url || raw.src || null;
+  // If relative path, prefix with Grotto API base
+  if (raw.startsWith('http')) return raw;
+  return `https://enterthegrotto.xyz${raw.startsWith('/') ? '' : '/'}${raw}`;
 }
 
 function getGameById(id) {
@@ -1004,12 +1045,15 @@ async function loadPasses() {
           p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
           Number(p.tokenId) === i
         );
-        if (!alreadyRegistered) {
-          rawBankPasses.push({
-            tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
-            name: `Game Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true
-          });
-        }
+        // Store for ALL found tokenIds — registered ones too (for balance cross-check)
+        rawBankPasses.push({
+          tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
+          name: alreadyRegistered ? (alreadyRegistered.name || `Game Pass #${i}`) : `Game Pass #${i}`,
+          imageURI: alreadyRegistered ? (alreadyRegistered.imageURI || '') : '',
+          gameId: alreadyRegistered ? (alreadyRegistered.gameId || '') : '',
+          active: alreadyRegistered ? alreadyRegistered.active : true,
+          unregistered: !alreadyRegistered
+        });
       }
     }
   } else {
@@ -1023,12 +1067,14 @@ async function loadPasses() {
             p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
             Number(p.tokenId) === i
           );
-          if (!alreadyRegistered) {
-            rawBankPasses.push({
-              tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
-              name: `Game Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true
-            });
-          }
+          rawBankPasses.push({
+            tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
+            name: alreadyRegistered ? (alreadyRegistered.name || `Game Pass #${i}`) : `Game Pass #${i}`,
+            imageURI: alreadyRegistered ? (alreadyRegistered.imageURI || '') : '',
+            gameId: alreadyRegistered ? (alreadyRegistered.gameId || '') : '',
+            active: alreadyRegistered ? alreadyRegistered.active : true,
+            unregistered: !alreadyRegistered
+          });
         }
       } catch(e) { /* token ID may not exist */ }
     }
@@ -1102,7 +1148,13 @@ async function renderPassCards() {
   }
 
   const cards = await Promise.all(allPasses.map(async (p, i) => {
-    const bal = Number(p.balance);
+    // For registered passes, cross-check balance from our on-chain scan (rawBankPasses)
+    // getAllPasses() balance is only updated via deposit(), not manual transfers
+    const rawMatch = rawBankPasses.find(r =>
+      r.tokenContract.toLowerCase() === (p.tokenContract || '').toLowerCase() &&
+      Number(r.tokenId) === Number(p.tokenId)
+    );
+    const bal = rawMatch ? Number(rawMatch.balance) : Number(p.balance);
     const active = p.active;
     let claimed = false, canReq = false;
     if (walletAddress) {
@@ -1113,22 +1165,35 @@ async function renderPassCards() {
       } catch(e) {}
     }
 
-    // Fetch linked game from Grotto Gateway
-    const gameInfo = await fetchGameInfo(p.gameId);
+    // Fetch linked game from Grotto Gateway (uses local cache)
+    const gameInfo = p.gameId ? await fetchGameInfo(p.gameId) : null;
+    const gameImgUrl = getGameImageUrl(gameInfo);
+    const gameTitle  = gameInfo ? (gameInfo.title || gameInfo.name || p.gameId) : null;
+
     const gameBadge = gameInfo
-      ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;
-           background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);
-           border-radius:6px;padding:6px 10px;">
-           <span style="font-size:14px;">🎮</span>
-           <span style="font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:0.04em;">${gameInfo.title || gameInfo.name || p.gameId}</span>
+      ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;
+           background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.18);
+           border-radius:8px;padding:7px 10px;">
+           ${gameImgUrl
+             ? `<img src="${gameImgUrl}" alt="${gameTitle}"
+                  style="width:24px;height:24px;border-radius:5px;object-fit:cover;flex-shrink:0;"
+                  onerror="this.style.display='none'">`
+             : `<span style="font-size:15px;flex-shrink:0;">🎮</span>`}
+           <span style="font-size:11px;color:var(--cyan);font-weight:600;letter-spacing:0.03em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${gameTitle}</span>
+           <span style="font-size:10px;background:rgba(0,255,136,0.15);color:var(--success);
+             border:1px solid rgba(0,255,136,0.3);border-radius:4px;padding:1px 5px;
+             font-weight:700;flex-shrink:0;">✓ VERIFIED</span>
          </div>`
       : p.gameId
         ? `<div style="font-size:11px;color:var(--steel);margin-bottom:8px;font-family:'JetBrains Mono',monospace;">Game: ${p.gameId}</div>`
         : '';
 
-    const imgHtml = p.imageURI
-      ? `<img src="${p.imageURI}" alt="${p.name}" loading="lazy"/>`
-      : `<span>🎮</span>`;
+    // Card image: prefer pass imageURI, then linked game image, then placeholder
+    const cardImgSrc = p.imageURI || gameImgUrl || null;
+    const imgHtml = cardImgSrc
+      ? `<img src="${cardImgSrc}" alt="${p.name}" loading="lazy" style="width:100%;height:130px;object-fit:cover;"
+           onerror="this.outerHTML='<span style=\'display:flex;align-items:center;justify-content:center;width:100%;height:130px;font-size:40px;\'>🎮</span>'">`
+      : `<span style="display:flex;align-items:center;justify-content:center;width:100%;height:130px;font-size:40px;">🎮</span>`;
 
     let actionHtml;
     if (p.unregistered) {
@@ -1428,27 +1493,36 @@ async function populateGamesDropdown() {
   console.log('[PassBank] Games dropdown populated with', games.length, 'games');
 }
 
+// ── Refresh all ───────────────────────────────────────────────────────────────
+async function refreshAll() {
+  const btn  = document.getElementById('refreshBtn');
+  const icon = document.getElementById('refreshIcon');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
+  if (icon) icon.style.animation = 'spin 0.8s linear infinite';
+  // Reset games cache
+  gamesLoaded = false;
+  await loadPasses();
+  await fetchGrottoGames();
+  await renderPassCards();
+  if (walletAddress) {
+    await updateStats();
+    await detectWalletPasses();
+  }
+  if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+  if (icon) icon.style.animation = '';
+  toast('Refreshed ✓', 'ok');
+}
+window.refreshAll = refreshAll;
+
 // ── Page init — load passes publicly (no wallet needed for read) ──────────────
 async function pageInit() {
   await loadEthers();
   // Create a read-only provider for public pass loading
   readProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
-  // Load passes from bank publicly
-  try {
-    const readBank = new ethers.Contract(BANK_ADDRESS, BANK_ABI, readProvider);
-    passes = await readBank.getAllPasses();
-    console.log('[PassBank] Public load: getAllPasses =', passes.length);
-  } catch(e) {
-    console.warn('[PassBank] Public getAllPasses failed:', e.message);
-    passes = [];
-  }
-  // Scan bank for raw (unregistered) passes
+  // Scan bank for passes (registered + raw)
   await loadPasses();
-  // Fetch games for display
-  fetchGrottoGames().then(() => {
-    // Enrich unregistered pass names if game API has info
-    renderPassCards();
-  });
+  // Fetch all games in parallel — re-render when done to fill in game info
+  fetchGrottoGames().then(() => renderPassCards());
 }
 
 // Start on DOM ready
