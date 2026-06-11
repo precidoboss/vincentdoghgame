@@ -826,12 +826,6 @@ const ERC1155_BATCH_ABI = [
 
 async function detectWalletPasses() {
   if (!walletAddress) return;
-  const banner   = document.getElementById('myPassesBanner');
-  const chipsEl  = document.getElementById('myPassesChips');
-  const headEl   = banner.querySelector('.my-passes-banner-head');
-  headEl.textContent = '🔍 Scanning wallet for game passes…';
-  banner.classList.add('visible');
-
   const chips = [];
 
   // ── 1. Scan known GAMEPASS_CONTRACT via balanceOfBatch ────────────────────
@@ -902,8 +896,12 @@ async function detectWalletPasses() {
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
+  const banner  = document.getElementById('myPassesBanner');
+  const chipsEl = document.getElementById('myPassesChips');
+  const headEl  = banner.querySelector('.my-passes-banner-head');
+
   if (chips.length) {
-    headEl.textContent = '🎮 Detected In Your Wallet';
+    headEl.textContent = '🎮 In Your Wallet';
     chipsEl.innerHTML = chips.map(d => `
       <div class="my-passes-chip">
         ${d.imgURI ? `<img src="${d.imgURI}" style="width:20px;height:20px;border-radius:4px;object-fit:cover;" onerror="this.style.display='none'">` : ''}
@@ -911,10 +909,11 @@ async function detectWalletPasses() {
         <span class="my-passes-chip-name">${d.name}</span>
         <span style="font-size:10px;color:var(--steel);margin-left:2px;">ID:${d.tokenId}</span>
       </div>`).join('');
-    toast(`${chips.length} game pass type(s) detected in your wallet ✓`, 'ok');
+    banner.classList.add('visible');
+    toast(`${chips.length} game pass type(s) in your wallet ✓`, 'ok');
   } else {
-    headEl.textContent = '🎮 No Game Passes Detected';
-    chipsEl.innerHTML = `<span style="font-size:12px;color:var(--steel);">No passes from the vault contract found in this wallet.</span>`;
+    // Hide the banner entirely if nothing in wallet — don't show misleading "not detected"
+    banner.classList.remove('visible');
   }
 }
 
@@ -923,15 +922,61 @@ function enableButtons() {
 }
 
 // ── Load passes ───────────────────────────────────────────────────────────────
+// Raw passes detected directly from on-chain balance (not in getAllPasses registry)
+let rawBankPasses = [];
+
 async function loadPasses() {
   try {
     passes = await bankContract.getAllPasses();
-    renderPassCards();
-    populateDepositSelect();
   } catch(e) {
-    console.error('loadPasses error:', e);
-    toast('Failed to load passes', 'err');
+    console.error('getAllPasses error:', e);
+    passes = [];
   }
+
+  // Always scan the known game pass contract directly against the bank address
+  // This catches passes sent in before registerPass was called
+  rawBankPasses = [];
+  try {
+    const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_BATCH_ABI, provider);
+    const accounts = GAMEPASS_SCAN_IDS.map(() => BANK_ADDRESS);
+    const balances = await gpContract.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
+    for (let i = 0; i < balances.length; i++) {
+      const bal = Number(balances[i]);
+      if (bal > 0) {
+        // Check if already registered in bank
+        const registered = passes.find(p =>
+          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
+          Number(p.tokenId) === i
+        );
+        if (!registered) {
+          // Not registered — add as a raw discovered pass
+          rawBankPasses.push({ tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal, name: `Game Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true });
+        }
+      }
+    }
+  } catch(batchErr) {
+    // Fallback: individual balanceOf
+    try {
+      const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, provider);
+      for (let i = 0; i < 30; i++) {
+        try {
+          const bal = Number(await gpContract.balanceOf(BANK_ADDRESS, i));
+          if (bal > 0) {
+            const registered = passes.find(p =>
+              p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
+              Number(p.tokenId) === i
+            );
+            if (!registered) {
+              rawBankPasses.push({ tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal, name: `Game Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true });
+            }
+          }
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }
+
+  renderPassCards();
+  populateDepositSelect();
 }
 
 async function updateStats() {
@@ -978,7 +1023,9 @@ async function fetchGameInfo(gameId) {
 
 async function renderPassCards() {
   const grid = document.getElementById('passGrid');
-  if (!passes.length) {
+  // Combine registered passes + unregistered raw passes found in bank
+  const allPasses = [...passes, ...rawBankPasses];
+  if (!allPasses.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="#8899AA" stroke-width="2"/></svg>
       <p>No passes in the vault yet.<br>Be the first to deposit!</p>
@@ -991,7 +1038,7 @@ async function renderPassCards() {
     try { cooldownSecs = Number(await bankContract.cooldownRemaining(walletAddress)); } catch(e) {}
   }
 
-  const cards = await Promise.all(passes.map(async (p, i) => {
+  const cards = await Promise.all(allPasses.map(async (p, i) => {
     const bal = Number(p.balance);
     const active = p.active;
     let claimed = false, canReq = false;
@@ -1020,21 +1067,43 @@ async function renderPassCards() {
       ? `<img src="${p.imageURI}" alt="${p.name}" loading="lazy"/>`
       : `<span>🎮</span>`;
 
-    const actionHtml = !walletAddress
-      ? `<button class="claim-btn" disabled>Connect wallet</button>`
-      : claimed
-        ? `<div class="claimed-badge">✓ Claimed</div>`
-        : cooldownSecs > 0
-          ? `<button class="claim-btn" disabled>Cooldown: ${fmtTime(cooldownSecs)}</button>`
-          : `<button class="claim-btn ${(!active || bal === 0) ? '' : ''}" 
-               onclick="claimPass(${i})"
-               ${(!active || bal === 0 || !canReq) ? 'disabled' : ''}>
-               ${!active ? 'Inactive' : bal === 0 ? 'Empty' : 'Claim Pass'}
-             </button>`;
+    let actionHtml;
+    if (p.unregistered) {
+      // Pass exists in bank but hasn't been registered via registerPass yet
+      actionHtml = isOwner
+        ? `<button class="claim-btn" style="background:rgba(255,184,0,0.12);color:var(--warn);border-color:rgba(255,184,0,0.3);"
+             onclick="prefillRegister('${p.tokenContract}','${p.tokenId}')">
+             ⚙️ Register This Pass
+           </button>`
+        : `<div class="claimed-badge" style="background:rgba(255,184,0,0.08);color:var(--warn);border-color:rgba(255,184,0,0.2);">
+             ⏳ Pending Registration
+           </div>`;
+    } else {
+      actionHtml = !walletAddress
+        ? `<button class="claim-btn" disabled>Connect wallet</button>`
+        : claimed
+          ? `<div class="claimed-badge">✓ Claimed</div>`
+          : cooldownSecs > 0
+            ? `<button class="claim-btn" disabled>Cooldown: ${fmtTime(cooldownSecs)}</button>`
+            : `<button class="claim-btn"
+                 onclick="claimPass(${i})"
+                 ${(!active || bal === 0 || !canReq) ? 'disabled' : ''}>
+                 ${!active ? 'Inactive' : bal === 0 ? 'Empty' : 'Claim Pass'}
+               </button>`;
+    }
+
+    const unregBadge = p.unregistered
+      ? `<div style="font-size:10px;color:var(--warn);font-family:'JetBrains Mono',monospace;
+           margin-bottom:8px;padding:3px 8px;background:rgba(255,184,0,0.08);
+           border:1px solid rgba(255,184,0,0.2);border-radius:4px;display:inline-block;">
+           DETECTED · NOT YET REGISTERED
+         </div>`
+      : '';
 
     return `<div class="pass-card">
       <div class="pass-card-img">${imgHtml}</div>
       <div class="pass-card-body">
+        ${unregBadge}
         ${gameBadge}
         <div class="pass-card-name">${p.name || 'Unnamed Pass'}</div>
         <div class="pass-card-meta">ID: ${p.tokenId} · ${p.tokenContract.slice(0,6)}…${p.tokenContract.slice(-4)}</div>
@@ -1275,6 +1344,15 @@ document.getElementById('loadClaimantsBtn').addEventListener('click', async () =
 
 // ── claimPass exposed globally for inline onclick ─────────────────────────────
 window.claimPass = claimPass;
+
+// ── prefillRegister: auto-fill admin register form for unregistered passes ──
+function prefillRegister(contract, tokenId) {
+  switchTab('admin');
+  document.getElementById('regContract').value = contract;
+  document.getElementById('regTokenId').value  = tokenId;
+  toast('Fill in the name and click Register Pass', 'warn');
+}
+window.prefillRegister = prefillRegister;
 </script>
 </body>
 </html>
