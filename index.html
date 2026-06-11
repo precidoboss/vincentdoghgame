@@ -810,31 +810,111 @@ async function connectWallet() {
 }
 
 // ── Auto-detect passes in wallet ──────────────────────────────────────────────
+// Known game pass contract — always scanned directly regardless of bank registration
+const GAMEPASS_CONTRACT = "0xFA01e077a78FcA556015B7193baF04bEF58edbC1";
+// Scan token IDs 0–99 on the known game pass contract
+const GAMEPASS_SCAN_IDS = Array.from({ length: 100 }, (_, i) => i);
+
+// Extended ERC1155 ABI for batch balance queries
+const ERC1155_BATCH_ABI = [
+  "function isApprovedForAll(address owner,address operator) view returns (bool)",
+  "function setApprovalForAll(address operator,bool approved)",
+  "function balanceOf(address account,uint256 id) view returns (uint256)",
+  "function balanceOfBatch(address[] accounts,uint256[] ids) view returns (uint256[])",
+  "function uri(uint256 id) view returns (string)"
+];
+
 async function detectWalletPasses() {
-  if (!walletAddress || !passes.length) return;
+  if (!walletAddress) return;
+  const banner   = document.getElementById('myPassesBanner');
+  const chipsEl  = document.getElementById('myPassesChips');
+  const headEl   = banner.querySelector('.my-passes-banner-head');
+  headEl.textContent = '🔍 Scanning wallet for game passes…';
+  banner.classList.add('visible');
+
   const chips = [];
+
+  // ── 1. Scan known GAMEPASS_CONTRACT via balanceOfBatch ────────────────────
   try {
-    const detections = await Promise.all(passes.map(async (p) => {
-      try {
-        const tokenContract = new ethers.Contract(p.tokenContract, ERC1155_ABI, provider);
-        const bal = Number(await tokenContract.balanceOf(walletAddress, p.tokenId));
-        return bal > 0 ? { name: p.name || ('Pass #' + p.tokenId), balance: bal } : null;
-      } catch(e) { return null; }
-    }));
-    detections.filter(Boolean).forEach(d => {
-      chips.push(`<div class="my-passes-chip">
+    const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_BATCH_ABI, provider);
+    const accounts   = GAMEPASS_SCAN_IDS.map(() => walletAddress);
+    const balances   = await gpContract.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
+
+    for (let i = 0; i < balances.length; i++) {
+      const bal = Number(balances[i]);
+      if (bal > 0) {
+        // Try to find a matching registered pass name
+        const registered = passes.find(p =>
+          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
+          Number(p.tokenId) === i
+        );
+        const name = registered?.name || `Game Pass #${i}`;
+        const imgURI = registered?.imageURI || '';
+        chips.push({ name, balance: bal, tokenId: i, source: 'gamepass', imgURI });
+      }
+    }
+  } catch(batchErr) {
+    // Fallback: individual balanceOf if batch not supported
+    try {
+      const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, provider);
+      for (let i = 0; i < 20; i++) {
+        try {
+          const bal = Number(await gpContract.balanceOf(walletAddress, i));
+          if (bal > 0) {
+            const registered = passes.find(p =>
+              p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
+              Number(p.tokenId) === i
+            );
+            chips.push({ name: registered?.name || `Game Pass #${i}`, balance: bal, tokenId: i, source: 'gamepass', imgURI: registered?.imageURI || '' });
+          }
+        } catch(e) {}
+      }
+    } catch(e) {}
+  }
+
+  // ── 2. Also scan any OTHER contracts registered in the bank ───────────────
+  const otherContracts = [...new Set(
+    passes
+      .map(p => p.tokenContract.toLowerCase())
+      .filter(addr => addr !== GAMEPASS_CONTRACT.toLowerCase())
+  )];
+  for (const contractAddr of otherContracts) {
+    const contractPasses = passes.filter(p => p.tokenContract.toLowerCase() === contractAddr);
+    try {
+      const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, provider);
+      const accounts = contractPasses.map(() => walletAddress);
+      const ids      = contractPasses.map(p => Number(p.tokenId));
+      const balances = await c.balanceOfBatch(accounts, ids);
+      balances.forEach((bal, idx) => {
+        if (Number(bal) > 0) {
+          chips.push({ name: contractPasses[idx].name || `Pass #${ids[idx]}`, balance: Number(bal), tokenId: ids[idx], source: 'bank', imgURI: contractPasses[idx].imageURI || '' });
+        }
+      });
+    } catch(e) {
+      for (const p of contractPasses) {
+        try {
+          const c = new ethers.Contract(contractAddr, ERC1155_ABI, provider);
+          const bal = Number(await c.balanceOf(walletAddress, p.tokenId));
+          if (bal > 0) chips.push({ name: p.name || `Pass #${p.tokenId}`, balance: bal, tokenId: Number(p.tokenId), source: 'bank', imgURI: p.imageURI || '' });
+        } catch(e2) {}
+      }
+    }
+  }
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  if (chips.length) {
+    headEl.textContent = '🎮 Detected In Your Wallet';
+    chipsEl.innerHTML = chips.map(d => `
+      <div class="my-passes-chip">
+        ${d.imgURI ? `<img src="${d.imgURI}" style="width:20px;height:20px;border-radius:4px;object-fit:cover;" onerror="this.style.display='none'">` : ''}
         <span class="my-passes-chip-bal">${d.balance}×</span>
         <span class="my-passes-chip-name">${d.name}</span>
-      </div>`);
-    });
-  } catch(e) {}
-
-  const banner = document.getElementById('myPassesBanner');
-  const chipsEl = document.getElementById('myPassesChips');
-  if (chips.length) {
-    chipsEl.innerHTML = chips.join('');
-    banner.classList.add('visible');
-    toast(`${chips.length} pass type(s) detected in your wallet`, 'ok');
+        <span style="font-size:10px;color:var(--steel);margin-left:2px;">ID:${d.tokenId}</span>
+      </div>`).join('');
+    toast(`${chips.length} game pass type(s) detected in your wallet ✓`, 'ok');
+  } else {
+    headEl.textContent = '🎮 No Game Passes Detected';
+    chipsEl.innerHTML = `<span style="font-size:12px;color:var(--steel);">No passes from the vault contract found in this wallet.</span>`;
   }
 }
 
