@@ -864,20 +864,24 @@ window.connectWith = connectWith;
 
 // ── Safe ethereum provider getter — handles multi-wallet extension conflicts ──
 function getEthereum() {
-  // Some extensions (Backpack, evmAsk) fight over window.ethereum and may throw
-  // on property access. Wrap in try/catch to gracefully handle conflicts.
-  try {
-    // Prefer MetaMask if multiple providers exist (EIP-6963 / providers array)
-    if (window.ethereum?.providers?.length) {
-      const mm = window.ethereum.providers.find(p => p.isMetaMask && !p.isBackpack);
-      if (mm) return mm;
-      return window.ethereum.providers[0];
-    }
-    return window.ethereum || null;
-  } catch(e) {
-    console.warn('[PassBank] window.ethereum access error:', e.message);
+  // window.ethereum can be a poisoned getter (Backpack/evmAsk conflicts) that
+  // throws even on optional-chaining access. Wrap everything in try/catch.
+  let eth = null;
+  try { eth = window.ethereum; } catch(e) {
+    console.warn('[PassBank] window.ethereum getter threw:', e.message);
     return null;
   }
+  if (!eth) return null;
+  try {
+    // EIP-6963 / MetaMask multi-wallet: prefer MetaMask, skip Backpack
+    const providers = eth.providers;
+    if (Array.isArray(providers) && providers.length) {
+      const mm = providers.find(p => { try { return p.isMetaMask && !p.isBackpack; } catch(e) { return false; } });
+      if (mm) return mm;
+      return providers[0];
+    }
+  } catch(e) { /* no providers array — use eth directly */ }
+  return eth;
 }
 
 // ── Connect ───────────────────────────────────────────────────────────────────
@@ -887,7 +891,13 @@ async function connectWallet() {
     const eth = getEthereum();
     if (!eth) return toast('No wallet detected. Install MetaMask or a Web3 wallet.', 'err');
 
-    provider = new ethers.BrowserProvider(eth);
+    try {
+      provider = new ethers.BrowserProvider(eth);
+    } catch(e) {
+      console.warn('[PassBank] BrowserProvider init failed, retrying with window.ethereum directly:', e.message);
+      try { provider = new ethers.BrowserProvider(window.ethereum); }
+      catch(e2) { return toast('Wallet provider error. Try disabling other wallet extensions.', 'err'); }
+    }
     const accounts = await provider.send("eth_requestAccounts", []);
     walletAddress = accounts[0];
 
@@ -1403,8 +1413,10 @@ async function fetchGameInfo(gameId) {
 
 async function renderPassCards() {
   const grid = document.getElementById('passGrid');
-  // Combine registered passes + unregistered raw passes found in bank
-  const allPasses = [...passes, ...rawBankPasses];
+  // Combine: registered passes come from passes[]; rawBankPasses may overlap for
+  // registered entries — only add unregistered ones to avoid duplicates.
+  const unregisteredRaw = rawBankPasses.filter(r => r.unregistered);
+  const allPasses = [...passes, ...unregisteredRaw];
   if (!allPasses.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">
       <svg width="48" height="48" viewBox="0 0 48 48" fill="none"><path d="M24 4L44 14V34L24 44L4 34V14L24 4Z" stroke="#8899AA" stroke-width="2"/></svg>
@@ -2080,10 +2092,10 @@ async function pageInit() {
   await loadEthers();
   // Create a read-only provider for public pass loading
   readProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
-  // Scan bank for passes (registered + raw)
+  // Fetch games first so cards render with full game info in one pass
+  await fetchGrottoGames();
+  // Scan bank for passes (registered + raw) — renders cards internally when done
   await loadPasses();
-  // Fetch all games in parallel — re-render when done to fill in game info
-  fetchGrottoGames().then(() => renderPassCards());
 }
 
 // Start on DOM ready
