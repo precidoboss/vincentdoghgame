@@ -6,6 +6,7 @@
 <title>Game Pass Bank — Grotto L1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<script src="https://api.enterthegrotto.xyz/sdk/grotto-game-runtime.v1.js"></script>
 <style>
   :root {
     --void:    #080B10;
@@ -431,6 +432,88 @@
   .my-passes-chip-name { color: var(--text); }
 
 
+  /* ── Grotto Session Badge ── */
+  .grotto-session-badge {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--slate); border: 1px solid rgba(0,229,255,0.25);
+    border-radius: 10px; padding: 6px 14px 6px 8px;
+    cursor: default; position: relative;
+  }
+  .grotto-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid var(--cyan); object-fit: cover; flex-shrink: 0;
+    background: rgba(0,229,255,0.1);
+  }
+  .grotto-avatar-fallback {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid var(--cyan); background: rgba(0,229,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; color: var(--cyan); font-weight: 700;
+  }
+  .grotto-session-info { display: flex; flex-direction: column; gap: 1px; }
+  .grotto-session-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .grotto-session-sub {
+    font-size: 10px; color: var(--cyan); letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .grotto-session-switch {
+    font-size: 10px; color: var(--steel); cursor: pointer; margin-left: 6px;
+    border: 1px solid var(--border); border-radius: 4px; padding: 2px 7px;
+    background: transparent; font-family: 'Space Grotesk', sans-serif;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .grotto-session-switch:hover { color: var(--text); border-color: var(--steel); }
+
+  /* ── Request Queue (Admin) ── */
+  .req-card {
+    background: var(--slate); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 14px;
+    transition: border-color 0.15s;
+  }
+  .req-card:hover { border-color: rgba(0,229,255,0.2); }
+  .req-avatar {
+    width: 40px; height: 40px; border-radius: 50%; object-fit: cover;
+    border: 2px solid var(--border); flex-shrink: 0;
+    background: rgba(0,229,255,0.06);
+  }
+  .req-avatar-fallback {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid var(--border); background: rgba(0,229,255,0.08);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0; color: var(--cyan); font-weight: 700;
+  }
+  .req-info { flex: 1; min-width: 0; }
+  .req-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .req-wallet { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--steel); }
+  .req-pass { font-size: 12px; color: var(--cyan); margin-top: 3px; }
+  .req-time { font-size: 10px; color: var(--steel); margin-top: 2px; }
+  .req-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .req-send-btn {
+    background: rgba(0,255,136,0.12); color: var(--success);
+    border: 1px solid rgba(0,255,136,0.3); border-radius: 6px;
+    padding: 7px 16px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.15s;
+  }
+  .req-send-btn:hover { background: rgba(0,255,136,0.22); }
+  .req-send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .req-reject-btn {
+    background: rgba(255,59,92,0.1); color: var(--danger);
+    border: 1px solid rgba(255,59,92,0.25); border-radius: 6px;
+    padding: 7px 14px; font-size: 12px; font-weight: 700;
+    cursor: pointer; font-family: 'Space Grotesk', sans-serif;
+    transition: background 0.15s;
+  }
+  .req-reject-btn:hover { background: rgba(255,59,92,0.2); }
+  .req-status-badge {
+    font-size: 10px; font-weight: 700; border-radius: 4px;
+    padding: 2px 8px; text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .req-status-sent { background: rgba(0,255,136,0.12); color: var(--success); }
+  .req-status-rejected { background: rgba(255,59,92,0.1); color: var(--danger); }
+  .req-status-pending { background: rgba(255,184,0,0.1); color: var(--warn); }
+
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%,100% { opacity:0.3; } 50% { opacity:0.7; } }
 
@@ -500,6 +583,7 @@
     PASS<span>BANK</span>
   </div>
   <div id="walletSection">
+    <div id="grottoSessionBadge" style="display:none;"></div>
     <button id="connectBtn" onclick="openWalletModal()">Connect Wallet</button>
   </div>
 </header>
@@ -550,7 +634,7 @@
 
   <!-- Browse Tab -->
   <div id="tab-browse" class="panel panel-full visible">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div class="panel-head" style="margin-bottom:0;">Available Game Passes</div>
       <button id="refreshBtn" onclick="refreshAll()"
         style="background:transparent;border:1px solid var(--border);color:var(--steel);
@@ -559,6 +643,18 @@
           transition:border-color 0.15s,color 0.15s;">
         <span id="refreshIcon">↻</span> Refresh
       </button>
+    </div>
+    <div style="position:relative;margin-bottom:20px;">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);
+        color:var(--steel);font-size:15px;pointer-events:none;">🔍</span>
+      <input id="passSearchInput" type="text" placeholder="Search game passes…"
+        oninput="filterPassCards()"
+        style="width:100%;padding:10px 14px 10px 40px;background:var(--slate);
+          border:1px solid var(--border);border-radius:8px;color:var(--text);
+          font-family:'Space Grotesk',sans-serif;font-size:13px;outline:none;
+          transition:border-color 0.15s;"
+        onfocus="this.style.borderColor='var(--cyan)'"
+        onblur="this.style.borderColor='var(--border)'"/>
     </div>
         <div class="my-passes-banner" id="myPassesBanner">
       <div class="my-passes-banner-head">🎮 Detected In Your Wallet</div>
@@ -703,6 +799,39 @@
       </div>
     </div>
 
+    <!-- Request Queue — full width -->
+    <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="section-label" style="margin-bottom:0;">📬 Pass Request Queue</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:6px;">
+            <button id="reqFilterAll" onclick="setReqFilter('all')"
+              style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--cyan);
+                background:var(--cyan);color:var(--void);font-family:'Space Grotesk',sans-serif;
+                font-weight:600;cursor:pointer;">All</button>
+            <button id="reqFilterPending" onclick="setReqFilter('pending')"
+              style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--border);
+                background:transparent;color:var(--steel);font-family:'Space Grotesk',sans-serif;
+                font-weight:600;cursor:pointer;">Pending</button>
+            <button id="reqFilterSent" onclick="setReqFilter('sent')"
+              style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--border);
+                background:transparent;color:var(--steel);font-family:'Space Grotesk',sans-serif;
+                font-weight:600;cursor:pointer;">Sent</button>
+          </div>
+          <button onclick="loadRequestQueue()"
+            style="background:transparent;border:1px solid var(--border);color:var(--steel);
+              padding:5px 14px;border-radius:6px;font-family:'Space Grotesk',sans-serif;
+              font-size:12px;font-weight:600;cursor:pointer;">↻ Refresh</button>
+        </div>
+      </div>
+      <div id="requestQueue" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:13px;color:var(--steel);padding:14px;
+          background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+          Loading request queue…
+        </div>
+      </div>
+    </div>
+
     <!-- Claimants viewer — full width -->
     <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:28px;">
       <div class="section-label">View All Claimants</div>
@@ -756,6 +885,36 @@ const ADMIN_ADDRESS   = "0x46914D5DC59598801e435AF2a08928Da87C60dF0";
 const GROTTO_API      = "https://api.enterthegrotto.xyz";
 const GROTTO_RPC      = "https://subnets.avax.network/thegrotto/mainnet/rpc";
 const GROTTO_EXPLORER_API = "https://grottoexplorer.xyz/api/v2";
+
+// ── Supabase ──────────────────────────────────────────────────────────────────
+const SUPABASE_URL  = 'https://alxcflavlmpjlmmofdux.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseGNmbGF2bG1wamxtbW9mZHV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjY3NjIsImV4cCI6MjA5Njg0Mjc2Mn0.zrMHEuhcAs_LC1Plq9mmlavU0cWGxh_2F6OPkMUCfFs';
+
+async function sbFetch(path, opts = {}) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    ...opts,
+    headers: {
+      'apikey': SUPABASE_ANON,
+      'Authorization': `Bearer ${SUPABASE_ANON}`,
+      'Content-Type': 'application/json',
+      'Prefer': opts.prefer || 'return=representation',
+      ...(opts.headers || {})
+    }
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || err.details || `Supabase ${res.status}`);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ── Grotto Session State ──────────────────────────────────────────────────────
+let grottoSession   = null;   // GrottoRuntime client
+let grottoPlayer    = null;   // { id, wallet, ... } from session/me
+let grottoProfile   = null;   // { username, avatar_url, ... } from users/:address/profile
+let sessionMode     = false;  // true = logged in via Grotto session
+let reqFilterState  = 'all';  // admin queue filter
 
 const BANK_ABI = [
   "function getAllPasses() view returns (tuple(address tokenContract,uint256 tokenId,uint256 balance,string name,string imageURI,string gameId,bool active)[])",
@@ -1642,12 +1801,25 @@ function renderPassCards() {
         : `<div class="claimed-badge" style="background:rgba(255,184,0,0.08);color:var(--warn);border-color:rgba(255,184,0,0.2);">⏳ Pending Registration</div>`;
     } else {
       // Render optimistic state — async enrichment will patch the button below
-      actionHtml = !walletAddress
-        ? `<button class="claim-btn" id="claimBtn_${i}" onclick="openWalletModal()">Connect wallet</button>`
-        : `<button class="claim-btn" id="claimBtn_${i}" ${(!active || bal === 0) ? 'disabled' : ''}
+      if (sessionMode && grottoPlayer?.wallet) {
+        // Grotto session user — show Request Pass button (queue-based, no wallet needed)
+        const disabledAttr = (!active || bal === 0) ? 'disabled' : '';
+        const btnLabel = !active ? 'Inactive' : bal === 0 ? 'Empty' : 'Request Pass';
+        actionHtml = `<button class="claim-btn" id="req-btn-${i}" ${disabledAttr}
+          style="${(!active||bal===0) ? '' : 'background:rgba(0,229,255,0.1);border-color:var(--cyan);color:var(--cyan);'}"
+          onclick="submitPassRequest(${i},'${(p.name||'Pass').replace(/'/g,"\'")}','${(p.imageURI||'').replace(/'/g,"\'")}','${(p.gameId||'').replace(/'/g,"\'")}')">
+          ${btnLabel}
+        </button>`;
+      } else if (!walletAddress) {
+        // No session, no wallet — prompt connect
+        actionHtml = `<button class="claim-btn" id="claimBtn_${i}" onclick="openWalletModal()">Connect wallet</button>`;
+      } else {
+        // Wallet connected — direct on-chain claim
+        actionHtml = `<button class="claim-btn" id="claimBtn_${i}" ${(!active || bal === 0) ? 'disabled' : ''}
              onclick="claimPass(${i})">
              ${!active ? 'Inactive' : bal === 0 ? 'Empty' : 'Claim Pass'}
            </button>`;
+      }
     }
 
     const unregBadge = p.unregistered
@@ -1713,6 +1885,25 @@ function renderPassCards() {
     }
   });
 
+  // Async enrichment: patch Request Pass buttons with existing Supabase status
+  if (sessionMode && grottoPlayer?.wallet) {
+    (async () => {
+      await Promise.allSettled(allPasses.map(async (p, i) => {
+        if (p.unregistered) return;
+        const btn = document.getElementById(`req-btn-${i}`);
+        if (!btn || btn.disabled) return;
+        const status = await getPlayerRequestStatus(i);
+        if (status === 'sent') {
+          btn.outerHTML = `<div class="claimed-badge">✓ Sent to you</div>`;
+        } else if (status === 'pending') {
+          btn.textContent = '⏳ Requested';
+          btn.disabled = true;
+          btn.style.cssText += ';background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);';
+        }
+      }));
+    })();
+  }
+
   // Async enrichment: patch claim buttons with actual claimed/cooldown state
   if (walletAddress && bankContract) {
     (async () => {
@@ -1731,20 +1922,79 @@ function renderPassCards() {
         );
         const _rawM = _rawMs.find(r => !r.unregistered) || _rawMs[0];
         const bal = _rawM ? Number(_rawM.balance) : Number(p.balance);
+        // Skip canRequest entirely if the pass is empty or inactive — saves RPC calls
+        if (bal === 0) { btn.disabled = true; btn.textContent = 'Empty'; return; }
+        if (!p.active) { btn.disabled = true; btn.textContent = 'Inactive'; return; }
         try {
           const claimed = await bankContract.hasClaimed(i, walletAddress);
           if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; return; }
         } catch(e) {}
         if (cooldownSecs > 0) { btn.disabled = true; btn.textContent = 'Cooldown: ' + fmtTime(cooldownSecs); return; }
         try {
-          const [ok] = await bankContract.canRequest(i, walletAddress);
-          btn.disabled = !ok || !p.active || bal === 0;
-          if (!ok) btn.textContent = 'Not eligible';
-        } catch(e) {}
+          const [ok, reason] = await bankContract.canRequest(i, walletAddress);
+          if (!ok) {
+            btn.disabled = true;
+            // Show the actual contract reason instead of a generic message
+            const r = (reason || '').toLowerCase();
+            if (r.includes('claim') || r.includes('already')) {
+              btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`;
+            } else if (r.includes('cool') || r.includes('wait')) {
+              btn.textContent = 'Cooldown active';
+            } else if (r.includes('empty') || r.includes('balance')) {
+              btn.textContent = 'Empty';
+            } else if (r.includes('inactive') || r.includes('paused')) {
+              btn.textContent = 'Inactive';
+            } else {
+              // Show shortened reason so the user knows WHY, not just "not eligible"
+              btn.textContent = reason ? reason.slice(0, 28) : 'Not available';
+            }
+          } else {
+            btn.disabled = false;
+            btn.textContent = 'Claim Pass';
+          }
+        } catch(e) {
+          // canRequest reverted — most likely already claimed or pass inactive
+          // Don't leave button as "Not eligible" — try hasClaimed as a fallback check
+          try {
+            const claimed = await bankContract.hasClaimed(i, walletAddress);
+            if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; }
+          } catch(e2) {}
+        }
       }));
     })();
   }
 }
+
+// ── Pass card search/filter ────────────────────────────────────────────────────
+function filterPassCards() {
+  const q = (document.getElementById('passSearchInput')?.value || '').toLowerCase().trim();
+  const cards = document.querySelectorAll('#passGrid .pass-card');
+  let visible = 0;
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    const show = !q || text.includes(q);
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  // Show/hide empty state
+  let emptyEl = document.getElementById('passGridEmpty');
+  if (!visible && q) {
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.id = 'passGridEmpty';
+      emptyEl.className = 'empty-state';
+      emptyEl.style.gridColumn = '1/-1';
+      emptyEl.innerHTML = `<p>No passes match "<strong>${q}</strong>"</p>`;
+      document.getElementById('passGrid').appendChild(emptyEl);
+    } else {
+      emptyEl.querySelector('p').innerHTML = `No passes match "<strong>${q}</strong>"`;
+      emptyEl.style.display = '';
+    }
+  } else if (emptyEl) {
+    emptyEl.style.display = 'none';
+  }
+}
+window.filterPassCards = filterPassCards;
 
 function fmtTime(secs) {
   if (secs < 60) return secs + 's';
@@ -2323,6 +2573,9 @@ async function refreshAll() {
   const icon = document.getElementById('refreshIcon');
   if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; }
   if (icon) icon.style.animation = 'spin 0.8s linear infinite';
+  // Clear search so all results are visible after refresh
+  const searchInput = document.getElementById('passSearchInput');
+  if (searchInput) searchInput.value = '';
   // Reset games cache
   gamesLoaded = false;
   await loadPasses();
@@ -2338,14 +2591,309 @@ async function refreshAll() {
 }
 window.refreshAll = refreshAll;
 
+// ══════════════════════════════════════════════════════════════════════════════
+// GROTTO SESSION — auto-detect, profile fetch, header badge
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function initGrottoSession() {
+  if (typeof GrottoRuntime === 'undefined') return;
+  try {
+    grottoSession = await Promise.race([
+      GrottoRuntime.ready(),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
+    ]);
+    grottoPlayer = await grottoSession.getPlayer();
+    if (!grottoPlayer?.wallet) return;
+
+    sessionMode = true;
+
+    // Fetch Grotto profile (name + avatar) — public endpoint
+    try {
+      const res = await fetch(`${GROTTO_API}/api/users/${grottoPlayer.wallet}/profile`,
+        { signal: AbortSignal.timeout(5000) });
+      if (res.ok) grottoProfile = await res.json();
+    } catch(e) {}
+
+    renderSessionBadge();
+
+    // Set walletAddress for view-only calls (canRequest, hasClaimed, etc.)
+    if (!walletAddress) {
+      walletAddress = grottoPlayer.wallet;
+      loadPasses().then(() => updateStats());
+    }
+  } catch(e) {
+    console.log('[PassBank] No Grotto session:', e.message);
+  }
+}
+window.initGrottoSession = initGrottoSession;
+
+function renderSessionBadge() {
+  const badge      = document.getElementById('grottoSessionBadge');
+  const connectBtn = document.getElementById('connectBtn');
+  if (!badge) return;
+
+  const name   = grottoProfile?.username || grottoProfile?.display_name
+               || (grottoPlayer?.wallet
+                  ? grottoPlayer.wallet.slice(0,6)+'…'+grottoPlayer.wallet.slice(-4)
+                  : 'Grotto User');
+  const avatar = grottoProfile?.avatar_url || grottoProfile?.avatarUrl || '';
+  const avatarHtml = avatar
+    ? `<img class="grotto-avatar" src="${avatar}" alt="${name}"
+        onerror="this.style.display='none'">`
+    : `<div class="grotto-avatar-fallback">${name[0].toUpperCase()}</div>`;
+
+  const isOwnerSession = grottoPlayer?.wallet?.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
+
+  badge.style.display = 'flex';
+  badge.style.alignItems = 'center';
+  badge.style.gap = '8px';
+  badge.innerHTML = `
+    <div class="grotto-session-badge">
+      ${avatarHtml}
+      <div class="grotto-session-info">
+        <div class="grotto-session-name">${name}${isOwnerSession ? ' 👑' : ''}</div>
+        <div class="grotto-session-sub">⚡ Grotto Session</div>
+      </div>
+    </div>
+    <button class="grotto-session-switch" onclick="openWalletModal()"
+      title="Switch to manual wallet connect">🔗 Wallet</button>`;
+
+  if (connectBtn) connectBtn.style.display = 'none';
+
+  if (isOwnerSession) {
+    const adminTab = document.getElementById('adminTab');
+    if (adminTab) adminTab.style.display = '';
+    populateGamesDropdown();
+    loadAdminState();
+    loadRequestQueue();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// PASS REQUEST FLOW (Grotto Session → Supabase queue)
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function submitPassRequest(passIndex, passName, passImage, gameId) {
+  if (!grottoPlayer?.wallet) {
+    toast('No Grotto session — connect your wallet to claim directly.', 'warn');
+    return;
+  }
+  const playerId = grottoPlayer.id || grottoPlayer.wallet;
+  const wallet   = grottoPlayer.wallet;
+
+  // Duplicate guard
+  try {
+    const existing = await sbFetch(
+      `/pass_requests?player_id=eq.${encodeURIComponent(playerId)}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,
+      { method: 'GET', prefer: '' }
+    );
+    if (existing?.length > 0) {
+      const s = existing[0].status;
+      toast(s === 'sent'
+        ? 'You already received this pass! ✓'
+        : 'Your request is pending — we will send it soon! ⏳', s === 'sent' ? 'ok' : 'warn');
+      return;
+    }
+  } catch(e) { console.warn('[PassBank] Dup check:', e.message); }
+
+  try {
+    await sbFetch('/pass_requests', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ player_id: playerId, wallet, pass_index: passIndex,
+        pass_name: passName, pass_image: passImage || '', game_id: gameId || '', status: 'pending' })
+    });
+    toast('Request submitted! We will send your pass soon. ✓', 'ok');
+    // Update the button on the card
+    const btn = document.getElementById(`req-btn-${passIndex}`);
+    if (btn) {
+      btn.textContent = '⏳ Requested';
+      btn.disabled = true;
+      btn.style.cssText += ';background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);';
+    }
+  } catch(e) {
+    toast('Failed to submit request: ' + e.message.slice(0,80), 'err');
+  }
+}
+window.submitPassRequest = submitPassRequest;
+
+async function getPlayerRequestStatus(passIndex) {
+  if (!grottoPlayer) return null;
+  try {
+    const rows = await sbFetch(
+      `/pass_requests?player_id=eq.${encodeURIComponent(grottoPlayer.id||grottoPlayer.wallet)}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,
+      { method: 'GET', prefer: '' }
+    );
+    return rows?.length > 0 ? rows[0].status : null;
+  } catch(e) { return null; }
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADMIN — REQUEST QUEUE
+// ══════════════════════════════════════════════════════════════════════════════
+
+function setReqFilter(f) {
+  reqFilterState = f;
+  ['all','pending','sent'].forEach(k => {
+    const btn = document.getElementById('reqFilter' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (!btn) return;
+    const active = k === f;
+    btn.style.background   = active ? 'var(--cyan)' : 'transparent';
+    btn.style.color        = active ? 'var(--void)' : 'var(--steel)';
+    btn.style.borderColor  = active ? 'var(--cyan)' : 'var(--border)';
+  });
+  loadRequestQueue();
+}
+window.setReqFilter = setReqFilter;
+
+async function loadRequestQueue() {
+  const container = document.getElementById('requestQueue');
+  if (!container) return;
+  container.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;
+    background:var(--slate);border:1px solid var(--border);border-radius:10px;">Loading…</div>`;
+
+  try {
+    const filterQS = reqFilterState === 'pending' ? '&status=eq.pending'
+                   : reqFilterState === 'sent'    ? '&status=eq.sent' : '';
+    const rows = await sbFetch(
+      `/pass_requests?order=requested_at.asc${filterQS}&limit=100`,
+      { method: 'GET', prefer: '' }
+    );
+
+    if (!rows?.length) {
+      container.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;
+        background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+        No requests${reqFilterState !== 'all' ? ' matching filter: '+reqFilterState : ''}.
+      </div>`; return;
+    }
+
+    // Batch-fetch all unique wallet profiles
+    const uniqueWallets = [...new Set(rows.map(r => r.wallet).filter(Boolean))];
+    const profileMap = {};
+    await Promise.allSettled(uniqueWallets.map(async w => {
+      try {
+        const res = await fetch(`${GROTTO_API}/api/users/${w}/profile`,
+          { signal: AbortSignal.timeout(4000) });
+        if (res.ok) profileMap[w.toLowerCase()] = await res.json();
+      } catch(e) {}
+    }));
+
+    container.innerHTML = rows.map(row => renderRequestCard(row, profileMap)).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:13px;color:var(--danger);padding:14px;
+      background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+      Failed to load queue: ${e.message}</div>`;
+  }
+}
+window.loadRequestQueue = loadRequestQueue;
+
+function renderRequestCard(row, profileMap) {
+  const profile = profileMap[(row.wallet||'').toLowerCase()] || {};
+  const name    = profile.username || profile.display_name
+                || (row.wallet ? row.wallet.slice(0,6)+'…'+row.wallet.slice(-4) : row.player_id);
+  const avatar  = profile.avatar_url || profile.avatarUrl || '';
+  const initial = (name[0]||'?').toUpperCase();
+
+  const avatarHtml = avatar
+    ? `<img class="req-avatar" src="${avatar}" alt="${name}"
+        onerror="this.outerHTML='<div class=\'req-avatar-fallback\'>${initial}</div>'">`
+    : `<div class="req-avatar-fallback">${initial}</div>`;
+
+  const passImg = row.pass_image
+    ? `<img src="${row.pass_image}" style="width:36px;height:36px;border-radius:6px;
+        object-fit:cover;border:1px solid var(--border);flex-shrink:0;"
+        onerror="this.style.display='none'">` : '';
+
+  let actionHtml;
+  if (row.status === 'pending') {
+    actionHtml = `<div class="req-actions">
+      <button class="req-send-btn" id="sendBtn-${row.id}"
+        onclick="adminSendPass('${row.id}','${row.wallet}',${row.pass_index},'${row.pass_name.replace(/'/g,"\'")}')">
+        ▶ Send
+      </button>
+      <button class="req-reject-btn" onclick="adminRejectRequest('${row.id}')">✕</button>
+    </div>`;
+  } else {
+    const cls   = row.status === 'sent' ? 'req-status-sent' : 'req-status-rejected';
+    const label = row.status === 'sent' ? '✓ Sent' : '✕ Rejected';
+    const txLink = (row.status === 'sent' && row.tx_hash)
+      ? `<a href="https://grottoexplorer.xyz/tx/${row.tx_hash}" target="_blank"
+          style="font-size:10px;color:var(--cyan);font-family:'JetBrains Mono',monospace;
+            text-decoration:none;display:block;margin-top:4px;">
+          ${row.tx_hash.slice(0,10)}…</a>` : '';
+    actionHtml = `<div style="text-align:right;">
+      <span class="req-status-badge ${cls}">${label}</span>${txLink}
+    </div>`;
+  }
+
+  return `<div class="req-card" id="reqCard-${row.id}">
+    ${avatarHtml}
+    <div style="display:flex;gap:10px;align-items:center;flex:1;min-width:0;">
+      ${passImg}
+      <div class="req-info">
+        <div class="req-name">${name}</div>
+        <div class="req-wallet">${row.wallet||row.player_id}</div>
+        <div class="req-pass">🎮 ${row.pass_name}
+          <span style="color:var(--steel);font-size:10px;">(index ${row.pass_index})</span></div>
+        <div class="req-time">${formatTimeAgo(row.requested_at)}</div>
+      </div>
+    </div>
+    ${actionHtml}
+  </div>`;
+}
+
+async function adminSendPass(reqId, toWallet, passIndex, passName) {
+  if (!bankContract || !isOwner) { toast('Connect owner wallet first', 'err'); return; }
+  const btn = document.getElementById(`sendBtn-${reqId}`);
+  if (btn) { btn.disabled = true; btn.textContent = '…Sending'; }
+  try {
+    toast(`Sending "${passName}" to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}`, 'warn');
+    const tx = await bankContract.withdrawPass(passIndex, 1, toWallet);
+    await tx.wait();
+    await sbFetch(`/pass_requests?id=eq.${reqId}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'sent', tx_hash: tx.hash, processed_at: new Date().toISOString() })
+    });
+    toast(`✓ Pass sent! Tx: ${tx.hash.slice(0,10)}…`, 'ok');
+    loadRequestQueue();
+    loadPasses().then(() => updateStats());
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '▶ Send'; }
+    toast('Send failed: ' + (e.reason||e.message||'').slice(0,80), 'err');
+  }
+}
+window.adminSendPass = adminSendPass;
+
+async function adminRejectRequest(reqId) {
+  if (!confirm('Reject this request?')) return;
+  try {
+    await sbFetch(`/pass_requests?id=eq.${reqId}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'rejected', processed_at: new Date().toISOString() })
+    });
+    toast('Request rejected', 'warn');
+    loadRequestQueue();
+  } catch(e) { toast('Failed: ' + e.message, 'err'); }
+}
+window.adminRejectRequest = adminRejectRequest;
+
+function formatTimeAgo(iso) {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return diff + 's ago';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
 // ── Page init — load passes publicly (no wallet needed for read) ──────────────
 async function pageInit() {
   await loadEthers();
   readProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
-  // Show skeletons right away so the UI isn't blank
   renderSkeletons();
-  // Kick off games fetch and passes load in parallel
-  await loadPasses(); // internally also fires fetchGrottoGames() in parallel
+  // Try Grotto session in parallel with pass loading
+  initGrottoSession();
+  await loadPasses();
 }
 
 // Start on DOM ready
