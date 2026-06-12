@@ -1323,10 +1323,11 @@ async function detectWalletPasses() {
     }
   }
 
-  // ── 3. Scan any contract recognized by the Grotto Games API ──────────────
-  // This lets users deposit ANY pass linked to a Grotto game, even if it's
-  // never been registered in the bank or seen by the bank before.
-  await fetchGrottoGames(); // ensure games are loaded
+  // ── 3. Scan ALL Grotto API contracts ──────────────────────
+  // Scans every contract the Grotto API links to a game -- no exclusions.
+  // Already-found chips get enriched with game name/image.
+  // New token IDs not yet in chips get added as unregistered deposits.
+  await fetchGrottoGames();
   const grottoContracts = new Set();
   for (const g of grottoGames) {
     const mm = g.marketplace_metadata || {};
@@ -1339,29 +1340,33 @@ async function detectWalletPasses() {
       }
     }
   }
-  // Exclude contracts already scanned above
-  const alreadyScanned = new Set([
-    GAMEPASS_CONTRACT.toLowerCase(),
-    ...passes.map(p => p.tokenContract.toLowerCase())
-  ]);
-  const newContracts = [...grottoContracts].filter(c => !alreadyScanned.has(c));
 
-  for (const contractAddr of newContracts) {
+  for (const contractAddr of [...grottoContracts]) {
+    const game    = getGameByContract(contractAddr);
+    const gameName = game ? (game.title || game.name || null) : null;
+    const gameImg  = getGameImageUrl(game) || '';
+
+    // Enrich any chips already found on this contract
+    for (const ch of chips) {
+      if (ch.tokenContract.toLowerCase() === contractAddr) {
+        if (gameName && (!ch.name || ch.name.startsWith('Pass #') || ch.name.startsWith('Game Pass #'))) ch.name = gameName;
+        if (gameImg && !ch.imgURI) ch.imgURI = gameImg;
+      }
+    }
+
+    // Scan for token IDs not yet in chips
     try {
       const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, (await getReadProvider()));
       const accounts = GAMEPASS_SCAN_IDS.map(() => walletAddress);
       const balances = await c.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
       for (let i = 0; i < balances.length; i++) {
         const bal = Number(balances[i]);
-        if (bal > 0) {
-          const game = getGameByContract(contractAddr);
-          const name = game ? (game.title || game.name || `Pass #${i}`) : `Pass #${i}`;
-          const imgURI = getGameImageUrl(game) || '';
-          chips.push({ name, balance: bal, tokenId: i, tokenContract: contractAddr, source: 'grotto-discovery', imgURI, passIndex: null });
+        if (bal > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === i)) {
+          chips.push({ name: gameName || `Pass #${i}`, balance: bal, tokenId: i, tokenContract: contractAddr, source: 'grotto-discovery', imgURI: gameImg, passIndex: null });
         }
       }
     } catch(e) {
-      // Not an ERC1155, or balanceOfBatch unsupported — skip silently
+      // Not ERC1155 or balanceOfBatch unsupported -- skip
     }
   }
 
