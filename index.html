@@ -862,13 +862,32 @@ async function connectWith(type) {
 }
 window.connectWith = connectWith;
 
+// ── Safe ethereum provider getter — handles multi-wallet extension conflicts ──
+function getEthereum() {
+  // Some extensions (Backpack, evmAsk) fight over window.ethereum and may throw
+  // on property access. Wrap in try/catch to gracefully handle conflicts.
+  try {
+    // Prefer MetaMask if multiple providers exist (EIP-6963 / providers array)
+    if (window.ethereum?.providers?.length) {
+      const mm = window.ethereum.providers.find(p => p.isMetaMask && !p.isBackpack);
+      if (mm) return mm;
+      return window.ethereum.providers[0];
+    }
+    return window.ethereum || null;
+  } catch(e) {
+    console.warn('[PassBank] window.ethereum access error:', e.message);
+    return null;
+  }
+}
+
 // ── Connect ───────────────────────────────────────────────────────────────────
 async function connectWallet() {
   try {
     await loadEthers();
-    if (!window.ethereum) return toast('No wallet detected. Install MetaMask or a Web3 wallet.', 'err');
+    const eth = getEthereum();
+    if (!eth) return toast('No wallet detected. Install MetaMask or a Web3 wallet.', 'err');
 
-    provider = new ethers.BrowserProvider(window.ethereum);
+    provider = new ethers.BrowserProvider(eth);
     const accounts = await provider.send("eth_requestAccounts", []);
     walletAddress = accounts[0];
 
@@ -876,7 +895,7 @@ async function connectWallet() {
     if (Number(network.chainId) !== GROTTO_CHAIN_ID) {
       toast(`Wrong network. Please switch to Grotto L1 (chain ${GROTTO_CHAIN_ID})`, 'warn');
       try {
-        await window.ethereum.request({
+        await eth.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: '0x' + GROTTO_CHAIN_ID.toString(16) }]
         });
@@ -907,7 +926,7 @@ async function connectWallet() {
     if (isOwner) await loadAdminState();
 
     toast('Wallet connected ✓', 'ok');
-    window.ethereum.on('accountsChanged', () => location.reload());
+    try { eth.on('accountsChanged', () => location.reload()); } catch(e) {}
   } catch(e) {
     console.error(e);
     toast('Connection failed: ' + (e.message || e), 'err');
@@ -1213,8 +1232,8 @@ async function discoverBankPasses() {
 
   try {
     const latestBlock = await rp.getBlockNumber();
-    // Scan from genesis in chunks (RPC may limit range per request)
-    const CHUNK = 50000;
+    // Scan from genesis in chunks — Grotto L1 RPC max is 2048 blocks per getLogs call
+    const CHUNK = 2000;
     let fromBlock = 0;
 
     while (fromBlock <= latestBlock) {
