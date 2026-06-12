@@ -969,8 +969,8 @@ async function fetchGrottoGames(force = false) {
 // Resolve image URL for a game object — uses thumbnail_url (confirmed Grotto API field)
 function getGameImageUrl(game) {
   if (!game) return null;
-  // thumbnail_url is the confirmed field used across the Grotto ecosystem (search results)
-  let raw = game.thumbnail_url || game.thumbnailUrl
+  // primary_image_url / thumbnail_url confirmed fields from live Grotto API response
+  let raw = game.primary_image_url || game.thumbnail_url || game.thumbnailUrl
     || game.coverImage || game.cover_image || game.coverUrl || game.cover
     || game.imageUrl || game.image_url || game.image || game.thumbnail
     || game.banner || game.bannerUrl || game.logoUrl || game.logo
@@ -996,8 +996,12 @@ function getGameByContract(address) {
   if (!address) return null;
   const target = address.toLowerCase();
   return grottoGames.find(g => {
-    const candidates = [g.license_address, g.token_address, g.licenseAddress, g.tokenAddress, g.contractAddress, g.contract_address];
-    return candidates.some(c => c && c.toLowerCase() === target);
+    const mm = g.marketplace_metadata || {};
+    const candidates = [
+      g.license_address, g.token_address, g.licenseAddress, g.tokenAddress, g.contractAddress, g.contract_address,
+      mm.license_address, mm.token_address, mm.licenseAddress, mm.tokenAddress
+    ];
+    return candidates.some(c => c && typeof c === 'string' && c.toLowerCase() === target);
   }) || null;
 }
 // Scan token IDs 0–99 on the known game pass contract
@@ -1109,10 +1113,13 @@ async function detectWalletPasses() {
   await fetchGrottoGames(); // ensure games are loaded
   const grottoContracts = new Set();
   for (const g of grottoGames) {
+    const mm = g.marketplace_metadata || {};
     for (const field of ['license_address','token_address','licenseAddress','tokenAddress','contractAddress','contract_address']) {
-      const addr = g[field];
-      if (addr && typeof addr === 'string' && addr.startsWith('0x')) {
-        grottoContracts.add(addr.toLowerCase());
+      for (const src of [g, mm]) {
+        const addr = src[field];
+        if (addr && typeof addr === 'string' && addr.startsWith('0x')) {
+          grottoContracts.add(addr.toLowerCase());
+        }
       }
     }
   }
@@ -1183,9 +1190,13 @@ async function getReadProvider() {
   return readProvider;
 }
 
-// Event signatures for ERC1155 transfers
-const TRANSFER_SINGLE_TOPIC = ethers.id("TransferSingle(address,address,address,uint256,uint256)");
-const TRANSFER_BATCH_TOPIC  = ethers.id("TransferBatch(address,address,address,uint256[],uint256[])");
+// Event signatures for ERC1155 transfers — computed lazily since ethers loads via CDN
+function getTransferSingleTopic() {
+  return ethers.id("TransferSingle(address,address,address,uint256,uint256)");
+}
+function getTransferBatchTopic() {
+  return ethers.id("TransferBatch(address,address,address,uint256[],uint256[])");
+}
 
 // Pad an address to a 32-byte topic for log filtering
 function addressToTopic(addr) {
@@ -1213,7 +1224,7 @@ async function discoverBankPasses() {
       try {
         const singleLogs = await rp.getLogs({
           fromBlock, toBlock,
-          topics: [TRANSFER_SINGLE_TOPIC, null, null, toTopic]
+          topics: [getTransferSingleTopic(), null, null, toTopic]
         });
         for (const log of singleLogs) {
           const tokenId = BigInt(log.data.slice(0, 66)); // first uint256 in data = id
@@ -1226,7 +1237,7 @@ async function discoverBankPasses() {
       try {
         const batchLogs = await rp.getLogs({
           fromBlock, toBlock,
-          topics: [TRANSFER_BATCH_TOPIC, null, null, toTopic]
+          topics: [getTransferBatchTopic(), null, null, toTopic]
         });
         for (const log of batchLogs) {
           try {
