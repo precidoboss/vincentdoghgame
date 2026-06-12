@@ -1221,10 +1221,11 @@ async function detectWalletPasses() {
       }
     }
   } catch(batchErr) {
+    console.warn('[PassBank] balanceOfBatch failed on GAMEPASS_CONTRACT, falling back:', batchErr.message);
     // Fallback: individual balanceOf if batch not supported
     try {
       const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, (await getReadProvider()));
-      for (let i = 0; i < 20; i++) {
+      for (let i = 0; i < 100; i++) {
         try {
           const bal = Number(await gpContract.balanceOf(walletAddress, i));
           if (bal > 0) {
@@ -1823,6 +1824,30 @@ function resolvePassNameByIndex(passIndex) {
   return p.name || (game ? (game.title || game.name) : null) || `Pass #${p.tokenId}`;
 }
 
+// ── Chunked getLogs helper — Grotto RPC caps at 2048 blocks per request ──────
+// Scans backwards from latest in 2048-block chunks up to maxBlocks total.
+async function getLogsChunked(rp, filter, maxBlocks = 150000) {
+  const CHUNK = 2048;
+  let latest;
+  try { latest = Number(await rp.getBlockNumber()); } catch(e) { latest = 0; }
+  if (!latest) return [];
+
+  const from = Math.max(0, latest - maxBlocks);
+  const allLogs = [];
+
+  for (let start = from; start <= latest; start += CHUNK) {
+    const end = Math.min(start + CHUNK - 1, latest);
+    try {
+      const chunk = await rp.getLogs({ ...filter, fromBlock: start, toBlock: end });
+      allLogs.push(...chunk);
+    } catch(e) {
+      // Skip bad chunk and continue
+      console.warn('[PassBank] getLogs chunk failed', start, '-', end, e.message);
+    }
+  }
+  return allLogs;
+}
+
 async function loadTransactionHistory() {
   const list = document.getElementById('historyList');
   if (!list) return;
@@ -1851,10 +1876,9 @@ async function loadTransactionHistory() {
         ethers.id("PassDeposited(uint256,address,uint256)"),
         null,
         userTopic
-      ],
-      fromBlock: 0, toBlock: 'latest'
+      ]
     };
-    const logs = await rp.getLogs(depositFilter);
+    const logs = await getLogsChunked(rp, depositFilter);
     for (const log of logs) {
       const passIndex = Number(BigInt(log.topics[1]));
       const amount = Number(BigInt(log.data));
@@ -1880,10 +1904,9 @@ async function loadTransactionHistory() {
         ethers.id("PassRequested(uint256,address)"),
         null,
         userTopic
-      ],
-      fromBlock: 0, toBlock: 'latest'
+      ]
     };
-    const logs = await rp.getLogs(claimFilter);
+    const logs = await getLogsChunked(rp, claimFilter);
     for (const log of logs) {
       const passIndex = Number(BigInt(log.topics[1]));
       const block = await rp.getBlock(log.blockNumber);
