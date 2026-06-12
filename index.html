@@ -1485,11 +1485,15 @@ async function loadPasses() {
             p.tokenContract.toLowerCase() === contractAddr.toLowerCase() &&
             Number(p.tokenId) === tid
           );
-          if (!reg) {
-            const game = getGameByContract(contractAddr);
-            const name = game ? (game.title || game.name || `Pass #${tid}`) : `Pass #${tid}`;
+          const game = getGameByContract(contractAddr);
+          if (reg) {
+            // Registered pass — store live balance so renderPassCards + updateStats
+            // use the freshly scanned value instead of the stale getAllPasses() value.
+            rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, unregistered: false });
+          } else {
+            const name    = game ? (game.title || game.name || `Pass #${tid}`) : `Pass #${tid}`;
             const imageURI = getGameImageUrl(game) || '';
-            const gameId = game ? String(game.id || game.slug || '') : '';
+            const gameId   = game ? String(game.id || game.slug || '') : '';
             rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, name, imageURI, gameId, active: true, unregistered: true });
           }
         }
@@ -1503,10 +1507,12 @@ async function loadPasses() {
           const b = Number(await c.balanceOf(BANK_ADDRESS, tid));
           if (b > 0) {
             const reg = passes.find(p => p.tokenContract.toLowerCase() === contractAddr.toLowerCase() && Number(p.tokenId) === tid);
-            if (!reg) {
-              const game = getGameByContract(contractAddr);
+            const game = getGameByContract(contractAddr);
+            if (reg) {
+              rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, unregistered: false });
+            } else {
               const name = game ? (game.title || game.name || `Pass #${tid}`) : `Pass #${tid}`;
-              rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, name, imageURI: getGameImageUrl(game)||''  , gameId: game?String(game.id||game.slug||''): '', active: true, unregistered: true });
+              rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, name, imageURI: getGameImageUrl(game)||'', gameId: game?String(game.id||game.slug||''): '', active: true, unregistered: true });
             }
           }
         } catch(e2) {}
@@ -1591,10 +1597,12 @@ function renderPassCards() {
   let cooldownSecs = 0;
 
   const cards = allPasses.map((p, i) => {
-    const rawMatch = rawBankPasses.find(r =>
+    // Collect all scan entries for this pass; prefer the registered-pass balance stub
+    const rawMatches = rawBankPasses.filter(r =>
       r.tokenContract.toLowerCase() === (p.tokenContract || '').toLowerCase() &&
       Number(r.tokenId) === Number(p.tokenId)
     );
+    const rawMatch = rawMatches.find(r => !r.unregistered) || rawMatches[0];
     const bal    = rawMatch ? Number(rawMatch.balance) : Number(p.balance);
     const active = p.active;
 
@@ -1717,10 +1725,12 @@ function renderPassCards() {
         if (p.unregistered) return;
         const btn = document.getElementById(`claimBtn_${i}`);
         if (!btn) return;
-        const bal = Number((rawBankPasses.find(r =>
+        const _rawMs = rawBankPasses.filter(r =>
           r.tokenContract.toLowerCase() === (p.tokenContract||'').toLowerCase() &&
           Number(r.tokenId) === Number(p.tokenId)
-        ) || p).balance);
+        );
+        const _rawM = _rawMs.find(r => !r.unregistered) || _rawMs[0];
+        const bal = _rawM ? Number(_rawM.balance) : Number(p.balance);
         try {
           const claimed = await bankContract.hasClaimed(i, walletAddress);
           if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; return; }
