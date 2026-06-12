@@ -1283,6 +1283,46 @@ async function detectWalletPasses() {
     }
   }
 
+  // ── 2b. Check user wallet for unregistered passes (rawBankPasses token IDs) ──
+  // These are token IDs the bank already holds but admin hasn’t registered yet.
+  // If the user also holds them, show so they can deposit more.
+  if (rawBankPasses.length) {
+    const unregByContract = {};
+    for (const rp of rawBankPasses) {
+      const addr = rp.tokenContract.toLowerCase();
+      if (!unregByContract[addr]) unregByContract[addr] = [];
+      unregByContract[addr].push(Number(rp.tokenId));
+    }
+    for (const [contractAddr, tokenIds] of Object.entries(unregByContract)) {
+      // Skip if this contract was already fully scanned in section 1 or 2
+      const alreadyCovered = contractAddr === GAMEPASS_CONTRACT.toLowerCase();
+      if (alreadyCovered) continue; // section 1 already covered GAMEPASS_CONTRACT IDs 0-99
+      try {
+        const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, (await getReadProvider()));
+        const accounts = tokenIds.map(() => walletAddress);
+        const balances = await c.balanceOfBatch(accounts, tokenIds);
+        balances.forEach((bal, idx2) => {
+          const b = Number(bal);
+          if (b > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === tokenIds[idx2])) {
+            const rp2 = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tokenIds[idx2]);
+            chips.push({ name: rp2?.name || `Pass #${tokenIds[idx2]}`, balance: b, tokenId: tokenIds[idx2], tokenContract: contractAddr, source: 'unregistered', imgURI: rp2?.imageURI || '', passIndex: null });
+          }
+        });
+      } catch(e) {
+        for (const tid of tokenIds) {
+          try {
+            const c = new ethers.Contract(contractAddr, ERC1155_ABI, (await getReadProvider()));
+            const b = Number(await c.balanceOf(walletAddress, tid));
+            if (b > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === tid)) {
+              const rp3 = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tid);
+              chips.push({ name: rp3?.name || `Pass #${tid}`, balance: b, tokenId: tid, tokenContract: contractAddr, source: 'unregistered', imgURI: rp3?.imageURI || '', passIndex: null });
+            }
+          } catch(e2) {}
+        }
+      }
+    }
+  }
+
   // ── 3. Scan any contract recognized by the Grotto Games API ──────────────
   // This lets users deposit ANY pass linked to a Grotto game, even if it's
   // never been registered in the bank or seen by the bank before.
