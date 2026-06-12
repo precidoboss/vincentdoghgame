@@ -1197,131 +1197,50 @@ async function detectWalletPasses() {
   if (!walletAddress) return;
   const chips = [];
 
-  // ── 1. Scan known GAMEPASS_CONTRACT via balanceOfBatch ────────────────────
-  try {
-    const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_BATCH_ABI, (await getReadProvider()));
-    const accounts   = GAMEPASS_SCAN_IDS.map(() => walletAddress);
-    const balances   = await gpContract.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
-
-    for (let i = 0; i < balances.length; i++) {
-      const bal = Number(balances[i]);
-      if (bal > 0) {
-        // Try to find a matching registered pass name
-        const registered = passes.find(p =>
-          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
-          Number(p.tokenId) === i
-        );
-        const name = registered?.name || `Game Pass #${i}`;
-        const imgURI = registered?.imageURI || '';
-        const passIndex = passes.findIndex(p =>
-          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
-          Number(p.tokenId) === i
-        );
-        chips.push({ name, balance: bal, tokenId: i, tokenContract: GAMEPASS_CONTRACT, source: 'gamepass', imgURI, passIndex: passIndex >= 0 ? passIndex : null });
-      }
-    }
-  } catch(batchErr) {
-    console.warn('[PassBank] balanceOfBatch failed on GAMEPASS_CONTRACT, falling back:', batchErr.message);
-    // Fallback: individual balanceOf if batch not supported
-    try {
-      const gpContract = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, (await getReadProvider()));
-      for (let i = 0; i < 100; i++) {
-        try {
-          const bal = Number(await gpContract.balanceOf(walletAddress, i));
-          if (bal > 0) {
-            const registered = passes.find(p =>
-              p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
-              Number(p.tokenId) === i
-            );
-            const passIndex2 = passes.findIndex(p =>
-              p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
-              Number(p.tokenId) === i
-            );
-            chips.push({ name: registered?.name || `Game Pass #${i}`, balance: bal, tokenId: i, tokenContract: GAMEPASS_CONTRACT, source: 'gamepass', imgURI: registered?.imageURI || '', passIndex: passIndex2 >= 0 ? passIndex2 : null });
-          }
-        } catch(e) {}
-      }
-    } catch(e) {}
-  }
-
-  // ── 2. Also scan any OTHER contracts registered in the bank ───────────────
-  const otherContracts = [...new Set(
-    passes
-      .map(p => p.tokenContract.toLowerCase())
-      .filter(addr => addr !== GAMEPASS_CONTRACT.toLowerCase())
-  )];
-  for (const contractAddr of otherContracts) {
-    const contractPasses = passes.filter(p => p.tokenContract.toLowerCase() === contractAddr);
+  // ── 1 & 2. Scan all contracts the bank holds (via fetchBankTokenContracts) ───
+  // This covers GAMEPASS_CONTRACT, all registered bank contracts, AND any
+  // additional contracts discovered from the explorer API.
+  const bankContractList = await fetchBankTokenContracts();
+  await Promise.allSettled(bankContractList.map(async ({ address: contractAddr, tokenIds }) => {
+    const scanIds = tokenIds.length ? tokenIds : GAMEPASS_SCAN_IDS;
     try {
       const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, (await getReadProvider()));
-      const accounts = contractPasses.map(() => walletAddress);
-      const ids      = contractPasses.map(p => Number(p.tokenId));
-      const balances = await c.balanceOfBatch(accounts, ids);
+      const accounts = scanIds.map(() => walletAddress);
+      const balances = await c.balanceOfBatch(accounts, scanIds);
       balances.forEach((bal, idx) => {
-        if (Number(bal) > 0) {
-          const passIdx = passes.findIndex(p =>
-            p.tokenContract.toLowerCase() === contractAddr &&
-            Number(p.tokenId) === ids[idx]
-          );
-          chips.push({ name: contractPasses[idx].name || `Pass #${ids[idx]}`, balance: Number(bal), tokenId: ids[idx], tokenContract: contractAddr, source: 'bank', imgURI: contractPasses[idx].imageURI || '', passIndex: passIdx >= 0 ? passIdx : null });
+        const b = Number(bal);
+        const tid = scanIds[idx];
+        if (b > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === tid)) {
+          const reg = passes.find(p => p.tokenContract.toLowerCase() === contractAddr && Number(p.tokenId) === tid);
+          const rawMatch = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tid);
+          const game = getGameByContract(contractAddr);
+          const name = reg?.name || rawMatch?.name || (game ? (game.title || game.name) : null) || `Pass #${tid}`;
+          const imgURI = reg?.imageURI || rawMatch?.imageURI || getGameImageUrl(game) || '';
+          const passIndex = passes.findIndex(p => p.tokenContract.toLowerCase() === contractAddr && Number(p.tokenId) === tid);
+          chips.push({ name, balance: b, tokenId: tid, tokenContract: contractAddr, source: 'scan', imgURI, passIndex: passIndex >= 0 ? passIndex : null });
         }
       });
-    } catch(e) {
-      for (const p of contractPasses) {
-        try {
-          const c = new ethers.Contract(contractAddr, ERC1155_ABI, (await getReadProvider()));
-          const bal = Number(await c.balanceOf(walletAddress, p.tokenId));
-          if (bal > 0) {
-            const passIdx2 = passes.findIndex(pp =>
-              pp.tokenContract.toLowerCase() === contractAddr &&
-              Number(pp.tokenId) === Number(p.tokenId)
-            );
-            chips.push({ name: p.name || `Pass #${p.tokenId}`, balance: bal, tokenId: Number(p.tokenId), tokenContract: contractAddr, source: 'bank', imgURI: p.imageURI || '', passIndex: passIdx2 >= 0 ? passIdx2 : null });
-          }
-        } catch(e2) {}
-      }
-    }
-  }
-
-  // ── 2b. Check user wallet for unregistered passes (rawBankPasses token IDs) ──
-  // These are token IDs the bank already holds but admin hasn’t registered yet.
-  // If the user also holds them, show so they can deposit more.
-  if (rawBankPasses.length) {
-    const unregByContract = {};
-    for (const rp of rawBankPasses) {
-      const addr = rp.tokenContract.toLowerCase();
-      if (!unregByContract[addr]) unregByContract[addr] = [];
-      unregByContract[addr].push(Number(rp.tokenId));
-    }
-    for (const [contractAddr, tokenIds] of Object.entries(unregByContract)) {
-      // Skip if this contract was already fully scanned in section 1 or 2
-      const alreadyCovered = contractAddr === GAMEPASS_CONTRACT.toLowerCase();
-      if (alreadyCovered) continue; // section 1 already covered GAMEPASS_CONTRACT IDs 0-99
+    } catch(batchErr) {
+      // Fallback: individual balanceOf
       try {
-        const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, (await getReadProvider()));
-        const accounts = tokenIds.map(() => walletAddress);
-        const balances = await c.balanceOfBatch(accounts, tokenIds);
-        balances.forEach((bal, idx2) => {
-          const b = Number(bal);
-          if (b > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === tokenIds[idx2])) {
-            const rp2 = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tokenIds[idx2]);
-            chips.push({ name: rp2?.name || `Pass #${tokenIds[idx2]}`, balance: b, tokenId: tokenIds[idx2], tokenContract: contractAddr, source: 'unregistered', imgURI: rp2?.imageURI || '', passIndex: null });
-          }
-        });
-      } catch(e) {
-        for (const tid of tokenIds) {
+        const c = new ethers.Contract(contractAddr, ERC1155_ABI, (await getReadProvider()));
+        await Promise.allSettled(scanIds.map(async tid => {
           try {
-            const c = new ethers.Contract(contractAddr, ERC1155_ABI, (await getReadProvider()));
             const b = Number(await c.balanceOf(walletAddress, tid));
             if (b > 0 && !chips.find(ch => ch.tokenContract.toLowerCase() === contractAddr && ch.tokenId === tid)) {
-              const rp3 = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tid);
-              chips.push({ name: rp3?.name || `Pass #${tid}`, balance: b, tokenId: tid, tokenContract: contractAddr, source: 'unregistered', imgURI: rp3?.imageURI || '', passIndex: null });
+              const reg = passes.find(p => p.tokenContract.toLowerCase() === contractAddr && Number(p.tokenId) === tid);
+              const rawMatch = rawBankPasses.find(r => r.tokenContract.toLowerCase() === contractAddr && Number(r.tokenId) === tid);
+              const game = getGameByContract(contractAddr);
+              const name = reg?.name || rawMatch?.name || (game ? (game.title || game.name) : null) || `Pass #${tid}`;
+              const imgURI = reg?.imageURI || rawMatch?.imageURI || getGameImageUrl(game) || '';
+              const passIndex = passes.findIndex(p => p.tokenContract.toLowerCase() === contractAddr && Number(p.tokenId) === tid);
+              chips.push({ name, balance: b, tokenId: tid, tokenContract: contractAddr, source: 'scan', imgURI, passIndex: passIndex >= 0 ? passIndex : null });
             }
-          } catch(e2) {}
-        }
-      }
+          } catch(e) {}
+        }));
+      } catch(e) {}
     }
-  }
+  }));
 
   // ── 3. Scan ALL Grotto API contracts ──────────────────────
   // Scans every contract the Grotto API links to a game -- no exclusions.
@@ -1430,59 +1349,106 @@ function renderSkeletons(count = 2) {
     </div>`).join('');
 }
 
+// ── Discover all ERC-1155 contracts the bank wallet holds ──────────────
+// Queries the Grotto explorer API; falls back to known contracts on failure.
+// Returns [{address, tokenIds[]}] where tokenIds are IDs the bank actually holds.
+async function fetchBankTokenContracts() {
+  const known = new Map(); // address -> Set of tokenIds
+
+  // Always include GAMEPASS_CONTRACT and all registered bank contracts
+  known.set(GAMEPASS_CONTRACT.toLowerCase(), new Set());
+  for (const p of passes) {
+    const addr = p.tokenContract.toLowerCase();
+    if (!known.has(addr)) known.set(addr, new Set());
+  }
+
+  // Query explorer for the bank's full ERC-1155 token list
+  try {
+    const url = `${GROTTO_EXPLORER_API}/addresses/${BANK_ADDRESS}/tokens?type=ERC-1155&limit=100`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
+    if (res.ok) {
+      const data = await res.json();
+      const items = data.items || data.tokens || data.result || [];
+      for (const item of items) {
+        // Explorer returns {token:{address}, token_id} or {contract_address, token_id}
+        const addr = (item.token?.address || item.contract_address || item.address || '').toLowerCase();
+        const tid  = item.token_id != null ? Number(item.token_id) : null;
+        if (!addr || !addr.startsWith('0x')) continue;
+        if (!known.has(addr)) known.set(addr, new Set());
+        if (tid !== null && !isNaN(tid)) known.get(addr).add(tid);
+      }
+      console.log('[PassBank] Explorer returned', items.length, 'token entries for bank');
+    }
+  } catch(e) {
+    console.warn('[PassBank] Explorer API failed, using known contracts only:', e.message);
+  }
+
+  return [...known.entries()].map(([address, tidSet]) => ({
+    address,
+    tokenIds: tidSet.size ? [...tidSet].sort((a,b)=>a-b) : []
+  }));
+}
+
 async function loadPasses() {
   const rp = await getReadProvider();
   renderSkeletons();
 
-  // 1. getAllPasses + games fetch + GAMEPASS bank balances — all in parallel
-  const [passResult, , gpBalances] = await Promise.allSettled([
-    // Registered passes from bank contract
+  // 1. getAllPasses + games fetch — in parallel
+  const [passResult] = await Promise.allSettled([
     new ethers.Contract(BANK_ADDRESS, BANK_ABI, rp).getAllPasses(),
-    // Games cache (warm it while contract call is in flight)
     fetchGrottoGames(),
-    // Direct balance check: how many of each GAMEPASS token does the bank hold
-    (async () => {
-      const c = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_BATCH_ABI, rp);
-      const accounts = GAMEPASS_SCAN_IDS.map(() => BANK_ADDRESS);
-      return c.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
-    })()
   ]);
 
   passes = passResult.status === 'fulfilled' ? passResult.value : [];
   console.log('[PassBank] getAllPasses returned', passes.length, 'passes');
 
-  // 2. Build rawBankPasses from the direct balance scan (no log scan needed)
+  // 2. Discover ALL contracts the bank holds via explorer API, then scan each
   rawBankPasses = [];
-  if (gpBalances.status === 'fulfilled') {
-    const bals = gpBalances.value;
-    for (let i = 0; i < bals.length; i++) {
-      const bal = Number(bals[i]);
-      if (bal > 0) {
-        const alreadyRegistered = passes.find(p =>
-          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
-          Number(p.tokenId) === i
-        );
-        if (!alreadyRegistered) {
-          rawBankPasses.push({
-            tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
-            name: `Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true
-          });
+  const bankContracts = await fetchBankTokenContracts();
+  console.log('[PassBank] bank holds tokens on', bankContracts.length, 'contract(s):', bankContracts.map(c=>c.address));
+
+  await Promise.allSettled(bankContracts.map(async ({ address: contractAddr, tokenIds }) => {
+    try {
+      const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, rp);
+      const scanIds = tokenIds.length ? tokenIds : GAMEPASS_SCAN_IDS;
+      const accounts = scanIds.map(() => BANK_ADDRESS);
+      const bals = await c.balanceOfBatch(accounts, scanIds);
+      bals.forEach((bal, idx) => {
+        const b = Number(bal);
+        const tid = scanIds[idx];
+        if (b > 0) {
+          const reg = passes.find(p =>
+            p.tokenContract.toLowerCase() === contractAddr.toLowerCase() &&
+            Number(p.tokenId) === tid
+          );
+          if (!reg) {
+            const game = getGameByContract(contractAddr);
+            const name = game ? (game.title || game.name || `Pass #${tid}`) : `Pass #${tid}`;
+            const imageURI = getGameImageUrl(game) || '';
+            const gameId = game ? String(game.id || game.slug || '') : '';
+            rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, name, imageURI, gameId, active: true, unregistered: true });
+          }
         }
-      }
+      });
+    } catch(e) {
+      // balanceOfBatch unsupported — try individual balanceOf
+      const c = new ethers.Contract(contractAddr, ERC1155_ABI, rp);
+      const scanIds = tokenIds.length ? tokenIds : GAMEPASS_SCAN_IDS.slice(0, 30);
+      await Promise.allSettled(scanIds.map(async tid => {
+        try {
+          const b = Number(await c.balanceOf(BANK_ADDRESS, tid));
+          if (b > 0) {
+            const reg = passes.find(p => p.tokenContract.toLowerCase() === contractAddr.toLowerCase() && Number(p.tokenId) === tid);
+            if (!reg) {
+              const game = getGameByContract(contractAddr);
+              const name = game ? (game.title || game.name || `Pass #${tid}`) : `Pass #${tid}`;
+              rawBankPasses.push({ tokenContract: contractAddr, tokenId: tid, balance: b, name, imageURI: getGameImageUrl(game)||''  , gameId: game?String(game.id||game.slug||''): '', active: true, unregistered: true });
+            }
+          }
+        } catch(e2) {}
+      }));
     }
-  } else {
-    // Fallback: individual balanceOf for known IDs
-    const c = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, rp);
-    await Promise.allSettled(GAMEPASS_SCAN_IDS.slice(0, 20).map(async id => {
-      try {
-        const bal = Number(await c.balanceOf(BANK_ADDRESS, id));
-        if (bal > 0) {
-          const reg = passes.find(p => p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() && Number(p.tokenId) === id);
-          if (!reg) rawBankPasses.push({ tokenContract: GAMEPASS_CONTRACT, tokenId: id, balance: bal, name: `Pass #${id}`, imageURI: '', gameId: '', active: true, unregistered: true });
-        }
-      } catch(e) {}
-    }));
-  }
+  }));
 
   console.log('[PassBank] rawBankPasses (unregistered) found:', rawBankPasses.length);
   renderPassCards();
