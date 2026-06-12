@@ -1115,25 +1115,73 @@ async function fetchGrottoGames(force = false) {
   grottoGames = [];
   const seen = new Set();
 
-  // Fire all endpoints in parallel — don't wait for them sequentially
-  const endpoints = [
+  function ingestArray(arr) {
+    if (!Array.isArray(arr)) return;
+    for (const g of arr) {
+      const id = g.id || g._id || g.slug;
+      if (id && !seen.has(String(id))) { seen.add(String(id)); grottoGames.push(g); }
+    }
+  }
+
+  // ── 1. Paginated /api/games endpoint (fetch ALL pages) ──────────────────────
+  try {
+    let page = 1;
+    const perPage = 100;
+    while (true) {
+      const url = `${GROTTO_API}/api/games?page=${page}&limit=${perPage}&per_page=${perPage}`;
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) break;
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data
+        : (data.games || data.data || data.results || data.items || []);
+      if (!arr.length) break;
+      const before = seen.size;
+      ingestArray(arr);
+      // If pagination metadata exists and says there are more pages, continue
+      const total   = data.total || data.totalCount || data.total_count || null;
+      const hasMore = data.hasMore || data.has_more || data.next_page || null;
+      if (hasMore === false) break;
+      if (total !== null && seen.size >= total) break;
+      // No new items added this page — we've reached the end
+      if (seen.size === before) break;
+      // If the page was shorter than requested, assume last page
+      if (arr.length < perPage) break;
+      page++;
+    }
+  } catch(e) {
+    console.warn('[PassBank] Paginated /api/games failed:', e.message);
+  }
+
+  // ── 2. Additional parallel endpoints for coverage ───────────────────────────
+  const extras = [
     `${GROTTO_API}/api/games/summaries`,
     `${GROTTO_API}/api/games/popular`,
     `${GROTTO_API}/api/games/recent`,
+    `${GROTTO_API}/api/games/all`,
+    `${GROTTO_API}/api/games/list`,
   ];
 
   const results = await Promise.allSettled(
-    endpoints.map(url => fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null))
+    extras.map(url => fetch(url, { signal: AbortSignal.timeout(6000) }).then(r => r.ok ? r.json() : null))
   );
 
   for (const r of results) {
     if (r.status !== 'fulfilled' || !r.value) continue;
     const data = r.value;
-    const arr = Array.isArray(data) ? data : (data.games || data.data || data.results || data.items || []);
-    for (const g of arr) {
-      const id = g.id || g._id || g.slug;
-      if (id && !seen.has(String(id))) { seen.add(String(id)); grottoGames.push(g); }
-    }
+    const arr = Array.isArray(data) ? data
+      : (data.games || data.data || data.results || data.items || []);
+    ingestArray(arr);
+  }
+
+  // ── 3. Search with wildcard/empty query if still no games ────────────────────
+  if (!grottoGames.length) {
+    try {
+      const res = await fetch(`${GROTTO_API}/api/search/detailed?q=&types=games&limit=100`, { signal: AbortSignal.timeout(6000) });
+      if (res.ok) {
+        const data = await res.json();
+        ingestArray(data.games || []);
+      }
+    } catch(e) {}
   }
 
   gamesLoaded = true;
