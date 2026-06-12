@@ -432,6 +432,7 @@
 
 
   @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%,100% { opacity:0.3; } 50% { opacity:0.7; } }
 
   /* ── Deposit Pass Cards ── */
   .deposit-card {
@@ -731,25 +732,10 @@
       </div>
     </div>
     <div class="wc-title">Connect Your Wallet</div>
-    <div class="wc-sub">Choose how you'd like to connect to the<br><strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank</div>
-    <div class="wc-options">
-      <button class="wc-option" onclick="connectWith('metamask')">
-        <div class="wc-option-icon">🦊</div>
-        <div>
-          <div class="wc-option-name">MetaMask</div>
-          <div class="wc-option-desc">Browser extension wallet</div>
-        </div>
-        <div class="wc-option-arrow">›</div>
-      </button>
-      <div class="wc-divider">or</div>
-      <button class="wc-option" onclick="connectWith('injected')">
-        <div class="wc-option-icon">💎</div>
-        <div>
-          <div class="wc-option-name">Other Wallet</div>
-          <div class="wc-option-desc">Coinbase, Rabby, Rainbow & more</div>
-        </div>
-        <div class="wc-option-arrow">›</div>
-      </button>
+    <div class="wc-sub" id="wcSub">Connect to the <strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank</div>
+    <div class="wc-options" id="wcOptions">
+      <!-- Populated by buildWalletList() -->
+      <div style="text-align:center;padding:20px;color:var(--steel);font-size:13px;">Detecting wallets…</div>
     </div>
     <div class="wc-footer">
       By connecting you agree to our<br>
@@ -843,108 +829,207 @@ function switchTab(name) {
 }
 
 // ── Wallet Modal ─────────────────────────────────────────────────────────────
+// EIP-6963: collect announced providers
+const eip6963Providers = [];
+window.addEventListener('eip6963:announceProvider', e => {
+  if (!eip6963Providers.find(p => p.info.uuid === e.detail.info.uuid)) {
+    eip6963Providers.push(e.detail);
+  }
+});
+window.dispatchEvent(new Event('eip6963:requestProvider'));
+
+function getWalletIcon(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('metamask'))  return '🦊';
+  if (n.includes('coinbase'))  return '🔵';
+  if (n.includes('rabby'))     return '🐰';
+  if (n.includes('rainbow'))   return '🌈';
+  if (n.includes('backpack'))  return '🎒';
+  if (n.includes('phantom'))   return '👻';
+  if (n.includes('trust'))     return '🛡️';
+  if (n.includes('brave'))     return '🦁';
+  return '💎';
+}
+
+function buildWalletList() {
+  const optionsEl = document.getElementById('wcOptions');
+  const buttons = [];
+
+  // EIP-6963 detected wallets
+  for (const { info, provider: p } of eip6963Providers) {
+    buttons.push({ label: info.name, desc: 'Detected · ' + info.name, icon: info.icon ? `<img src="${info.icon}" style="width:28px;height:28px;border-radius:8px;">` : getWalletIcon(info.name), provider: p });
+  }
+
+  // Fallback: window.ethereum (if not already listed via EIP-6963)
+  let winEth = null;
+  try { winEth = window.ethereum; } catch(e) {}
+  if (winEth && !buttons.length) {
+    const name = winEth.isMetaMask ? 'MetaMask' : winEth.isCoinbaseWallet ? 'Coinbase Wallet' : 'Browser Wallet';
+    buttons.push({ label: name, desc: 'Browser extension wallet', icon: getWalletIcon(name), provider: winEth });
+  }
+
+  if (!buttons.length) {
+    optionsEl.innerHTML = `
+      <div style="text-align:center;padding:16px 0;">
+        <div style="font-size:32px;margin-bottom:12px;">🦊</div>
+        <div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:6px;">No wallet detected</div>
+        <div style="font-size:12px;color:var(--steel);margin-bottom:16px;">Install MetaMask or another Web3 wallet extension</div>
+        <a href="https://metamask.io/download/" target="_blank"
+          style="display:inline-block;background:var(--cyan);color:var(--void);padding:10px 24px;
+          border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;">
+          Get MetaMask →
+        </a>
+      </div>`;
+    return;
+  }
+
+  optionsEl.innerHTML = buttons.map((b, i) => `
+    <button class="wc-option" id="wcOpt_${i}" onclick="connectWithProvider(${i})">
+      <div class="wc-option-icon">${typeof b.icon === 'string' && b.icon.startsWith('<img') ? b.icon : `<span style="font-size:22px;">${b.icon}</span>`}</div>
+      <div>
+        <div class="wc-option-name">${b.label}</div>
+        <div class="wc-option-desc">${b.desc}</div>
+      </div>
+      <div class="wc-option-arrow" id="wcArrow_${i}">›</div>
+    </button>`).join('');
+
+  // Store for connectWithProvider
+  window._wcProviders = buttons;
+}
+
 function openWalletModal() {
+  buildWalletList();
   document.getElementById('wcOverlay').classList.add('open');
 }
 function closeWalletModal() {
   document.getElementById('wcOverlay').classList.remove('open');
+  document.getElementById('wcSub').textContent = '';
+  document.getElementById('wcSub').innerHTML = 'Connect to the <strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank';
 }
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('wcOverlay')) closeWalletModal();
 }
-window.openWalletModal = openWalletModal;
+window.openWalletModal  = openWalletModal;
 window.closeWalletModal = closeWalletModal;
 window.handleOverlayClick = handleOverlayClick;
 
-async function connectWith(type) {
-  closeWalletModal();
-  await connectWallet();
-}
+// Legacy — modal options call this
+async function connectWith(type) { closeWalletModal(); await connectWallet(); }
 window.connectWith = connectWith;
 
-// ── Safe ethereum provider getter — handles multi-wallet extension conflicts ──
-function getEthereum() {
-  // window.ethereum can be a poisoned getter (Backpack/evmAsk conflicts) that
-  // throws even on optional-chaining access. Wrap everything in try/catch.
-  let eth = null;
-  try { eth = window.ethereum; } catch(e) {
-    console.warn('[PassBank] window.ethereum getter threw:', e.message);
-    return null;
-  }
-  if (!eth) return null;
+async function connectWithProvider(idx) {
+  const btn = document.getElementById(`wcOpt_${idx}`);
+  const arrow = document.getElementById(`wcArrow_${idx}`);
+  const sub = document.getElementById('wcSub');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (arrow) arrow.innerHTML = '<span style="font-size:11px;animation:spin 0.8s linear infinite;display:inline-block;">↻</span>';
+  if (sub) sub.textContent = 'Connecting…';
+
   try {
-    // EIP-6963 / MetaMask multi-wallet: prefer MetaMask, skip Backpack
-    const providers = eth.providers;
-    if (Array.isArray(providers) && providers.length) {
-      const mm = providers.find(p => { try { return p.isMetaMask && !p.isBackpack; } catch(e) { return false; } });
-      if (mm) return mm;
-      return providers[0];
-    }
-  } catch(e) { /* no providers array — use eth directly */ }
-  return eth;
+    const chosen = (window._wcProviders || [])[idx];
+    await connectWallet(chosen ? chosen.provider : null);
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    if (arrow) arrow.innerHTML = '›';
+  }
 }
+window.connectWithProvider = connectWithProvider;
 
 // ── Connect ───────────────────────────────────────────────────────────────────
-async function connectWallet() {
+async function connectWallet(injectedProvider) {
   try {
     await loadEthers();
-    const eth = getEthereum();
-    if (!eth) return toast('No wallet detected. Install MetaMask or a Web3 wallet.', 'err');
 
-    try {
-      provider = new ethers.BrowserProvider(eth);
-    } catch(e) {
-      console.warn('[PassBank] BrowserProvider init failed, retrying with window.ethereum directly:', e.message);
-      try { provider = new ethers.BrowserProvider(window.ethereum); }
-      catch(e2) { return toast('Wallet provider error. Try disabling other wallet extensions.', 'err'); }
+    // Resolve provider: use injected (from EIP-6963 picker) → window.ethereum → error
+    let eth = injectedProvider || null;
+    if (!eth) {
+      try { eth = window.ethereum; } catch(e) {}
+      // Multi-wallet: prefer MetaMask
+      if (eth && Array.isArray(eth.providers) && eth.providers.length) {
+        eth = eth.providers.find(p => { try { return p.isMetaMask && !p.isBackpack; } catch(e) { return false; } })
+              || eth.providers[0];
+      }
     }
-    const accounts = await provider.send("eth_requestAccounts", []);
-    walletAddress = accounts[0];
+    if (!eth) {
+      closeWalletModal();
+      return toast('No wallet found — install MetaMask or another Web3 wallet.', 'err');
+    }
 
-    const network = await provider.getNetwork();
-    if (Number(network.chainId) !== GROTTO_CHAIN_ID) {
-      toast(`Wrong network. Please switch to Grotto L1 (chain ${GROTTO_CHAIN_ID})`, 'warn');
+    provider = new ethers.BrowserProvider(eth);
+
+    // Request accounts — this triggers the wallet popup
+    let accounts;
+    try {
+      accounts = await provider.send('eth_requestAccounts', []);
+    } catch(e) {
+      closeWalletModal();
+      if (e.code === 4001) return toast('Connection rejected by user.', 'warn');
+      return toast('Failed to get accounts: ' + (e.message || e), 'err');
+    }
+
+    walletAddress = accounts[0];
+    if (!walletAddress) { closeWalletModal(); return toast('No account returned from wallet.', 'err'); }
+
+    // Check / switch network
+    let network;
+    try { network = await provider.getNetwork(); } catch(e) {}
+    if (network && Number(network.chainId) !== GROTTO_CHAIN_ID) {
+      const sub = document.getElementById('wcSub');
+      if (sub) sub.textContent = 'Switching to Grotto L1…';
       try {
-        await eth.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x' + GROTTO_CHAIN_ID.toString(16) }]
-        });
-      } catch(e) { return; }
+        await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + GROTTO_CHAIN_ID.toString(16) }] });
+      } catch(switchErr) {
+        if (switchErr.code === 4902) {
+          // Chain not added — add it
+          try {
+            await eth.request({ method: 'wallet_addEthereumChain', params: [{
+              chainId: '0x' + GROTTO_CHAIN_ID.toString(16),
+              chainName: 'Grotto L1',
+              nativeCurrency: { name: 'GROTTO', symbol: 'GROTTO', decimals: 18 },
+              rpcUrls: [GROTTO_RPC],
+              blockExplorerUrls: ['https://grottoexplorer.xyz']
+            }]});
+          } catch(addErr) { closeWalletModal(); return toast('Could not add Grotto L1 network.', 'err'); }
+        } else { closeWalletModal(); return toast('Network switch cancelled.', 'warn'); }
+      }
+      // Re-init provider after switch
+      provider = new ethers.BrowserProvider(eth);
     }
 
     signer = await provider.getSigner();
     bankContract = new ethers.Contract(BANK_ADDRESS, BANK_ABI, signer);
-
-    // Admin = hardcoded address only
     isOwner = walletAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
 
-    // Update UI — replace button with badge
+    closeWalletModal();
+
+    // Update header UI
     const ws = document.getElementById('walletSection');
     ws.innerHTML = `<div class="wallet-badge" onclick="openWalletModal()">
       <div class="wallet-badge-dot"></div>
       <div class="wallet-badge-addr">${walletAddress.slice(0,6)}…${walletAddress.slice(-4)} ${isOwner ? '👑' : ''}</div>
     </div>`;
 
-    // Show admin tab only for admin wallet
     document.getElementById('adminTab').style.display = isOwner ? '' : 'none';
     if (isOwner) populateGamesDropdown();
 
-    enableButtons();
-    await loadPasses();
-    await updateStats();
-    await detectWalletPasses();
-    if (isOwner) await loadAdminState();
-
     toast('Wallet connected ✓', 'ok');
+
+    // Non-blocking post-connect enrichment
+    loadPasses().then(() => updateStats());
+    detectWalletPasses();
+    if (isOwner) loadAdminState();
+
     try { eth.on('accountsChanged', () => location.reload()); } catch(e) {}
+    try { eth.on('chainChanged',    () => location.reload()); } catch(e) {}
+
   } catch(e) {
-    console.error(e);
-    toast('Connection failed: ' + (e.message || e), 'err');
+    console.error('[PassBank] connectWallet error:', e);
+    closeWalletModal();
+    toast('Connection failed: ' + (e.message || String(e)), 'err');
   }
 }
 
 // ── Auto-detect passes in wallet ──────────────────────────────────────────────
-// Known game pass contract — always scanned directly regardless of bank registration
 const GAMEPASS_CONTRACT = "0xFA01e077a78FcA556015B7193baF04bEF58edbC1";
 
 // ── Games API ─────────────────────────────────────────────────────────────────
@@ -956,42 +1041,29 @@ async function fetchGrottoGames(force = false) {
   grottoGames = [];
   const seen = new Set();
 
-  // Use search/detailed with broad query — confirmed working endpoint from airdropper.js
-  // Try a wildcard-ish approach: fetch popular/recent/summaries which list all games directly
+  // Fire all endpoints in parallel — don't wait for them sequentially
   const endpoints = [
     `${GROTTO_API}/api/games/summaries`,
     `${GROTTO_API}/api/games/popular`,
     `${GROTTO_API}/api/games/recent`,
-    `${GROTTO_API}/api/games/upcoming`,
-    `${GROTTO_API}/api/games/on-sale`,
-    `${GROTTO_API}/api/games/`,
   ];
 
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-      const data = await res.json();
-      const arr = Array.isArray(data) ? data
-        : (data.games || data.data || data.results || data.items || []);
-      for (const g of arr) {
-        const id = g.id || g._id || g.slug;
-        if (id && !seen.has(String(id))) {
-          seen.add(String(id));
-          grottoGames.push(g);
-        }
-      }
-    } catch(e) {
-      console.warn('[PassBank] games endpoint failed:', url, e.message);
+  const results = await Promise.allSettled(
+    endpoints.map(url => fetch(url, { signal: AbortSignal.timeout(5000) }).then(r => r.ok ? r.json() : null))
+  );
+
+  for (const r of results) {
+    if (r.status !== 'fulfilled' || !r.value) continue;
+    const data = r.value;
+    const arr = Array.isArray(data) ? data : (data.games || data.data || data.results || data.items || []);
+    for (const g of arr) {
+      const id = g.id || g._id || g.slug;
+      if (id && !seen.has(String(id))) { seen.add(String(id)); grottoGames.push(g); }
     }
   }
 
   gamesLoaded = true;
   console.log('[PassBank] Loaded', grottoGames.length, 'unique games from Grotto API');
-  if (grottoGames.length > 0) {
-    console.log('[PassBank] Sample game object (first result):', JSON.stringify(grottoGames[0], null, 2));
-    console.log('[PassBank] All keys on first game:', Object.keys(grottoGames[0]));
-  }
   return grottoGames;
 }
 
@@ -1207,164 +1279,99 @@ function enableButtons() {
   // Deposit UI now renders per-card buttons via populateDepositPanel(); nothing global to enable here.
 }
 
-// ── Load passes ───────────────────────────────────────────────────────────────
+// ── Load passes — fast path ───────────────────────────────────────────────────
+// Strategy: getAllPasses() gives registered passes instantly.
+// For unregistered ones, scan only GAMEPASS_CONTRACT token IDs directly (no
+// full log scan which costs 70+ sequential RPC calls on Grotto L1's 2048-block limit).
 let rawBankPasses = [];
-let readProvider;  // dedicated read-only provider — always available after ethers loads
+let readProvider;
 
 async function getReadProvider() {
   if (provider) return provider;
   if (readProvider) return readProvider;
-  await loadEthers(); // guarantee window.ethers exists before constructing provider
+  await loadEthers();
   readProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
   return readProvider;
 }
 
-// Event signatures for ERC1155 transfers — computed lazily since ethers loads via CDN
-function getTransferSingleTopic() {
-  return ethers.id("TransferSingle(address,address,address,uint256,uint256)");
-}
-function getTransferBatchTopic() {
-  return ethers.id("TransferBatch(address,address,address,uint256[],uint256[])");
-}
-
-// Pad an address to a 32-byte topic for log filtering
-function addressToTopic(addr) {
-  return ethers.zeroPadValue(addr, 32);
-}
-
-// ── Auto-discover every ERC1155 contract + tokenId ever sent to the bank ──────
-// Scans TransferSingle/TransferBatch logs where `to` == BANK_ADDRESS, across
-// all contracts on the chain. No hardcoded contract address needed.
-async function discoverBankPasses() {
-  const rp = await getReadProvider();
-  const discovered = new Map(); // key: `${contract}-${tokenId}` -> {tokenContract, tokenId}
-  const toTopic = addressToTopic(BANK_ADDRESS);
-
-  try {
-    const latestBlock = await rp.getBlockNumber();
-    // Scan from genesis in chunks — Grotto L1 RPC max is 2048 blocks per getLogs call
-    const CHUNK = 2000;
-    let fromBlock = 0;
-
-    while (fromBlock <= latestBlock) {
-      const toBlock = Math.min(fromBlock + CHUNK - 1, latestBlock);
-
-      // TransferSingle: topics[0]=sig, topics[1]=operator, topics[2]=from, topics[3]=to
-      try {
-        const singleLogs = await rp.getLogs({
-          fromBlock, toBlock,
-          topics: [getTransferSingleTopic(), null, null, toTopic]
-        });
-        for (const log of singleLogs) {
-          const tokenId = BigInt(log.data.slice(0, 66)); // first uint256 in data = id
-          const key = `${log.address.toLowerCase()}-${tokenId}`;
-          discovered.set(key, { tokenContract: log.address, tokenId: Number(tokenId) });
-        }
-      } catch(e) { console.warn('[PassBank] TransferSingle log scan failed for range', fromBlock, toBlock, e.message); }
-
-      // TransferBatch: topics same positions, data contains two uint256[] arrays (ids, values)
-      try {
-        const batchLogs = await rp.getLogs({
-          fromBlock, toBlock,
-          topics: [getTransferBatchTopic(), null, null, toTopic]
-        });
-        for (const log of batchLogs) {
-          try {
-            const decoded = ethers.AbiCoder.defaultAbiCoder().decode(["uint256[]","uint256[]"], log.data);
-            const ids = decoded[0];
-            for (const id of ids) {
-              const key = `${log.address.toLowerCase()}-${id}`;
-              discovered.set(key, { tokenContract: log.address, tokenId: Number(id) });
-            }
-          } catch(e) { /* decode failure, skip */ }
-        }
-      } catch(e) { console.warn('[PassBank] TransferBatch log scan failed for range', fromBlock, toBlock, e.message); }
-
-      fromBlock = toBlock + 1;
-    }
-  } catch(e) {
-    console.warn('[PassBank] discoverBankPasses failed:', e.message);
-  }
-
-  console.log('[PassBank] Discovered', discovered.size, 'unique (contract, tokenId) pairs ever sent to bank');
-  return Array.from(discovered.values());
+// Show skeleton cards while loading
+function renderSkeletons(count = 2) {
+  const grid = document.getElementById('passGrid');
+  grid.innerHTML = Array.from({ length: count }, () => `
+    <div class="pass-card" style="opacity:0.4;pointer-events:none;">
+      <div class="pass-card-img" style="background:var(--slate);display:flex;align-items:center;justify-content:center;">
+        <span style="font-size:32px;animation:pulse 1.2s ease-in-out infinite;">🎮</span>
+      </div>
+      <div class="pass-card-body">
+        <div style="height:12px;background:var(--border);border-radius:4px;margin-bottom:10px;"></div>
+        <div style="height:10px;background:var(--border);border-radius:4px;width:60%;margin-bottom:16px;"></div>
+        <div style="height:32px;background:var(--border);border-radius:7px;"></div>
+      </div>
+    </div>`).join('');
 }
 
 async function loadPasses() {
   const rp = await getReadProvider();
+  renderSkeletons();
 
-  // 1. getAllPasses from bank contract (registered passes)
-  try {
-    const readBank = new ethers.Contract(BANK_ADDRESS, BANK_ABI, rp);
-    passes = await readBank.getAllPasses();
-    console.log('[PassBank] getAllPasses returned', passes.length, 'passes');
-  } catch(e) {
-    console.warn('[PassBank] getAllPasses failed:', e.message);
-    passes = [];
-  }
+  // 1. getAllPasses + games fetch + GAMEPASS bank balances — all in parallel
+  const [passResult, , gpBalances] = await Promise.allSettled([
+    // Registered passes from bank contract
+    new ethers.Contract(BANK_ADDRESS, BANK_ABI, rp).getAllPasses(),
+    // Games cache (warm it while contract call is in flight)
+    fetchGrottoGames(),
+    // Direct balance check: how many of each GAMEPASS token does the bank hold
+    (async () => {
+      const c = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_BATCH_ABI, rp);
+      const accounts = GAMEPASS_SCAN_IDS.map(() => BANK_ADDRESS);
+      return c.balanceOfBatch(accounts, GAMEPASS_SCAN_IDS);
+    })()
+  ]);
 
-  // 2. Auto-discover every contract/tokenId ever transferred to the bank via logs
+  passes = passResult.status === 'fulfilled' ? passResult.value : [];
+  console.log('[PassBank] getAllPasses returned', passes.length, 'passes');
+
+  // 2. Build rawBankPasses from the direct balance scan (no log scan needed)
   rawBankPasses = [];
-  const discovered = await discoverBankPasses();
-
-  // Also always include the known GAMEPASS_CONTRACT token IDs as a fallback,
-  // in case log scanning isn't supported by the RPC (some public RPCs limit getLogs)
-  if (discovered.length === 0) {
-    console.log('[PassBank] Log scan returned nothing — falling back to known GAMEPASS_CONTRACT scan');
-    for (const id of GAMEPASS_SCAN_IDS) {
-      discovered.push({ tokenContract: GAMEPASS_CONTRACT, tokenId: id });
-    }
-  }
-
-  // Group discovered pairs by contract for batch balance checks
-  const byContract = new Map();
-  for (const d of discovered) {
-    const c = d.tokenContract.toLowerCase();
-    if (!byContract.has(c)) byContract.set(c, []);
-    byContract.get(c).push(d.tokenId);
-  }
-
-  for (const [contractAddr, tokenIds] of byContract.entries()) {
-    const c = new ethers.Contract(contractAddr, ERC1155_BATCH_ABI, rp);
-    let balances = null;
-    try {
-      const accounts = tokenIds.map(() => BANK_ADDRESS);
-      balances = await c.balanceOfBatch(accounts, tokenIds);
-    } catch(e) {
-      // Individual fallback
-      balances = [];
-      for (const id of tokenIds) {
-        try { balances.push(await c.balanceOf(BANK_ADDRESS, id)); }
-        catch(e2) { balances.push(0); }
-      }
-    }
-
-    for (let i = 0; i < tokenIds.length; i++) {
-      const bal = Number(balances[i]);
+  if (gpBalances.status === 'fulfilled') {
+    const bals = gpBalances.value;
+    for (let i = 0; i < bals.length; i++) {
+      const bal = Number(bals[i]);
       if (bal > 0) {
-        const tokenId = tokenIds[i];
         const alreadyRegistered = passes.find(p =>
-          p.tokenContract.toLowerCase() === contractAddr &&
-          Number(p.tokenId) === tokenId
+          p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() &&
+          Number(p.tokenId) === i
         );
-        console.log(`[PassBank] Bank holds ${bal} of tokenId ${tokenId} from ${contractAddr}${alreadyRegistered ? ' (registered)' : ' (NEW)'}`);
-        rawBankPasses.push({
-          tokenContract: contractAddr, tokenId, balance: bal,
-          name: alreadyRegistered ? (alreadyRegistered.name || `Pass #${tokenId}`) : `Pass #${tokenId}`,
-          imageURI: alreadyRegistered ? (alreadyRegistered.imageURI || '') : '',
-          gameId: alreadyRegistered ? (alreadyRegistered.gameId || '') : '',
-          active: alreadyRegistered ? alreadyRegistered.active : true,
-          unregistered: !alreadyRegistered
-        });
+        if (!alreadyRegistered) {
+          rawBankPasses.push({
+            tokenContract: GAMEPASS_CONTRACT, tokenId: i, balance: bal,
+            name: `Pass #${i}`, imageURI: '', gameId: '', active: true, unregistered: true
+          });
+        }
       }
     }
+  } else {
+    // Fallback: individual balanceOf for known IDs
+    const c = new ethers.Contract(GAMEPASS_CONTRACT, ERC1155_ABI, rp);
+    await Promise.allSettled(GAMEPASS_SCAN_IDS.slice(0, 20).map(async id => {
+      try {
+        const bal = Number(await c.balanceOf(BANK_ADDRESS, id));
+        if (bal > 0) {
+          const reg = passes.find(p => p.tokenContract.toLowerCase() === GAMEPASS_CONTRACT.toLowerCase() && Number(p.tokenId) === id);
+          if (!reg) rawBankPasses.push({ tokenContract: GAMEPASS_CONTRACT, tokenId: id, balance: bal, name: `Pass #${id}`, imageURI: '', gameId: '', active: true, unregistered: true });
+        }
+      } catch(e) {}
+    }));
   }
 
-  console.log('[PassBank] rawBankPasses found:', rawBankPasses.length);
+  console.log('[PassBank] rawBankPasses (unregistered) found:', rawBankPasses.length);
   renderPassCards();
   populateDepositPanel();
   updateAutoDiscoverInfo();
 }
+
+// Stub — log scan removed in favour of direct balance check above
+async function discoverBankPasses() { return []; }
 
 async function updateStats() {
   let total = 0, claimable = 0, myClaims = 0;
@@ -1411,7 +1418,7 @@ async function fetchGameInfo(gameId) {
   } catch(e) { return null; }
 }
 
-async function renderPassCards() {
+function renderPassCards() {
   const grid = document.getElementById('passGrid');
   // Combine: registered passes come from passes[]; rawBankPasses may overlap for
   // registered entries — only add unregistered ones to avoid duplicates.
@@ -1425,34 +1432,18 @@ async function renderPassCards() {
     return;
   }
 
+  // Render cards immediately with static data — claim state patched async below
   let cooldownSecs = 0;
-  if (walletAddress) {
-    try { cooldownSecs = Number(await bankContract.cooldownRemaining(walletAddress)); } catch(e) {}
-  }
 
-  const cards = await Promise.all(allPasses.map(async (p, i) => {
-    // For registered passes, cross-check balance from our on-chain scan (rawBankPasses)
-    // getAllPasses() balance is only updated via deposit(), not manual transfers
+  const cards = allPasses.map((p, i) => {
     const rawMatch = rawBankPasses.find(r =>
       r.tokenContract.toLowerCase() === (p.tokenContract || '').toLowerCase() &&
       Number(r.tokenId) === Number(p.tokenId)
     );
-    const bal = rawMatch ? Number(rawMatch.balance) : Number(p.balance);
+    const bal    = rawMatch ? Number(rawMatch.balance) : Number(p.balance);
     const active = p.active;
-    let claimed = false, canReq = false;
-    if (walletAddress) {
-      try { claimed = await bankContract.hasClaimed(i, walletAddress); } catch(e) {}
-      try {
-        const [ok] = await bankContract.canRequest(i, walletAddress);
-        canReq = ok;
-      } catch(e) {}
-    }
 
-    // Fetch linked game from Grotto Gateway (uses local cache)
-    // Prefer explicit gameId, fall back to matching by contract address (for unregistered passes)
-    const gameInfo = p.gameId
-      ? await fetchGameInfo(p.gameId)
-      : getGameByContract(p.tokenContract);
+    const gameInfo  = p.gameId ? (gameInfoCache[p.gameId] || getGameById(p.gameId)) : getGameByContract(p.tokenContract);
     const gameImgUrl = getGameImageUrl(gameInfo);
     const gameTitle  = gameInfo ? (gameInfo.title || gameInfo.name || p.gameId) : null;
 
@@ -1474,7 +1465,6 @@ async function renderPassCards() {
         ? `<div style="font-size:11px;color:var(--steel);margin-bottom:8px;font-family:'JetBrains Mono',monospace;">Game: ${p.gameId}</div>`
         : '';
 
-    // Card image: prefer pass imageURI, then linked game image, then placeholder
     const cardImgSrc = p.imageURI || gameImgUrl || null;
     const imgHtml = cardImgSrc
       ? `<img src="${cardImgSrc}" alt="${p.name}" loading="lazy" style="width:100%;height:130px;object-fit:cover;"
@@ -1483,42 +1473,31 @@ async function renderPassCards() {
 
     let actionHtml;
     if (p.unregistered) {
-      // Pass exists in bank but hasn't been registered via registerPass yet
       actionHtml = isOwner
         ? `<button class="claim-btn" style="background:rgba(255,184,0,0.12);color:var(--warn);border-color:rgba(255,184,0,0.3);"
-             onclick="prefillRegister('${p.tokenContract}','${p.tokenId}')">
-             ⚙️ Register This Pass
-           </button>`
-        : `<div class="claimed-badge" style="background:rgba(255,184,0,0.08);color:var(--warn);border-color:rgba(255,184,0,0.2);">
-             ⏳ Pending Registration
-           </div>`;
+             onclick="prefillRegister('${p.tokenContract}','${p.tokenId}')">⚙️ Register This Pass</button>`
+        : `<div class="claimed-badge" style="background:rgba(255,184,0,0.08);color:var(--warn);border-color:rgba(255,184,0,0.2);">⏳ Pending Registration</div>`;
     } else {
+      // Render optimistic state — async enrichment will patch the button below
       actionHtml = !walletAddress
-        ? `<button class="claim-btn" disabled>Connect wallet</button>`
-        : claimed
-          ? `<div class="claimed-badge">✓ Claimed</div>`
-          : cooldownSecs > 0
-            ? `<button class="claim-btn" disabled>Cooldown: ${fmtTime(cooldownSecs)}</button>`
-            : `<button class="claim-btn"
-                 onclick="claimPass(${i})"
-                 ${(!active || bal === 0 || !canReq) ? 'disabled' : ''}>
-                 ${!active ? 'Inactive' : bal === 0 ? 'Empty' : 'Claim Pass'}
-               </button>`;
+        ? `<button class="claim-btn" id="claimBtn_${i}" onclick="openWalletModal()">Connect wallet</button>`
+        : `<button class="claim-btn" id="claimBtn_${i}" ${(!active || bal === 0) ? 'disabled' : ''}
+             onclick="claimPass(${i})">
+             ${!active ? 'Inactive' : bal === 0 ? 'Empty' : 'Claim Pass'}
+           </button>`;
     }
 
     const unregBadge = p.unregistered
       ? `<div style="font-size:10px;color:var(--warn);font-family:'JetBrains Mono',monospace;
            margin-bottom:8px;padding:3px 8px;background:rgba(255,184,0,0.08);
            border:1px solid rgba(255,184,0,0.2);border-radius:4px;display:inline-block;">
-           DETECTED · NOT YET REGISTERED
-         </div>`
+           DETECTED · NOT YET REGISTERED</div>`
       : '';
 
     return `<div class="pass-card">
       <div class="pass-card-img">${imgHtml}</div>
       <div class="pass-card-body">
-        ${unregBadge}
-        ${gameBadge}
+        ${unregBadge}${gameBadge}
         <div class="pass-card-name">${p.name || 'Unnamed Pass'}</div>
         <div class="pass-card-meta">ID: ${p.tokenId} · ${p.tokenContract.slice(0,6)}…${p.tokenContract.slice(-4)}</div>
         <div class="pass-card-balance">
@@ -1528,9 +1507,39 @@ async function renderPassCards() {
         ${actionHtml}
       </div>
     </div>`;
-  }));
+  });
 
   grid.innerHTML = cards.join('');
+
+  // Async enrichment: patch claim buttons with actual claimed/cooldown state
+  if (walletAddress && bankContract) {
+    (async () => {
+      const [cdRemaining] = await Promise.allSettled([
+        bankContract.cooldownRemaining(walletAddress)
+      ]);
+      cooldownSecs = cdRemaining.status === 'fulfilled' ? Number(cdRemaining.value) : 0;
+
+      await Promise.allSettled(allPasses.map(async (p, i) => {
+        if (p.unregistered) return;
+        const btn = document.getElementById(`claimBtn_${i}`);
+        if (!btn) return;
+        const bal = Number((rawBankPasses.find(r =>
+          r.tokenContract.toLowerCase() === (p.tokenContract||'').toLowerCase() &&
+          Number(r.tokenId) === Number(p.tokenId)
+        ) || p).balance);
+        try {
+          const claimed = await bankContract.hasClaimed(i, walletAddress);
+          if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; return; }
+        } catch(e) {}
+        if (cooldownSecs > 0) { btn.disabled = true; btn.textContent = 'Cooldown: ' + fmtTime(cooldownSecs); return; }
+        try {
+          const [ok] = await bankContract.canRequest(i, walletAddress);
+          btn.disabled = !ok || !p.active || bal === 0;
+          if (!ok) btn.textContent = 'Not eligible';
+        } catch(e) {}
+      }));
+    })();
+  }
 }
 
 function fmtTime(secs) {
@@ -2090,12 +2099,11 @@ window.refreshAll = refreshAll;
 // ── Page init — load passes publicly (no wallet needed for read) ──────────────
 async function pageInit() {
   await loadEthers();
-  // Create a read-only provider for public pass loading
   readProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
-  // Fetch games first so cards render with full game info in one pass
-  await fetchGrottoGames();
-  // Scan bank for passes (registered + raw) — renders cards internally when done
-  await loadPasses();
+  // Show skeletons right away so the UI isn't blank
+  renderSkeletons();
+  // Kick off games fetch and passes load in parallel
+  await loadPasses(); // internally also fires fetchGrottoGames() in parallel
 }
 
 // Start on DOM ready
