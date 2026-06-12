@@ -829,13 +829,17 @@ function switchTab(name) {
 }
 
 // ── Wallet Modal ─────────────────────────────────────────────────────────────
-// EIP-6963: collect announced providers
+// EIP-6963: collect announced providers — listen continuously
 const eip6963Providers = [];
 window.addEventListener('eip6963:announceProvider', e => {
-  if (!eip6963Providers.find(p => p.info.uuid === e.detail.info.uuid)) {
-    eip6963Providers.push(e.detail);
-  }
+  try {
+    const { info, provider: p } = e.detail;
+    if (info && p && !eip6963Providers.find(x => x.info.uuid === info.uuid)) {
+      eip6963Providers.push({ info, provider: p });
+    }
+  } catch(e) {}
 });
+// Request providers — wallets that support EIP-6963 will respond to this
 window.dispatchEvent(new Event('eip6963:requestProvider'));
 
 function getWalletIcon(name) {
@@ -851,21 +855,64 @@ function getWalletIcon(name) {
   return '💎';
 }
 
+// Collect all injectable providers from window.ethereum (handles multi-wallet arrays)
+function getAllWindowProviders() {
+  const found = [];
+  let eth = null;
+  try { eth = window.ethereum; } catch(e) { return found; }
+  if (!eth) return found;
+  try {
+    if (Array.isArray(eth.providers) && eth.providers.length) {
+      for (const p of eth.providers) {
+        try {
+          const name = p.isMetaMask ? 'MetaMask'
+            : p.isCoinbaseWallet ? 'Coinbase Wallet'
+            : p.isRabby ? 'Rabby'
+            : p.isBackpack ? 'Backpack'
+            : 'Browser Wallet';
+          found.push({ label: name, desc: 'Browser extension', icon: getWalletIcon(name), provider: p });
+        } catch(e) {}
+      }
+      return found;
+    }
+  } catch(e) {}
+  // Single provider
+  try {
+    const name = eth.isMetaMask ? 'MetaMask'
+      : eth.isCoinbaseWallet ? 'Coinbase Wallet'
+      : eth.isRabby ? 'Rabby'
+      : eth.isBackpack ? 'Backpack'
+      : 'Browser Wallet';
+    found.push({ label: name, desc: 'Browser extension', icon: getWalletIcon(name), provider: eth });
+  } catch(e) {}
+  return found;
+}
+
 function buildWalletList() {
   const optionsEl = document.getElementById('wcOptions');
-  const buttons = [];
+  // Re-request EIP-6963 providers (wallets may not have announced yet on first open)
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
 
-  // EIP-6963 detected wallets
+  const buttons = [];
+  const seenNames = new Set();
+
+  // EIP-6963 detected wallets (most reliable — direct provider reference)
   for (const { info, provider: p } of eip6963Providers) {
-    buttons.push({ label: info.name, desc: 'Detected · ' + info.name, icon: info.icon ? `<img src="${info.icon}" style="width:28px;height:28px;border-radius:8px;">` : getWalletIcon(info.name), provider: p });
+    if (!seenNames.has(info.name)) {
+      seenNames.add(info.name);
+      const iconHtml = info.icon
+        ? `<img src="${info.icon}" style="width:28px;height:28px;border-radius:8px;" onerror="this.style.display='none'">`
+        : `<span style="font-size:22px;">${getWalletIcon(info.name)}</span>`;
+      buttons.push({ label: info.name, desc: 'Detected via EIP-6963', iconHtml, provider: p });
+    }
   }
 
-  // Fallback: window.ethereum (if not already listed via EIP-6963)
-  let winEth = null;
-  try { winEth = window.ethereum; } catch(e) {}
-  if (winEth && !buttons.length) {
-    const name = winEth.isMetaMask ? 'MetaMask' : winEth.isCoinbaseWallet ? 'Coinbase Wallet' : 'Browser Wallet';
-    buttons.push({ label: name, desc: 'Browser extension wallet', icon: getWalletIcon(name), provider: winEth });
+  // window.ethereum fallback — covers wallets that don't implement EIP-6963
+  for (const w of getAllWindowProviders()) {
+    if (!seenNames.has(w.label)) {
+      seenNames.add(w.label);
+      buttons.push({ label: w.label, desc: w.desc, iconHtml: `<span style="font-size:22px;">${w.icon}</span>`, provider: w.provider });
+    }
   }
 
   if (!buttons.length) {
@@ -873,19 +920,20 @@ function buildWalletList() {
       <div style="text-align:center;padding:16px 0;">
         <div style="font-size:32px;margin-bottom:12px;">🦊</div>
         <div style="font-size:14px;color:var(--text);font-weight:600;margin-bottom:6px;">No wallet detected</div>
-        <div style="font-size:12px;color:var(--steel);margin-bottom:16px;">Install MetaMask or another Web3 wallet extension</div>
+        <div style="font-size:12px;color:var(--steel);margin-bottom:16px;">Install MetaMask or another Web3 wallet extension, then refresh the page.</div>
         <a href="https://metamask.io/download/" target="_blank"
           style="display:inline-block;background:var(--cyan);color:var(--void);padding:10px 24px;
           border-radius:8px;font-weight:700;font-size:13px;text-decoration:none;">
           Get MetaMask →
         </a>
       </div>`;
+    window._wcProviders = [];
     return;
   }
 
   optionsEl.innerHTML = buttons.map((b, i) => `
     <button class="wc-option" id="wcOpt_${i}" onclick="connectWithProvider(${i})">
-      <div class="wc-option-icon">${typeof b.icon === 'string' && b.icon.startsWith('<img') ? b.icon : `<span style="font-size:22px;">${b.icon}</span>`}</div>
+      <div class="wc-option-icon">${b.iconHtml}</div>
       <div>
         <div class="wc-option-name">${b.label}</div>
         <div class="wc-option-desc">${b.desc}</div>
@@ -893,7 +941,6 @@ function buildWalletList() {
       <div class="wc-option-arrow" id="wcArrow_${i}">›</div>
     </button>`).join('');
 
-  // Store for connectWithProvider
   window._wcProviders = buttons;
 }
 
@@ -902,9 +949,10 @@ function openWalletModal() {
   document.getElementById('wcOverlay').classList.add('open');
 }
 function closeWalletModal() {
-  document.getElementById('wcOverlay').classList.remove('open');
-  document.getElementById('wcSub').textContent = '';
-  document.getElementById('wcSub').innerHTML = 'Connect to the <strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank';
+  const overlay = document.getElementById('wcOverlay');
+  if (overlay) overlay.classList.remove('open');
+  const sub = document.getElementById('wcSub');
+  if (sub) sub.innerHTML = 'Connect to the <strong style="color:var(--cyan)">Grotto L1</strong> Game Pass Bank';
 }
 function handleOverlayClick(e) {
   if (e.target === document.getElementById('wcOverlay')) closeWalletModal();
@@ -913,23 +961,21 @@ window.openWalletModal  = openWalletModal;
 window.closeWalletModal = closeWalletModal;
 window.handleOverlayClick = handleOverlayClick;
 
-// Legacy — modal options call this
-async function connectWith(type) { closeWalletModal(); await connectWallet(); }
+async function connectWith(type) { closeWalletModal(); await connectWallet(null); }
 window.connectWith = connectWith;
 
 async function connectWithProvider(idx) {
-  const btn = document.getElementById(`wcOpt_${idx}`);
+  const btn   = document.getElementById(`wcOpt_${idx}`);
   const arrow = document.getElementById(`wcArrow_${idx}`);
-  const sub = document.getElementById('wcSub');
-  if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; }
-  if (arrow) arrow.innerHTML = '<span style="font-size:11px;animation:spin 0.8s linear infinite;display:inline-block;">↻</span>';
-  if (sub) sub.textContent = 'Connecting…';
-
+  const sub   = document.getElementById('wcSub');
+  if (btn)  { btn.disabled = true; btn.style.opacity = '0.7'; }
+  if (arrow) arrow.innerHTML = '<span style="display:inline-block;animation:spin 0.8s linear infinite;">↻</span>';
+  if (sub)   sub.textContent = 'Connecting…';
   try {
     const chosen = (window._wcProviders || [])[idx];
     await connectWallet(chosen ? chosen.provider : null);
   } finally {
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    if (btn)  { btn.disabled = false; btn.style.opacity = '1'; }
     if (arrow) arrow.innerHTML = '›';
   }
 }
@@ -937,50 +983,74 @@ window.connectWithProvider = connectWithProvider;
 
 // ── Connect ───────────────────────────────────────────────────────────────────
 async function connectWallet(injectedProvider) {
+  await loadEthers();
+
+  // Resolve the actual provider object to use
+  let eth = injectedProvider;
+  if (!eth) {
+    // Try window.ethereum with full guard
+    try { eth = window.ethereum; } catch(e) {}
+    if (eth) {
+      // If multiple providers exist, prefer non-Backpack MetaMask
+      try {
+        if (Array.isArray(eth.providers) && eth.providers.length) {
+          eth = eth.providers.find(p => { try { return p.isMetaMask && !p.isBackpack; } catch(e) { return false; } })
+                || eth.providers[0];
+        }
+      } catch(e) {}
+    }
+  }
+
+  if (!eth) {
+    closeWalletModal();
+    toast('No wallet found. Install MetaMask and refresh the page.', 'err');
+    return;
+  }
+
+  // Build BrowserProvider — try the chosen provider, fall back to raw window.ethereum
+  let prov;
   try {
-    await loadEthers();
-
-    // Resolve provider: use injected (from EIP-6963 picker) → window.ethereum → error
-    let eth = injectedProvider || null;
-    if (!eth) {
-      try { eth = window.ethereum; } catch(e) {}
-      // Multi-wallet: prefer MetaMask
-      if (eth && Array.isArray(eth.providers) && eth.providers.length) {
-        eth = eth.providers.find(p => { try { return p.isMetaMask && !p.isBackpack; } catch(e) { return false; } })
-              || eth.providers[0];
-      }
-    }
-    if (!eth) {
+    prov = new ethers.BrowserProvider(eth);
+  } catch(e) {
+    try { prov = new ethers.BrowserProvider(window.ethereum); }
+    catch(e2) {
       closeWalletModal();
-      return toast('No wallet found — install MetaMask or another Web3 wallet.', 'err');
+      toast('Could not initialise wallet provider. Try disabling conflicting extensions.', 'err');
+      return;
     }
+  }
 
-    provider = new ethers.BrowserProvider(eth);
-
-    // Request accounts — this triggers the wallet popup
-    let accounts;
-    try {
-      accounts = await provider.send('eth_requestAccounts', []);
-    } catch(e) {
-      closeWalletModal();
-      if (e.code === 4001) return toast('Connection rejected by user.', 'warn');
-      return toast('Failed to get accounts: ' + (e.message || e), 'err');
+  // Request accounts — triggers the wallet popup
+  let accounts;
+  try {
+    accounts = await prov.send('eth_requestAccounts', []);
+  } catch(e) {
+    closeWalletModal();
+    if (e.code === 4001 || e.code === 'ACTION_REJECTED') {
+      toast('Connection rejected.', 'warn');
+    } else {
+      toast('Wallet error: ' + (e.shortMessage || e.message || String(e)).slice(0, 80), 'err');
     }
+    return;
+  }
 
-    walletAddress = accounts[0];
-    if (!walletAddress) { closeWalletModal(); return toast('No account returned from wallet.', 'err'); }
+  walletAddress = accounts && accounts[0];
+  if (!walletAddress) {
+    closeWalletModal();
+    toast('No account returned. Unlock your wallet and try again.', 'err');
+    return;
+  }
 
-    // Check / switch network
-    let network;
-    try { network = await provider.getNetwork(); } catch(e) {}
-    if (network && Number(network.chainId) !== GROTTO_CHAIN_ID) {
+  // Check / switch to Grotto L1
+  try {
+    const network = await prov.getNetwork();
+    if (Number(network.chainId) !== GROTTO_CHAIN_ID) {
       const sub = document.getElementById('wcSub');
-      if (sub) sub.textContent = 'Switching to Grotto L1…';
+      if (sub) sub.textContent = 'Switching network…';
       try {
         await eth.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x' + GROTTO_CHAIN_ID.toString(16) }] });
       } catch(switchErr) {
-        if (switchErr.code === 4902) {
-          // Chain not added — add it
+        if (switchErr.code === 4902 || switchErr.code === -32603) {
           try {
             await eth.request({ method: 'wallet_addEthereumChain', params: [{
               chainId: '0x' + GROTTO_CHAIN_ID.toString(16),
@@ -989,44 +1059,48 @@ async function connectWallet(injectedProvider) {
               rpcUrls: [GROTTO_RPC],
               blockExplorerUrls: ['https://grottoexplorer.xyz']
             }]});
-          } catch(addErr) { closeWalletModal(); return toast('Could not add Grotto L1 network.', 'err'); }
-        } else { closeWalletModal(); return toast('Network switch cancelled.', 'warn'); }
+          } catch(addErr) {
+            closeWalletModal();
+            toast('Could not add Grotto L1. Add it manually in your wallet.', 'err');
+            return;
+          }
+        } else {
+          closeWalletModal();
+          toast('Please switch to Grotto L1 network manually.', 'warn');
+          return;
+        }
       }
-      // Re-init provider after switch
-      provider = new ethers.BrowserProvider(eth);
+      // Rebuild provider after network switch
+      try { prov = new ethers.BrowserProvider(eth); } catch(e) {}
     }
+  } catch(e) { /* network check failed — proceed anyway */ }
 
-    signer = await provider.getSigner();
-    bankContract = new ethers.Contract(BANK_ADDRESS, BANK_ABI, signer);
-    isOwner = walletAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
+  provider = prov;
+  signer   = await provider.getSigner();
+  bankContract = new ethers.Contract(BANK_ADDRESS, BANK_ABI, signer);
+  isOwner  = walletAddress.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
 
-    closeWalletModal();
+  closeWalletModal();
 
-    // Update header UI
-    const ws = document.getElementById('walletSection');
-    ws.innerHTML = `<div class="wallet-badge" onclick="openWalletModal()">
-      <div class="wallet-badge-dot"></div>
-      <div class="wallet-badge-addr">${walletAddress.slice(0,6)}…${walletAddress.slice(-4)} ${isOwner ? '👑' : ''}</div>
-    </div>`;
+  // Update header
+  const ws = document.getElementById('walletSection');
+  ws.innerHTML = `<div class="wallet-badge" onclick="openWalletModal()">
+    <div class="wallet-badge-dot"></div>
+    <div class="wallet-badge-addr">${walletAddress.slice(0,6)}…${walletAddress.slice(-4)}${isOwner ? ' 👑' : ''}</div>
+  </div>`;
 
-    document.getElementById('adminTab').style.display = isOwner ? '' : 'none';
-    if (isOwner) populateGamesDropdown();
+  document.getElementById('adminTab').style.display = isOwner ? '' : 'none';
+  if (isOwner) populateGamesDropdown();
 
-    toast('Wallet connected ✓', 'ok');
+  toast('Wallet connected ✓', 'ok');
 
-    // Non-blocking post-connect enrichment
-    loadPasses().then(() => updateStats());
-    detectWalletPasses();
-    if (isOwner) loadAdminState();
+  // Fire post-connect data loads without blocking
+  loadPasses().then(() => updateStats());
+  detectWalletPasses();
+  if (isOwner) loadAdminState();
 
-    try { eth.on('accountsChanged', () => location.reload()); } catch(e) {}
-    try { eth.on('chainChanged',    () => location.reload()); } catch(e) {}
-
-  } catch(e) {
-    console.error('[PassBank] connectWallet error:', e);
-    closeWalletModal();
-    toast('Connection failed: ' + (e.message || String(e)), 'err');
-  }
+  try { eth.on('accountsChanged', () => location.reload()); } catch(e) {}
+  try { eth.on('chainChanged',    () => location.reload()); } catch(e) {}
 }
 
 // ── Auto-detect passes in wallet ──────────────────────────────────────────────
@@ -1510,6 +1584,45 @@ function renderPassCards() {
   });
 
   grid.innerHTML = cards.join('');
+
+  // Async: enrich any cards where game info wasn't in cache yet (fetch then patch image+badge)
+  allPasses.forEach(async (p, i) => {
+    if (p.unregistered) return;
+    let gameInfo = p.gameId ? (gameInfoCache[p.gameId] || getGameById(p.gameId)) : getGameByContract(p.tokenContract);
+    if (gameInfo) return; // already rendered with game info
+    // Fetch game info now and patch the card
+    if (p.gameId) {
+      try {
+        const res = await fetch(`${GROTTO_API}/api/games/${p.gameId}`, { signal: AbortSignal.timeout(5000) });
+        if (res.ok) { gameInfo = await res.json(); gameInfoCache[p.gameId] = gameInfo; }
+      } catch(e) {}
+    }
+    if (!gameInfo) return;
+    const card = grid.children[i];
+    if (!card) return;
+    const imgUrl   = getGameImageUrl(gameInfo);
+    const title    = gameInfo.title || gameInfo.name || p.gameId;
+    // Patch card image (top area)
+    const imgWrap = card.querySelector('.pass-card-img');
+    if (imgWrap && imgUrl) {
+      imgWrap.innerHTML = `<img src="${imgUrl}" alt="${title}" loading="lazy"
+        style="width:100%;height:130px;object-fit:cover;"
+        onerror="this.outerHTML='<span style=\\'display:flex;align-items:center;justify-content:center;width:100%;height:130px;font-size:40px;\\'>🎮</span>'">`;
+    }
+    // Patch game badge (insert before pass-card-name)
+    const nameEl = card.querySelector('.pass-card-name');
+    if (nameEl && !card.querySelector('.game-badge')) {
+      const badge = document.createElement('div');
+      badge.className = 'game-badge';
+      badge.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:10px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.18);border-radius:8px;padding:7px 10px;';
+      badge.innerHTML = `${imgUrl
+        ? `<img src="${imgUrl}" style="width:24px;height:24px;border-radius:5px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+        : `<span style="font-size:15px;flex-shrink:0;">🎮</span>`}
+        <span style="font-size:11px;color:var(--cyan);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${title}</span>
+        <span style="font-size:10px;background:rgba(0,255,136,0.15);color:var(--success);border:1px solid rgba(0,255,136,0.3);border-radius:4px;padding:1px 5px;font-weight:700;flex-shrink:0;">✓ VERIFIED</span>`;
+      nameEl.parentNode.insertBefore(badge, nameEl);
+    }
+  });
 
   // Async enrichment: patch claim buttons with actual claimed/cooldown state
   if (walletAddress && bankContract) {
