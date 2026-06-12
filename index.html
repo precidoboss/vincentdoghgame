@@ -719,7 +719,9 @@
   </div>
 
 
-<!-- Wallet Connect Modal -->
+</main>
+
+<!-- Wallet Connect Modal — placed as direct body child so position:fixed works correctly -->
 <div class="wc-overlay" id="wcOverlay" onclick="handleOverlayClick(event)">
   <div class="wc-modal">
     <button class="wc-close" onclick="closeWalletModal()">✕</button>
@@ -743,8 +745,6 @@
     </div>
   </div>
 </div>
-
-</main>
 
 <div id="toast"></div>
 
