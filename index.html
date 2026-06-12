@@ -1410,7 +1410,24 @@ async function fetchBankTokenContracts() {
     if (!known.has(addr)) known.set(addr, new Set());
   }
 
-  // Query explorer for the bank's full ERC-1155 token list
+  // ── Include ALL Grotto API game contracts ────────────────────────────────────
+  // This ensures any pass sitting in the bank that hasn't been registered yet
+  // is still detected and shown as an unregistered card in browse + admin.
+  await fetchGrottoGames();
+  for (const g of grottoGames) {
+    const mm = g.marketplace_metadata || {};
+    for (const field of ['license_address','token_address','licenseAddress','tokenAddress','contractAddress','contract_address']) {
+      for (const src of [g, mm]) {
+        const addr = src[field];
+        if (addr && typeof addr === 'string' && addr.startsWith('0x')) {
+          const lc = addr.toLowerCase();
+          if (!known.has(lc)) known.set(lc, new Set());
+        }
+      }
+    }
+  }
+
+  // Query explorer for the bank's full ERC-1155 token list (adds specific tokenIds held)
   try {
     const url = `${GROTTO_EXPLORER_API}/addresses/${BANK_ADDRESS}/tokens?type=ERC-1155&limit=100`;
     const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
@@ -1418,7 +1435,6 @@ async function fetchBankTokenContracts() {
       const data = await res.json();
       const items = data.items || data.tokens || data.result || [];
       for (const item of items) {
-        // Explorer returns {token:{address}, token_id} or {contract_address, token_id}
         const addr = (item.token?.address || item.contract_address || item.address || '').toLowerCase();
         const tid  = item.token_id != null ? Number(item.token_id) : null;
         if (!addr || !addr.startsWith('0x')) continue;
@@ -1512,7 +1528,12 @@ async function updateStats() {
   const types = passes.length;
 
   for (let i = 0; i < passes.length; i++) {
-    const bal = Number(passes[i].balance);
+    // Prefer freshly on-chain scanned balance over potentially stale getAllPasses() value
+    const rawMatch = rawBankPasses.find(r =>
+      r.tokenContract.toLowerCase() === (passes[i].tokenContract || '').toLowerCase() &&
+      Number(r.tokenId) === Number(passes[i].tokenId)
+    );
+    const bal = rawMatch ? Number(rawMatch.balance) : Number(passes[i].balance);
     total += bal;
     if (passes[i].active && bal > 0) claimable++;
     try {
@@ -2070,11 +2091,27 @@ document.getElementById('registerAllBtn').addEventListener('click', async () => 
 
   for (const p of unregistered) {
     try {
-      // Auto-resolve name/image/gameId from matching Grotto game
-      const game = getGameByContract(p.tokenContract);
-      const name  = game ? (game.title || game.name || `Pass #${p.tokenId}`) : `Pass #${p.tokenId}`;
-      const image = game ? (getGameImageUrl(game) || '') : '';
-      const gameId = game ? String(game.id || game.slug || '') : '';
+      // 1. Try matching by contract address
+      let game = getGameByContract(p.tokenContract);
+
+      // 2. If no match, try by stored gameId field
+      if (!game && p.gameId) game = getGameById(p.gameId);
+
+      // 3. If still nothing, try a direct Grotto API lookup by contract address
+      if (!game) {
+        try {
+          const r = await fetch(`${GROTTO_API}/api/games?contract=${p.tokenContract}`, { signal: AbortSignal.timeout(5000) });
+          if (r.ok) {
+            const d = await r.json();
+            const arr = Array.isArray(d) ? d : (d.games || d.data || d.results || []);
+            if (arr.length) game = arr[0];
+          }
+        } catch(e) {}
+      }
+
+      const name   = game ? (game.title || game.name || `Pass #${p.tokenId}`) : (p.name || `Pass #${p.tokenId}`);
+      const image  = game ? (getGameImageUrl(game) || p.imageURI || '') : (p.imageURI || '');
+      const gameId = game ? String(game.id || game.slug || '') : (p.gameId || '');
 
       const tx = await bankContract.registerPass(p.tokenContract, p.tokenId, name, image, gameId);
       await tx.wait();
