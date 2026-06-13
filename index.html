@@ -2596,32 +2596,51 @@ window.refreshAll = refreshAll;
 // ══════════════════════════════════════════════════════════════════════════════
 
 async function initGrottoSession() {
-  if (typeof GrottoRuntime === 'undefined') return;
+  if (typeof GrottoRuntime === 'undefined') {
+    console.warn('[PassBank] GrottoRuntime SDK not loaded');
+    return;
+  }
   try {
-    grottoSession = await Promise.race([
-      GrottoRuntime.ready(),
-      new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 4000))
-    ]);
-    grottoPlayer = await grottoSession.getPlayer();
-    if (!grottoPlayer?.wallet) return;
+    // Use the same pattern as official Grotto games — pass timeoutMs directly
+    grottoSession = await GrottoRuntime.ready({ timeoutMs: 8000 });
+    console.log('[PassBank] GrottoRuntime ready ✓');
+
+    // getPlayer() returns { player: { displayName, walletAddress, ... } }
+    const result = await grottoSession.getPlayer();
+    console.log('[PassBank] getPlayer() =>', result);
+
+    if (!result?.player) {
+      console.warn('[PassBank] No player in session response'); return;
+    }
+
+    // Normalise — store the nested player object and expose wallet at top level
+    grottoPlayer = result.player;
+    grottoPlayer.wallet = grottoPlayer.walletAddress || grottoPlayer.wallet || grottoPlayer.address;
+
+    if (!grottoPlayer.wallet) {
+      console.warn('[PassBank] No wallet address in player:', Object.keys(grottoPlayer)); return;
+    }
+
+    console.log('[PassBank] Signed in as', grottoPlayer.displayName || grottoPlayer.wallet);
 
     sessionMode = true;
 
-    // Fetch Grotto profile (name + avatar) — public endpoint
+    // Fetch profile (avatar + username) from public Grotto API
     try {
       const res = await fetch(`${GROTTO_API}/api/users/${grottoPlayer.wallet}/profile`,
         { signal: AbortSignal.timeout(5000) });
       if (res.ok) grottoProfile = await res.json();
-    } catch(e) {}
+    } catch(e) { console.warn('[PassBank] Profile fetch failed:', e.message); }
 
     renderSessionBadge();
 
-    // Set walletAddress for view-only calls (canRequest, hasClaimed, etc.)
+    // Use wallet for view-only contract calls
     if (!walletAddress) {
       walletAddress = grottoPlayer.wallet;
       loadPasses().then(() => updateStats());
     }
   } catch(e) {
+    // Not in a Grotto session — wallet-only mode, this is normal
     console.log('[PassBank] No Grotto session:', e.message);
   }
 }
@@ -2632,11 +2651,21 @@ function renderSessionBadge() {
   const connectBtn = document.getElementById('connectBtn');
   if (!badge) return;
 
-  const name   = grottoProfile?.username || grottoProfile?.display_name
+  // grottoPlayer.displayName comes from the SDK; grottoProfile fields from the API
+  const name   = grottoPlayer?.displayName
+               || grottoProfile?.username
+               || grottoProfile?.display_name
+               || grottoProfile?.displayName
+               || grottoProfile?.name
                || (grottoPlayer?.wallet
                   ? grottoPlayer.wallet.slice(0,6)+'…'+grottoPlayer.wallet.slice(-4)
                   : 'Grotto User');
-  const avatar = grottoProfile?.avatar_url || grottoProfile?.avatarUrl || '';
+  const avatar = grottoProfile?.avatar_url
+               || grottoProfile?.avatarUrl
+               || grottoProfile?.avatar
+               || grottoProfile?.profileImage
+               || grottoProfile?.profile_image
+               || '';
   const avatarHtml = avatar
     ? `<img class="grotto-avatar" src="${avatar}" alt="${name}"
         onerror="this.style.display='none'">`
@@ -2678,7 +2707,7 @@ async function submitPassRequest(passIndex, passName, passImage, gameId) {
     toast('No Grotto session — connect your wallet to claim directly.', 'warn');
     return;
   }
-  const playerId = grottoPlayer.id || grottoPlayer.wallet;
+  const playerId = grottoPlayer.wallet; // walletAddress is the stable identity from the SDK
   const wallet   = grottoPlayer.wallet;
 
   // Duplicate guard
@@ -2721,7 +2750,7 @@ async function getPlayerRequestStatus(passIndex) {
   if (!grottoPlayer) return null;
   try {
     const rows = await sbFetch(
-      `/pass_requests?player_id=eq.${encodeURIComponent(grottoPlayer.id||grottoPlayer.wallet)}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,
+      `/pass_requests?player_id=eq.${encodeURIComponent(grottoPlayer.wallet)}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,
       { method: 'GET', prefer: '' }
     );
     return rows?.length > 0 ? rows[0].status : null;
@@ -2789,9 +2818,11 @@ window.loadRequestQueue = loadRequestQueue;
 
 function renderRequestCard(row, profileMap) {
   const profile = profileMap[(row.wallet||'').toLowerCase()] || {};
-  const name    = profile.username || profile.display_name
+  const name    = profile.username || profile.display_name || profile.displayName
+                || profile.name
                 || (row.wallet ? row.wallet.slice(0,6)+'…'+row.wallet.slice(-4) : row.player_id);
-  const avatar  = profile.avatar_url || profile.avatarUrl || '';
+  const avatar  = profile.avatar_url || profile.avatarUrl || profile.avatar
+                || profile.profileImage || profile.profile_image || '';
   const initial = (name[0]||'?').toUpperCase();
 
   const avatarHtml = avatar
