@@ -1680,31 +1680,11 @@ async function fetchBankTokenContracts() {
     if (!isNaN(tid)) known.get(addr).add(tid);
   }
 
-  // ── 2. Explorer + Grotto games in PARALLEL (don't block on either) ───────────
-  const [explorerResult, gamesResult] = await Promise.allSettled([
-    // Explorer: adds any extra tokenIds the bank holds
-    fetch(`${GROTTO_EXPLORER_API}/addresses/${BANK_ADDRESS}/tokens?type=ERC-1155&limit=100`, {
-      signal: AbortSignal.timeout(5000)
-    }).then(r => r.ok ? r.json() : null),
-    // Games: adds contract addresses for unregistered pass detection
-    fetchGrottoGames()
-  ]);
-
-  // Process explorer results
-  if (explorerResult.status === 'fulfilled' && explorerResult.value) {
-    const data  = explorerResult.value;
-    const items = data.items || data.tokens || data.result || [];
-    for (const item of items) {
-      const addr = (item.token?.address || item.contract_address || item.address || '').toLowerCase();
-      const tid  = item.token_id != null ? Number(item.token_id) : null;
-      if (!addr || !addr.startsWith('0x')) continue;
-      if (!known.has(addr)) known.set(addr, new Set());
-      if (tid !== null && !isNaN(tid)) known.get(addr).add(tid);
-    }
-    console.log('[PassBank] Explorer:', (explorerResult.value.items||[]).length, 'entries');
-  } else {
-    console.warn('[PassBank] Explorer skipped:', explorerResult.reason?.message || 'failed');
-  }
+  // ── 2. Grotto games (for unregistered pass detection) ───────────────────────
+  // Note: Explorer API returns 422/403 for token queries — skipped entirely.
+  // Registered pass tokenIds are already seeded above from passes[] which is
+  // the most reliable source. Games fetch adds contract addresses for discovery.
+  await fetchGrottoGames();
 
   // Process Grotto game contracts (for unregistered pass detection)
   for (const g of grottoGames) {
@@ -3110,7 +3090,7 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
             `⚠️ Connect the bank wallet (${BANK_ADDRESS.slice(0,10)}…) to send directly, ` +
             `or grant operator approval from the bank wallet first.`, 'err'
           );
-          showApprovalInstructions(tokenContract, tokenId, toWallet, passName, reqId);
+          showApprovalInstructions(tokenContract, tokenId, toWallet, passName, reqId, idx);
           return;
         }
       }
@@ -3151,7 +3131,7 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
 // ── Approval instructions panel ───────────────────────────────────────────────
 // Shown when we detect the bank holds tokens but our wallet isn't approved as
 // operator. Guides admin to grant approval via the explorer write interface.
-function showApprovalInstructions(tokenContract, tokenId, toWallet, passName, reqId) {
+function showApprovalInstructions(tokenContract, tokenId, toWallet, passName, reqId, idx) {
   const existing = document.getElementById('approvalInstructions');
   if (existing) existing.remove();
 
@@ -3186,7 +3166,7 @@ function showApprovalInstructions(tokenContract, tokenId, toWallet, passName, re
           text-decoration:none;">
         Open Token Contract ↗
       </a>
-      <button onclick="adminSendPass('${reqId}','${toWallet}',${passIndex},'${passName.replace(/'/g,"\'")}');this.parentElement.parentElement.remove();"
+      <button onclick="adminSendPass('${reqId}','${toWallet}',${idx},'${passName.replace(/'/g,"\'")}');this.parentElement.parentElement.remove();"
         style="flex:1;padding:9px 0;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);
           border-radius:7px;color:var(--cyan);font-size:12px;font-weight:700;cursor:pointer;
           font-family:'Space Grotesk',sans-serif;">
