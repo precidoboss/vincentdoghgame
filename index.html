@@ -813,8 +813,6 @@
     </div>
 
     <!-- Grant Operator Approval — full width -->
-    <!-- Needed when passes were sent directly (safeTransferFrom) to the bank   -->
-    <!-- wallet. Grants your admin wallet permission to move those tokens.       -->
     <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:28px;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <div class="section-label" style="margin-bottom:0;">🔑 Grant Operator Approval</div>
@@ -823,27 +821,39 @@
           FOR DIRECTLY-SENT TOKENS
         </span>
       </div>
-      <div style="font-size:12px;color:var(--steel);margin-bottom:14px;line-height:1.6;">
-        If passes were sent directly to the bank wallet (not via Deposit), the vault struct balance
-        stays at 0. Grant your admin wallet operator approval on the token contract so it can send
-        those tokens directly via <code>safeTransferFrom</code>.
-        <br>The bank wallet must sign this — connect the bank wallet first.
+      <div style="font-size:12px;color:var(--steel);margin-bottom:16px;line-height:1.7;">
+        Passes sent directly to the bank wallet (not via Deposit) have struct balance = 0.
+        The fix: <strong style="color:var(--text);">connect the BANK wallet</strong>
+        (<code style="color:var(--cyan);">${BANK_ADDRESS.slice(0,10)}…</code> — not the admin wallet)
+        and click the button below to approve the admin wallet as operator on all pass contracts at once.
+        After that, click Send on any request and it will work automatically.
       </div>
-      <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;">
-        <div class="field" style="margin-bottom:0;">
-          <label>Token Contract Address</label>
-          <input id="approvalTokenContract" placeholder="0x… (the pass token contract)"/>
+
+      <div style="background:rgba(255,184,0,0.06);border:1px solid rgba(255,184,0,0.2);
+        border-radius:10px;padding:16px;margin-bottom:14px;">
+        <div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:10px;">
+          STEP 1 — Connect the BANK wallet (${BANK_ADDRESS})
+        </div>
+        <div style="font-size:11px;color:var(--steel);margin-bottom:12px;">
+          Currently connected: <span id="connectedWalletDisplay" style="color:var(--text);font-family:'JetBrains Mono',monospace;">—</span>
+          <span id="bankWalletCheck" style="margin-left:8px;"></span>
+        </div>
+        <div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:10px;">
+          STEP 2 — Approve admin wallet on all pass token contracts
+        </div>
+        <div style="font-size:11px;color:var(--steel);margin-bottom:12px;">
+          Admin wallet to approve: <code style="color:var(--cyan);">${ADMIN_ADDRESS}</code>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="approvalQuickBtns">
+          <!-- Populated with per-contract approve buttons -->
         </div>
         <button class="btn" id="grantApprovalBtn"
-          style="background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);
-            white-space:nowrap;height:42px;">
-          🔑 Grant Approval
+          style="margin-top:12px;background:rgba(255,184,0,0.1);color:var(--warn);
+            border-color:rgba(255,184,0,0.3);width:100%;">
+          🔑 Approve Admin on ALL Pass Contracts
         </button>
       </div>
-      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;" id="approvalQuickBtns">
-        <!-- Populated dynamically with registered pass contracts -->
-      </div>
-      <div id="approvalStatus" style="margin-top:10px;font-size:12px;color:var(--steel);"></div>
+      <div id="approvalStatus" style="font-size:12px;color:var(--steel);"></div>
     </div>
 
     <!-- Request Queue — full width -->
@@ -1354,9 +1364,11 @@ async function connectWallet(injectedProvider) {
   </div>`;
 
   document.getElementById('adminTab').style.display = isOwner ? '' : 'none';
-  if (isOwner) populateGamesDropdown();
+  if (isOwner) { populateGamesDropdown(); loadRequestQueue(); }
 
   toast('Wallet connected ✓', 'ok');
+  // Update approval panel with current wallet info
+  if (document.getElementById('approvalQuickBtns')) populateApprovalQuickBtns();
 
   // Fire post-connect data loads without blocking
   loadPasses().then(() => updateStats());
@@ -3178,70 +3190,102 @@ function showApprovalInstructions(tokenContract, tokenId, toWallet, passName, re
 }
 window.showApprovalInstructions = showApprovalInstructions;
 
-// ── Grant operator approval on a token contract ───────────────────────────────
-// Must be called with the BANK wallet connected (the wallet that holds the tokens).
-// Approves walletAddress (admin) to move tokens on behalf of the bank.
-async function grantOperatorApproval(tokenContractAddr) {
-  if (!signer || !isOwner) { toast('Connect owner wallet first', 'err'); return; }
-
-  const addr = (tokenContractAddr || document.getElementById('approvalTokenContract')?.value || '').trim();
-  if (!addr || !ethers.isAddress(addr)) {
-    toast('Enter a valid token contract address', 'err'); return;
-  }
+// ── Grant operator approval — approve ADMIN on all pass token contracts ──────
+// Must be called with the BANK wallet connected, not the admin wallet.
+// This lets the admin wallet call safeTransferFrom on behalf of the bank.
+async function grantOperatorApproval(specificAddr) {
+  if (!signer) { toast('Connect the BANK wallet first', 'err'); return; }
 
   const statusEl = document.getElementById('approvalStatus');
-  const btn = document.getElementById('grantApprovalBtn');
+  const btn      = document.getElementById('grantApprovalBtn');
 
-  try {
-    if (btn) { btn.disabled = true; btn.textContent = '…Checking'; }
-    if (statusEl) statusEl.textContent = 'Checking current approval…';
-
-    const tokenC = new ethers.Contract(addr, ERC1155_ABI, signer);
-
-    // Check if already approved
-    const already = await tokenC.isApprovedForAll(walletAddress, walletAddress);
-    // More importantly: check if bank address has approved admin wallet
-    // walletAddress IS the bank wallet here (admin connected = bank wallet)
-    const selfCheck = await tokenC.isApprovedForAll(walletAddress, walletAddress);
-
-    // The real check: is our wallet (which should BE the bank wallet) 
-    // already set as operator for itself — not needed, safeTransferFrom 
-    // works if msg.sender == from OR isApprovedForAll(from, msg.sender)
-    // Since walletAddress IS the bank address (admin holds bank keys), 
-    // safeTransferFrom(bankAddress, ...) called by walletAddress works 
-    // WITHOUT any approval needed — msg.sender == from is always allowed!
-    
-    if (statusEl) statusEl.innerHTML = `
-      <span style="color:var(--success);">✓ Your connected wallet IS the bank wallet — 
-      no approval needed! safeTransferFrom will work directly.</span>
-      <br><span style="color:var(--steel);font-size:11px;">
-      Just click Send on any request and it will use the direct transfer path automatically.</span>`;
-
-    toast('✓ Direct transfer is already possible — click Send on any request!', 'ok');
-
-  } catch(e) {
-    if (statusEl) statusEl.innerHTML = `<span style="color:var(--danger);">Error: ${e.message.slice(0,80)}</span>`;
-    toast('Check failed: ' + e.message.slice(0,60), 'err');
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔑 Grant Approval'; }
+  // Verify connected wallet is actually the bank wallet
+  if (walletAddress.toLowerCase() !== BANK_ADDRESS.toLowerCase()) {
+    if (statusEl) statusEl.innerHTML =
+      `<span style="color:var(--danger);">⚠️ Wrong wallet connected. You need to connect the
+      BANK wallet (<code>${BANK_ADDRESS}</code>), not your admin wallet.</span>`;
+    toast('Connect the BANK wallet to grant approval', 'err');
+    return;
   }
+
+  // Collect contracts to approve — either one specific or all pass contracts
+  const uniqueContracts = specificAddr
+    ? [specificAddr]
+    : [...new Set(passes.map(p => p.tokenContract).filter(Boolean))];
+
+  if (!uniqueContracts.length) {
+    toast('No pass contracts found — load passes first', 'warn'); return;
+  }
+
+  if (btn) { btn.disabled = true; btn.textContent = '…Approving'; }
+  if (statusEl) statusEl.innerHTML = `<span style="color:var(--steel);">Granting approval on ${uniqueContracts.length} contract(s)…</span>`;
+
+  let approved = 0, alreadyDone = 0, failed = 0;
+  const results = [];
+
+  for (const addr of uniqueContracts) {
+    const passName = passes.find(p => p.tokenContract === addr)?.name || addr.slice(0,10)+'…';
+    try {
+      const tokenC = new ethers.Contract(addr, ERC1155_ABI, signer);
+
+      // Check if already approved
+      const already = await tokenC.isApprovedForAll(walletAddress, ADMIN_ADDRESS);
+      if (already) {
+        alreadyDone++;
+        results.push(`<span style="color:var(--success);">✓ ${passName} — already approved</span>`);
+        continue;
+      }
+
+      // Grant approval — bank wallet signs, approves admin wallet
+      const tx = await tokenC.setApprovalForAll(ADMIN_ADDRESS, true);
+      await tx.wait();
+      approved++;
+      results.push(`<span style="color:var(--success);">✓ ${passName} — approved!</span>`);
+    } catch(e) {
+      failed++;
+      results.push(`<span style="color:var(--danger);">✗ ${passName} — ${(e.reason||e.message||'').slice(0,50)}</span>`);
+    }
+  }
+
+  if (statusEl) statusEl.innerHTML = results.join('<br>') +
+    `<br><span style="color:var(--steel);font-size:11px;margin-top:6px;display:block;">
+    Done — ${approved} approved, ${alreadyDone} already set, ${failed} failed.
+    ${approved > 0 ? 'Now reconnect your ADMIN wallet and click Send on any request.' : ''}
+    </span>`;
+
+  if (approved > 0) toast(`✓ Approved on ${approved} contract(s)! Reconnect admin wallet and Send.`, 'ok');
+  else if (alreadyDone > 0) toast('Admin wallet already approved on all contracts ✓', 'ok');
+  else toast(`Approval failed on all contracts`, 'err');
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔑 Approve Admin on ALL Pass Contracts'; }
 }
 window.grantOperatorApproval = grantOperatorApproval;
 
-// Populate quick-fill buttons with all registered pass contracts
+// Populate per-contract approve buttons + show connected wallet status
 function populateApprovalQuickBtns() {
   const container = document.getElementById('approvalQuickBtns');
   if (!container || !passes.length) return;
 
-  const uniqueContracts = [...new Set(passes.map(p => p.tokenContract))];
+  // Update connected wallet display
+  const display = document.getElementById('connectedWalletDisplay');
+  const check   = document.getElementById('bankWalletCheck');
+  if (display) display.textContent = walletAddress || '—';
+  if (check && walletAddress) {
+    const isBankWallet = walletAddress.toLowerCase() === BANK_ADDRESS.toLowerCase();
+    check.innerHTML = isBankWallet
+      ? `<span style="color:var(--success);font-weight:700;">✓ This IS the bank wallet</span>`
+      : `<span style="color:var(--danger);font-weight:700;">✗ Not the bank wallet</span>`;
+  }
+
+  const uniqueContracts = [...new Set(passes.map(p => p.tokenContract).filter(Boolean))];
   container.innerHTML = uniqueContracts.map(addr => {
     const p = passes.find(x => x.tokenContract === addr);
     const label = p?.name || addr.slice(0,10)+'…';
-    return `<button onclick="document.getElementById('approvalTokenContract').value='${addr}';grantOperatorApproval('${addr}')"
+    return `<button onclick="grantOperatorApproval('${addr}')"
       style="font-size:11px;padding:5px 12px;border-radius:5px;
         border:1px solid var(--border);background:var(--slate);color:var(--steel);
-        cursor:pointer;font-family:'Space Grotesk',sans-serif;">
-      ${label}
+        cursor:pointer;font-family:'Space Grotesk',sans-serif;margin-bottom:4px;">
+      ${label} only
     </button>`;
   }).join('');
 }
