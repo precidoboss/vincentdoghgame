@@ -709,8 +709,8 @@
   <!-- History Tab -->
   <div id="tab-history" style="display:none;" class="panel panel-full">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-      <div class="panel-head" style="margin-bottom:0;">Transaction History</div>
-      <button id="historyRefreshBtn" onclick="loadTransactionHistory()"
+      <div class="panel-head" style="margin-bottom:0;">History</div>
+      <button id="historyRefreshBtn" onclick="loadTransactionHistory();loadMyRequests();"
         style="background:transparent;border:1px solid var(--border);color:var(--steel);
           padding:6px 14px;border-radius:6px;font-family:'Space Grotesk',sans-serif;
           font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;
@@ -718,6 +718,19 @@
         <span id="historyRefreshIcon">↻</span> Refresh
       </button>
     </div>
+
+    <!-- My Pass Requests (session users only) -->
+    <div id="myRequestsSection" style="display:none;margin-bottom:32px;">
+      <div class="section-label" style="margin-bottom:12px;">📬 My Pass Requests</div>
+      <div id="myRequestsList" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:13px;color:var(--steel);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+          Loading your requests…
+        </div>
+      </div>
+    </div>
+
+    <!-- On-chain Transaction History -->
+    <div class="section-label" style="margin-bottom:12px;">⛓ On-Chain Transactions</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button class="tab active" id="historyFilterAll" onclick="setHistoryFilter('all')" style="padding:6px 16px;font-size:12px;">All</button>
       <button class="tab" id="historyFilterDeposit" onclick="setHistoryFilter('deposit')" style="padding:6px 16px;font-size:12px;">Deposits</button>
@@ -870,12 +883,69 @@
     </div>
     <div class="wc-footer">
       By connecting you agree to our<br>
-      <a href="#">Terms of Service</a> · <a href="#">Privacy Policy</a>
+      <a href="#" onclick="event.preventDefault();document.getElementById('tosModal').style.display='flex'">Terms of Service</a>
+      · <a href="#" onclick="event.preventDefault();document.getElementById('privModal').style.display='flex'">Privacy Policy</a>
     </div>
   </div>
 </div>
 
 <div id="toast"></div>
+
+<!-- Terms of Service Modal -->
+<div id="tosModal" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;">
+  <div style="background:#0D1117;border:1px solid rgba(0,229,255,0.2);border-radius:16px;
+    max-width:560px;width:90%;max-height:80vh;overflow-y:auto;padding:32px;position:relative;">
+    <button onclick="document.getElementById('tosModal').style.display='none'"
+      style="position:absolute;top:16px;right:16px;background:transparent;border:none;
+        color:var(--steel);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+    <h2 style="color:var(--cyan);font-size:18px;margin:0 0 20px;">Terms of Service</h2>
+    <div style="font-size:13px;color:var(--steel);line-height:1.8;display:flex;flex-direction:column;gap:14px;">
+      <p><strong style="color:var(--text);">1. Acceptance</strong><br>
+      By connecting your wallet to the Grotto Pass Bank, you agree to these terms. If you do not agree, do not use this service.</p>
+      <p><strong style="color:var(--text);">2. Service Description</strong><br>
+      The Pass Bank is a community vault for ERC-1155 game passes on the Grotto L1 blockchain. It allows users to deposit game passes for the community and request one pass per registered type.</p>
+      <p><strong style="color:var(--text);">3. One Claim Per Wallet</strong><br>
+      Each wallet address may claim one pass per pass type. This is enforced on-chain and cannot be bypassed. Claims via Grotto session are subject to manual review and sent at the operator's discretion.</p>
+      <p><strong style="color:var(--text);">4. No Guarantees</strong><br>
+      Pass availability depends on community deposits. The operator makes no guarantee that passes will be available at any given time. Vault balances are public and visible on-chain.</p>
+      <p><strong style="color:var(--text);">5. Smart Contract Risk</strong><br>
+      All transactions are final and irreversible on the blockchain. The operator is not responsible for lost funds due to user error, network issues, or smart contract bugs.</p>
+      <p><strong style="color:var(--text);">6. No Financial Advice</strong><br>
+      Nothing on this platform constitutes financial or investment advice. Game passes are digital assets with no guaranteed monetary value.</p>
+      <p><strong style="color:var(--text);">7. Changes</strong><br>
+      These terms may be updated at any time. Continued use of the service constitutes acceptance of updated terms.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div id="privModal" style="display:none;position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;">
+  <div style="background:#0D1117;border:1px solid rgba(0,229,255,0.2);border-radius:16px;
+    max-width:560px;width:90%;max-height:80vh;overflow-y:auto;padding:32px;position:relative;">
+    <button onclick="document.getElementById('privModal').style.display='none'"
+      style="position:absolute;top:16px;right:16px;background:transparent;border:none;
+        color:var(--steel);font-size:20px;cursor:pointer;line-height:1;">✕</button>
+    <h2 style="color:var(--cyan);font-size:18px;margin:0 0 20px;">Privacy Policy</h2>
+    <div style="font-size:13px;color:var(--steel);line-height:1.8;display:flex;flex-direction:column;gap:14px;">
+      <p><strong style="color:var(--text);">1. Data We Collect</strong><br>
+      When you submit a pass request via Grotto session, we store your wallet address, Grotto player ID, the pass requested, and request timestamp in our database. No personal information beyond your public wallet address is collected.</p>
+      <p><strong style="color:var(--text);">2. Blockchain Data</strong><br>
+      All on-chain transactions (deposits, claims, withdrawals) are permanently recorded on the Grotto L1 blockchain and are publicly visible. We do not control or delete this data.</p>
+      <p><strong style="color:var(--text);">3. How We Use Your Data</strong><br>
+      Request data is used solely to process pass distribution. We do not sell, share, or use your data for advertising or profiling purposes.</p>
+      <p><strong style="color:var(--text);">4. Data Retention</strong><br>
+      Request records are kept indefinitely for audit and anti-spam purposes. You may contact us to request deletion of off-chain records associated with your wallet.</p>
+      <p><strong style="color:var(--text);">5. Third-Party Services</strong><br>
+      This service uses Supabase for database storage and the Grotto API for identity verification. These services have their own privacy policies.</p>
+      <p><strong style="color:var(--text);">6. Contact</strong><br>
+      For privacy inquiries, reach out through the Grotto community channels.</p>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── Config — update these before deploying ──────────────────────────────────
@@ -984,7 +1054,7 @@ function switchTab(name) {
   document.querySelectorAll('.tabs > .tab').forEach((b, i) => {
     b.classList.toggle('active', ['browse','deposit','history','admin'][i] === name);
   });
-  if (name === 'history') loadTransactionHistory();
+  if (name === 'history') { loadTransactionHistory(); loadMyRequests(); }
 }
 
 // ── Wallet Modal ─────────────────────────────────────────────────────────────
@@ -1922,6 +1992,12 @@ function renderPassCards() {
         );
         const _rawM = _rawMs.find(r => !r.unregistered) || _rawMs[0];
         const bal = _rawM ? Number(_rawM.balance) : Number(p.balance);
+        // Also patch the session-mode req-btn if present
+        const reqBtn = document.getElementById(`req-btn-${i}`);
+        if (reqBtn && !reqBtn.disabled) {
+          if (bal === 0) { reqBtn.disabled = true; reqBtn.textContent = 'Empty'; }
+          else if (!p.active) { reqBtn.disabled = true; reqBtn.textContent = 'Inactive'; }
+        }
         // Skip canRequest entirely if the pass is empty or inactive — saves RPC calls
         if (bal === 0) { btn.disabled = true; btn.textContent = 'Empty'; return; }
         if (!p.active) { btn.disabled = true; btn.textContent = 'Inactive'; return; }
@@ -2302,15 +2378,23 @@ function renderHistory() {
 
   list.innerHTML = filtered.map(e => {
     const isDeposit = e.type === 'deposit';
-    const icon = isDeposit ? '📥' : '🎁';
     const label = isDeposit ? 'Deposited' : 'Claimed';
     const color = isDeposit ? 'var(--cyan)' : 'var(--success)';
-    const date = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
+    const date  = e.timestamp ? new Date(e.timestamp).toLocaleString() : '—';
     const pendingTag = e.pending ? `<span class="deposit-unregistered-tag">Pending registration</span>` : '';
+
+    // Resolve game logo from passes array or games cache
+    const passEntry = passes.find(p => p.name === e.passName || (e.passIndex !== undefined && passes[e.passIndex]?.name === p.name));
+    const game      = passEntry ? (getGameByContract(passEntry.tokenContract) || getGameById(passEntry.gameId)) : null;
+    const logoUrl   = passEntry?.imageURI || (game ? getGameImageUrl(game) : '');
+    const imgHtml   = logoUrl
+      ? `<img src="${logoUrl}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;border:1px solid var(--border);flex-shrink:0;"
+           onerror="this.outerHTML='<div style=\'width:44px;height:44px;border-radius:8px;background:rgba(0,229,255,0.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;\'>${isDeposit ? '📥' : '🎁'}</div>'">`
+      : `<div style="width:44px;height:44px;border-radius:8px;background:rgba(0,229,255,0.08);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${isDeposit ? '📥' : '🎁'}</div>`;
 
     return `
     <div class="deposit-card">
-      <div class="deposit-card-img" style="font-size:20px;">${icon}</div>
+      ${imgHtml}
       <div class="deposit-card-info">
         <div class="deposit-card-name">${label} ${e.amount}× ${e.passName}${pendingTag}</div>
         <div class="deposit-card-meta">${date}</div>
@@ -2879,18 +2963,65 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
   if (btn) { btn.disabled = true; btn.textContent = '…Sending'; }
   try {
     toast(`Sending "${passName}" to ${toWallet.slice(0,6)}…${toWallet.slice(-4)}`, 'warn');
+
+    // ── Pre-flight balance check ──────────────────────────────────────────────
+    // The contract's passes[i].balance struct field may be 0 if tokens were
+    // deposited directly (safeTransferFrom) rather than through deposit().
+    // In that case withdrawPass() will revert with "Insufficient vault balance".
+    // Check the live on-chain ERC-1155 balance of the bank first.
+    let structBalance = 0;
+    try {
+      const passEntry = await bankContract.getPass(passIndex);
+      structBalance = Number(passEntry.balance);
+    } catch(e) {}
+
+    if (structBalance < 1) {
+      // Struct balance is stale — tokens may be physically held but not tracked.
+      // Warn the admin clearly so they know to use direct safeTransferFrom instead.
+      if (btn) { btn.disabled = false; btn.textContent = '▶ Send'; }
+      toast(
+        `⚠️ Contract reports 0 balance for this pass. Tokens may have been deposited directly. ` +
+        `Use the token contract's safeTransferFrom to send manually, or call deposit() first.`,
+        'err'
+      );
+      return;
+    }
+
     const tx = await bankContract.withdrawPass(passIndex, 1, toWallet);
     await tx.wait();
-    await sbFetch(`/pass_requests?id=eq.${reqId}`, {
-      method: 'PATCH', prefer: 'return=minimal',
-      body: JSON.stringify({ status: 'sent', tx_hash: tx.hash, processed_at: new Date().toISOString() })
-    });
+
+    // ── Mark sent in Supabase ─────────────────────────────────────────────────
+    // Direct REST PATCH — works with anon key when RLS insert policy is open.
+    // If this fails (RLS), the pass was still sent on-chain — log it clearly.
+    try {
+      await sbFetch(`/pass_requests?id=eq.${reqId}`, {
+        method: 'PATCH',
+        prefer: 'return=minimal',
+        body: JSON.stringify({
+          status: 'sent',
+          tx_hash: tx.hash,
+          processed_at: new Date().toISOString()
+        })
+      });
+    } catch(sbErr) {
+      // On-chain send succeeded — don't hide that from the admin
+      console.error('[PassBank] Supabase PATCH failed (RLS?):', sbErr.message);
+      toast(
+        `✓ Pass sent on-chain! But queue update failed — mark manually in Supabase. Tx: ${tx.hash.slice(0,10)}…`,
+        'warn'
+      );
+      loadRequestQueue();
+      loadPasses().then(() => updateStats());
+      return;
+    }
+
     toast(`✓ Pass sent! Tx: ${tx.hash.slice(0,10)}…`, 'ok');
     loadRequestQueue();
     loadPasses().then(() => updateStats());
   } catch(e) {
     if (btn) { btn.disabled = false; btn.textContent = '▶ Send'; }
-    toast('Send failed: ' + (e.reason||e.message||'').slice(0,80), 'err');
+    const msg = e.reason || e.data?.message || e.message || '';
+    toast('Send failed: ' + msg.slice(0, 100), 'err');
   }
 }
 window.adminSendPass = adminSendPass;
@@ -2907,6 +3038,79 @@ async function adminRejectRequest(reqId) {
   } catch(e) { toast('Failed: ' + e.message, 'err'); }
 }
 window.adminRejectRequest = adminRejectRequest;
+
+// ── My Requests — session user's own Supabase request history ────────────────
+async function loadMyRequests() {
+  const section = document.getElementById('myRequestsSection');
+  const list    = document.getElementById('myRequestsList');
+  if (!section || !list) return;
+
+  // Only show if user has a Grotto session
+  if (!sessionMode || !grottoPlayer?.wallet) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = 'block';
+  list.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;
+    background:var(--slate);border:1px solid var(--border);border-radius:10px;">Loading…</div>`;
+
+  try {
+    const rows = await sbFetch(
+      `/pass_requests?player_id=eq.${encodeURIComponent(grottoPlayer.wallet)}&order=requested_at.desc&limit=50`,
+      { method: 'GET', prefer: '' }
+    );
+
+    if (!rows?.length) {
+      list.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;
+        background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+        No requests yet. Browse passes and click "Request Pass" to get started.
+      </div>`; return;
+    }
+
+    list.innerHTML = rows.map(row => {
+      // Game logo from passes array
+      const passEntry = passes[row.pass_index];
+      const game      = passEntry ? (getGameByContract(passEntry.tokenContract) || getGameById(passEntry.gameId)) : null;
+      const logoUrl   = row.pass_image || passEntry?.imageURI || (game ? getGameImageUrl(game) : '');
+      const imgHtml   = logoUrl
+        ? `<img src="${logoUrl}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;
+            border:1px solid var(--border);flex-shrink:0;"
+            onerror="this.style.display='none'">`
+        : `<div style="width:44px;height:44px;border-radius:8px;background:rgba(0,229,255,0.08);
+            border:1px solid var(--border);display:flex;align-items:center;justify-content:center;
+            font-size:20px;flex-shrink:0;">🎮</div>`;
+
+      const statusCls = row.status === 'sent'     ? 'req-status-sent'
+                      : row.status === 'rejected'  ? 'req-status-rejected'
+                      : 'req-status-pending';
+      const statusLbl = row.status === 'sent'     ? '✓ Sent'
+                      : row.status === 'rejected'  ? '✕ Rejected'
+                      : '⏳ Pending';
+
+      const txLink = (row.status === 'sent' && row.tx_hash)
+        ? `<a href="https://grottoexplorer.xyz/tx/${row.tx_hash}" target="_blank"
+            style="font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace;
+              text-decoration:none;display:inline-block;margin-top:4px;">
+            View Tx: ${row.tx_hash.slice(0,10)}… ↗</a>` : '';
+
+      return `<div class="deposit-card">
+        ${imgHtml}
+        <div class="deposit-card-info" style="flex:1;">
+          <div class="deposit-card-name">${row.pass_name}</div>
+          <div class="deposit-card-meta">${formatTimeAgo(row.requested_at)}</div>
+          ${txLink}
+        </div>
+        <span class="req-status-badge ${statusCls}">${statusLbl}</span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML = `<div style="font-size:13px;color:var(--danger);padding:14px;
+      background:var(--slate);border:1px solid var(--border);border-radius:10px;">
+      Failed to load requests: ${e.message}</div>`;
+  }
+}
+window.loadMyRequests = loadMyRequests;
 
 function formatTimeAgo(iso) {
   if (!iso) return '';
