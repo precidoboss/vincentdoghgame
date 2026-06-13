@@ -1632,17 +1632,46 @@ function renderSkeletons(count = 2) {
 async function fetchBankTokenContracts() {
   const known = new Map(); // address -> Set of tokenIds
 
-  // Always include GAMEPASS_CONTRACT and all registered bank contracts
+  // ── 1. Seed from registered passes — ALWAYS include exact tokenId ────────────
+  // This is the most critical step. Tokens sent via safeTransferFrom directly
+  // (not through deposit()) are invisible to the contract's balance struct but
+  // physically held. We MUST scan their exact tokenId or balanceOfBatch returns 0.
   known.set(GAMEPASS_CONTRACT.toLowerCase(), new Set());
   for (const p of passes) {
     const addr = p.tokenContract.toLowerCase();
     if (!known.has(addr)) known.set(addr, new Set());
+    // Always add the registered tokenId — never rely solely on the explorer
+    const tid = Number(p.tokenId);
+    if (!isNaN(tid)) known.get(addr).add(tid);
   }
 
-  // ── Include ALL Grotto API game contracts ────────────────────────────────────
-  // This ensures any pass sitting in the bank that hasn't been registered yet
-  // is still detected and shown as an unregistered card in browse + admin.
-  await fetchGrottoGames();
+  // ── 2. Explorer + Grotto games in PARALLEL (don't block on either) ───────────
+  const [explorerResult, gamesResult] = await Promise.allSettled([
+    // Explorer: adds any extra tokenIds the bank holds
+    fetch(`${GROTTO_EXPLORER_API}/addresses/${BANK_ADDRESS}/tokens?type=ERC-1155&limit=100`, {
+      signal: AbortSignal.timeout(5000)
+    }).then(r => r.ok ? r.json() : null),
+    // Games: adds contract addresses for unregistered pass detection
+    fetchGrottoGames()
+  ]);
+
+  // Process explorer results
+  if (explorerResult.status === 'fulfilled' && explorerResult.value) {
+    const data  = explorerResult.value;
+    const items = data.items || data.tokens || data.result || [];
+    for (const item of items) {
+      const addr = (item.token?.address || item.contract_address || item.address || '').toLowerCase();
+      const tid  = item.token_id != null ? Number(item.token_id) : null;
+      if (!addr || !addr.startsWith('0x')) continue;
+      if (!known.has(addr)) known.set(addr, new Set());
+      if (tid !== null && !isNaN(tid)) known.get(addr).add(tid);
+    }
+    console.log('[PassBank] Explorer:', (explorerResult.value.items||[]).length, 'entries');
+  } else {
+    console.warn('[PassBank] Explorer skipped:', explorerResult.reason?.message || 'failed');
+  }
+
+  // Process Grotto game contracts (for unregistered pass detection)
   for (const g of grottoGames) {
     const mm = g.marketplace_metadata || {};
     for (const field of ['license_address','token_address','licenseAddress','tokenAddress','contractAddress','contract_address']) {
@@ -1656,26 +1685,6 @@ async function fetchBankTokenContracts() {
     }
   }
 
-  // Query explorer for the bank's full ERC-1155 token list (adds specific tokenIds held)
-  try {
-    const url = `${GROTTO_EXPLORER_API}/addresses/${BANK_ADDRESS}/tokens?type=ERC-1155&limit=100`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-    if (res.ok) {
-      const data = await res.json();
-      const items = data.items || data.tokens || data.result || [];
-      for (const item of items) {
-        const addr = (item.token?.address || item.contract_address || item.address || '').toLowerCase();
-        const tid  = item.token_id != null ? Number(item.token_id) : null;
-        if (!addr || !addr.startsWith('0x')) continue;
-        if (!known.has(addr)) known.set(addr, new Set());
-        if (tid !== null && !isNaN(tid)) known.get(addr).add(tid);
-      }
-      console.log('[PassBank] Explorer returned', items.length, 'token entries for bank');
-    }
-  } catch(e) {
-    console.warn('[PassBank] Explorer API failed, using known contracts only:', e.message);
-  }
-
   return [...known.entries()].map(([address, tidSet]) => ({
     address,
     tokenIds: tidSet.size ? [...tidSet].sort((a,b)=>a-b) : []
@@ -1686,19 +1695,20 @@ async function loadPasses() {
   const rp = await getReadProvider();
   renderSkeletons();
 
-  // 1. getAllPasses + games fetch — in parallel
+  // ── Run getAllPasses + games fetch + explorer lookup ALL in parallel ───────────
+  // Nothing here is sequential — fire everything at once for max speed.
   const [passResult] = await Promise.allSettled([
     new ethers.Contract(BANK_ADDRESS, BANK_ABI, rp).getAllPasses(),
-    fetchGrottoGames(),
+    fetchGrottoGames(), // also warms the games cache for fetchBankTokenContracts
   ]);
 
   passes = passResult.status === 'fulfilled' ? passResult.value : [];
   console.log('[PassBank] getAllPasses returned', passes.length, 'passes');
 
-  // 2. Discover ALL contracts the bank holds via explorer API, then scan each
+  // fetchBankTokenContracts now uses the already-warm games cache — near instant
   rawBankPasses = [];
   const bankContracts = await fetchBankTokenContracts();
-  console.log('[PassBank] bank holds tokens on', bankContracts.length, 'contract(s):', bankContracts.map(c=>c.address));
+  console.log('[PassBank] Scanning', bankContracts.length, 'contract(s)');
 
   await Promise.allSettled(bankContracts.map(async ({ address: contractAddr, tokenIds }) => {
     try {
@@ -1763,7 +1773,6 @@ async function updateStats() {
   const types = passes.length;
 
   for (let i = 0; i < passes.length; i++) {
-    // Prefer freshly on-chain scanned balance over potentially stale getAllPasses() value
     const rawMatch = rawBankPasses.find(r =>
       r.tokenContract.toLowerCase() === (passes[i].tokenContract || '').toLowerCase() &&
       Number(r.tokenId) === Number(passes[i].tokenId)
@@ -1771,19 +1780,22 @@ async function updateStats() {
     const bal = rawMatch ? Number(rawMatch.balance) : Number(passes[i].balance);
     total += bal;
     if (passes[i].active && bal > 0) claimable++;
-    try {
-      const claimed = await bankContract.hasClaimed(i, walletAddress);
-      if (claimed) myClaims++;
-    } catch(e) {}
   }
 
-  document.getElementById('statTotal').textContent    = total;
-  document.getElementById('statTypes').textContent    = types;
+  // Batch hasClaimed in parallel instead of sequential awaits
+  if (walletAddress && bankContract) {
+    const claimResults = await Promise.allSettled(
+      passes.map((_, i) => bankContract.hasClaimed(i, walletAddress))
+    );
+    myClaims = claimResults.filter(r => r.status === 'fulfilled' && r.value).length;
+  }
+
+  document.getElementById('statTotal').textContent     = total;
+  document.getElementById('statTypes').textContent     = types;
   document.getElementById('statClaimable').textContent = claimable;
   document.getElementById('statMyClaims').textContent  = walletAddress ? myClaims : '—';
 
-  // Fill bar
-  const maxCapacity = 500; // tweak as needed
+  const maxCapacity = 500;
   const pct = Math.min(100, Math.round((total / maxCapacity) * 100));
   document.getElementById('vaultFill').style.width = pct + '%';
   document.getElementById('capacityPct').textContent = pct + '%';
@@ -1955,90 +1967,113 @@ function renderPassCards() {
     }
   });
 
-  // Async enrichment: patch Request Pass buttons with existing Supabase status
-  if (sessionMode && grottoPlayer?.wallet) {
-    (async () => {
-      await Promise.allSettled(allPasses.map(async (p, i) => {
-        if (p.unregistered) return;
-        const btn = document.getElementById(`req-btn-${i}`);
-        if (!btn || btn.disabled) return;
-        const status = await getPlayerRequestStatus(i);
-        if (status === 'sent') {
-          btn.outerHTML = `<div class="claimed-badge">✓ Sent to you</div>`;
-        } else if (status === 'pending') {
-          btn.textContent = '⏳ Requested';
-          btn.disabled = true;
-          btn.style.cssText += ';background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);';
-        }
-      }));
-    })();
-  }
+  // ── Async enrichment — all contract calls batched in parallel ────────────────
+  // Fire everything at once: cooldown + all hasClaimed + all canRequest + Supabase
+  // This replaces sequential per-card awaits with a single parallel wave.
+  (async () => {
+    const registeredPasses = allPasses.map((p, i) => ({ p, i })).filter(({ p }) => !p.unregistered);
 
-  // Async enrichment: patch claim buttons with actual claimed/cooldown state
-  if (walletAddress && bankContract) {
-    (async () => {
-      const [cdRemaining] = await Promise.allSettled([
-        bankContract.cooldownRemaining(walletAddress)
-      ]);
-      cooldownSecs = cdRemaining.status === 'fulfilled' ? Number(cdRemaining.value) : 0;
+    // Batch 1: cooldown + all hasClaimed in one parallel wave
+    const [cdRes, ...claimResults] = await Promise.allSettled([
+      walletAddress && bankContract ? bankContract.cooldownRemaining(walletAddress) : Promise.resolve(0),
+      ...registeredPasses.map(({ i }) =>
+        walletAddress && bankContract ? bankContract.hasClaimed(i, walletAddress) : Promise.resolve(false)
+      )
+    ]);
 
-      await Promise.allSettled(allPasses.map(async (p, i) => {
-        if (p.unregistered) return;
-        const btn = document.getElementById(`claimBtn_${i}`);
-        if (!btn) return;
-        const _rawMs = rawBankPasses.filter(r =>
-          r.tokenContract.toLowerCase() === (p.tokenContract||'').toLowerCase() &&
-          Number(r.tokenId) === Number(p.tokenId)
+    cooldownSecs = cdRes.status === 'fulfilled' ? Number(cdRes.value) : 0;
+
+    // Build claimed set from batch results
+    const claimedSet = new Set();
+    registeredPasses.forEach(({ i }, idx) => {
+      if (claimResults[idx]?.status === 'fulfilled' && claimResults[idx].value) claimedSet.add(i);
+    });
+
+    // Batch 2: canRequest only for passes that aren't claimed/empty/inactive
+    const needsCanRequest = registeredPasses.filter(({ p, i }) => {
+      const _raws = rawBankPasses.filter(r =>
+        r.tokenContract.toLowerCase() === (p.tokenContract||'').toLowerCase() &&
+        Number(r.tokenId) === Number(p.tokenId)
+      );
+      const bal = (_raws.find(r => !r.unregistered) || _raws[0])
+        ? Number((_raws.find(r => !r.unregistered) || _raws[0]).balance)
+        : Number(p.balance);
+      return bal > 0 && p.active && !claimedSet.has(i) && cooldownSecs === 0;
+    });
+
+    const canReqResults = await Promise.allSettled(
+      needsCanRequest.map(({ i }) =>
+        walletAddress && bankContract ? bankContract.canRequest(i, walletAddress) : Promise.resolve([true, ''])
+      )
+    );
+
+    const canReqMap = {};
+    needsCanRequest.forEach(({ i }, idx) => { canReqMap[i] = canReqResults[idx]; });
+
+    // Batch 3: Supabase request statuses (single query for all passes at once)
+    let supabaseStatuses = {};
+    if (sessionMode && grottoPlayer?.wallet) {
+      try {
+        const rows = await sbFetch(
+          `/pass_requests?player_id=eq.${encodeURIComponent(grottoPlayer.wallet)}&status=in.(pending,sent)&limit=100`,
+          { method: 'GET', prefer: '' }
         );
-        const _rawM = _rawMs.find(r => !r.unregistered) || _rawMs[0];
-        const bal = _rawM ? Number(_rawM.balance) : Number(p.balance);
-        // Also patch the session-mode req-btn if present
-        const reqBtn = document.getElementById(`req-btn-${i}`);
-        if (reqBtn && !reqBtn.disabled) {
-          if (bal === 0) { reqBtn.disabled = true; reqBtn.textContent = 'Empty'; }
-          else if (!p.active) { reqBtn.disabled = true; reqBtn.textContent = 'Inactive'; }
+        if (rows) rows.forEach(r => { supabaseStatuses[r.pass_index] = r.status; });
+      } catch(e) {}
+    }
+
+    // Now apply all results to the DOM in one synchronous pass — no more awaits
+    for (const { p, i } of registeredPasses) {
+      const _raws = rawBankPasses.filter(r =>
+        r.tokenContract.toLowerCase() === (p.tokenContract||'').toLowerCase() &&
+        Number(r.tokenId) === Number(p.tokenId)
+      );
+      const bal = (_raws.find(r => !r.unregistered) || _raws[0])
+        ? Number((_raws.find(r => !r.unregistered) || _raws[0]).balance)
+        : Number(p.balance);
+
+      // ── Session mode button ─────────────────────────────────────────────────
+      const reqBtn = document.getElementById(`req-btn-${i}`);
+      if (reqBtn) {
+        const sbStatus = supabaseStatuses[i];
+        if (sbStatus === 'sent') {
+          reqBtn.outerHTML = `<div class="claimed-badge">✓ Sent to you</div>`;
+        } else if (sbStatus === 'pending') {
+          reqBtn.textContent = '⏳ Requested'; reqBtn.disabled = true;
+          reqBtn.style.cssText += ';background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);';
+        } else if (bal === 0) {
+          reqBtn.disabled = true; reqBtn.textContent = 'Empty';
+        } else if (!p.active) {
+          reqBtn.disabled = true; reqBtn.textContent = 'Inactive';
         }
-        // Skip canRequest entirely if the pass is empty or inactive — saves RPC calls
-        if (bal === 0) { btn.disabled = true; btn.textContent = 'Empty'; return; }
-        if (!p.active) { btn.disabled = true; btn.textContent = 'Inactive'; return; }
-        try {
-          const claimed = await bankContract.hasClaimed(i, walletAddress);
-          if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; return; }
-        } catch(e) {}
-        if (cooldownSecs > 0) { btn.disabled = true; btn.textContent = 'Cooldown: ' + fmtTime(cooldownSecs); return; }
-        try {
-          const [ok, reason] = await bankContract.canRequest(i, walletAddress);
-          if (!ok) {
-            btn.disabled = true;
-            // Show the actual contract reason instead of a generic message
-            const r = (reason || '').toLowerCase();
-            if (r.includes('claim') || r.includes('already')) {
-              btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`;
-            } else if (r.includes('cool') || r.includes('wait')) {
-              btn.textContent = 'Cooldown active';
-            } else if (r.includes('empty') || r.includes('balance')) {
-              btn.textContent = 'Empty';
-            } else if (r.includes('inactive') || r.includes('paused')) {
-              btn.textContent = 'Inactive';
-            } else {
-              // Show shortened reason so the user knows WHY, not just "not eligible"
-              btn.textContent = reason ? reason.slice(0, 28) : 'Not available';
-            }
-          } else {
-            btn.disabled = false;
-            btn.textContent = 'Claim Pass';
-          }
-        } catch(e) {
-          // canRequest reverted — most likely already claimed or pass inactive
-          // Don't leave button as "Not eligible" — try hasClaimed as a fallback check
-          try {
-            const claimed = await bankContract.hasClaimed(i, walletAddress);
-            if (claimed) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; }
-          } catch(e2) {}
-        }
-      }));
-    })();
-  }
+      }
+
+      // ── Wallet mode button ──────────────────────────────────────────────────
+      const btn = document.getElementById(`claimBtn_${i}`);
+      if (!btn) continue;
+      if (bal === 0)  { btn.disabled = true; btn.textContent = 'Empty';    continue; }
+      if (!p.active)  { btn.disabled = true; btn.textContent = 'Inactive'; continue; }
+      if (claimedSet.has(i)) { btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`; continue; }
+      if (cooldownSecs > 0)  { btn.disabled = true; btn.textContent = 'Cooldown: ' + fmtTime(cooldownSecs); continue; }
+
+      const cr = canReqMap[i];
+      if (!cr || cr.status !== 'fulfilled') {
+        btn.disabled = false; btn.textContent = 'Claim Pass'; continue;
+      }
+      const [ok, reason] = cr.value;
+      if (!ok) {
+        btn.disabled = true;
+        const r = (reason||'').toLowerCase();
+        if (r.includes('claim')||r.includes('already'))  btn.outerHTML = `<div class="claimed-badge">✓ Claimed</div>`;
+        else if (r.includes('cool')||r.includes('wait')) btn.textContent = 'Cooldown active';
+        else if (r.includes('empty')||r.includes('balance')) btn.textContent = 'Empty';
+        else if (r.includes('inactive')||r.includes('paused')) btn.textContent = 'Inactive';
+        else btn.textContent = reason ? reason.slice(0,28) : 'Not available';
+      } else {
+        btn.disabled = false; btn.textContent = 'Claim Pass';
+      }
+    }
+  })();
 }
 
 // ── Pass card search/filter ────────────────────────────────────────────────────
