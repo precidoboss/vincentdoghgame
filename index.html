@@ -514,6 +514,51 @@
   .req-status-rejected { background: rgba(255,59,92,0.1); color: var(--danger); }
   .req-status-pending { background: rgba(255,184,0,0.1); color: var(--warn); }
 
+  /* ── Analytics Cards ── */
+  .analytics-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:28px; }
+  .analytics-card { background:var(--slate);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center; }
+  .analytics-card-value { font-size:28px;font-weight:700;color:var(--cyan);font-family:'JetBrains Mono',monospace; }
+  .analytics-card-label { font-size:11px;color:var(--steel);margin-top:4px;text-transform:uppercase;letter-spacing:0.06em; }
+  .analytics-card.warn .analytics-card-value { color:var(--warn); }
+  .analytics-card.success .analytics-card-value { color:var(--success); }
+
+  /* ── Low stock badge ── */
+  .low-stock-badge {
+    display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.08em;
+    background:rgba(255,59,92,0.15);color:var(--danger);border:1px solid rgba(255,59,92,0.3);
+    border-radius:4px;padding:2px 7px;text-transform:uppercase;margin-left:6px;vertical-align:middle;
+  }
+  .almost-gone-badge {
+    display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.08em;
+    background:rgba(255,184,0,0.12);color:var(--warn);border:1px solid rgba(255,184,0,0.3);
+    border-radius:4px;padding:2px 7px;text-transform:uppercase;margin-left:6px;vertical-align:middle;
+  }
+
+  /* ── Gas Bank ── */
+  .gas-hero { background:linear-gradient(135deg,rgba(0,229,255,0.06),rgba(255,184,0,0.06));
+    border:1px solid rgba(0,229,255,0.15);border-radius:16px;padding:28px;margin-bottom:28px;text-align:center; }
+  .gas-hero-title { font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px; }
+  .gas-hero-sub { font-size:13px;color:var(--steel);line-height:1.6;max-width:480px;margin:0 auto 20px; }
+  .gas-amount-pill { display:inline-block;background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.25);
+    border-radius:20px;padding:6px 20px;font-family:'JetBrains Mono',monospace;font-size:14px;
+    color:var(--cyan);font-weight:700;margin-bottom:20px; }
+  .gas-request-btn { background:var(--cyan);color:var(--void);border:none;border-radius:10px;
+    padding:14px 36px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Space Grotesk',sans-serif;
+    transition:opacity 0.15s;display:inline-block; }
+  .gas-request-btn:hover { opacity:0.85; }
+  .gas-request-btn:disabled { opacity:0.4;cursor:not-allowed; }
+
+  /* ── Manual deposit address banner ── */
+  .manual-deposit-banner {
+    background:rgba(0,229,255,0.05);border:1px solid rgba(0,229,255,0.2);
+    border-radius:12px;padding:20px;margin-bottom:24px;
+  }
+
+  /* ── Admin improved layout ── */
+  .admin-section { background:var(--slate);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px; }
+  .admin-section-title { font-size:12px;font-weight:700;color:var(--cyan);text-transform:uppercase;
+    letter-spacing:0.08em;margin-bottom:16px;display:flex;align-items:center;gap:8px; }
+
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 0%,100% { opacity:0.3; } 50% { opacity:0.7; } }
 
@@ -629,6 +674,7 @@
     <button class="tab active" onclick="switchTab('browse')">🎮 Browse Passes</button>
     <button class="tab" onclick="switchTab('deposit')">📥 Deposit</button>
     <button class="tab" onclick="switchTab('history')">📜 History</button>
+    <button class="tab" onclick="switchTab('gas')">⛽ Gas Bank</button>
     <button class="tab" id="adminTab" onclick="switchTab('admin')" style="display:none;">⚙️ Admin</button>
   </div>
 
@@ -671,6 +717,30 @@
   <!-- Deposit Tab -->
   <div id="tab-deposit" style="display:none;" class="panel panel-full">
     <div class="panel-head">Deposit Game Passes</div>
+
+    <!-- Manual deposit address -->
+    <div class="manual-deposit-banner">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">📬 Prefer to send directly?</div>
+      </div>
+      <div style="font-size:12px;color:var(--steel);margin-bottom:12px;line-height:1.6;">
+        Don't want to connect your wallet? Send game passes directly to the admin wallet below.
+        We will handle the deposit and registration from our side. Make sure to include the game name in a message or DM us on Grotto.
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <code id="adminAddrDisplay" style="font-family:'JetBrains Mono',monospace;font-size:12px;
+          color:var(--cyan);background:var(--panel);border:1px solid var(--border);
+          border-radius:6px;padding:8px 14px;flex:1;min-width:0;word-break:break-all;">
+          ${ADMIN_ADDRESS}
+        </code>
+        <button onclick="copyAdminAddr()"
+          style="background:rgba(0,229,255,0.1);border:1px solid rgba(0,229,255,0.3);color:var(--cyan);
+            border-radius:6px;padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;
+            font-family:'Space Grotesk',sans-serif;white-space:nowrap;" id="copyAdminBtn">
+          📋 Copy Address
+        </button>
+      </div>
+    </div>
 
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;">
       <div>
@@ -739,6 +809,64 @@
     <div id="historyList" style="display:flex;flex-direction:column;gap:8px;">
       <div style="font-size:13px;color:var(--steel);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">
         Connect your wallet to view your transaction history.
+      </div>
+    </div>
+  </div>
+
+  <!-- Gas Bank Tab -->
+  <div id="tab-gas" style="display:none;" class="panel panel-full">
+
+    <div class="gas-hero">
+      <div class="gas-hero-title">⛽ HERESY Gas Bank</div>
+      <div class="gas-hero-sub">
+        New to Grotto L1? Request a small amount of HERESY to cover your first transactions.
+        One request per wallet, forever. Funded by the community.
+      </div>
+      <div class="gas-amount-pill">0.00065 HERESY ≈ $0.50</div>
+      <br>
+      <div id="gasRequestArea">
+        <button class="gas-request-btn" id="gasRequestBtn" onclick="requestGas()">
+          ⛽ Request Gas
+        </button>
+        <div id="gasRequestStatus" style="margin-top:14px;font-size:13px;color:var(--steel);"></div>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;">
+      <div style="background:var(--slate);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">🔗</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Connect</div>
+        <div style="font-size:12px;color:var(--steel);">Sign in with Grotto session or connect your wallet</div>
+      </div>
+      <div style="background:var(--slate);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">⛽</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Request</div>
+        <div style="font-size:12px;color:var(--steel);">Click once — one request per wallet, ever</div>
+      </div>
+      <div style="background:var(--slate);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center;">
+        <div style="font-size:28px;margin-bottom:10px;">✅</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">Receive</div>
+        <div style="font-size:12px;color:var(--steel);">We manually review and send HERESY to your wallet</div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div style="background:var(--slate);border:1px solid var(--border);border-radius:12px;padding:20px;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;">Frequently Asked</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--cyan);">What is HERESY?</div>
+          <div style="font-size:12px;color:var(--steel);margin-top:3px;">HERESY is the native gas token on Grotto L1. You need a small amount to sign transactions on the network.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--cyan);">How long does it take?</div>
+          <div style="font-size:12px;color:var(--steel);margin-top:3px;">Requests are reviewed manually and usually sent within a few hours.</div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:600;color:var(--cyan);">Can I request more than once?</div>
+          <div style="font-size:12px;color:var(--steel);margin-top:3px;">No — one request per wallet address, forever. This prevents abuse.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -889,6 +1017,30 @@
       </div>
     </div>
 
+    <!-- Gas Bank Request Queue -->
+    <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:24px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <div class="section-label" style="margin-bottom:0;">⛽ Gas Request Queue</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button id="gasFilterAll" onclick="setGasFilter('all')"
+            style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--cyan);
+              background:var(--cyan);color:var(--void);font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer;">All</button>
+          <button id="gasFilterPending" onclick="setGasFilter('pending')"
+            style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--border);
+              background:transparent;color:var(--steel);font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer;">Pending</button>
+          <button id="gasFilterSent" onclick="setGasFilter('sent')"
+            style="font-size:11px;padding:4px 12px;border-radius:5px;border:1px solid var(--border);
+              background:transparent;color:var(--steel);font-family:'Space Grotesk',sans-serif;font-weight:600;cursor:pointer;">Sent</button>
+          <button onclick="loadGasQueue()"
+            style="background:transparent;border:1px solid var(--border);color:var(--steel);
+              padding:5px 12px;border-radius:6px;font-family:'Space Grotesk',sans-serif;font-size:12px;cursor:pointer;">↻</button>
+        </div>
+      </div>
+      <div id="gasQueue" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:13px;color:var(--steel);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">Loading gas requests…</div>
+      </div>
+    </div>
+
     <!-- Claimants viewer — full width -->
     <div style="margin-top:32px;border-top:1px solid var(--border);padding-top:28px;">
       <div class="section-label">View All Claimants</div>
@@ -996,6 +1148,8 @@
 const BANK_ADDRESS    = "0x72060df011186124ed93abf53C3EbD9Ee97307fB";
 const GROTTO_CHAIN_ID = 36463; // Grotto L1
 const ADMIN_ADDRESS   = "0x46914D5DC59598801e435AF2a08928Da87C60dF0";
+const HERESY_CONTRACT = "0x432d38F83a50EC77C409D086e97448794cf76dCF";
+const GAS_AMOUNT_HERESY = "0.00065"; // ~$0.50 per gas request
 const GROTTO_API      = "https://api.enterthegrotto.xyz";
 const GROTTO_RPC      = "https://subnets.avax.network/thegrotto/mainnet/rpc";
 const GROTTO_EXPLORER_API = "https://grottoexplorer.xyz/api/v2";
@@ -1089,17 +1243,19 @@ function toast(msg, type = '') {
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 function switchTab(name) {
-  ['browse','deposit','history','admin'].forEach(t => {
+  ['browse','deposit','history','gas','admin'].forEach(t => {
     const el = document.getElementById('tab-' + t);
     if (!el) return;
     el.style.display = 'none'; el.classList.remove('visible');
   });
   const el = document.getElementById('tab-' + name);
-  el.style.display = 'block'; el.classList.add('visible');
+  if (el) { el.style.display = 'block'; el.classList.add('visible'); }
   document.querySelectorAll('.tabs > .tab').forEach((b, i) => {
-    b.classList.toggle('active', ['browse','deposit','history','admin'][i] === name);
+    b.classList.toggle('active', ['browse','deposit','history','gas','admin'][i] === name);
   });
   if (name === 'history') { loadTransactionHistory(); loadMyRequests(); }
+  if (name === 'gas')     { initGasTab(); }
+  if (name === 'admin')   { loadAdminAnalytics(); loadGasQueue(); }
 }
 
 // ── Wallet Modal ─────────────────────────────────────────────────────────────
@@ -1878,6 +2034,7 @@ function renderPassCards() {
     const gameImgUrl = getGameImageUrl(gameInfo);
     const gameTitle  = gameInfo ? (gameInfo.title || gameInfo.name || p.gameId) : null;
 
+    const lowStockBadge = getLowStockBadge(bal);
     const gameBadge = gameInfo
       ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;
            background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.18);
@@ -1945,7 +2102,7 @@ function renderPassCards() {
         <div class="pass-card-name">${p.name || 'Unnamed Pass'}</div>
         <div class="pass-card-meta">ID: ${p.tokenId} · ${p.tokenContract.slice(0,6)}…${p.tokenContract.slice(-4)}</div>
         <div class="pass-card-balance">
-          <span class="balance-pill ${bal === 0 ? 'empty' : ''}">${bal} remaining</span>
+          <span class="balance-pill ${bal === 0 ? 'empty' : ''}">${bal} remaining</span>${lowStockBadge}
           <span class="status-dot ${active ? '' : 'inactive'}" title="${active ? 'Active' : 'Paused'}"></span>
         </div>
         ${actionHtml}
@@ -2488,6 +2645,8 @@ async function loadAdminState() {
   } catch(e) {}
   // Populate quick-fill approval buttons with registered pass contracts
   populateApprovalQuickBtns();
+  loadAdminAnalytics();
+  loadGasQueue();
 }
 
 document.getElementById('registerAllBtn').addEventListener('click', async () => {
@@ -3386,6 +3545,267 @@ function formatTimeAgo(iso) {
   if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
   return Math.floor(diff/86400) + 'd ago';
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GAS BANK
+// ══════════════════════════════════════════════════════════════════════════════
+
+let gasFilterState = 'all';
+
+async function initGasTab() {
+  const btn    = document.getElementById('gasRequestBtn');
+  const status = document.getElementById('gasRequestStatus');
+  if (!btn) return;
+
+  const wallet = walletAddress || grottoPlayer?.wallet;
+  if (!wallet) {
+    btn.disabled = true; btn.textContent = 'Connect wallet or sign in';
+    if (status) status.textContent = 'Connect your wallet or Grotto session to request gas.';
+    return;
+  }
+
+  // Check if already requested
+  try {
+    const rows = await sbFetch(
+      `/gas_requests?wallet=eq.${wallet.toLowerCase()}&status=in.(pending,sent)&limit=1`,
+      { method: 'GET', prefer: '' }
+    );
+    if (rows?.length > 0) {
+      const r = rows[0];
+      btn.disabled = true;
+      btn.textContent = r.status === 'sent' ? '✓ Already Received' : '⏳ Request Pending';
+      btn.style.background = r.status === 'sent' ? 'rgba(0,255,136,0.2)' : 'rgba(255,184,0,0.2)';
+      btn.style.color = r.status === 'sent' ? 'var(--success)' : 'var(--warn)';
+      if (status) {
+        if (r.status === 'sent' && r.tx_hash) {
+          status.innerHTML = `✓ Gas received! <a href="https://grottoexplorer.xyz/tx/${r.tx_hash}" target="_blank"
+            style="color:var(--cyan);text-decoration:none;">View Tx ↗</a>`;
+        } else {
+          status.textContent = 'Your request is pending. We usually send within a few hours.';
+        }
+      }
+      return;
+    }
+  } catch(e) {}
+
+  btn.disabled = false;
+  btn.textContent = '⛽ Request Gas';
+  btn.style.cssText = '';
+  if (status) status.textContent = `Wallet: ${wallet.slice(0,6)}…${wallet.slice(-4)}`;
+}
+
+async function requestGas() {
+  const wallet   = walletAddress || grottoPlayer?.wallet;
+  const playerId = grottoPlayer?.wallet || wallet;
+  const btn      = document.getElementById('gasRequestBtn');
+  const status   = document.getElementById('gasRequestStatus');
+
+  if (!wallet) { toast('Connect wallet or Grotto session first', 'warn'); return; }
+  if (btn) { btn.disabled = true; btn.textContent = '…Submitting'; }
+
+  // Duplicate guard
+  try {
+    const existing = await sbFetch(
+      `/gas_requests?wallet=eq.${wallet.toLowerCase()}&status=in.(pending,sent)&limit=1`,
+      { method: 'GET', prefer: '' }
+    );
+    if (existing?.length > 0) {
+      toast('You already have an active gas request!', 'warn');
+      initGasTab(); return;
+    }
+  } catch(e) {}
+
+  try {
+    await sbFetch('/gas_requests', {
+      method: 'POST', prefer: 'return=minimal',
+      body: JSON.stringify({
+        player_id:     playerId,
+        wallet:        wallet.toLowerCase(),
+        amount_heresy: parseFloat(GAS_AMOUNT_HERESY),
+        status:        'pending'
+      })
+    });
+    toast('⛽ Gas request submitted! We will send HERESY to your wallet soon.', 'ok');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Request Pending'; btn.style.cssText='background:rgba(255,184,0,0.2);color:var(--warn);border:none;'; }
+    if (status) status.textContent = 'Pending — usually sent within a few hours.';
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '⛽ Request Gas'; }
+    toast('Failed to submit: ' + e.message.slice(0,80), 'err');
+  }
+}
+window.requestGas = requestGas;
+
+function setGasFilter(f) {
+  gasFilterState = f;
+  ['all','pending','sent'].forEach(k => {
+    const b = document.getElementById('gasFilter' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (!b) return;
+    const active = k === f;
+    b.style.background  = active ? 'var(--cyan)' : 'transparent';
+    b.style.color       = active ? 'var(--void)' : 'var(--steel)';
+    b.style.borderColor = active ? 'var(--cyan)' : 'var(--border)';
+  });
+  loadGasQueue();
+}
+window.setGasFilter = setGasFilter;
+
+async function loadGasQueue() {
+  const container = document.getElementById('gasQueue');
+  if (!container) return;
+  container.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">Loading…</div>`;
+  try {
+    const filterQS = gasFilterState === 'pending' ? '&status=eq.pending'
+                   : gasFilterState === 'sent'    ? '&status=eq.sent' : '';
+    const rows = await sbFetch(`/gas_requests?order=requested_at.asc${filterQS}&limit=100`, { method: 'GET', prefer: '' });
+    if (!rows?.length) {
+      container.innerHTML = `<div style="font-size:13px;color:var(--steel);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">No gas requests.</div>`;
+      return;
+    }
+    // Batch profile fetch
+    const uniqueWallets = [...new Set(rows.map(r => r.wallet).filter(Boolean))];
+    const profileMap = {};
+    await Promise.allSettled(uniqueWallets.map(async w => {
+      try {
+        const res = await fetch(`${GROTTO_API}/api/users/${w}/profile`, { signal: AbortSignal.timeout(4000) });
+        if (res.ok) profileMap[w.toLowerCase()] = await res.json();
+      } catch(e) {}
+    }));
+    container.innerHTML = rows.map(row => renderGasCard(row, profileMap)).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:13px;color:var(--danger);padding:14px;background:var(--slate);border:1px solid var(--border);border-radius:10px;">Failed: ${e.message}</div>`;
+  }
+}
+window.loadGasQueue = loadGasQueue;
+
+function renderGasCard(row, profileMap) {
+  const profile = profileMap[(row.wallet||'').toLowerCase()] || {};
+  const name    = profile.username || profile.display_name || profile.displayName
+                || (row.wallet ? row.wallet.slice(0,6)+'…'+row.wallet.slice(-4) : row.player_id);
+  const avatar  = profile.avatar_url || profile.avatarUrl || profile.avatar || '';
+  const initial = (name[0]||'?').toUpperCase();
+  const avatarHtml = avatar
+    ? `<img class="req-avatar" src="${avatar}" alt="${name}" onerror="this.outerHTML='<div class=\'req-avatar-fallback\'>${initial}</div>'">`
+    : `<div class="req-avatar-fallback">${initial}</div>`;
+
+  let actionHtml;
+  if (row.status === 'pending') {
+    actionHtml = `<div class="req-actions">
+      <button class="req-send-btn" id="gasSendBtn-${row.id}"
+        onclick="adminSendGas('${row.id}','${row.wallet}')">⛽ Send</button>
+      <button class="req-reject-btn" onclick="adminRejectGas('${row.id}')">✕</button>
+    </div>`;
+  } else {
+    const cls   = row.status === 'sent' ? 'req-status-sent' : 'req-status-rejected';
+    const label = row.status === 'sent' ? '✓ Sent' : '✕ Rejected';
+    const txLink = (row.status === 'sent' && row.tx_hash)
+      ? `<a href="https://grottoexplorer.xyz/tx/${row.tx_hash}" target="_blank"
+          style="font-size:10px;color:var(--cyan);font-family:'JetBrains Mono',monospace;text-decoration:none;display:block;margin-top:4px;">${row.tx_hash.slice(0,10)}…</a>` : '';
+    actionHtml = `<div style="text-align:right;"><span class="req-status-badge ${cls}">${label}</span>${txLink}</div>`;
+  }
+
+  return `<div class="req-card">
+    ${avatarHtml}
+    <div class="req-info" style="flex:1;">
+      <div class="req-name">${name}</div>
+      <div class="req-wallet">${row.wallet}</div>
+      <div class="req-pass">⛽ ${row.amount_heresy} HERESY (~$0.50)</div>
+      <div class="req-time">${formatTimeAgo(row.requested_at)}</div>
+    </div>
+    ${actionHtml}
+  </div>`;
+}
+
+async function adminSendGas(reqId, toWallet) {
+  if (!signer || !isOwner) { toast('Connect owner wallet first', 'err'); return; }
+  const btn = document.getElementById(`gasSendBtn-${reqId}`);
+  if (btn) { btn.disabled = true; btn.textContent = '…Sending'; }
+  try {
+    toast(`Sending ${GAS_AMOUNT_HERESY} HERESY to ${toWallet.slice(0,6)}…`, 'warn');
+    // Send native HERESY (native token on Grotto L1) directly
+    const amountWei = ethers.parseEther(GAS_AMOUNT_HERESY);
+    const tx = await signer.sendTransaction({ to: toWallet, value: amountWei });
+    await tx.wait();
+    await sbFetch(`/gas_requests?id=eq.${reqId}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'sent', tx_hash: tx.hash, processed_at: new Date().toISOString() })
+    });
+    toast(`✓ ${GAS_AMOUNT_HERESY} HERESY sent! Tx: ${tx.hash.slice(0,10)}…`, 'ok');
+    loadGasQueue();
+    loadAdminAnalytics();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = '⛽ Send'; }
+    toast('Send failed: ' + (e.reason||e.message||'').slice(0,80), 'err');
+  }
+}
+window.adminSendGas = adminSendGas;
+
+async function adminRejectGas(reqId) {
+  if (!confirm('Reject this gas request?')) return;
+  try {
+    await sbFetch(`/gas_requests?id=eq.${reqId}`, {
+      method: 'PATCH', prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'rejected', processed_at: new Date().toISOString() })
+    });
+    toast('Gas request rejected', 'warn');
+    loadGasQueue();
+  } catch(e) { toast('Failed: ' + e.message, 'err'); }
+}
+window.adminRejectGas = adminRejectGas;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ADMIN ANALYTICS
+// ══════════════════════════════════════════════════════════════════════════════
+
+async function loadAdminAnalytics() {
+  try {
+    const data = await sbFetch('/admin_analytics?limit=1', { method: 'GET', prefer: '' });
+    if (!data?.length) return;
+    const d = data[0];
+    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val ?? '—'; };
+    set('anTotalPasses', d.sent_pass_requests);
+    set('anPending',     d.pending_pass_requests);
+    set('anWallets',     d.unique_wallets_served);
+    set('anToday',       d.pass_requests_today);
+    set('anGasPending',  d.pending_gas_requests);
+    set('anGasSent',     d.sent_gas_requests);
+    set('anTopPass',     d.top_pass_30d || 'N/A');
+    // Show admin wallet label
+    const lbl = document.getElementById('adminWalletLabel');
+    if (lbl && walletAddress) lbl.textContent = walletAddress.slice(0,6)+'…'+walletAddress.slice(-4)+' 👑';
+  } catch(e) { console.warn('[PassBank] Analytics failed:', e.message); }
+}
+window.loadAdminAnalytics = loadAdminAnalytics;
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOW STOCK BADGES + SOCIAL SHARE + COPY ADDRESS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function getLowStockBadge(bal) {
+  if (bal === 1) return `<span class="almost-gone-badge">Almost Gone</span>`;
+  if (bal === 0) return `<span class="low-stock-badge">Empty</span>`;
+  return '';
+}
+window.getLowStockBadge = getLowStockBadge;
+
+function sharePass(passName) {
+  const text = `🎮 I just claimed a ${passName} from the Grotto Pass Bank! Get yours while supplies last.`;
+  const url  = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: 'Grotto Pass Bank', text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(text + ' ' + url).then(() => toast('Share text copied!', 'ok'));
+  }
+}
+window.sharePass = sharePass;
+
+function copyAdminAddr() {
+  navigator.clipboard.writeText(ADMIN_ADDRESS).then(() => {
+    const btn = document.getElementById('copyAdminBtn');
+    if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '📋 Copy Address', 2000); }
+    toast('Admin address copied!', 'ok');
+  });
+}
+window.copyAdminAddr = copyAdminAddr;
 
 // ── Page init — load passes publicly (no wallet needed for read) ──────────────
 async function pageInit() {
