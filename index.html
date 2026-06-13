@@ -1023,6 +1023,7 @@ let reqFilterState  = 'all';  // admin queue filter
 const BANK_ABI = [
   "function getAllPasses() view returns (tuple(address tokenContract,uint256 tokenId,uint256 balance,string name,string imageURI,string gameId,bool active)[])",
   "function getPassCount() view returns (uint256)",
+  "function getPass(uint256) view returns (tuple(address tokenContract,uint256 tokenId,uint256 balance,string name,string imageURI,string gameId,bool active))",
   "function deposit(uint256 passIndex, uint256 amount)",
   "function requestPass(uint256 passIndex)",
   "function registerPass(address,uint256,string,string,string)",
@@ -3036,22 +3037,21 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
   if (btn) { btn.disabled = true; btn.textContent = '…Sending'; }
 
   try {
-    // ── Resolve pass details ──────────────────────────────────────────────────
-    let tokenContract, tokenId;
-    try {
-      const passEntry = await bankContract.getPass(passIndex);
-      tokenContract = passEntry.tokenContract;
-      tokenId       = Number(passEntry.tokenId);
-    } catch(e) {
-      throw new Error('Could not read pass details from contract: ' + e.message);
+    // ── Resolve pass details from already-loaded passes array ────────────────
+    // Use the in-memory passes[] — avoids a redundant contract call and works
+    // even if getPass isn't callable (no need to hit the network twice).
+    const localPass = passes[passIndex];
+    if (!localPass) {
+      throw new Error(`Pass index ${passIndex} not found — reload the page and try again.`);
     }
+    const tokenContract  = localPass.tokenContract;
+    const tokenId        = Number(localPass.tokenId);
+    const structBalance  = Number(
+      // Also try a fresh read in case passes[] is stale
+      await bankContract.getPass(passIndex).then(p => p.balance).catch(() => localPass.balance)
+    );
 
-    // ── Check BOTH balances ───────────────────────────────────────────────────
-    // structBalance: what the contract THINKS it has (may be 0 for direct transfers)
-    // liveBalance:   what the ERC-1155 contract actually reports for the bank wallet
-    const passEntry   = await bankContract.getPass(passIndex);
-    const structBalance = Number(passEntry.balance);
-
+    // ── Live ERC-1155 balance from the token contract ─────────────────────────
     const tokenC = new ethers.Contract(tokenContract, ERC1155_ABI, signer);
     const liveBalance = Number(await tokenC.balanceOf(BANK_ADDRESS, tokenId));
 
