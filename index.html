@@ -3037,25 +3037,42 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
   if (btn) { btn.disabled = true; btn.textContent = '…Sending'; }
 
   try {
-    // ── Resolve pass details from already-loaded passes array ────────────────
-    // Use the in-memory passes[] — avoids a redundant contract call and works
-    // even if getPass isn't callable (no need to hit the network twice).
-    const localPass = passes[passIndex];
-    if (!localPass) {
-      throw new Error(`Pass index ${passIndex} not found — reload the page and try again.`);
+    // ── Resolve pass details ─────────────────────────────────────────────────
+    // Cast to number defensively — comes as string from onclick attribute.
+    const idx = Number(passIndex);
+
+    // Primary: use in-memory passes[] (fast, no network).
+    // Fallback: fresh getPass() call if passes[] isn't loaded yet.
+    let tokenContract, tokenId, structBalance;
+    const localPass = passes[idx];
+
+    if (localPass) {
+      tokenContract = localPass.tokenContract;
+      tokenId       = Number(localPass.tokenId);
+      structBalance = Number(localPass.balance);
+      // Try to get a fresher struct balance without blocking on failure
+      try {
+        const fresh = await bankContract.getPass(idx);
+        structBalance = Number(fresh.balance);
+      } catch(e) { /* use localPass.balance */ }
+    } else {
+      // passes[] not loaded — hit the contract directly
+      let entry;
+      try {
+        entry = await bankContract.getPass(idx);
+      } catch(e) {
+        throw new Error(`Could not read pass #${idx} from contract: ${e.message}`);
+      }
+      tokenContract = entry.tokenContract;
+      tokenId       = Number(entry.tokenId);
+      structBalance = Number(entry.balance);
     }
-    const tokenContract  = localPass.tokenContract;
-    const tokenId        = Number(localPass.tokenId);
-    const structBalance  = Number(
-      // Also try a fresh read in case passes[] is stale
-      await bankContract.getPass(passIndex).then(p => p.balance).catch(() => localPass.balance)
-    );
 
     // ── Live ERC-1155 balance from the token contract ─────────────────────────
     const tokenC = new ethers.Contract(tokenContract, ERC1155_ABI, signer);
     const liveBalance = Number(await tokenC.balanceOf(BANK_ADDRESS, tokenId));
 
-    console.log(`[PassBank] Pass ${passIndex} — struct: ${structBalance}, live: ${liveBalance}`);
+    console.log(`[PassBank] Pass ${idx} — struct: ${structBalance}, live: ${liveBalance}`);
 
     if (liveBalance < 1) {
       if (btn) { btn.disabled = false; btn.textContent = '▶ Send'; }
@@ -3069,7 +3086,7 @@ async function adminSendPass(reqId, toWallet, passIndex, passName) {
       // ── Path A: withdrawPass (normal flow) ──────────────────────────────────
       // Contract struct is in sync — use the official bank function.
       toast(`Sending "${passName}" via vault… confirm in wallet`, 'warn');
-      tx = await bankContract.withdrawPass(passIndex, 1, toWallet);
+      tx = await bankContract.withdrawPass(idx, 1, toWallet);
 
     } else {
       // ── Path B: direct safeTransferFrom (bypass for direct-transfer tokens) ──
