@@ -336,6 +336,15 @@ select option{background:var(--slate)}
 
 <div id="roomLabel">Vault Chamber · Grotto L1</div>
 
+<!-- Mouse lock hint -->
+<div id="mouseLockHint" style="position:fixed;inset:0;z-index:45;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;transition:opacity 1s">
+  <div style="background:rgba(8,11,16,0.75);border:1px solid rgba(0,229,255,0.3);border-radius:14px;padding:16px 28px;text-align:center;backdrop-filter:blur(8px)">
+    <div style="font-size:22px;margin-bottom:6px">🖱️</div>
+    <div style="font-size:13px;color:var(--cyan);font-weight:700;letter-spacing:0.06em">CLICK TO LOOK AROUND</div>
+    <div style="font-size:11px;color:var(--steel);margin-top:3px">ESC to release mouse · WASD to move</div>
+  </div>
+</div>
+
 <div id="proximityPrompt">
   <div class="prox-inner">
     <span class="prox-key">E</span><span class="prox-text">to interact</span>
@@ -356,9 +365,9 @@ select option{background:var(--slate)}
     <div class="ctrl-row"><div class="ctrl-key" id="kW">W</div><div class="ctrl-lbl">Forward</div></div>
     <div class="ctrl-row"><div class="ctrl-key" id="kA">A</div><div class="ctrl-key" id="kD">D</div><div class="ctrl-lbl">Strafe</div></div>
     <div class="ctrl-row"><div class="ctrl-key" id="kS">S</div><div class="ctrl-lbl">Back</div></div>
-    <div class="ctrl-row"><div class="ctrl-key" style="min-width:44px">↑↓←→</div><div class="ctrl-lbl">Look</div></div>
+    <div class="ctrl-row"><div class="ctrl-key" style="min-width:44px">MOUSE</div><div class="ctrl-lbl">Look around</div></div>
     <div class="ctrl-row"><div class="ctrl-key" style="min-width:30px">E</div><div class="ctrl-lbl">Interact</div></div>
-    <div class="ctrl-row"><div class="ctrl-key" style="min-width:46px">DRAG</div><div class="ctrl-lbl">Mouse look</div></div>
+    <div class="ctrl-row"><div class="ctrl-key" style="min-width:36px">ESC</div><div class="ctrl-lbl">Release mouse</div></div>
   </div>
 </div>
 
@@ -520,12 +529,13 @@ let reqFilterState='all', gasFilterState='all', histFilterState='all';
 // ══════════════════════════════════════════════
 let THREE, scene, camera, renderer;
 let playerPos={x:0,z:2}, playerAngle=0, cameraPitch=0.18;
-let keys={}, mouseDragging=false, lastMouseX=0, lastMouseY=0;
+let keys={}, mouseLocked=false;
 let currentSpeed=0;
-const MOVE_SPEED=0.22, LOOK_SENS=0.004;
+const MOVE_SPEED=0.22, LOOK_SENS=0.0018;
 const INTERACT_DIST=3.5;
 let stationMeshes=[], nearStation=null, currentStation=null;
 let particlePts, particleBase;
+let walkPhase=0, walkBobY=0, walkBobRoll=0;
 
 const STATIONS=[
   {id:'vault',  name:'Vault Stats',    emoji:'🏦', x:0,   z:-9,  color:0xAA88FF},
@@ -556,9 +566,23 @@ async function initThree(){
   camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,0.1,100);
   buildRoom();buildStations();buildLights();buildParticles();
   window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
-  canvas.addEventListener('mousedown',e=>{mouseDragging=true;lastMouseX=e.clientX;lastMouseY=e.clientY;});
-  window.addEventListener('mousemove',e=>{if(!mouseDragging)return;playerAngle-=(e.clientX-lastMouseX)*LOOK_SENS;cameraPitch=Math.max(-0.6,Math.min(0.8,cameraPitch-(e.clientY-lastMouseY)*LOOK_SENS*0.5));lastMouseX=e.clientX;lastMouseY=e.clientY;});
-  window.addEventListener('mouseup',()=>mouseDragging=false);
+  // Pointer lock for free mouse look
+  canvas.addEventListener('click',()=>{
+    if(!currentStation&&!document.getElementById('gateScreen')?.classList.contains('gone')===false) return;
+    if(currentStation) return;
+    if(document.getElementById('wcOverlay')?.classList.contains('open')) return;
+    canvas.requestPointerLock();
+  });
+  document.addEventListener('pointerlockchange',()=>{
+    mouseLocked=document.pointerLockElement===canvas;
+    const hint=document.getElementById('mouseLockHint');
+    if(hint) hint.style.display=mouseLocked?'none':'flex';
+  });
+  document.addEventListener('mousemove',e=>{
+    if(!mouseLocked) return;
+    playerAngle-=e.movementX*LOOK_SENS;
+    cameraPitch=Math.max(-0.55,Math.min(0.7,cameraPitch-e.movementY*LOOK_SENS*0.8));
+  });
   window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;updateKeyHints();if(e.key==='e'||e.key==='E')tryInteract();if(e.key==='Escape')closeStation();});
   window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;updateKeyHints();});
   let ts={x:0,y:0};
@@ -592,11 +616,40 @@ function buildRoom(){
   rm.position.set(0,4,-21.8);scene.add(rm);
 }
 
+function makeLabelSprite(T, name, emoji, color){
+  const W=512,H=128;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  // Background pill
+  const hex=color.toString(16).padStart(6,'0');
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle=`rgba(8,11,16,0.82)`;
+  const r=28;
+  ctx.beginPath();ctx.moveTo(r,0);ctx.lineTo(W-r,0);ctx.quadraticCurveTo(W,0,W,r);
+  ctx.lineTo(W,H-r);ctx.quadraticCurveTo(W,H,W-r,H);ctx.lineTo(r,H);
+  ctx.quadraticCurveTo(0,H,0,H-r);ctx.lineTo(0,r);ctx.quadraticCurveTo(0,0,r,0);
+  ctx.closePath();ctx.fill();
+  // Border glow
+  ctx.strokeStyle=`#${hex}`;ctx.lineWidth=3;ctx.globalAlpha=0.9;ctx.stroke();ctx.globalAlpha=1;
+  // Emoji
+  ctx.font='44px serif';ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(emoji,18,H/2);
+  // Name
+  ctx.font='bold 38px Space Grotesk, sans-serif';ctx.fillStyle=`#${hex}`;
+  ctx.textAlign='left';ctx.textBaseline='middle';
+  ctx.fillText(name,76,H/2);
+  const tex=new T.CanvasTexture(cv);
+  const mat=new T.SpriteMaterial({map:tex,transparent:true,depthTest:false});
+  const sprite=new T.Sprite(mat);
+  sprite.scale.set(3.2,0.8,1);
+  return sprite;
+}
+
 function buildStations(){
   const T=THREE;
   STATIONS.forEach(st=>{
     const g=new T.Group();g.position.set(st.x,0,st.z);
-    // Hex base
+    // Hex base platform
     const baseGeo=new T.CylinderGeometry(1.3,1.5,0.1,6);
     const baseMat=new T.MeshStandardMaterial({color:0x18243A,roughness:0.5,metalness:0.5,emissive:new T.Color(st.color),emissiveIntensity:0.05});
     const base=new T.Mesh(baseGeo,baseMat);base.position.y=0.05;base.receiveShadow=true;g.add(base);
@@ -604,7 +657,7 @@ function buildStations(){
     // Terminal body
     const tower=new T.Mesh(new T.BoxGeometry(1,2,0.14),new T.MeshStandardMaterial({color:0x0E1420,roughness:0.35,metalness:0.7,emissive:new T.Color(st.color),emissiveIntensity:0.03}));
     tower.position.y=1.1;tower.castShadow=true;g.add(tower);
-    // Screen glow
+    // Screen glow fill
     const screen=new T.Mesh(new T.PlaneGeometry(0.84,1.4),new T.MeshBasicMaterial({color:new T.Color(st.color),transparent:true,opacity:0.1}));
     screen.position.set(0,1.2,0.08);g.add(screen);
     // Edge glow border
@@ -616,9 +669,12 @@ function buildStations(){
     orb.position.set(0,3.5,0);orb.userData.floatOffset=Math.random()*Math.PI*2;g.add(orb);
     // Point light
     const pl=new T.PointLight(st.color,0.9,6);pl.position.set(0,2.8,0);g.add(pl);
-    // Look at center unless at center
+    // Door label sprite — always faces camera (billboard)
+    const label=makeLabelSprite(T,st.name,st.emoji,st.color);
+    label.position.set(0,2.8,0);g.add(label);
+    // Look at center
     if(Math.abs(st.x)>0.1||Math.abs(st.z)>0.1) g.lookAt(0,0,0);
-    g.userData={id:st.id,orb,pl,baseMat,color:st.color};
+    g.userData={id:st.id,orb,pl,baseMat,color:st.color,label};
     scene.add(g);stationMeshes.push(g);
   });
 }
@@ -652,9 +708,28 @@ function loop(){
   if(lft){playerPos.x-=cs*MOVE_SPEED;playerPos.z+=sn*MOVE_SPEED;moved=true;}
   if(rgt){playerPos.x+=cs*MOVE_SPEED;playerPos.z-=sn*MOVE_SPEED;moved=true;}
   playerPos.x=Math.max(-20,Math.min(20,playerPos.x));playerPos.z=Math.max(-20,Math.min(20,playerPos.z));
-  camera.position.set(playerPos.x,1.7,playerPos.z);
-  camera.rotation.order='YXZ';camera.rotation.y=playerAngle;camera.rotation.x=-cameraPitch;
-  currentSpeed=moved?8:0;document.getElementById('speedVal').textContent=currentSpeed;
+
+  // Human walk bob — step frequency tied to movement
+  const BOB_FREQ=8.5, BOB_AMP=0.055, BOB_ROLL=0.018;
+  if(moved){
+    walkPhase+=BOB_FREQ*0.016;
+    walkBobY=Math.abs(Math.sin(walkPhase))*BOB_AMP; // both steps up
+    walkBobRoll=Math.sin(walkPhase)*BOB_ROLL;        // side sway
+  } else {
+    // Smoothly settle back to neutral
+    walkPhase=0;
+    walkBobY*=0.82;
+    walkBobRoll*=0.82;
+  }
+
+  camera.position.set(playerPos.x, 1.7+walkBobY, playerPos.z);
+  camera.rotation.order='YXZ';
+  camera.rotation.y=playerAngle;
+  camera.rotation.x=-cameraPitch;
+  camera.rotation.z=walkBobRoll;
+
+  const spd=moved?Math.round(MOVE_SPEED*100):0;
+  currentSpeed=spd;document.getElementById('speedVal').textContent=spd;
   // Station animations
   stationMeshes.forEach((g,i)=>{
     const {orb,pl}=g.userData;
@@ -1023,34 +1098,91 @@ async function updateStats(){
   const cp=document.getElementById('capacityPct');if(cp)cp.textContent=pct+'%';
 }
 
+const gameInfoCache3d={};
+async function fetchGameInfo3d(gameId){
+  if(!gameId)return null;if(gameInfoCache3d[gameId])return gameInfoCache3d[gameId];
+  const c=getGameById(gameId);if(c){gameInfoCache3d[gameId]=c;return c;}
+  try{const r=await fetch(`${GROTTO_API}/api/games/${gameId}`,{signal:AbortSignal.timeout(5000)});if(!r.ok)return null;const d=await r.json();gameInfoCache3d[gameId]=d;return d;}catch(e){return null;}
+}
+
+function getLowStockBadge(bal){
+  if(bal===1)return'<span class="almost-gone-badge">Almost Gone</span>';
+  if(bal===0)return'<span class="low-stock-badge">Empty</span>';
+  return'';
+}
+window.getLowStockBadge=getLowStockBadge;
+
 async function populateBrowsePanel(){
   const grid=document.getElementById('passGrid');if(!grid)return;
-  const gameCache={};
-  async function gInfo(id){if(!id)return null;if(gameCache[id])return gameCache[id];const c=getGameById(id);if(c){gameCache[id]=c;return c;}try{const r=await fetch(`${GROTTO_API}/api/games/${id}`);if(!r.ok)return null;const d=await r.json();gameCache[id]=d;return d;}catch(e){return null;}}
-  const all=[...passes.map((p,i)=>({...p,passIndex:i,isReg:true})),...rawBankPasses.filter(r=>r.unregistered).map(r=>({...r,passIndex:null,isReg:false}))];
-  if(!all.length){grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--steel)"><div style="font-size:48px;margin-bottom:14px">🎮</div><p>No passes in vault yet.<br>Be the first to deposit!</p></div>`;return;}
-  const gameInfos=await Promise.all(all.map(p=>p.gameId?gInfo(p.gameId):null));
-  grid.innerHTML=all.map((p,i)=>{
-    const game=gameInfos[i];
-    const rm=rawBankPasses.find(r=>r.tokenContract?.toLowerCase()===(p.tokenContract||'').toLowerCase()&&Number(r.tokenId)===Number(p.tokenId));
-    const bal=rm?Number(rm.balance):Number(p.balance||0);const active=p.active!==false;
-    const imgUrl=p.imageURI||(game?getGameImageUrl(game):null)||'';
-    const badge=bal===1?'<span class="almost-gone-badge">Almost Gone</span>':bal===0?'<span class="low-stock-badge">Empty</span>':'';
-    let claimHtml;
-    if(!active)claimHtml=`<div class="claimed-badge" style="background:rgba(136,153,170,.08);color:var(--steel);border-color:rgba(136,153,170,.2)">INACTIVE</div>`;
-    else if(bal===0)claimHtml=`<button class="claim-btn" disabled>Out of Stock</button>`;
-    else if(!walletAddress)claimHtml=`<button class="claim-btn" onclick="openWalletModal()">Connect to Claim</button>`;
-    else if(p.passIndex===null)claimHtml=`<button class="claim-btn" disabled>Unregistered</button>`;
-    else claimHtml=`<button class="claim-btn" id="claimBtn-${p.passIndex}" onclick="claimPass(${p.passIndex})">Claim Pass</button>`;
+  const unregisteredRaw=rawBankPasses.filter(r=>r.unregistered);
+  const allPasses=[...passes.map((p,i)=>({...p,passIndex:i,isReg:true})),...unregisteredRaw.map(r=>({...r,passIndex:null,isReg:false}))];
+  if(!allPasses.length){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--steel)"><div style="font-size:48px;margin-bottom:14px">🎮</div><p>No passes in vault yet.<br>Be the first to deposit!</p></div>`;
+    return;
+  }
+
+  const cards=allPasses.map((p,i)=>{
+    const rawMatches=rawBankPasses.filter(r=>r.tokenContract?.toLowerCase()===(p.tokenContract||'').toLowerCase()&&Number(r.tokenId)===Number(p.tokenId));
+    const rawMatch=rawMatches.find(r=>!r.unregistered)||rawMatches[0];
+    const bal=rawMatch?Number(rawMatch.balance):Number(p.balance||0);
+    const active=p.active!==false;
+    const gameInfo=p.gameId?(gameInfoCache3d[p.gameId]||getGameById(p.gameId)):getGameByContract(p.tokenContract);
+    const gameImgUrl=getGameImageUrl(gameInfo);
+    const cardImgSrc=p.imageURI||gameImgUrl||null;
+    const lowBadge=getLowStockBadge(bal);
+
+    let actionHtml;
+    if(p.unregistered){
+      actionHtml=`<div class="claimed-badge" style="background:rgba(255,184,0,0.08);color:var(--warn);border-color:rgba(255,184,0,0.2)">⏳ Pending Registration</div>`;
+    } else if(!active){
+      actionHtml=`<div class="claimed-badge" style="background:rgba(136,153,170,.08);color:var(--steel);border-color:rgba(136,153,170,.2)">INACTIVE</div>`;
+    } else if(bal===0){
+      actionHtml=`<button class="claim-btn" disabled>Out of Stock</button>`;
+    } else if(!walletAddress){
+      actionHtml=`<button class="claim-btn" onclick="openWalletModal()">Connect to Claim</button>`;
+    } else {
+      actionHtml=`<button class="claim-btn" id="claimBtn3d_${p.passIndex}" onclick="claimPass(${p.passIndex})">Claim Pass</button>`;
+    }
+
+    const gameBadge=gameInfo?`<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.15);border-radius:6px;padding:5px 8px;">${gameImgUrl?`<img src="${gameImgUrl}" style="width:18px;height:18px;border-radius:3px;object-fit:cover" onerror="this.style.display='none'">`:'<span style="font-size:13px">🎮</span>'}<span style="font-size:10px;color:var(--cyan);font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${gameInfo.title||gameInfo.name||p.gameId}</span><span style="font-size:9px;background:rgba(0,255,136,0.15);color:var(--success);border-radius:3px;padding:1px 5px;font-weight:700">✓</span></div>`:'';
+
     return`<div class="pass-card" data-name="${(p.name||'').toLowerCase()}">
-      <div class="pass-card-img">${imgUrl?`<img src="${imgUrl}" alt="${p.name||''}" onerror="this.parentElement.innerHTML='🎮'">`:'🎮'}</div>
+      <div class="pass-card-img">${cardImgSrc?`<img src="${cardImgSrc}" alt="${p.name||''}" loading="lazy" onerror="this.parentElement.innerHTML='🎮'">`:'🎮'}</div>
       <div class="pass-card-body">
+        ${gameBadge}
         <div class="pass-card-name">${p.name||`Pass #${p.tokenId}`}</div>
-        <div class="pass-card-meta">${p.tokenContract?p.tokenContract.slice(0,12)+'…'+p.tokenContract.slice(-5):''} · ID ${p.tokenId}</div>
-        <div class="pass-card-balance"><div class="balance-pill${bal===0?' empty':''}">${bal} left</div><div style="display:flex;align-items:center;gap:7px">${badge}<div class="status-dot${active?'':' inactive'}"></div></div></div>
-        ${claimHtml}
+        <div class="pass-card-meta">${p.tokenContract?p.tokenContract.slice(0,10)+'…'+p.tokenContract.slice(-5):''} · ID ${p.tokenId}</div>
+        <div class="pass-card-balance"><div class="balance-pill${bal===0?' empty':''}">${bal} left</div><div style="display:flex;align-items:center;gap:6px">${lowBadge}<div class="status-dot${active?'':' inactive'}"></div></div></div>
+        ${actionHtml}
       </div></div>`;
-  }).join('');
+  });
+  grid.innerHTML=cards.join('');
+
+  // Async enrich game info for cards missing it
+  allPasses.forEach(async(p,i)=>{
+    if(p.unregistered||!p.gameId)return;
+    if(gameInfoCache3d[p.gameId])return;
+    const info=await fetchGameInfo3d(p.gameId);
+    if(!info)return;
+    const card=grid.querySelectorAll('.pass-card')[i];
+    if(!card)return;
+    const imgUrl=getGameImageUrl(info);
+    if(imgUrl){
+      const imgWrap=card.querySelector('.pass-card-img');
+      if(imgWrap&&!imgWrap.querySelector('img'))imgWrap.innerHTML=`<img src="${imgUrl}" style="width:100%;height:110px;object-fit:cover" onerror="this.parentElement.innerHTML='🎮'">`;
+    }
+  });
+
+  // Async enrich claim buttons with hasClaimed state
+  if(walletAddress&&bankContract){
+    const claimChecks=await Promise.allSettled(passes.map((_,i)=>bankContract.hasClaimed(i,walletAddress)));
+    claimChecks.forEach((r,i)=>{
+      if(r.status==='fulfilled'&&r.value){
+        const btn=document.getElementById(`claimBtn3d_${i}`);
+        if(btn)btn.outerHTML=`<div class="claimed-badge">✓ Already Claimed</div>`;
+      }
+    });
+  }
 }
 
 function filterPassCards(){const q=(document.getElementById('passSearchInput')?.value||'').toLowerCase();document.querySelectorAll('#passGrid .pass-card').forEach(c=>{c.style.display=(!q||c.dataset.name?.includes(q))?'':'none';});}
@@ -1259,9 +1391,12 @@ function animateGateOpen(label){
         gate.addEventListener('animationend',()=>{
           gate.classList.add('gone');
           gateOpen=true;
-          // Show wallet badge in HUD
           const hw=document.getElementById('hudWallet');
           if(hw)hw.classList.add('authed');
+          // Show mouse lock hint
+          const hint=document.getElementById('mouseLockHint');
+          if(hint){hint.style.opacity='1';hint.style.pointerEvents='all';
+            setTimeout(()=>{hint.style.opacity='0';hint.style.pointerEvents='none';},4000);}
         },{once:true});
       },900);
     }
