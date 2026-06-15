@@ -187,6 +187,9 @@ select option{background:var(--slate)}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes portalRing{0%{transform:rotate(0deg) scaleX(1)}50%{transform:rotate(180deg) scaleX(0.96)}100%{transform:rotate(360deg) scaleX(1)}}
+@keyframes portalPulse{0%,100%{opacity:0.7;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.04)}}
+@keyframes energyFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
 
 /* ═══════════════════════════════════════
    GATE SCREEN
@@ -616,7 +619,143 @@ function buildRoom(){
   rm.position.set(0,4,-21.8);scene.add(rm);
 }
 
-function makeLabelSprite(T, name, emoji, color){
+function makePortalTexture(T, color, label, emoji){
+  const W=512,H=768;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  const hex='#'+color.toString(16).padStart(6,'0');
+  const r=(color>>16)&255,g=(color>>8)&255,b=color&255;
+  // Dark void background
+  ctx.fillStyle='rgba(4,8,16,0.95)';ctx.fillRect(0,0,W,H);
+  // Scanlines
+  for(let y=0;y<H;y+=4){ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,y,W,2);}
+  // Glowing energy center
+  const grd=ctx.createRadialGradient(W/2,H/2,0,W/2,H/2,260);
+  grd.addColorStop(0,`rgba(${r},${g},${b},0.25)`);
+  grd.addColorStop(0.5,`rgba(${r},${g},${b},0.08)`);
+  grd.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grd;ctx.fillRect(0,0,W,H);
+  // Hex grid pattern
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.12)`;ctx.lineWidth=1;
+  for(let row=0;row<12;row++){for(let col=0;col<8;col++){
+    const hx=col*70+(row%2)*35,hy=row*55;
+    ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*Math.PI*2-Math.PI/6;i===0?ctx.moveTo(hx+Math.cos(a)*28,hy+Math.sin(a)*28):ctx.lineTo(hx+Math.cos(a)*28,hy+Math.sin(a)*28);}ctx.closePath();ctx.stroke();
+  }}
+  // Floating data lines
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.35)`;ctx.lineWidth=1.5;
+  for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(Math.random()*W,Math.random()*H*0.3);ctx.lineTo(Math.random()*W,Math.random()*H);ctx.stroke();}
+  // Border glow frame
+  ctx.strokeStyle=hex;ctx.lineWidth=4;ctx.shadowColor=hex;ctx.shadowBlur=20;
+  ctx.strokeRect(8,8,W-16,H-16);ctx.shadowBlur=0;
+  // Inner frame
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.4)`;ctx.lineWidth=1;ctx.strokeRect(20,20,W-40,H-40);
+  // Corner brackets
+  const bL=8,bS=40;[[8,8],[W-8,8],[8,H-8],[W-8,H-8]].forEach(([cx,cy],i)=>{
+    ctx.beginPath();ctx.strokeStyle=hex;ctx.lineWidth=3;ctx.shadowColor=hex;ctx.shadowBlur=10;
+    const sx=i%2===0?1:-1,sy=i<2?1:-1;
+    ctx.moveTo(cx,cy+sy*bS);ctx.lineTo(cx,cy);ctx.lineTo(cx+sx*bS,cy);ctx.stroke();ctx.shadowBlur=0;
+  });
+  // Emoji large center
+  ctx.font='120px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.globalAlpha=0.9;ctx.fillText(emoji,W/2,H/2-60);ctx.globalAlpha=1;
+  // Label
+  ctx.font='bold 42px Space Grotesk,sans-serif';ctx.fillStyle=hex;ctx.shadowColor=hex;ctx.shadowBlur=15;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,W/2,H/2+80);ctx.shadowBlur=0;
+  // Sub label
+  ctx.font='26px JetBrains Mono,monospace';ctx.fillStyle=`rgba(${r},${g},${b},0.6)`;
+  ctx.fillText('[ ENTER TO ACCESS ]',W/2,H/2+130);
+  // Top status bar
+  ctx.fillStyle=`rgba(${r},${g},${b},0.15)`;ctx.fillRect(20,20,W-40,50);
+  ctx.font='bold 22px JetBrains Mono,monospace';ctx.fillStyle=hex;ctx.textAlign='left';
+  ctx.fillText('GROTTO L1 · VAULT SYSTEM',36,50);
+  ctx.textAlign='right';ctx.fillText('◉ LIVE',W-36,50);
+  // Bottom bar
+  ctx.fillStyle=`rgba(${r},${g},${b},0.15)`;ctx.fillRect(20,H-70,W-40,50);
+  ctx.font='20px JetBrains Mono,monospace';ctx.fillStyle=`rgba(${r},${g},${b},0.7)`;
+  ctx.textAlign='center';ctx.fillText('PASS BANK · INTERACTIVE TERMINAL',W/2,H-39);
+  const tex=new T.CanvasTexture(cv);
+  return tex;
+}
+
+function buildStations(){
+  const T=THREE;
+  STATIONS.forEach((st,si)=>{
+    const g=new T.Group();g.position.set(st.x,0,st.z);
+    const col=new T.Color(st.color);
+    const r=(st.color>>16)&255,gb=(st.color>>8)&255,b2=st.color&255;
+
+    // === PORTAL ARCH FRAME ===
+    // Main arch — two pillars + top arch
+    const pillarMat=new T.MeshStandardMaterial({color:0x0A1828,roughness:0.3,metalness:0.9,emissive:col,emissiveIntensity:0.08});
+    // Left pillar
+    const lp=new T.Mesh(new T.BoxGeometry(0.18,3.4,0.18),pillarMat);lp.position.set(-0.95,1.7,0);lp.castShadow=true;g.add(lp);
+    // Right pillar
+    const rp2=new T.Mesh(new T.BoxGeometry(0.18,3.4,0.18),pillarMat.clone());rp2.position.set(0.95,1.7,0);rp2.castShadow=true;g.add(rp2);
+    // Top beam
+    const top=new T.Mesh(new T.BoxGeometry(2.26,0.22,0.18),pillarMat.clone());top.position.set(0,3.45,0);top.castShadow=true;g.add(top);
+    // Side depth pieces (give 3D depth to the frame)
+    [[-.95,0],[.95,0]].forEach(([x])=>{
+      const d=new T.Mesh(new T.BoxGeometry(0.12,3.4,0.5),new T.MeshStandardMaterial({color:0x06101A,roughness:0.4,metalness:0.8}));
+      d.position.set(x,1.7,-0.15);g.add(d);
+    });
+
+    // === GLOWING EDGE STRIPS on pillars ===
+    const edgeMat=new T.MeshBasicMaterial({color:st.color});
+    const edgeGeo=new T.BoxGeometry(0.04,3.3,0.04);
+    [[-0.87,1.7,0.07],[0.87,1.7,0.07],[-0.87,1.7,-0.07],[0.87,1.7,-0.07]].forEach(([ex,ey,ez])=>{
+      const e=new T.Mesh(edgeGeo,edgeMat);e.position.set(ex,ey,ez);g.add(e);
+    });
+    // Top beam edges
+    [[-0.87,3.44,0.07],[0.87,3.44,0.07]].forEach(([ex,ey,ez])=>{
+      const e=new T.Mesh(new T.BoxGeometry(0.04,0.18,0.04),edgeMat);e.position.set(ex,ey,ez);g.add(e);
+    });
+
+    // === PORTAL SCREEN (energy field) ===
+    const portalTex=makePortalTexture(T,st.color,st.name,st.emoji);
+    const screenMat=new T.MeshBasicMaterial({map:portalTex,transparent:true,opacity:0.92,side:T.DoubleSide});
+    const screen=new T.Mesh(new T.PlaneGeometry(1.72,3.22),screenMat);
+    screen.position.set(0,1.72,0.01);g.add(screen);
+    screen.userData.screenMat=screenMat;
+
+    // === ENERGY OVERLAY (pulsing plane slightly in front) ===
+    const energyGeo=new T.PlaneGeometry(1.72,3.22);
+    const energyMat=new T.MeshBasicMaterial({color:st.color,transparent:true,opacity:0.06,side:T.DoubleSide});
+    const energy=new T.Mesh(energyGeo,energyMat);energy.position.set(0,1.72,0.02);g.add(energy);
+    energy.userData.energyMat=energyMat;
+
+    // === OUTER GLOW RING (around the arch opening) ===
+    const ringGeo=new T.RingGeometry(1.12,1.22,32);
+    const ringMat=new T.MeshBasicMaterial({color:st.color,transparent:true,opacity:0.5,side:T.DoubleSide});
+    const ring=new T.Mesh(ringGeo,ringMat);ring.position.set(0,1.72,0.03);g.add(ring);
+
+    // === HEX BASE PLATFORM ===
+    const baseMat=new T.MeshStandardMaterial({color:0x111E30,roughness:0.5,metalness:0.6,emissive:col,emissiveIntensity:0.05});
+    const base=new T.Mesh(new T.CylinderGeometry(1.4,1.6,0.1,6),baseMat);base.position.y=0.05;base.receiveShadow=true;g.add(base);
+
+    // === FLOOR GLOW DISC ===
+    const discMat=new T.MeshBasicMaterial({color:st.color,transparent:true,opacity:0.18,side:T.DoubleSide});
+    const disc=new T.Mesh(new T.CircleGeometry(1.35,32),discMat);disc.rotation.x=-Math.PI/2;disc.position.y=0.06;g.add(disc);
+
+    // === FLOATING ORB above arch ===
+    const orbMat=new T.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.2,roughness:0.1,metalness:0.9});
+    const orb=new T.Mesh(new T.SphereGeometry(0.13,12,12),orbMat);
+    orb.position.set(0,4.0,0);orb.userData.floatOffset=si*1.05;g.add(orb);
+
+    // === POINT LIGHT ===
+    const pl=new T.PointLight(st.color,1.1,7);pl.position.set(0,2.5,0.5);g.add(pl);
+
+    // === LABEL SPRITE above portal ===
+    const labelSpr=makeLabelSprite(T,st.name,st.emoji,st.color);
+    labelSpr.position.set(0,4.2,0);g.add(labelSpr);
+
+    // Orient toward room center
+    if(Math.abs(st.x)>0.1||Math.abs(st.z)>0.1)g.lookAt(0,0,0);
+
+    g.userData={id:st.id,orb,pl,baseMat,energyMat,screenMat,ringMat,discMat,color:st.color,t:si*0.7};
+    scene.add(g);stationMeshes.push(g);
+  });
+}
   const W=512,H=128;
   const cv=document.createElement('canvas');cv.width=W;cv.height=H;
   const ctx=cv.getContext('2d');
@@ -1073,16 +1212,42 @@ async function fetchBankTokenContracts(){
 
 async function loadPasses(){
   const rp=await getReadProvider();
-  const[pr]=await Promise.allSettled([new ethers.Contract(BANK_ADDRESS,BANK_ABI,rp).getAllPasses(),fetchGrottoGames()]);
-  passes=pr.status==='fulfilled'?pr.value:[];rawBankPasses=[];
+  await fetchGrottoGames();
+  const pr=await new ethers.Contract(BANK_ADDRESS,BANK_ABI,rp).getAllPasses().catch(()=>[]);
+  // ethers v6 returns Result objects - extract named fields explicitly
+  passes=(pr||[]).map((p,i)=>({
+    tokenContract: p.tokenContract||p[0]||'',
+    tokenId: p.tokenId!=null?p.tokenId:p[1],
+    balance: p.balance!=null?p.balance:p[2],
+    name: p.name||p[3]||`Pass #${i}`,
+    imageURI: p.imageURI||p[4]||'',
+    gameId: p.gameId||p[5]||'',
+    active: p.active!=null?p.active:(p[6]!=null?p[6]:true)
+  }));
+  rawBankPasses=[];
   const bankContracts=await fetchBankTokenContracts();
   await Promise.allSettled(bankContracts.map(async({address:ca,tokenIds})=>{
     try{
       const c=new ethers.Contract(ca,ERC1155_BATCH_ABI,rp);
       const scanIds=tokenIds.length?tokenIds:GAMEPASS_SCAN_IDS;
       const bals=await c.balanceOfBatch(scanIds.map(()=>BANK_ADDRESS),scanIds);
-      bals.forEach((bal,idx)=>{const b=Number(bal),tid=scanIds[idx];if(b>0){const reg=passes.find(p=>p.tokenContract.toLowerCase()===ca&&Number(p.tokenId)===tid);const game=getGameByContract(ca);if(reg)rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,unregistered:false});else rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,name:game?(game.title||game.name||`Pass #${tid}`):`Pass #${tid}`,imageURI:getGameImageUrl(game)||'',gameId:game?String(game.id||game.slug||''):'',active:true,unregistered:true});}});
-    }catch(e){const c=new ethers.Contract(ca,ERC1155_ABI,rp);await Promise.allSettled((tokenIds.length?tokenIds:GAMEPASS_SCAN_IDS.slice(0,30)).map(async tid=>{try{const b=Number(await c.balanceOf(BANK_ADDRESS,tid));if(b>0){const reg=passes.find(p=>p.tokenContract.toLowerCase()===ca&&Number(p.tokenId)===tid);const game=getGameByContract(ca);if(reg)rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,unregistered:false});else rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,name:game?(game.title||game.name||`Pass #${tid}`):`Pass #${tid}`,imageURI:getGameImageUrl(game)||'',gameId:game?String(game.id||game.slug||''):'',active:true,unregistered:true});}}catch(e2){}}));}
+      bals.forEach((bal,idx)=>{const b=Number(bal),tid=scanIds[idx];if(b>0){
+        const reg=passes.find(p=>p.tokenContract&&p.tokenContract.toLowerCase()===ca&&Number(p.tokenId)===tid);
+        const game=getGameByContract(ca);
+        if(reg)rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,unregistered:false});
+        else rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,name:game?(game.title||game.name||`Pass #${tid}`):`Pass #${tid}`,imageURI:getGameImageUrl(game)||'',gameId:game?String(game.id||game.slug||''):'',active:true,unregistered:true});
+      }});
+    }catch(e){
+      const c=new ethers.Contract(ca,ERC1155_ABI,rp);
+      await Promise.allSettled((tokenIds.length?tokenIds:GAMEPASS_SCAN_IDS.slice(0,30)).map(async tid=>{
+        try{const b=Number(await c.balanceOf(BANK_ADDRESS,tid));if(b>0){
+          const reg=passes.find(p=>p.tokenContract&&p.tokenContract.toLowerCase()===ca&&Number(p.tokenId)===tid);
+          const game=getGameByContract(ca);
+          if(reg)rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,unregistered:false});
+          else rawBankPasses.push({tokenContract:ca,tokenId:tid,balance:b,name:game?(game.title||game.name||`Pass #${tid}`):`Pass #${tid}`,imageURI:getGameImageUrl(game)||'',gameId:game?String(game.id||game.slug||''):'',active:true,unregistered:true});
+        }}catch(e2){}
+      }));
+    }
   }));
   return passes;
 }
@@ -1437,52 +1602,68 @@ async function gateGrottoConnect(){
   if(btn){btn.disabled=true;btn.textContent='🎮 Connecting to Grotto…';}
   gs.textContent='HANDSHAKING WITH GROTTO…';gs.className='gate-status blink';
   try{
-    if(window.GrottoRuntime){
-      const runtime=new GrottoRuntime({appId:'pass-bank-3d'});
-      await runtime.init();
-      const p=await runtime.getPlayer();
-      if(p?.wallet){
-        grottoPlayer=p;walletAddress=p.wallet;
-        const name=p.username||p.display_name||p.wallet.slice(0,6)+'…'+p.wallet.slice(-4);
+    let session=null,player=null;
+    if(typeof GrottoRuntime!=='undefined'){
+      try{session=await GrottoRuntime.ready({timeoutMs:6000});const r=await session.getPlayer();player=r?.player||r;}catch(e){}
+      if(!player){try{const rt=new GrottoRuntime({appId:'pass-bank-3d'});await rt.init();const r=await rt.getPlayer();player=r?.player||r;}catch(e){}}
+    }
+    if(player){
+      const wallet=player.walletAddress||player.wallet||player.address||'';
+      const name=player.displayName||player.display_name||player.username||player.name||(wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Grotto User');
+      if(wallet){
+        grottoPlayer={...player,wallet};walletAddress=wallet;
         animateGateOpen('🎮 '+name);
         if(btn){btn.disabled=false;btn.textContent='🎮 Sign In With Grotto';}
+        loadPasses().then(updateStats);
         return;
       }
     }
-    // Fallback: no grotto session available
-    gs.textContent='NO GROTTO SESSION — USE WALLET';gs.className='gate-status';
-    gs.style.color='var(--warn)';
+    gs.textContent='NO GROTTO SESSION — USE WALLET';gs.className='gate-status';gs.style.color='var(--warn)';
     if(btn){btn.disabled=false;btn.textContent='🎮 Sign In With Grotto';}
   }catch(e){
-    gs.textContent='GROTTO ERROR — TRY WALLET';gs.className='gate-status';
-    gs.style.color='var(--danger)';
+    gs.textContent='GROTTO ERROR — TRY WALLET';gs.className='gate-status';gs.style.color='var(--danger)';
     if(btn){btn.disabled=false;btn.textContent='🎮 Sign In With Grotto';}
   }
 }
 
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
 async function pageInit(){
   await loadEthers();
   readProvider=new ethers.JsonRpcProvider(GROTTO_RPC);
   initThree();
-  // Try Grotto session — if found, auto-open gate
+  // Try Grotto session — multiple SDK patterns for compatibility
   try{
-    if(window.GrottoRuntime){
-      const gs=new GrottoRuntime({appId:'pass-bank-3d'});
-      await gs.init();
-      const p=await gs.getPlayer();
-      if(p?.wallet){
-        grottoPlayer=p;walletAddress=p.wallet;
-        const name=p.username||p.display_name||p.wallet.slice(0,6)+'…'+p.wallet.slice(-4);
-        // Short delay so 3D world finishes loading visually
-        setTimeout(()=>animateGateOpen('🎮 '+name),800);
-        return;
+    if(typeof GrottoRuntime!=='undefined'){
+      let session=null,player=null;
+      // Pattern 1: GrottoRuntime.ready() (official)
+      try{session=await GrottoRuntime.ready({timeoutMs:5000});const r=await session.getPlayer();player=r?.player||r;}catch(e){}
+      // Pattern 2: new GrottoRuntime({appId}) (older SDK)
+      if(!player){try{const rt=new GrottoRuntime({appId:'pass-bank-3d'});await rt.init();const r=await rt.getPlayer();player=r?.player||r;}catch(e){}}
+      // Pattern 3: window.GrottoRuntime direct
+      if(!player&&window.grottoRuntime){try{const r=await window.grottoRuntime.getPlayer();player=r?.player||r;}catch(e){}}
+
+      if(player){
+        // Normalize all possible field names
+        const wallet=player.walletAddress||player.wallet||player.address||player.wallet_address||'';
+        const name=player.displayName||player.display_name||player.username||player.name||(wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Grotto User');
+        if(wallet){
+          grottoPlayer={...player,wallet};
+          walletAddress=wallet;
+          // Fetch profile for avatar
+          try{const res=await fetch(`${GROTTO_API}/api/users/${wallet}/profile`,{signal:AbortSignal.timeout(4000)});if(res.ok){const prof=await res.json();grottoPlayer.username=prof.username||prof.display_name||name;grottoPlayer.avatar=prof.avatar_url||prof.avatarUrl||prof.avatar||'';}}catch(e){}
+          // Update HUD
+          const hw=document.getElementById('hudWallet');
+          if(hw){
+            hw.innerHTML=`<div class="wallet-badge" onclick="openWalletModal()"><div class="wallet-badge-dot" style="background:var(--success)"></div><div class="wallet-badge-addr">🎮 ${grottoPlayer.username||name}</div></div>`;
+            hw.classList.add('authed');
+          }
+          setTimeout(()=>animateGateOpen('🎮 '+name),800);
+          loadPasses().then(updateStats);
+          return;
+        }
       }
     }
-  }catch(e){}
-  // No session — gate stays up, user must interact
+  }catch(e){console.log('[PassBank] No Grotto session:',e.message||e);}
+  // No session — gate stays, user must connect
 }
 
 window.openWalletModal=openWalletModal;window.closeWalletModal=closeWalletModal;window.handleOverlayClick=handleOverlayClick;window.connectWithProvider=connectWithProvider;window.claimPass=claimPass;window.depositPass=depositPass;window.filterPassCards=filterPassCards;window.setHistoryFilter=setHistoryFilter;window.setReqFilter=setReqFilter;window.setGasFilter=setGasFilter;window.loadRequestQueue=loadRequestQueue;window.loadGasQueue=loadGasQueue;window.adminSendGas=adminSendGas;window.adminRejectGas=adminRejectGas;window.adminSendPass=adminSendPass;window.adminRejectReq=adminRejectReq;window.requestGas=requestGas;window.copyAdminAddr=copyAdminAddr;window.closeStation=closeStation;window.populateGamesDropdown=populateGamesDropdown;window.gateConnect=gateConnect;window.gateGrottoConnect=gateGrottoConnect;window.buildWalletList=buildWalletList;
