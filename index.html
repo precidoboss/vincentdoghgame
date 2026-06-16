@@ -185,6 +185,37 @@ select option{background:var(--slate)}
 
 /* ANIMATIONS */
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* SUB-ROOM OVERLAY — content displayed on wall */
+#subRoomUI{position:fixed;inset:0;z-index:150;pointer-events:none;opacity:0;transition:opacity .4s}
+#subRoomUI.visible{opacity:1;pointer-events:all}
+#subRoomContent{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:min(760px,90vw);max-height:82vh;overflow-y:auto;
+  background:rgba(8,11,16,0.88);
+  border:1px solid rgba(0,229,255,0.25);border-radius:16px;
+  backdrop-filter:blur(14px);
+  box-shadow:0 0 60px rgba(0,229,255,0.06),0 32px 80px rgba(0,0,0,0.8);
+  pointer-events:all;
+}
+#subRoomContent::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+#subRoomHeader{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:rgba(8,11,16,0.96);z-index:5;border-radius:16px 16px 0 0;
+}
+#subRoomTitle{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+#subRoomBody{padding:22px}
+#exitDoorPrompt{
+  position:fixed;bottom:190px;right:28px;z-index:160;
+  background:rgba(14,20,32,0.92);border:1px solid var(--danger);
+  border-radius:10px;padding:10px 18px;backdrop-filter:blur(8px);
+  font-size:12px;color:var(--danger);font-weight:700;cursor:pointer;
+  letter-spacing:.06em;text-transform:uppercase;pointer-events:all;
+  transition:background .15s;display:none;
+}
+#exitDoorPrompt:hover{background:rgba(255,59,92,.12)}
+#exitDoorPrompt.visible{display:block}
 @keyframes pulse{0%,100%{opacity:.4}50%{opacity:.9}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 @keyframes portalRing{0%{transform:rotate(0deg) scaleX(1)}50%{transform:rotate(180deg) scaleX(0.96)}100%{transform:rotate(360deg) scaleX(1)}}
@@ -402,6 +433,18 @@ select option{background:var(--slate)}
 </div>
 
 <!-- STATION PANEL -->
+<!-- Sub-room wall content overlay -->
+<div id="subRoomUI">
+  <div id="subRoomContent">
+    <div id="subRoomHeader">
+      <div id="subRoomTitle"><span id="subRoomIcon">🎮</span><span id="subRoomName">Room</span></div>
+      <button onclick="exitSubRoom()" style="background:rgba(255,59,92,.12);border:1px solid rgba(255,59,92,.3);color:var(--danger);width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s" title="Exit room (E)">✕</button>
+    </div>
+    <div id="subRoomBody" style="padding:22px"></div>
+  </div>
+</div>
+<div id="exitDoorPrompt" onclick="exitSubRoom()">⬅ Exit Room (E)</div>
+
 <div id="stationPanel">
   <div class="station-modal holo-flicker">
     <div class="holo-frame">
@@ -486,7 +529,6 @@ const GROTTO_RPC      = "https://subnets.avax.network/thegrotto/mainnet/rpc";
 const GROTTO_EXPLORER_API = "https://grottoexplorer.xyz/api/v2";
 const SUPABASE_URL    = 'https://alxcflavlmpjlmmofdux.supabase.co';
 const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseGNmbGF2bG1wamxtbW9mZHV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjY3NjIsImV4cCI6MjA5Njg0Mjc2Mn0.zrMHEuhcAs_LC1Plq9mmlavU0cWGxh_2F6OPkMUCfFs';
-const GAS_AMOUNT_HERESY = '0.00065';   // ~$0.50
 const HERESY_CONTRACT   = '0x432d38F83a50EC77C409D086e97448794cf76dCF';
 const GAMEPASS_CONTRACT = "0xFA01e077a78FcA556015B7193baF04bEF58edbC1";
 const ETHERS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js";
@@ -525,7 +567,7 @@ const ERC1155_BATCH_ABI = [...ERC1155_ABI,
 // ══════════════════════════════════════════════
 let provider, signer, bankContract, walletAddress, isOwner=false;
 let passes=[], rawBankPasses=[], myWalletPasses=[];
-let grottoPlayer=null, grottoGames=[], gamesLoaded=false;
+let grottoPlayer=null, grottoProfile=null, grottoGames=[], gamesLoaded=false;
 let readProvider;
 let reqFilterState='all', gasFilterState='all', histFilterState='all';
 
@@ -539,6 +581,9 @@ let currentSpeed=0;
 const MOVE_SPEED=0.22, LOOK_SENS=0.0018;
 const INTERACT_DIST=3.5;
 let stationMeshes=[], nearStation=null, currentStation=null;
+let currentRoom='main'; // 'main' or station id
+let subRoomObjects=[]; // THREE objects belonging to current sub-room
+let profileFloorMesh=null; // Grotto profile picture on floor
 let particlePts, particleBase;
 let walkPhase=0, walkBobY=0, walkBobRoll=0;
 
@@ -573,9 +618,9 @@ async function initThree(){
   window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
   // Pointer lock for free mouse look
   canvas.addEventListener('click',()=>{
-    if(!currentStation&&!document.getElementById('gateScreen')?.classList.contains('gone')===false) return;
-    if(currentStation) return;
+    if(!document.getElementById('gateScreen')?.classList.contains('gone')) return;
     if(document.getElementById('wcOverlay')?.classList.contains('open')) return;
+    // Movement is allowed both in main room and sub-rooms — click canvas to lock pointer
     canvas.requestPointerLock();
   });
   document.addEventListener('pointerlockchange',()=>{
@@ -588,7 +633,7 @@ async function initThree(){
     playerAngle-=e.movementX*LOOK_SENS;
     cameraPitch=Math.max(-0.55,Math.min(0.7,cameraPitch-e.movementY*LOOK_SENS*0.8));
   });
-  window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;updateKeyHints();if(e.key==='e'||e.key==='E')tryInteract();if(e.key==='Escape')closeStation();});
+  window.addEventListener('keydown',e=>{keys[e.key.toLowerCase()]=true;updateKeyHints();if(e.key==='e'||e.key==='E')tryInteract();if(e.key==='Escape'&&currentRoom!=='main')exitSubRoom();});
   window.addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;updateKeyHints();});
   let ts={x:0,y:0};
   canvas.addEventListener('touchstart',e=>{ts={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:true});
@@ -810,7 +855,9 @@ function loop(){
   if(bck){playerPos.x+=sn*MOVE_SPEED;playerPos.z+=cs*MOVE_SPEED;moved=true;}
   if(lft){playerPos.x-=cs*MOVE_SPEED;playerPos.z+=sn*MOVE_SPEED;moved=true;}
   if(rgt){playerPos.x+=cs*MOVE_SPEED;playerPos.z-=sn*MOVE_SPEED;moved=true;}
-  playerPos.x=Math.max(-20,Math.min(20,playerPos.x));playerPos.z=Math.max(-20,Math.min(20,playerPos.z));
+  // Boundary depends on which room the player is in: main room (44x44) vs sub-room (20x20)
+  const bound=currentRoom==='main'?20:9.2;
+  playerPos.x=Math.max(-bound,Math.min(bound,playerPos.x));playerPos.z=Math.max(-bound,Math.min(bound,playerPos.z));
 
   // Human walk bob — step frequency tied to movement
   const BOB_FREQ=8.5, BOB_AMP=0.055, BOB_ROLL=0.018;
@@ -858,25 +905,64 @@ function loop(){
 }
 
 function checkProximity(){
+  const pp=document.getElementById('proximityPrompt');
+
+  if(currentRoom!=='main'){
+    // Inside a sub-room — check proximity to the exit door (back wall, z=+9.8)
+    const distToExit=Math.sqrt(playerPos.x*playerPos.x+(playerPos.z-9.8)*(playerPos.z-9.8));
+    const exitDoorPrompt=document.getElementById('exitDoorPrompt');
+    if(distToExit<INTERACT_DIST){
+      pp.classList.remove('visible'); // hide main prompt
+      if(exitDoorPrompt){exitDoorPrompt.style.background='rgba(255,59,92,0.18)';}
+    } else if(exitDoorPrompt){
+      exitDoorPrompt.style.background='rgba(14,20,32,0.92)';
+    }
+    nearStation=null;
+    return;
+  }
+
+  // Main room — check proximity to station portals
   let closest=null,cd=999;
   STATIONS.forEach(st=>{const dx=playerPos.x-st.x,dz=playerPos.z-st.z,d=Math.sqrt(dx*dx+dz*dz);if(d<INTERACT_DIST&&d<cd){cd=d;closest=st;}});
   if(closest!==nearStation){
     nearStation=closest;
-    const pp=document.getElementById('proximityPrompt');
     if(closest){document.getElementById('proximityTitle').textContent=closest.name;pp.classList.add('visible');}
     else pp.classList.remove('visible');
   }
 }
 
-function tryInteract(){if(nearStation&&!currentStation)openStation(nearStation.id);else if(currentStation)closeStation();}
+function tryInteract(){
+  if(currentRoom!=='main'){exitSubRoom();return;}
+  if(nearStation)openStation(nearStation.id);
+}
 
 function drawMinimap(){
   const cv=document.getElementById('minimapCanvas'),ctx=cv.getContext('2d');
-  const W=140,sc=W/44;
+  const W=140;
   ctx.clearRect(0,0,W,W);
   ctx.fillStyle='rgba(8,11,16,0.7)';ctx.fillRect(0,0,W,W);
   ctx.strokeStyle='rgba(26,32,48,0.5)';ctx.lineWidth=0.5;
   for(let i=0;i<=8;i++){const v=i*(W/8);ctx.beginPath();ctx.moveTo(v,0);ctx.lineTo(v,W);ctx.stroke();ctx.beginPath();ctx.moveTo(0,v);ctx.lineTo(W,v);ctx.stroke();}
+
+  if(currentRoom!=='main'){
+    // Sub-room minimap: show room bounds + exit door marker
+    const sc=W/20; // sub-room is 20x20
+    const st=STATIONS.find(s=>s.id===currentRoom);
+    if(st){
+      ctx.strokeStyle=`rgba(${(st.color>>16)&255},${(st.color>>8)&255},${st.color&255},0.5)`;
+      ctx.lineWidth=1.5;ctx.strokeRect(8,8,W-16,W-16);
+    }
+    // Exit door marker (z=+9.8)
+    const ex=W/2,ey=W/2+9.8*sc;
+    ctx.beginPath();ctx.arc(ex,ey,4,0,Math.PI*2);ctx.fillStyle='#FF3B5C';ctx.fill();
+    const px=W/2+playerPos.x*sc,py=W/2+playerPos.z*sc;
+    ctx.beginPath();ctx.arc(px,py,5,0,Math.PI*2);ctx.shadowBlur=8;ctx.shadowColor='#00E5FF';ctx.fillStyle='#00E5FF';ctx.fill();ctx.shadowBlur=0;
+    ctx.strokeStyle='#00E5FF';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-Math.sin(playerAngle)*9,py-Math.cos(playerAngle)*9);ctx.stroke();
+    return;
+  }
+
+  // Main room minimap
+  const sc=W/44;
   STATIONS.forEach(st=>{
     const mx=W/2+st.x*sc,my=W/2+st.z*sc;
     const near=nearStation?.id===st.id;
@@ -895,24 +981,260 @@ function updateKeyHints(){['w','a','s','d'].forEach(k=>{const el=document.getEle
 // ══════════════════════════════════════════════
 function openStation(id){
   const st=STATIONS.find(s=>s.id===id);if(!st)return;
-  currentStation=id;
-  document.getElementById('stationIcon').textContent=st.emoji;
-  document.getElementById('stationName').textContent=st.name;
-  const body=document.getElementById('stationBody');
+  // Teleport into sub-room instead of opening a modal overlay
+  teleportToRoom(id);
+}
+
+function closeStation(){exitSubRoom();}
+
+// ── TELEPORT SYSTEM ───────────────────────────────────────────────────────────
+function teleportToRoom(id){
+  const st=STATIONS.find(s=>s.id===id);if(!st)return;
+  currentRoom=id; currentStation=id;
+
+  // Flash transition effect
+  const flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;z-index:9000;background:var(--cyan);opacity:0;pointer-events:none;transition:opacity .15s';
+  document.body.appendChild(flash);
+  requestAnimationFrame(()=>{flash.style.opacity='0.18';});
+  setTimeout(()=>{
+    flash.style.opacity='0';
+    setTimeout(()=>flash.remove(),300);
+  },150);
+
+  // Move player to sub-room spawn point (centre of a virtual sub-room)
+  playerPos={x:0, z:2};
+  playerAngle=Math.PI; // face the "wall" with content
+  cameraPitch=0.1;
+
+  // Build sub-room 3D environment
+  buildSubRoom(st);
+
+  // Populate wall-content panel
   const map={vault:renderVault,browse:renderBrowse,deposit:renderDeposit,history:renderHistory,gas:renderGas,admin:renderAdmin};
-  body.innerHTML=(map[id]||renderVault)();
-  document.getElementById('stationPanel').classList.add('open');
+  document.getElementById('subRoomIcon').textContent=st.emoji;
+  document.getElementById('subRoomName').textContent=st.name;
+  document.getElementById('subRoomBody').innerHTML=(map[id]||renderVault)();
+
+  // Show wall panel + exit prompt
+  document.getElementById('subRoomUI').classList.add('visible');
+  document.getElementById('exitDoorPrompt').classList.add('visible');
+  document.getElementById('roomLabel').textContent=st.name+' · Sub-Room';
+
+  // Load data for this room
   setTimeout(()=>{
     if(id==='browse')loadPasses().then(()=>{populateBrowsePanel();updateStats();});
     if(id==='vault')loadPasses().then(updateStats);
     if(id==='history'){loadTransactionHistory();loadMyRequests();}
     if(id==='gas')initGasTab();
-    if(id==='deposit'&&walletAddress)detectWalletPasses();
+    if(id==='deposit'&&(walletAddress||grottoPlayer?.wallet))detectWalletPasses();
     if(id==='admin'){if(isOwner){loadAdminAnalytics();loadGasQueue();loadRequestQueue();populateGamesDropdown();loadAdminState();setupAdminButtons();}}
   },60);
 }
 
-function closeStation(){currentStation=null;document.getElementById('stationPanel').classList.remove('open');}
+function exitSubRoom(){
+  if(currentRoom==='main')return;
+  currentRoom='main'; currentStation=null;
+
+  // Flash transition
+  const flash=document.createElement('div');
+  flash.style.cssText='position:fixed;inset:0;z-index:9000;background:#0A0F1A;opacity:0;pointer-events:none;transition:opacity .15s';
+  document.body.appendChild(flash);
+  requestAnimationFrame(()=>{flash.style.opacity='0.3';});
+  setTimeout(()=>{flash.style.opacity='0';setTimeout(()=>flash.remove(),300);},150);
+
+  // Return to main room centre
+  playerPos={x:0,z:2};playerAngle=0;cameraPitch=0.18;
+
+  // Tear down sub-room objects
+  subRoomObjects.forEach(o=>scene.remove(o));
+  subRoomObjects=[];
+
+  // Hide wall panel + exit prompt
+  document.getElementById('subRoomUI').classList.remove('visible');
+  document.getElementById('exitDoorPrompt').classList.remove('visible');
+  document.getElementById('roomLabel').textContent='Vault Chamber · Grotto L1';
+}
+window.exitSubRoom=exitSubRoom;
+
+function buildSubRoom(st){
+  const T=THREE;
+  // Remove old sub-room objects
+  subRoomObjects.forEach(o=>scene.remove(o));
+  subRoomObjects=[];
+
+  const col=st.color;
+  const r=(col>>16)&255,g=(col>>8)&255,b=col&255;
+  const hex='#'+col.toString(16).padStart(6,'0');
+
+  // Sub-room is a smaller chamber, camera already repositioned
+  // Floor
+  const floorMat=new T.MeshStandardMaterial({color:0x080C14,roughness:0.92});
+  const floor=new T.Mesh(new T.PlaneGeometry(20,20),floorMat);
+  floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;
+  subRoomObjects.push(floor);scene.add(floor);
+
+  // Grid
+  const grid=new T.GridHelper(20,20,col,0x141D28);grid.position.y=0.01;
+  subRoomObjects.push(grid);scene.add(grid);
+
+  // Walls
+  const wm=new T.MeshStandardMaterial({color:0x080C14,roughness:0.95});
+  [
+    {rx:0,ry:0,   px:0, py:4,pz:-10},{rx:0,ry:Math.PI,px:0, py:4,pz:10},
+    {rx:0,ry:Math.PI/2,px:-10,py:4,pz:0},{rx:0,ry:-Math.PI/2,px:10,py:4,pz:0}
+  ].forEach(d=>{
+    const w=new T.Mesh(new T.PlaneGeometry(20,8),wm);
+    w.rotation.set(d.rx,d.ry,0);w.position.set(d.px,d.py,d.pz);
+    subRoomObjects.push(w);scene.add(w);
+  });
+
+  // Ceiling
+  const ceil=new T.Mesh(new T.PlaneGeometry(20,20),new T.MeshStandardMaterial({color:0x070A0F}));
+  ceil.rotation.x=Math.PI/2;ceil.position.y=8;
+  subRoomObjects.push(ceil);scene.add(ceil);
+
+  // Coloured accent strip on front wall (content wall, behind player's view)
+  const accentGeo=new T.PlaneGeometry(20,0.15);
+  const accentMat=new T.MeshBasicMaterial({color:col,transparent:true,opacity:0.7});
+  const accent=new T.Mesh(accentGeo,accentMat);accent.position.set(0,0.07,-9.9);
+  subRoomObjects.push(accent);scene.add(accent);
+  const accentTop=new T.Mesh(new T.PlaneGeometry(20,0.1),new T.MeshBasicMaterial({color:col,transparent:true,opacity:0.4}));
+  accentTop.position.set(0,8,-9.9);subRoomObjects.push(accentTop);scene.add(accentTop);
+
+  // Station name on back wall (content side)
+  const labelTex=makeRoomLabelTexture(T,col,st.name,st.emoji);
+  const labelMesh=new T.Mesh(new T.PlaneGeometry(8,1.5),new T.MeshBasicMaterial({map:labelTex,transparent:true,side:T.DoubleSide}));
+  labelMesh.position.set(0,7,-9.8);
+  subRoomObjects.push(labelMesh);scene.add(labelMesh);
+
+  // Exit door on the back wall (behind player, z=+10)
+  const exitTex=makeExitDoorTexture(T);
+  const exitMesh=new T.Mesh(new T.PlaneGeometry(2.5,4),new T.MeshBasicMaterial({map:exitTex,transparent:true,side:T.DoubleSide}));
+  exitMesh.position.set(0,2,9.8);exitMesh.rotation.y=Math.PI;
+  subRoomObjects.push(exitMesh);scene.add(exitMesh);
+
+  // Glow light matching room colour
+  const light=new T.PointLight(col,1.2,16);light.position.set(0,6,0);
+  subRoomObjects.push(light);scene.add(light);
+  const fillLight=new T.PointLight(0x0A1828,0.8,18);fillLight.position.set(0,2,0);
+  subRoomObjects.push(fillLight);scene.add(fillLight);
+
+  // Floor emblem — Grotto profile picture if session active, else station emoji
+  buildFloorEmblem(T,col);
+
+  // Floor lines from centre to walls
+  [[0,0,-9],[0,0,9],[-9,0,0],[9,0,0]].forEach(([ex,ey,ez])=>{
+    const pts=[new T.Vector3(0,0.02,0),new T.Vector3(ex,0.02,ez)];
+    const line=new T.Line(new T.BufferGeometry().setFromPoints(pts),new T.LineBasicMaterial({color:col,transparent:true,opacity:0.15}));
+    subRoomObjects.push(line);scene.add(line);
+  });
+}
+
+function buildFloorEmblem(T,col){
+  // Remove old emblem
+  if(profileFloorMesh){scene.remove(profileFloorMesh);profileFloorMesh=null;}
+
+  const cv=document.createElement('canvas');cv.width=512;cv.height=512;
+  const ctx=cv.getContext('2d');
+  const r=(col>>16)&255,g=(col>>8)&255,b=col&255;
+
+  // Outer ring
+  ctx.clearRect(0,0,512,512);
+  ctx.beginPath();ctx.arc(256,256,240,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.5)`;ctx.lineWidth=3;ctx.stroke();
+  ctx.beginPath();ctx.arc(256,256,200,0,Math.PI*2);
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.2)`;ctx.lineWidth=1;ctx.stroke();
+
+  // Draw profile picture or emoji
+  const avatarUrl=grottoProfile?.avatar_url||grottoProfile?.avatarUrl||grottoProfile?.avatar||'';
+  const name=grottoProfile?.username||grottoProfile?.display_name||'';
+
+  if(avatarUrl){
+    // Load image and draw circle-cropped
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>{
+      ctx.save();
+      ctx.beginPath();ctx.arc(256,256,180,0,Math.PI*2);ctx.clip();
+      ctx.drawImage(img,76,76,360,360);
+      ctx.restore();
+      // Overlay ring
+      ctx.beginPath();ctx.arc(256,256,180,0,Math.PI*2);
+      ctx.strokeStyle=`rgba(${r},${g},${b},0.6)`;ctx.lineWidth=4;ctx.stroke();
+      if(name){
+        ctx.font='bold 36px Space Grotesk,sans-serif';
+        ctx.fillStyle=`rgba(${r},${g},${b},0.9)`;ctx.textAlign='center';
+        ctx.fillText(name,256,460);
+      }
+      const tex=new T.CanvasTexture(cv);
+      if(profileFloorMesh)profileFloorMesh.material.map=tex;
+      else if(profileFloorMesh)profileFloorMesh.material.needsUpdate=true;
+      // Rebuild with loaded image
+      if(profileFloorMesh){scene.remove(profileFloorMesh);}
+      profileFloorMesh=new T.Mesh(new T.CircleGeometry(4.5,64),new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),transparent:true,opacity:0.35,depthWrite:false}));
+      profileFloorMesh.rotation.x=-Math.PI/2;profileFloorMesh.position.set(0,0.03,0);
+      scene.add(profileFloorMesh);subRoomObjects.push(profileFloorMesh);
+    };
+    img.onerror=()=>drawEmojiEmblem(T,ctx,cv,col,r,g,b);
+    img.src=avatarUrl;
+    // Draw placeholder while loading
+    drawEmojiEmblem(T,ctx,cv,col,r,g,b);
+  } else {
+    drawEmojiEmblem(T,ctx,cv,col,r,g,b);
+  }
+}
+
+function drawEmojiEmblem(T,ctx,cv,col,r,g,b){
+  // Draw hex emblem
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2-Math.PI/6;i===0?ctx.moveTo(256+Math.cos(a)*160,256+Math.sin(a)*160):ctx.lineTo(256+Math.cos(a)*160,256+Math.sin(a)*160);}
+  ctx.closePath();
+  ctx.fillStyle=`rgba(${r},${g},${b},0.08)`;ctx.fill();
+  ctx.strokeStyle=`rgba(${r},${g},${b},0.4)`;ctx.lineWidth=2;ctx.stroke();
+  // Logo emoji in centre
+  ctx.font='140px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.globalAlpha=0.7;ctx.fillText('🏦',256,256);ctx.globalAlpha=1;
+
+  const mesh=new T.Mesh(
+    new T.CircleGeometry(4.5,64),
+    new T.MeshBasicMaterial({map:new T.CanvasTexture(cv),transparent:true,opacity:0.35,depthWrite:false})
+  );
+  mesh.rotation.x=-Math.PI/2;mesh.position.set(0,0.03,0);
+  if(profileFloorMesh)scene.remove(profileFloorMesh);
+  profileFloorMesh=mesh;
+  scene.add(profileFloorMesh);
+  if(!subRoomObjects.includes(profileFloorMesh))subRoomObjects.push(profileFloorMesh);
+}
+
+function makeRoomLabelTexture(T,col,label,emoji){
+  const W=512,H=80;const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');const r=(col>>16)&255,g=(col>>8)&255,b=col&255;
+  ctx.clearRect(0,0,W,H);
+  ctx.font='bold 44px Space Grotesk,sans-serif';
+  ctx.fillStyle=`rgba(${r},${g},${b},0.85)`;ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.shadowColor=`rgb(${r},${g},${b})`;ctx.shadowBlur=20;
+  ctx.fillText(emoji+' '+label,W/2,H/2);
+  return new T.CanvasTexture(cv);
+}
+
+function makeExitDoorTexture(T){
+  const W=256,H=512;const cv=document.createElement('canvas');cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+  // Door frame
+  ctx.strokeStyle='rgba(255,59,92,0.6)';ctx.lineWidth=3;ctx.strokeRect(8,8,W-16,H-16);
+  ctx.strokeStyle='rgba(255,59,92,0.3)';ctx.lineWidth=1;ctx.strokeRect(20,20,W-40,H-40);
+  // Arrow
+  ctx.font='72px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.globalAlpha=0.8;
+  ctx.fillText('⬅',W/2,H/2-40);ctx.globalAlpha=1;
+  // Label
+  ctx.font='bold 28px Space Grotesk,sans-serif';
+  ctx.fillStyle='rgba(255,59,92,0.8)';ctx.shadowColor='#FF3B5C';ctx.shadowBlur=10;
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('EXIT',W/2,H/2+60);ctx.shadowBlur=0;
+  ctx.font='18px JetBrains Mono,monospace';ctx.fillStyle='rgba(255,59,92,0.5)';
+  ctx.fillText('[ E ]',W/2,H/2+100);
+  return new T.CanvasTexture(cv);
+}
 
 // ── VAULT ──
 function renderVault(){return`
@@ -1412,25 +1734,27 @@ function setHistoryFilter(f){
 
 async function loadTransactionHistory(){
   const c=document.getElementById('historyList');if(!c)return;
-  if(!walletAddress){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Connect wallet to view history.</div>`;return;}
+  const wallet=walletAddress||(grottoPlayer?.wallet)||null;
+  if(!wallet){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Connect wallet to view history.</div>`;return;}
   c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Loading…</div>`;
   try{
-    const res=await fetch(`${GROTTO_EXPLORER_API}/addresses/${walletAddress.toLowerCase()}/token-transfers?token_type=ERC-1155&limit=20`,{signal:AbortSignal.timeout(8000)});
-    if(!res.ok)throw new Error(`Explorer ${res.status}`);
-    const data=await res.json();const bank=BANK_ADDRESS.toLowerCase();
-    const items=(data.items||[]).filter(tx=>{const dep=tx.to?.hash?.toLowerCase()===bank,cl=tx.from?.hash?.toLowerCase()===bank;return histFilterState==='deposit'?dep:histFilterState==='claim'?cl:dep||cl;});
-    if(!items.length){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">No transactions found.</div>`;return;}
-    c.innerHTML=items.map(tx=>{
-      const dep=tx.to?.hash?.toLowerCase()===bank;
-      const tl=dep?'Deposit':'Claim';const tc=dep?'tx-type-deposit':'tx-type-claim';
-      const tokenAddr=(tx.token?.address||'').toLowerCase();
-      const matchedPass=passes.find(p=>p.tokenContract?.toLowerCase()===tokenAddr);
-      const game=matchedPass?(getGameByContract(matchedPass.tokenContract)||getGameById(matchedPass.gameId)):getGameByContract(tokenAddr);
-      const logoUrl=matchedPass?.imageURI||(game?getGameImageUrl(game):'')||'';
-      const imgHtml=logoUrl?`<img src="${logoUrl}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;border-radius:6px;background:rgba(0,229,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${dep?'📥':'🎁'}</div>`;
-      return`<div class="tx-card"><div class="tx-type-badge ${tc}">${tl}</div>${imgHtml}<div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${matchedPass?.name||tx.token?.name||tx.token?.symbol||'Game Pass'}</div><div class="tx-meta">${tx.total?.value||'1'}× · <a href="https://grottoexplorer.xyz/tx/${tx.tx_hash}" target="_blank" style="color:var(--cyan);text-decoration:none">${(tx.tx_hash||'').slice(0,10)}…</a></div><div class="tx-time">${tx.timestamp?new Date(tx.timestamp).toLocaleString():''}</div></div></div>`;
+    // Use Supabase pass_requests — explorer API returns 422 for token queries
+    const filterQS=histFilterState==='deposit'?'&status=eq.on-chain':histFilterState==='claim'?'&status=in.(sent,on-chain)':'';
+    const rows=await sbFetch(`/pass_requests?wallet=eq.${wallet.toLowerCase()}&order=requested_at.desc&limit=30${filterQS}`,{method:'GET',prefer:''});
+    if(!rows?.length){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">No transactions found.</div>`;return;}
+    c.innerHTML=rows.map(r=>{
+      const isClaim=r.status==='sent'||r.status==='on-chain';
+      const tl=isClaim?'Claim':'Request';const tc=isClaim?'tx-type-claim':'tx-type-deposit';
+      const passEntry=passes[r.pass_index];
+      const game=passEntry?(getGameByContract(passEntry.tokenContract)||getGameById(passEntry.gameId)):null;
+      const logoUrl=r.pass_image||passEntry?.imageURI||(game?getGameImageUrl(game):'')||'';
+      const imgHtml=logoUrl
+        ?`<img src="${logoUrl}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);flex-shrink:0" onerror="this.outerHTML='<div style=\'width:36px;height:36px;border-radius:6px;background:rgba(0,229,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0\'>${isClaim?'🎁':'📥'}</div>'">`
+        :`<div style="width:36px;height:36px;border-radius:6px;background:rgba(0,229,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${isClaim?'🎁':'📥'}</div>`;
+      const txLink=r.tx_hash?` · <a href="https://grottoexplorer.xyz/tx/${r.tx_hash}" target="_blank" style="color:var(--cyan);text-decoration:none">${r.tx_hash.slice(0,10)}… ↗</a>`:'';
+      return`<div class="tx-card"><div class="tx-type-badge ${tc}">${tl}</div>${imgHtml}<div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${r.pass_name||'Game Pass'}</div><div class="tx-meta">${r.status}${txLink}</div><div class="tx-time">${r.requested_at?formatTimeAgo3d(r.requested_at):''}</div></div></div>`;
     }).join('');
-  }catch(e){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Failed: ${e.message}</div>`;}
+  }catch(e){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Failed to load: ${e.message}</div>`;}
 }
 
 async function loadMyRequests(){
@@ -1688,9 +2012,19 @@ async function gateGrottoConnect(){
       const name=player.displayName||player.display_name||player.username||player.name||(wallet?wallet.slice(0,6)+'…'+wallet.slice(-4):'Grotto User');
       if(wallet){
         grottoPlayer={...player,wallet};walletAddress=wallet;
-        animateGateOpen('🎮 '+name);
+        // Fetch public profile (avatar + username) for the floor emblem + UI badges
+        try{
+          const res=await fetch(`${GROTTO_API}/api/users/${wallet}/profile`,{signal:AbortSignal.timeout(5000)});
+          if(res.ok)grottoProfile=await res.json();
+        }catch(e){}
+        animateGateOpen('🎮 '+(grottoProfile?.username||grottoProfile?.display_name||name));
         if(btn){btn.disabled=false;btn.textContent='🎮 Sign In With Grotto';}
         loadPasses().then(updateStats);
+        // Refresh floor emblem if already inside a sub-room
+        if(typeof currentRoom!=='undefined'&&currentRoom!=='main'){
+          const st=STATIONS.find(s=>s.id===currentRoom);
+          if(st)buildFloorEmblem(THREE,st.color);
+        }
         return;
       }
     }
