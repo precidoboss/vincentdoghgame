@@ -486,6 +486,8 @@ const GROTTO_RPC      = "https://subnets.avax.network/thegrotto/mainnet/rpc";
 const GROTTO_EXPLORER_API = "https://grottoexplorer.xyz/api/v2";
 const SUPABASE_URL    = 'https://alxcflavlmpjlmmofdux.supabase.co';
 const SUPABASE_ANON   = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFseGNmbGF2bG1wamxtbW9mZHV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNjY3NjIsImV4cCI6MjA5Njg0Mjc2Mn0.zrMHEuhcAs_LC1Plq9mmlavU0cWGxh_2F6OPkMUCfFs';
+const GAS_AMOUNT_HERESY = '0.00065';   // ~$0.50
+const HERESY_CONTRACT   = '0x432d38F83a50EC77C409D086e97448794cf76dCF';
 const GAMEPASS_CONTRACT = "0xFA01e077a78FcA556015B7193baF04bEF58edbC1";
 const ETHERS_CDN = "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js";
 const GAMEPASS_SCAN_IDS = Array.from({length:100},(_,i)=>i);
@@ -1271,6 +1273,11 @@ async function populateBrowsePanel(){
       actionHtml=`<div class="claimed-badge" style="background:rgba(136,153,170,.08);color:var(--steel);border-color:rgba(136,153,170,.2)">INACTIVE</div>`;
     } else if(bal===0){
       actionHtml=`<button class="claim-btn" disabled>Out of Stock</button>`;
+    } else if(typeof grottoPlayer!=='undefined'&&grottoPlayer?.wallet&&!walletAddress){
+      // Grotto session — queue-based request
+      actionHtml=`<button class="claim-btn" id="claimBtn3d_${p.passIndex}"
+        style="background:rgba(0,229,255,0.1);border-color:var(--cyan);color:var(--cyan)"
+        onclick="claimPass(${p.passIndex})">⛽ Request Pass</button>`;
     } else if(!walletAddress){
       actionHtml=`<button class="claim-btn" onclick="openWalletModal()">Connect to Claim</button>`;
     } else {
@@ -1306,14 +1313,29 @@ async function populateBrowsePanel(){
     }
   });
 
-  // Async enrich claim buttons with hasClaimed state
-  if(walletAddress&&bankContract){
-    const claimChecks=await Promise.allSettled(passes.map((_,i)=>bankContract.hasClaimed(i,walletAddress)));
-    claimChecks.forEach((r,i)=>{
-      if(r.status==='fulfilled'&&r.value){
-        const btn=document.getElementById(`claimBtn3d_${i}`);
-        if(btn)btn.outerHTML=`<div class="claimed-badge">✓ Already Claimed</div>`;
-      }
+  // Async enrich: batch all claim checks in parallel
+  const enrichWallet=walletAddress||(typeof grottoPlayer!=='undefined'?grottoPlayer?.wallet:null);
+  if(enrichWallet){
+    // Supabase: fetch all request statuses for this wallet in one query
+    let supaStatuses={};
+    try{const rows=await sbFetch(`/pass_requests?wallet=eq.${enrichWallet.toLowerCase()}&status=in.(pending,sent)&limit=100`,{method:'GET',prefer:''});
+      if(rows)rows.forEach(r=>{supaStatuses[r.pass_index]=r.status;});}catch(e){}
+
+    // On-chain hasClaimed (only if wallet is actually connected with bankContract)
+    let claimedSet=new Set();
+    if(walletAddress&&bankContract){
+      const checks=await Promise.allSettled(passes.map((_,i)=>bankContract.hasClaimed(i,walletAddress)));
+      checks.forEach((r,i)=>{if(r.status==='fulfilled'&&r.value)claimedSet.add(i);});
+    }
+
+    passes.forEach((_,i)=>{
+      const btn=document.getElementById(`claimBtn3d_${i}`);if(!btn)return;
+      // On-chain claimed
+      if(claimedSet.has(i)){btn.outerHTML=`<div class="claimed-badge">✓ Already Claimed</div>`;return;}
+      // Supabase session request status
+      const sb=supaStatuses[i];
+      if(sb==='sent'){btn.outerHTML=`<div class="claimed-badge">✓ Sent to you</div>`;}
+      else if(sb==='pending'){btn.textContent='⏳ Requested';btn.disabled=true;btn.style.cssText+='background:rgba(255,184,0,0.1);color:var(--warn);border-color:rgba(255,184,0,0.3);';}
     });
   }
 }
@@ -1326,9 +1348,9 @@ async function claimPass(passIndex){
   if(grottoPlayer?.wallet&&!bankContract){
     if(!p){toast('Pass not found','err');return;}
     try{
-      const ex=await sbFetch(`/pass_requests?wallet=eq.${grottoPlayer.wallet}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,{method:'GET',prefer:''});
+      const ex=await sbFetch(`/pass_requests?wallet=eq.${grottoPlayer.wallet.toLowerCase()}&pass_index=eq.${passIndex}&status=in.(pending,sent)&limit=1`,{method:'GET',prefer:''});
       if(ex?.length){toast(ex[0].status==='sent'?'Already received! ✓':'Request pending ⏳','warn');return;}
-      await sbFetch('/pass_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({wallet:grottoPlayer.wallet,player_id:grottoPlayer.wallet,pass_index:passIndex,pass_name:p.name||`Pass #${passIndex}`,pass_image:p.imageURI||'',game_id:p.gameId||'',status:'pending',requested_at:new Date().toISOString()})});
+      await sbFetch('/pass_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({wallet:grottoPlayer.wallet.toLowerCase(),player_id:grottoPlayer.wallet,pass_index:passIndex,pass_name:p.name||`Pass #${passIndex}`,pass_image:p.imageURI||'',game_id:p.gameId||'',status:'pending',requested_at:new Date().toISOString()})});
       toast('Pass requested! We will send it soon ✓','ok');
       const btn=document.getElementById(`claimBtn3d_${passIndex}`)||document.getElementById(`claimBtn-${passIndex}`);
       if(btn){btn.textContent='⏳ Requested';btn.disabled=true;}
@@ -1342,7 +1364,7 @@ async function claimPass(passIndex){
     const tx=await bankContract.requestPass(passIndex);toast('Tx submitted…','warn');await tx.wait();
     toast('Pass claimed! ✓','ok');if(btn){btn.textContent='✓ Claimed';btn.className='claimed-badge';}
     updateStats();
-    await sbFetch('/pass_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({pass_index:passIndex,wallet:walletAddress,pass_name:p?.name||`Pass #${passIndex}`,tx_hash:tx.hash,status:'on-chain',requested_at:new Date().toISOString()})}).catch(()=>{});
+    await sbFetch('/pass_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({pass_index:passIndex,wallet:walletAddress,player_id:walletAddress,pass_name:p?.name||`Pass #${passIndex}`,pass_image:p?.imageURI||'',game_id:p?.gameId||'',tx_hash:tx.hash,status:'sent',requested_at:new Date().toISOString()})}).catch(()=>{});
   }catch(e){if(btn){btn.disabled=false;btn.textContent='Claim Pass';}toast('Claim failed: '+(e.reason||e.message||'').slice(0,80),'err');}
 }
 
@@ -1398,15 +1420,46 @@ async function loadTransactionHistory(){
     const data=await res.json();const bank=BANK_ADDRESS.toLowerCase();
     const items=(data.items||[]).filter(tx=>{const dep=tx.to?.hash?.toLowerCase()===bank,cl=tx.from?.hash?.toLowerCase()===bank;return histFilterState==='deposit'?dep:histFilterState==='claim'?cl:dep||cl;});
     if(!items.length){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">No transactions found.</div>`;return;}
-    c.innerHTML=items.map(tx=>{const dep=tx.to?.hash?.toLowerCase()===bank;const tl=dep?'Deposit':'Claim';const tc=dep?'tx-type-deposit':'tx-type-claim';return`<div class="tx-card"><div class="tx-type-badge ${tc}">${tl}</div><div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${tx.token?.name||tx.token?.symbol||'Game Pass'}</div><div class="tx-meta">${tx.total?.value||'1'}× · <a href="https://grottoexplorer.xyz/tx/${tx.tx_hash}" target="_blank" style="color:var(--cyan);text-decoration:none">${(tx.tx_hash||'').slice(0,10)}…</a></div><div class="tx-time">${tx.timestamp?new Date(tx.timestamp).toLocaleString():''}</div></div></div>`;}).join('');
+    c.innerHTML=items.map(tx=>{
+      const dep=tx.to?.hash?.toLowerCase()===bank;
+      const tl=dep?'Deposit':'Claim';const tc=dep?'tx-type-deposit':'tx-type-claim';
+      const tokenAddr=(tx.token?.address||'').toLowerCase();
+      const matchedPass=passes.find(p=>p.tokenContract?.toLowerCase()===tokenAddr);
+      const game=matchedPass?(getGameByContract(matchedPass.tokenContract)||getGameById(matchedPass.gameId)):getGameByContract(tokenAddr);
+      const logoUrl=matchedPass?.imageURI||(game?getGameImageUrl(game):'')||'';
+      const imgHtml=logoUrl?`<img src="${logoUrl}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;border-radius:6px;background:rgba(0,229,255,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${dep?'📥':'🎁'}</div>`;
+      return`<div class="tx-card"><div class="tx-type-badge ${tc}">${tl}</div>${imgHtml}<div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${matchedPass?.name||tx.token?.name||tx.token?.symbol||'Game Pass'}</div><div class="tx-meta">${tx.total?.value||'1'}× · <a href="https://grottoexplorer.xyz/tx/${tx.tx_hash}" target="_blank" style="color:var(--cyan);text-decoration:none">${(tx.tx_hash||'').slice(0,10)}…</a></div><div class="tx-time">${tx.timestamp?new Date(tx.timestamp).toLocaleString():''}</div></div></div>`;
+    }).join('');
   }catch(e){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:13px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Failed: ${e.message}</div>`;}
 }
 
 async function loadMyRequests(){
-  if(!walletAddress)return;const sect=document.getElementById('myRequestsSection');if(sect)sect.style.display='';
+  // Works with both wallet connect and Grotto session
+  const wallet=walletAddress||(grottoPlayer?.wallet)||null;
+  if(!wallet)return;
+  const sect=document.getElementById('myRequestsSection');if(sect)sect.style.display='';
   const list=document.getElementById('myRequestsList');if(!list)return;
-  try{const rows=await sbFetch(`/pass_requests?wallet=eq.${walletAddress}&order=requested_at.desc&limit=20`,{method:'GET',prefer:''});if(!rows?.length){list.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:8px">No requests yet.</div>`;return;}
-  list.innerHTML=rows.map(r=>{const cls=r.status==='sent'?'req-status-sent':r.status==='rejected'?'req-status-rejected':'';const lbl=r.status==='sent'?'✓ Sent':r.status==='rejected'?'✕ Rejected':'⏳ Pending';return`<div class="tx-card"><div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${r.pass_name||'Pass Request'}</div><div class="tx-meta">${new Date(r.requested_at).toLocaleString()}</div></div><span class="req-status-badge ${cls}">${lbl}</span></div>`;}).join('');}catch(e){if(list)list.innerHTML=`<div style="font-size:13px;color:var(--danger);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:8px">Failed: ${e.message}</div>`;}
+  try{
+    const rows=await sbFetch(`/pass_requests?wallet=eq.${wallet.toLowerCase()}&order=requested_at.desc&limit=20`,{method:'GET',prefer:''});
+    if(!rows?.length){list.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:8px">No requests yet.</div>`;return;}
+    list.innerHTML=rows.map(r=>{
+      const passEntry=passes[r.pass_index];
+      const game=passEntry?(getGameByContract(passEntry.tokenContract)||getGameById(passEntry.gameId)):null;
+      const logoUrl=r.pass_image||passEntry?.imageURI||(game?getGameImageUrl(game):'')||'';
+      const imgHtml=logoUrl?`<img src="${logoUrl}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display='none'">`:`<div style="width:36px;height:36px;border-radius:6px;background:rgba(0,229,255,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🎮</div>`;
+      const cls=r.status==='sent'?'req-status-sent':r.status==='rejected'?'req-status-rejected':'req-status-pending';
+      const lbl=r.status==='sent'?'✓ Sent':r.status==='rejected'?'✕ Rejected':'⏳ Pending';
+      const txLink=(r.status==='sent'&&r.tx_hash)?`<a href="https://grottoexplorer.xyz/tx/${r.tx_hash}" target="_blank" style="font-size:10px;color:var(--cyan);text-decoration:none;display:block;margin-top:3px">${r.tx_hash.slice(0,10)}… ↗</a>`:'';
+      const timeAgo=formatTimeAgo3d(r.requested_at);
+      return`<div class="tx-card">${imgHtml}<div style="flex:1"><div style="font-size:13px;color:var(--text);font-weight:600">${r.pass_name||'Pass Request'}</div><div class="tx-meta">${timeAgo}</div>${txLink}</div><span class="req-status-badge ${cls}">${lbl}</span></div>`;
+    }).join('');
+  }catch(e){if(list)list.innerHTML=`<div style="font-size:13px;color:var(--danger);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:8px">Failed: ${e.message}</div>`;}
+}
+
+function formatTimeAgo3d(iso){
+  if(!iso)return'';const diff=Math.floor((Date.now()-new Date(iso).getTime())/1000);
+  if(diff<60)return diff+'s ago';if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';return Math.floor(diff/86400)+'d ago';
 }
 
 // ══════════════════════════════════════════════
@@ -1415,16 +1468,21 @@ async function loadMyRequests(){
 async function initGasTab(){
   const status=document.getElementById('gasRequestStatus');if(!status)return;
   const wallet=walletAddress||grottoPlayer?.wallet;if(!wallet){status.textContent='Connect wallet to request gas.';return;}
-  try{const rows=await sbFetch(`/gas_requests?wallet=eq.${wallet}&limit=1`,{method:'GET',prefer:''});
-    if(rows?.length){const r=rows[0];const btn=document.getElementById('gasRequestBtn');if(btn){btn.disabled=true;btn.textContent='Already Requested';}status.textContent=`Status: ${r.status==='sent'?'✓ Sent':r.status==='rejected'?'✕ Rejected':'⏳ Pending'}`;status.style.color=r.status==='sent'?'var(--success)':r.status==='rejected'?'var(--danger)':'var(--warn)';}}catch(e){}
+  try{const rows=await sbFetch(`/gas_requests?wallet=eq.${wallet.toLowerCase()}&limit=1`,{method:'GET',prefer:''});
+    if(rows?.length){const r=rows[0];const btn=document.getElementById('gasRequestBtn');
+      if(btn){btn.disabled=true;btn.textContent=r.status==='sent'?'✓ Received':r.status==='rejected'?'✕ Rejected':'⏳ Pending';btn.style.background=r.status==='sent'?'rgba(0,255,136,0.15)':r.status==='rejected'?'rgba(255,59,92,0.1)':'rgba(255,184,0,0.1)';}
+      const txLink=(r.status==='sent'&&r.tx_hash)?` <a href="https://grottoexplorer.xyz/tx/${r.tx_hash}" target="_blank" style="color:var(--cyan);text-decoration:none;font-size:11px">View Tx ↗</a>`:'';
+      status.innerHTML=`Status: ${r.status==='sent'?'<span style="color:var(--success)">✓ HERESY received!</span>':r.status==='rejected'?'<span style="color:var(--danger)">✕ Rejected</span>':'<span style="color:var(--warn)">⏳ Pending review</span>'}${txLink}`;
+    }
+  }catch(e){}
 }
 
 async function requestGas(){
   const wallet=walletAddress||grottoPlayer?.wallet;if(!wallet){toast('Connect wallet first','err');return;}
   const btn=document.getElementById('gasRequestBtn'),status=document.getElementById('gasRequestStatus');
   if(btn){btn.disabled=true;btn.textContent='Submitting…';}
-  try{const ex=await sbFetch(`/gas_requests?wallet=eq.${wallet}&limit=1`,{method:'GET',prefer:''});if(ex?.length){toast('Already submitted','warn');if(btn)btn.textContent='Already Requested';return;}
-    await sbFetch('/gas_requests',{method:'POST',body:JSON.stringify({wallet,player_id:grottoPlayer?.id||null,amount_heresy:GAS_AMOUNT_HERESY,status:'pending',requested_at:new Date().toISOString()})});
+  try{const ex=await sbFetch(`/gas_requests?wallet=eq.${wallet.toLowerCase()}&limit=1`,{method:'GET',prefer:''});if(ex?.length){toast('Already submitted','warn');if(btn)btn.textContent='Already Requested';return;}
+    await sbFetch('/gas_requests',{method:'POST',prefer:'return=minimal',body:JSON.stringify({wallet:wallet.toLowerCase(),player_id:grottoPlayer?.wallet||wallet,amount_heresy:parseFloat(GAS_AMOUNT_HERESY),status:'pending',requested_at:new Date().toISOString()})});
     toast('Gas request submitted! ✓','ok');if(btn)btn.textContent='✓ Submitted';if(status){status.textContent='Status: ⏳ Pending review';status.style.color='var(--warn)';}
   }catch(e){if(btn){btn.disabled=false;btn.textContent='⛽ Request Gas';}toast('Failed: '+e.message,'err');}
 }
@@ -1472,19 +1530,54 @@ async function loadRequestQueue(){
   try{const fq=reqFilterState==='pending'?'&status=eq.pending':reqFilterState==='sent'?'&status=eq.sent':'';const rows=await sbFetch(`/pass_requests?order=requested_at.asc${fq}&limit=100`,{method:'GET',prefer:''});
     if(!rows?.length){c.innerHTML=`<div style="font-size:13px;color:var(--steel);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:10px">No requests.</div>`;return;}
     const pm={};await Promise.allSettled([...new Set(rows.map(r=>r.wallet).filter(Boolean))].map(async w=>{try{const r=await fetch(`${GROTTO_API}/api/users/${w}/profile`,{signal:AbortSignal.timeout(4000)});if(r.ok)pm[w.toLowerCase()]=await r.json();}catch(e){}}));
-    c.innerHTML=rows.map(row=>{const pr=pm[(row.wallet||'').toLowerCase()]||{};const nm=pr.username||pr.display_name||(row.wallet?row.wallet.slice(0,6)+'…'+row.wallet.slice(-4):row.player_id);const av=pr.avatar_url||pr.avatarUrl||pr.avatar||'';const init=(nm[0]||'?').toUpperCase();const avHtml=av?`<img class="req-avatar" src="${av}" alt="${nm}" onerror="this.outerHTML='<div class=\\'req-avatar-fallback\\'>${init}</div>'">`:``+`<div class="req-avatar-fallback">${init}</div>`;let act;if(row.status==='pending')act=`<div class="req-actions"><button class="req-send-btn" id="reqSendBtn-${row.id}" onclick="adminSendPass('${row.id}','${row.wallet}','${row.pass_index||0}')">✉ Send</button><button class="req-reject-btn" onclick="adminRejectReq('${row.id}')">✕</button></div>`;else{const cls=row.status==='sent'?'req-status-sent':'req-status-rejected';const lbl=row.status==='sent'?'✓ Sent':'✕ Rejected';act=`<span class="req-status-badge ${cls}">${lbl}</span>`;}
+    c.innerHTML=rows.map(row=>{const pr=pm[(row.wallet||'').toLowerCase()]||{};const nm=pr.username||pr.display_name||(row.wallet?row.wallet.slice(0,6)+'…'+row.wallet.slice(-4):row.player_id);const av=pr.avatar_url||pr.avatarUrl||pr.avatar||'';const init=(nm[0]||'?').toUpperCase();const avHtml=av?`<img class="req-avatar" src="${av}" alt="${nm}" onerror="this.outerHTML='<div class=\\'req-avatar-fallback\\'>${init}</div>'">`:``+`<div class="req-avatar-fallback">${init}</div>`;let act;if(row.status==='pending')act=`<div class="req-actions"><button class="req-send-btn" id="reqSendBtn-${row.id}" onclick="adminSendPass('${row.id}','${row.wallet||''}',${Number(row.pass_index)||0})">✉ Send</button><button class="req-reject-btn" onclick="adminRejectReq('${row.id}')">✕</button></div>`;else{const cls=row.status==='sent'?'req-status-sent':'req-status-rejected';const lbl=row.status==='sent'?'✓ Sent':'✕ Rejected';act=`<span class="req-status-badge ${cls}">${lbl}</span>`;}
       return`<div class="req-card">${avHtml}<div style="flex:1"><div class="req-name">${nm}</div><div class="req-wallet">${row.wallet||''}</div><div class="req-pass">🎮 ${row.pass_name||'Pass'}</div><div class="req-time">${row.requested_at?new Date(row.requested_at).toLocaleString():''}</div></div>${act}</div>`;}).join('');
   }catch(e){c.innerHTML=`<div style="font-size:13px;color:var(--danger);padding:12px;background:var(--slate);border:1px solid var(--border);border-radius:10px">Failed: ${e.message}</div>`;}
 }
 
 async function adminSendPass(reqId,toWallet,passIndex){
-  if(!signer||!isOwner){toast('Owner wallet needed','err');return;}const btn=document.getElementById(`reqSendBtn-${reqId}`);if(btn){btn.disabled=true;btn.textContent='…';}
-  try{if(bankContract){toast(`Sending to ${toWallet.slice(0,8)}…`,'warn');const tx=await bankContract.requestPass(passIndex);await tx.wait();}
-    await sbFetch(`/pass_requests?id=eq.${reqId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'sent',processed_at:new Date().toISOString()})});
-    toast('Pass sent! ✓','ok');loadRequestQueue();loadAdminAnalytics();
-  }catch(e){if(btn){btn.disabled=false;btn.textContent='✉ Send';}toast('Failed: '+(e.reason||e.message||'').slice(0,80),'err');}
-}
+  if(!signer||!isOwner){toast('Owner wallet needed','err');return;}
+  const btn=document.getElementById(`reqSendBtn-${reqId}`);if(btn){btn.disabled=true;btn.textContent='…Sending';}
+  const idx=Number(passIndex);
+  try{
+    // Resolve pass details
+    const localPass=passes[idx];
+    let tokenContract,tokenId,structBalance=0;
+    if(localPass){
+      tokenContract=localPass.tokenContract; tokenId=Number(localPass.tokenId); structBalance=Number(localPass.balance);
+      try{const fresh=await bankContract.getPass(idx);structBalance=Number(fresh.balance);}catch(e){}
+    } else {
+      const entry=await bankContract.getPass(idx);
+      tokenContract=entry.tokenContract; tokenId=Number(entry.tokenId); structBalance=Number(entry.balance);
+    }
+    // Check live ERC-1155 balance
+    const tokenC=new ethers.Contract(tokenContract,ERC1155_ABI,signer);
+    const liveBalance=Number(await tokenC.balanceOf(BANK_ADDRESS,tokenId));
+    if(liveBalance<1){if(btn){btn.disabled=false;btn.textContent='✉ Send';}toast('Vault is truly empty for this pass','err');return;}
 
+    let tx;
+    if(structBalance>=1){
+      // Path A: normal withdrawPass
+      toast(`Sending via vault to ${toWallet.slice(0,8)}…`,'warn');
+      tx=await bankContract.withdrawPass(idx,1,toWallet);
+    } else {
+      // Path B: direct safeTransferFrom (tokens sent directly, struct=0)
+      const connectedIsBank=walletAddress.toLowerCase()===BANK_ADDRESS.toLowerCase();
+      if(!connectedIsBank){
+        const isApproved=await tokenC.isApprovedForAll(BANK_ADDRESS,walletAddress);
+        if(!isApproved){if(btn){btn.disabled=false;btn.textContent='✉ Send';}toast('Connect BANK wallet or grant approval first','err');return;}
+      }
+      toast(`Direct transfer to ${toWallet.slice(0,8)}…`,'warn');
+      tx=await tokenC.safeTransferFrom(BANK_ADDRESS,toWallet,tokenId,1,'0x');
+    }
+    if(btn)btn.textContent='⏳ Confirming…';
+    await tx.wait();
+    try{await sbFetch(`/pass_requests?id=eq.${reqId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'sent',tx_hash:tx.hash,processed_at:new Date().toISOString()})});}
+    catch(sbErr){toast(`✓ Sent on-chain! Queue update failed — check Supabase. Tx:${tx.hash.slice(0,10)}…`,'warn');loadRequestQueue();loadAdminAnalytics();return;}
+    toast(`✓ Pass sent! Tx:${tx.hash.slice(0,10)}…`,'ok');loadRequestQueue();loadAdminAnalytics();
+    loadPasses().then(updateStats);
+  }catch(e){if(btn){btn.disabled=false;btn.textContent='✉ Send';}toast('Failed: '+(e.reason||e.data?.message||e.message||'').slice(0,100),'err');console.error('[PassBank3D] adminSendPass:',e);}
+}
 async function adminRejectReq(reqId){if(!confirm('Reject?'))return;try{await sbFetch(`/pass_requests?id=eq.${reqId}`,{method:'PATCH',prefer:'return=minimal',body:JSON.stringify({status:'rejected',processed_at:new Date().toISOString()})});toast('Rejected','warn');loadRequestQueue();}catch(e){toast('Failed: '+e.message,'err');}}
 
 function setGasFilter(f){
