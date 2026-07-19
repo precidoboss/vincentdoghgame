@@ -175,8 +175,6 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sp
 #progress-track{width:100%;height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-bottom:12px;}
 #progress-fill{height:100%;width:0%;background:var(--blaze);border-radius:2px;}
 #controls{display:flex;align-items:center;justify-content:space-between;}
-#brand-mark{font-size:12px;font-weight:700;color:var(--muted2);letter-spacing:1px;}
-#brand-mark b{color:var(--blaze);}
 .ctrl-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);
   width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
 .ctrl-btn:hover{border-color:var(--blaze);color:var(--blaze);}
@@ -189,6 +187,116 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sp
 @keyframes pulse-btn{0%{box-shadow:0 0 0 0 rgba(240,185,11,.5);}70%{box-shadow:0 0 0 22px rgba(240,185,11,0);}100%{box-shadow:0 0 0 0 rgba(240,185,11,0);}}
 #start-overlay .hint{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
 #start-overlay.hidden{display:none;}
+
+/* ══════════════ NEW: Games + Poll scenes ══════════════ */
+.game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:18px;}
+.game-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;transition:.3s;}
+.game-card.hl{border-color:var(--blaze);background:var(--blazedim);transform:translateY(-3px);}
+.game-icon{font-size:20px;margin-bottom:5px;}
+.game-cmd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blaze);font-weight:700;}
+.game-desc{font-size:10px;color:var(--muted2);margin-top:2px;}
+.game-result{margin:0 18px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 15px;
+  font-size:12px;opacity:0;transform:translateY(8px) scale(.96);}
+.game-result.show{animation:msgIn .45s cubic-bezier(.16,1,.3,1) forwards;}
+.game-result .gr-icon{font-size:22px;margin-bottom:4px;}
+.game-result b{color:var(--green);}
+
+.poll-wrap{padding:26px 30px;}
+.poll-q{font-size:16px;font-weight:700;margin-bottom:16px;}
+.poll-opt{margin-bottom:12px;}
+.poll-opt-hdr{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:5px;}
+.poll-opt-hdr .pct{font-family:'JetBrains Mono',monospace;color:var(--blaze);}
+.poll-bar-wrap{height:10px;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.poll-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--blaze),var(--blaze2));border-radius:6px;transition:width 1s cubic-bezier(.16,1,.3,1);}
+.poll-votes{margin-top:16px;font-size:11px;color:var(--muted2);font-family:'JetBrains Mono',monospace;}
+.poll-winner{margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:var(--greendim);border:1px solid rgba(34,212,122,.3);
+  color:var(--green);padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;opacity:0;transform:scale(.9);}
+.poll-winner.show{animation:msgIn .4s ease forwards;}
+
+/* ══════════════ MOBILE — additive, doesn't touch desktop rules above ══════════════ */
+@media (max-width: 640px){
+  .frame{width:96vw;height:80vh;border-radius:12px;}
+  .frame-bar{height:28px;padding:0 8px;gap:4px;}
+  .dot{width:7px;height:7px;}
+  .frame-url{margin-left:8px;font-size:8px;padding:2px 6px;max-width:130px;}
+
+  .logo-word{font-size:38px;}
+  #start-overlay .logo-word{font-size:34px;}
+  .tagline{font-size:11px;padding:0 20px;}
+  #play-btn{width:62px;height:62px;}
+  #start-overlay .hint{font-size:9px;}
+
+  .hero-mock{padding:26px 18px;}
+  .hero-mock h1{font-size:21px;}
+  .hero-mock p{font-size:11px;}
+  .hero-btn{padding:10px 18px;font-size:11px;margin-top:16px;}
+
+  .tabs-mini{padding:6px 8px;gap:2px;overflow-x:auto;}
+  .tab-mini{padding:5px 8px;font-size:9px;white-space:nowrap;}
+
+  /* Stack the 3-column live dashboard into one scrollable column on mobile */
+  .mega{display:flex;flex-direction:column;overflow-y:auto;height:100%;}
+  .mega-side{border-right:none;border-bottom:1px solid var(--border);padding:10px;}
+  .mega-stats{grid-template-columns:repeat(4,1fr);}
+  .mega-stat{padding:5px;}
+  .mega-stat .v{font-size:12px;}
+  .mega-stat .l{font-size:6.5px;}
+  .mega-main{padding:10px;}
+  .mega-right{border-left:none;border-top:1px solid var(--border);min-height:220px;}
+  .lb-row{padding:7px 9px;gap:7px;}
+  .lb-av{width:22px;height:22px;}
+  .lb-name{font-size:10px;}
+  .lb-bar-wrap{width:60px;}
+  .lb-score{font-size:11px;}
+
+  .ai-grid{grid-template-columns:repeat(2,1fr);gap:7px;padding:12px;}
+  .ai-card{padding:11px 6px;}
+  .ai-icon{font-size:17px;}
+  .ai-name{font-size:9px;}
+  .chat-input-mock{margin:0 12px 10px;padding:8px 10px;font-size:10px;flex-wrap:wrap;}
+  .reply-bubble{margin:0 12px;font-size:10px;padding:8px 10px;}
+
+  .viewer-search{margin:12px 12px 6px;padding:8px 10px;font-size:10px;}
+  .vrow{padding:7px 12px;font-size:10px;gap:7px;}
+  .shop-tbl{margin:8px 12px 0;width:calc(100% - 24px);font-size:9px;}
+  .shop-tbl th{font-size:7.5px;padding:5px 5px;}
+  .shop-tbl td{padding:6px 5px;}
+
+  .overlay-widget{top:12px;right:12px;width:150px;padding:9px 10px;}
+  .ow-title{font-size:7.5px;}
+  .overlay-alert{bottom:12px;left:12px;right:12px;font-size:9px;padding:8px 10px;}
+  .stream-hud{top:10px;left:10px;font-size:7.5px;padding:3px 7px;}
+
+  .set-row{margin:6px 12px;padding:9px 11px;font-size:10px;}
+  .toggle-mock{width:30px;height:18px;}
+  .toggle-mock::after{width:12px;height:12px;}
+  .toggle-mock.on::after{left:14px;}
+
+  .cta-btn{padding:11px 22px;font-size:12px;margin-top:18px;}
+  .cta-sub{font-size:10px;}
+
+  .scene-label{bottom:16px;width:88vw;}
+  .scene-label .eyebrow{font-size:8px;letter-spacing:2px;}
+  .scene-label .headline{font-size:13px;margin-top:3px;}
+
+  #chrome{padding:12px 14px 14px;}
+  #cursor{display:none;} /* touch devices have no cursor to simulate — avoid a floating ghost dot */
+  .click-ripple{display:none;}
+
+  .game-grid{grid-template-columns:repeat(2,1fr);gap:7px;padding:12px;}
+  .game-card{padding:10px;}
+  .game-icon{font-size:16px;}
+  .game-cmd{font-size:9px;}
+  .game-desc{font-size:8px;}
+  .game-result{margin:0 12px;padding:9px 11px;font-size:10px;}
+
+  .poll-wrap{padding:16px 16px;}
+  .poll-q{font-size:12px;margin-bottom:12px;}
+  .poll-opt-hdr{font-size:10px;}
+  .poll-bar-wrap{height:8px;}
+  .poll-votes{font-size:9px;margin-top:10px;}
+  .poll-winner{font-size:9px;padding:5px 10px;margin-top:10px;}
+}
 </style>
 </head>
 <body>
@@ -320,7 +428,52 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sp
     <div class="scene-label"><div class="eyebrow">Full control</div><div class="headline">Moderation, currency, announcements — all yours</div></div>
   </div>
 
-  <div class="scene" data-scene="7" style="flex-direction:column;">
+  <div class="scene" data-scene="7">
+    <div class="frame">
+      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
+      <div class="frame-body">
+        <div class="tabs-mini"><div class="tab-mini">🏆 Board</div><div class="tab-mini on">🎮 Games</div>
+          <div class="tab-mini">🤖 AI Tools</div><div class="tab-mini">🛒 Shop</div></div>
+        <div class="game-grid">
+          <div class="game-card" id="game-coinflip"><div class="game-icon">🪙</div><div class="game-cmd">!coinflip heads 10</div><div class="game-desc">Bet points on heads or tails</div></div>
+          <div class="game-card"><div class="game-icon">🎲</div><div class="game-cmd">!roll 6 10</div><div class="game-desc">Roll dice, bet on the number</div></div>
+          <div class="game-card"><div class="game-icon">✂️</div><div class="game-cmd">!rps rock 10</div><div class="game-desc">Rock paper scissors vs the bot</div></div>
+          <div class="game-card"><div class="game-icon">🧠</div><div class="game-cmd">!trivia</div><div class="game-desc">Fastest correct answer wins</div></div>
+        </div>
+        <div class="game-result" id="game-result">
+          <div class="gr-icon">🪙</div>
+          <div><b>@ash_exe</b> called heads — <b>Heads!</b> Won <b>20 pts</b> 🎉</div>
+        </div>
+      </div>
+    </div>
+    <div class="scene-label"><div class="eyebrow">Mini games</div><div class="headline">Coinflip, dice, RPS, trivia — points on the line, right in chat</div></div>
+  </div>
+
+  <div class="scene" data-scene="8">
+    <div class="frame">
+      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
+      <div class="frame-body">
+        <div class="poll-wrap">
+          <div class="poll-q">🗳️ Poll: What should we play next?</div>
+          <div class="poll-opt">
+            <div class="poll-opt-hdr"><span>A — Ranked queue</span><span class="pct" id="poll-pct-a">0%</span></div>
+            <div class="poll-bar-wrap"><div class="poll-bar" id="poll-bar-a"></div></div>
+          </div>
+          <div class="poll-opt">
+            <div class="poll-opt-hdr"><span>B — Chill co-op</span><span class="pct" id="poll-pct-b">0%</span></div>
+            <div class="poll-bar-wrap"><div class="poll-bar" id="poll-bar-b"></div></div>
+          </div>
+          <div class="poll-votes" id="poll-votes">0 votes</div>
+          <div class="poll-winner" id="poll-winner">✅ Ranked queue wins — starting now!</div>
+        </div>
+      </div>
+    </div>
+    <div class="scene-label"><div class="eyebrow">Live polls</div><div class="headline">Chat votes with !vote — bars fill in real time</div></div>
+  </div>
+
+  <div class="scene" data-scene="9" style="flex-direction:column;">
     <div class="logo-word" id="logo-outro"></div>
     <div class="cta-btn">⚡ Add blazeguy to your channel — free</div>
     <div class="cta-sub">blaze.stream/blazeguy</div>
@@ -332,8 +485,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Sp
 
   <div id="chrome">
     <div id="progress-track"><div id="progress-fill"></div></div>
-    <div id="controls">
-      <div id="brand-mark"><b>⚡ blazeguy</b> — product demo</div>
+    <div id="controls" style="justify-content:flex-end;">
       <div style="display:flex;gap:8px;">
         <div class="ctrl-btn" id="replay-btn" title="Replay">↺</div>
         <div class="ctrl-btn" id="pause-btn" title="Pause">❚❚</div>
@@ -625,7 +777,7 @@ function runSettings(){
 
 const scenes = [...document.querySelectorAll('.scene')];
 let current = -1, playing = false, timer = null, progressStart=0;
-const DURATIONS = [2800, 4600, 17000, 7200, 6800, 6600, 4800, 5200];
+const DURATIONS = [2800, 4600, 17000, 7200, 6800, 6600, 4800, 6200, 6800, 5200];
 const TOTAL = DURATIONS.reduce((a,b)=>a+b,0);
 const progressFill = document.getElementById('progress-fill');
 
@@ -641,15 +793,60 @@ function goScene(i){
   if(playing) timer = setTimeout(()=>goScene(i+1), DURATIONS[i]);
 }
 
+function runGames(){
+  document.getElementById('game-coinflip').classList.remove('hl');
+  const result = document.getElementById('game-result');
+  result.classList.remove('show');
+  setTimeout(()=>{
+    moveCursor(.28,.36,()=>{
+      clickAt(.28,.36);
+      document.getElementById('game-coinflip').classList.add('hl');
+      setTimeout(()=>{
+        result.classList.add('show');
+        sfx('pop');
+      }, 500);
+    });
+  }, 500);
+}
+
+function runPoll(){
+  ['poll-pct-a','poll-pct-b'].forEach(id=>document.getElementById(id).textContent='0%');
+  ['poll-bar-a','poll-bar-b'].forEach(id=>document.getElementById(id).style.width='0%');
+  document.getElementById('poll-votes').textContent='0 votes';
+  const winner = document.getElementById('poll-winner');
+  winner.classList.remove('show');
+
+  let votesA=0, votesB=0;
+  const totalTicks = 14;
+  let tick=0;
+  const iv = setInterval(()=>{
+    tick++;
+    if(Math.random() < 0.62) votesA++; else votesB++;
+    const total = votesA+votesB;
+    const pctA = Math.round((votesA/total)*100), pctB = 100-pctA;
+    document.getElementById('poll-bar-a').style.width = pctA+'%';
+    document.getElementById('poll-bar-b').style.width = pctB+'%';
+    document.getElementById('poll-pct-a').textContent = pctA+'%';
+    document.getElementById('poll-pct-b').textContent = pctB+'%';
+    document.getElementById('poll-votes').textContent = total+' votes';
+    if(tick>=totalTicks){
+      clearInterval(iv);
+      setTimeout(()=>{ winner.classList.add('show'); sfx('chime'); }, 300);
+    }
+  }, 260);
+}
+
 function runSceneScript(i){
-  cursorEl.style.opacity = (i===0 || i===7) ? 0 : 1;
+  cursorEl.style.opacity = (i===0 || i===9) ? 0 : 1;
   if(i===1) moveCursor(.5,.7,()=>clickAt(.5,.7));
   if(i===2) runLiveDashboard();
   if(i===3) runAiTools();
   if(i===4) runShopViewers();
   if(i===5) runOverlay();
   if(i===6) runSettings();
-  if(i===7) sfx('chime');
+  if(i===7) runGames();
+  if(i===8) runPoll();
+  if(i===9) sfx('chime');
 }
 
 document.getElementById('start-overlay').addEventListener('click', () => {
