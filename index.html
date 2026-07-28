@@ -658,10 +658,8 @@ async function doBridge(){
   if(!userAddress){ connectWallet(); return; }
   const amtStr = document.getElementById('bridge-amount').value.trim();
   const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const recipient = recipientInput || userAddress;
   const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
   const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!ethers.isAddress(recipient)){ toast('Recipient is not a valid address','error'); return; }
   if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
 
   const btn = document.getElementById('btn-bridge');
@@ -670,6 +668,8 @@ async function doBridge(){
     await ensureGrottoNetwork();
     signer = await provider.getSigner();
     userAddress = await signer.getAddress();
+    const recipient = recipientInput || userAddress;
+    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
     const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
     const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
     const requiredGasLimit = BigInt(gasLimitStr);
