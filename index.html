@@ -188,6 +188,50 @@
     line-height: 1.5;
   }
   .footer-note code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+
+  .ticker {
+    display:flex; align-items:center; justify-content:center; flex-wrap:wrap;
+    gap: 8px 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 12.5px;
+  }
+  .ticker-item { display:flex; align-items:center; gap:5px; }
+  .ticker-label { color: var(--muted); }
+  .ticker-value { font-weight: 700; color: var(--text); }
+  .ticker-change { font-weight: 700; font-size: 11.5px; }
+  .ticker-change.up { color: var(--good); }
+  .ticker-change.down { color: var(--bad); }
+  .ticker-sep { color: var(--border); }
+
+  .tabs { display:flex; gap:6px; margin-bottom: 14px; background: var(--panel2); border-radius: 12px; padding: 4px; }
+  .tab-btn {
+    flex:1; background: transparent; border: none; color: var(--muted);
+    padding: 9px 0; border-radius: 9px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  }
+  .tab-btn.active { background: var(--panel); color: var(--text); box-shadow: 0 4px 12px -4px rgba(0,0,0,0.5); }
+
+  .bridge-intro { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 2px 0 16px; }
+  .bridge-row {
+    display:flex; justify-content:space-between; align-items:center; gap:10px;
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px; font-size: 13px;
+  }
+  .bridge-row .label { color: var(--muted); line-height:1.4; }
+  .bridge-row .label small { display:block; font-size: 11px; margin-top: 2px; }
+  .bridge-row .value { font-weight: 700; text-align:right; }
+  .bridge-row .value a { color: var(--accent2); text-decoration:none; font-weight: 600; }
+  .bridge-row .value a:hover { text-decoration: underline; }
+  .bridge-cta {
+    display:block; text-align:center; text-decoration:none;
+    width: 100%; margin-top: 6px; padding: 15px; border-radius: 14px;
+    font-size: 16px; font-weight: 700; color:#fff;
+    background: linear-gradient(90deg, var(--accent2), #c97a1a);
+  }
+  .bridge-cta:hover { opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -195,6 +239,26 @@
   <div class="brand">
     <h1>BOB SWAP</h1>
     <p>$BOB ⇄ HERESY / WHERESY — routed through Cave V2 on The Grotto</p>
+  </div>
+
+  <div class="ticker" id="priceTicker">
+    <div class="ticker-item">
+      <span class="ticker-label">BOB</span>
+      <span class="ticker-value" id="bobUsdPrice">—</span>
+      <span class="ticker-change" id="bobUsdChange"></span>
+    </div>
+    <div class="ticker-sep">·</div>
+    <div class="ticker-item">
+      <span class="ticker-label">1 BOB ≈</span>
+      <span class="ticker-value" id="bobHeresyRate">—</span>
+      <span class="ticker-label">HERESY</span>
+    </div>
+    <div class="ticker-sep">·</div>
+    <div class="ticker-item">
+      <span class="ticker-label">1 BOB ≈</span>
+      <span class="ticker-value" id="bobWheresyRate">—</span>
+      <span class="ticker-label">WHERESY</span>
+    </div>
   </div>
 
   <div class="card">
@@ -206,6 +270,12 @@
       </div>
     </div>
 
+    <div class="tabs">
+      <button class="tab-btn active" id="tabSwap">Swap</button>
+      <button class="tab-btn" id="tabBridge">Bridge to Avalanche</button>
+    </div>
+
+    <div id="swapPanel">
     <div class="settings-panel" id="settingsPanel">
       <div>Slippage tolerance</div>
       <div class="slippage-row">
@@ -255,6 +325,33 @@
     <button class="action-btn" id="swapBtn" disabled>Enter an amount</button>
 
     <div class="status" id="statusLine"></div>
+    </div>
+
+    <div id="bridgePanel" style="display:none;">
+      <p class="bridge-intro">
+        $BOB moves between The Grotto and Avalanche C-Chain via Avalanche's native Interchain Token Transfer bridge. This panel reads live collateral for transparency — the actual transfer happens on Grotto's own bridge portal, since it already speaks the exact home/remote message format and I didn't want to hand-roll that transaction against a guessed ABI for something that moves real funds.
+      </p>
+
+      <div class="bridge-row">
+        <span class="label">BOB locked in TokenHome<br/><small>collateral backing bridged BOB on Avalanche</small></span>
+        <span class="value" id="homeCollateral">—</span>
+      </div>
+      <div class="bridge-row">
+        <span class="label">Home contract<br/><small>The Grotto L1</small></span>
+        <span class="value"><a href="https://grottoexplorer.xyz/address/0x362c34d5df39458be2fe3a2f132dd45f0f4189a3" target="_blank">0x362c…89a3 ↗</a></span>
+      </div>
+      <div class="bridge-row">
+        <span class="label">Remote contract<br/><small>Avalanche C-Chain</small></span>
+        <span class="value"><a href="https://snowtrace.io/address/0x2f524f453430520ca26e5485017abaa80231c53d" target="_blank">0x2f52…c53d ↗</a></span>
+      </div>
+
+      <a class="bridge-cta" href="https://bp.enterthegrotto.xyz/bridge" target="_blank">Open Grotto Bridge ↗</a>
+
+      <div class="footer-note" style="margin-top:14px;">
+        Receiving bridged BOB on Avalanche? Add it as a custom token:<br/>
+        <code>0x2f524f453430520ca26e5485017abaa80231c53d</code> · 18 decimals
+      </div>
+    </div>
   </div>
 
   <div class="footer-note">
@@ -281,7 +378,10 @@ const ADDR = {
   WHERESY: '0xfA99B368B5fc1f5a061bc393dFf73BE8a097667D',
   HERESY_LEGACY: '0x432d38F83a50EC77C409D086e97448794cf76dCF', // not wired into routing, see legacyWarn
   ROUTER: '0x1c9C1459a01ab34498b74024798DF140607a3966',
-  FACTORY: '0xfc13BFD4369e6366cAbd7811448CF29b8fA2a404'
+  FACTORY: '0xfc13BFD4369e6366cAbd7811448CF29b8fA2a404',
+  BRIDGE_HOME: '0x362c34d5df39458be2fe3a2f132dd45f0f4189a3',   // ERC20TokenHome on Grotto, custodies real BOB
+  BRIDGE_REMOTE: '0x2f524f453430520ca26e5485017abaa80231c53d', // ERC20TokenRemote on Avalanche C-Chain
+  BOB_AVAX_PAIR: '0x200ce172bf316d302d8e38e712fe0d093162b84b'  // DexScreener pair for USD price
 };
 const NATIVE = 'NATIVE';
 
@@ -306,6 +406,10 @@ document.getElementById('routerAddr').textContent = ADDR.ROUTER.slice(0,6) + '�
 let provider, signer, userAddress, router, wethAddress;
 let slippagePct = 0.5;
 let bobDecimals = 18;
+
+// Read-only RPC access so prices/rates load before a wallet is connected
+const readProvider = new ethers.JsonRpcProvider(CHAIN.rpcUrls[0]);
+const readRouter = new ethers.Contract(ADDR.ROUTER, ROUTER_ABI, readProvider);
 
 const TOKENS = {
   HERESY: { symbol: 'HERESY', address: NATIVE, decimals: 18 },
@@ -350,6 +454,72 @@ $('customSlip').oninput = (e) => {
   }
 };
 
+// ---------- Tabs ----------
+$('tabSwap').onclick = () => {
+  $('tabSwap').classList.add('active');
+  $('tabBridge').classList.remove('active');
+  $('swapPanel').style.display = 'block';
+  $('bridgePanel').style.display = 'none';
+};
+$('tabBridge').onclick = () => {
+  $('tabBridge').classList.add('active');
+  $('tabSwap').classList.remove('active');
+  $('bridgePanel').style.display = 'block';
+  $('swapPanel').style.display = 'none';
+  fetchCollateral();
+};
+
+// ---------- Prices ----------
+async function fetchDexPrice() {
+  try {
+    const res = await fetch(`https://api.dexscreener.com/latest/dex/pairs/avalanche/${ADDR.BOB_AVAX_PAIR}`);
+    const data = await res.json();
+    const pair = data.pair || (data.pairs && data.pairs[0]);
+    if (!pair || !pair.priceUsd) return;
+    const price = parseFloat(pair.priceUsd);
+    $('bobUsdPrice').textContent = '$' + price.toLocaleString(undefined, { maximumFractionDigits: price < 1 ? 6 : 4 });
+    const change = pair.priceChange && pair.priceChange.h24;
+    if (typeof change === 'number') {
+      const el = $('bobUsdChange');
+      el.textContent = (change >= 0 ? '+' : '') + change.toFixed(2) + '%';
+      el.className = 'ticker-change ' + (change >= 0 ? 'up' : 'down');
+    }
+  } catch (e) { console.error('DexScreener price fetch failed', e); }
+}
+
+async function fetchOnchainRates() {
+  try {
+    if (!wethAddress) wethAddress = await readRouter.WETH();
+    const oneBob = ethers.parseUnits('1', TOKENS.BOB.decimals);
+    const [heresyAmounts, wheresyAmounts] = await Promise.all([
+      readRouter.getAmountsOut(oneBob, [ADDR.BOB, wethAddress]),
+      readRouter.getAmountsOut(oneBob, [ADDR.BOB, ADDR.WHERESY])
+    ]);
+    const heresyOut = heresyAmounts[heresyAmounts.length - 1];
+    const wheresyOut = wheresyAmounts[wheresyAmounts.length - 1];
+    $('bobHeresyRate').textContent = parseFloat(ethers.formatUnits(heresyOut, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 });
+    $('bobWheresyRate').textContent = parseFloat(ethers.formatUnits(wheresyOut, 18)).toLocaleString(undefined, { maximumFractionDigits: 6 });
+  } catch (e) { console.error('On-chain rate fetch failed', e); }
+}
+
+async function fetchCollateral() {
+  try {
+    const c = new ethers.Contract(ADDR.BOB, ERC20_ABI, readProvider);
+    const bal = await c.balanceOf(ADDR.BRIDGE_HOME);
+    $('homeCollateral').textContent = fmt(bal, TOKENS.BOB.decimals) + ' BOB';
+  } catch (e) {
+    $('homeCollateral').textContent = '—';
+    console.error('Collateral fetch failed', e);
+  }
+}
+
+(function initPriceData() {
+  fetchDexPrice();
+  fetchOnchainRates();
+  setInterval(fetchDexPrice, 45000);
+  setInterval(fetchOnchainRates, 45000);
+})();
+
 // ---------- Wallet ----------
 async function connect() {
   if (!window.ethereum) {
@@ -369,7 +539,7 @@ async function connect() {
     $('connectBtn').textContent = 'Connected';
 
     const bobRead = new ethers.Contract(ADDR.BOB, ERC20_ABI, provider);
-    try { bobDecimals = await bobRead.decimals(); TOKENS.BOB.decimals = bobDecimals; } catch(e) {}
+    try { bobDecimals = await bobRead.decimals(); TOKENS.BOB.decimals = bobDecimals; fetchOnchainRates(); } catch(e) {}
 
     window.ethereum.on('accountsChanged', () => window.location.reload());
     window.ethereum.on('chainChanged', () => window.location.reload());
