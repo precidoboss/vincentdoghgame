@@ -1,1042 +1,609 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>blazeguy — Product Demo</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BOB Swap · The Grotto</title>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --bg:#080B10;--surface:#0E1118;--card:#131720;--border:#1E2433;--border2:#252D3D;
-  --blaze:#F0B90B;--blaze2:#FFD234;--blazedim:rgba(240,185,11,0.12);
-  --text:#E8EAF0;--muted:#5A6380;--muted2:#8892AA;
-  --green:#22D47A;--greendim:rgba(34,212,122,0.1);
-  --purple:#9B6CF5;--purpledim:rgba(155,108,245,0.1);
-  --blue:#4C8EF5;--red:#F05050;
-}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Space Grotesk',sans-serif;color:var(--text);}
-::-webkit-scrollbar{width:0;}
+  :root{
+    --bg: #0b0b10;
+    --panel: #15151d;
+    --panel2: #1c1c26;
+    --border: #2a2a38;
+    --text: #f2f0ea;
+    --muted: #9a97a8;
+    --accent: #e0463e;
+    --accent2: #f0a13c;
+    --good: #4caf7d;
+    --bad: #e0463e;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #241820 0%, transparent 60%),
+      radial-gradient(900px 500px at 100% 100%, #1a1420 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+  .wrap {
+    max-width: 460px;
+    margin: 48px auto;
+    padding: 0 16px;
+  }
+  .brand {
+    text-align: center;
+    margin-bottom: 22px;
+  }
+  .brand h1 {
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    margin: 0 0 4px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+  }
+  .brand p { color: var(--muted); font-size: 13px; margin: 0; }
 
-#stage{position:relative;width:100vw;height:100vh;background:var(--bg);overflow:hidden;}
-.orb{position:absolute;border-radius:50%;filter:blur(90px);opacity:.3;pointer-events:none;}
-.orb1{width:520px;height:520px;background:radial-gradient(circle,var(--blaze),transparent 70%);top:-160px;left:-120px;animation:drift1 14s ease-in-out infinite;}
-.orb2{width:420px;height:420px;background:radial-gradient(circle,var(--purple),transparent 70%);bottom:-140px;right:-100px;animation:drift2 17s ease-in-out infinite;}
-.orb3{width:360px;height:360px;background:radial-gradient(circle,var(--blue),transparent 70%);top:40%;right:10%;animation:drift3 20s ease-in-out infinite;opacity:.18;}
-@keyframes drift1{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(60px,40px) scale(1.15);}}
-@keyframes drift2{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-50px,-30px) scale(1.1);}}
-@keyframes drift3{0%,100%{transform:translate(0,0);}50%{transform:translate(-40px,50px);}}
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,0.6);
+  }
+  .toprow { display:flex; justify-content:space-between; align-items:center; margin-bottom: 14px; }
+  .toprow h2 { font-size: 15px; margin:0; color: var(--muted); font-weight: 600;}
+  .settings-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    border-radius: 10px; padding: 6px 10px; font-size: 12px; cursor: pointer;
+  }
+  .settings-btn:hover { border-color: var(--accent2); color: var(--text); }
 
-.scene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;
-  transform:scale(1.05) translateZ(0);filter:blur(10px);
-  transition:opacity .65s cubic-bezier(.16,1,.3,1), transform .75s cubic-bezier(.16,1,.3,1), filter .65s cubic-bezier(.16,1,.3,1);
-  pointer-events:none;}
-.scene.active{opacity:1;transform:scale(1) translateZ(0);filter:blur(0);pointer-events:auto;}
+  .settings-panel {
+    display: none;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+  .settings-panel.open { display: block; }
+  .slippage-row { display:flex; gap:8px; align-items:center; margin-top:6px; }
+  .slippage-row button {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 5px 10px; font-size: 12px; cursor: pointer;
+  }
+  .slippage-row button.active { border-color: var(--accent2); color: var(--accent2); }
+  .slippage-row input {
+    width: 60px; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 5px 8px; font-size: 12px;
+  }
 
-.frame{width:min(1180px,90vw);height:min(700px,80vh);background:var(--surface);border:1px solid var(--border2);
-  border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03);
-  display:flex;flex-direction:column;position:relative;}
-.frame-bar{height:32px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;
-  gap:6px;padding:0 12px;flex-shrink:0;}
-.dot{width:9px;height:9px;border-radius:50%;}
-.dot.r{background:#F05050;}.dot.y{background:#F0B90B;}.dot.g{background:#22D47A;}
-.frame-url{margin-left:14px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);
-  background:var(--bg);padding:3px 10px;border-radius:5px;flex:1;max-width:240px;display:flex;align-items:center;gap:6px;}
-.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink2 1.2s infinite;}
-@keyframes blink2{50%{opacity:.3;}}
-.frame-body{flex:1;position:relative;overflow:hidden;background:var(--bg);}
+  .field {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+  }
+  .field-label { display:flex; justify-content:space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .field-label .bal { cursor:pointer; }
+  .field-label .bal:hover { color: var(--accent2); }
+  .field-main { display:flex; align-items:center; gap:10px; }
+  .field-main input[type=text] {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 26px;
+    font-weight: 600;
+    min-width: 0;
+  }
+  select.token-select {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 
-#cursor{position:absolute;width:20px;height:20px;pointer-events:none;z-index:999;
-  transition:left .65s cubic-bezier(.65,0,.35,1), top .65s cubic-bezier(.65,0,.35,1), opacity .3s;
-  filter:drop-shadow(0 2px 6px rgba(0,0,0,.5));}
-.click-ripple{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid var(--blaze);
-  transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;z-index:998;}
-.click-ripple.go{animation:ripple .5s cubic-bezier(.16,1,.3,1) forwards;}
-@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.2);opacity:.9;}100%{transform:translate(-50%,-50%) scale(2.2);opacity:0;}}
+  .swap-arrow-row { display:flex; justify-content:center; margin: -14px 0; position:relative; z-index:2; }
+  .swap-arrow {
+    background: var(--panel);
+    border: 3px solid var(--bg);
+    color: var(--accent2);
+    width: 34px; height:34px; border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer; font-size: 16px; user-select:none;
+  }
+  .swap-arrow:hover { color: var(--accent); }
 
-.logo-word{font-size:60px;font-weight:800;letter-spacing:-2px;color:var(--blaze);display:flex;}
-.logo-word span{display:inline-block;opacity:0;transform:translateY(24px);animation:letterUp .45s cubic-bezier(.16,1,.3,1) forwards;}
-@keyframes letterUp{to{opacity:1;transform:translateY(0);}}
-.tagline{margin-top:16px;font-size:14px;color:var(--muted2);letter-spacing:.5px;opacity:0;animation:fadeUp .7s ease forwards .55s;text-align:center;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+  .rate-line {
+    font-size: 12.5px;
+    color: var(--muted);
+    padding: 10px 4px 4px;
+    display:flex; justify-content:space-between;
+  }
 
-.hero-mock{padding:56px 50px;text-align:center;}
-.hero-mock h1{font-size:32px;font-weight:700;line-height:1.15;}
-.hero-mock h1 span{color:var(--blaze);}
-.hero-mock p{margin-top:12px;font-size:13px;color:var(--muted2);max-width:440px;margin-left:auto;margin-right:auto;line-height:1.6;}
-.hero-btn{margin-top:22px;display:inline-flex;background:var(--blaze);color:#000;padding:12px 26px;border-radius:11px;font-weight:700;font-size:14px;}
+  .warn {
+    font-size: 12px;
+    color: var(--accent2);
+    background: rgba(240,161,60,0.08);
+    border: 1px solid rgba(240,161,60,0.3);
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
 
-.tabs-mini{display:flex;gap:4px;background:var(--surface);border-bottom:1px solid var(--border);padding:9px 18px;flex-shrink:0;}
-.tab-mini{padding:6px 12px;font-size:11px;font-weight:600;color:var(--muted);border-radius:7px;}
-.tab-mini.on{color:var(--blaze);background:var(--blazedim);}
+  .action-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 15px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(90deg, var(--accent), #b83430);
+    transition: opacity .15s;
+  }
+  .action-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .action-btn:not(:disabled):hover { opacity: 0.9; }
+  .action-btn.secondary {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
 
-.mega{display:grid;grid-template-columns:190px 1fr 240px;height:100%;overflow:hidden;}
-.mega-side{background:var(--surface);border-right:1px solid var(--border);padding:14px;overflow:hidden;}
-.mega-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;}
-.mega-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;}
-.mega-stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:7px;}
-.mega-stat .v{font-size:15px;font-weight:700;color:var(--blaze);font-family:'JetBrains Mono',monospace;}
-.mega-stat .l{font-size:8px;color:var(--muted);text-transform:uppercase;font-weight:700;}
-.mega-main{padding:14px 16px;overflow:hidden;}
-.mega-right{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.mega-right-hdr{padding:9px 12px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);flex-shrink:0;}
-.feed{flex:1;overflow:hidden;padding:8px;display:flex;flex-direction:column-reverse;}
-.feed-inner{display:flex;flex-direction:column;gap:5px;}
+  .status {
+    margin-top: 12px;
+    font-size: 13px;
+    text-align: center;
+    color: var(--muted);
+    min-height: 18px;
+    word-break: break-all;
+  }
+  .status a { color: var(--accent2); }
+  .status.error { color: var(--bad); }
+  .status.success { color: var(--good); }
 
-.chat-msg{font-size:11px;line-height:1.5;padding:2px 4px;opacity:0;transform:translateY(6px);animation:msgIn .35s ease forwards;}
-@keyframes msgIn{to{opacity:1;transform:translateY(0);}}
-.chat-sender{font-weight:700;margin-right:4px;}
-.s-owner{color:var(--blaze);}.s-sub{color:var(--purple);}.s-mod{color:var(--red);}.s-viewer{color:#7FA8D9;}
-.chat-text{color:var(--muted2);}
-.bot-msg{background:var(--blazedim);border:1px solid rgba(240,185,11,.18);border-radius:7px;padding:5px 8px;font-size:11px;
-  opacity:0;transform:translateY(6px);animation:msgIn .35s ease forwards;}
-.bot-msg b{color:var(--blaze);}
-.typing-dots{display:inline-flex;gap:3px;padding:5px 8px;background:var(--card);border-radius:7px;opacity:0;animation:msgIn .3s ease forwards;}
-.typing-dots span{width:4px;height:4px;border-radius:50%;background:var(--muted2);animation:dotpulse 1s infinite;}
-.typing-dots span:nth-child(2){animation-delay:.15s;}.typing-dots span:nth-child(3){animation-delay:.3s;}
-@keyframes dotpulse{0%,60%,100%{opacity:.3;}30%{opacity:1;}}
-
-.alert-item{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:7px 9px;display:flex;gap:7px;
-  margin-bottom:5px;font-size:10px;opacity:0;transform:translateX(14px);animation:alertIn .4s cubic-bezier(.16,1,.3,1) forwards;}
-@keyframes alertIn{to{opacity:1;transform:translateX(0);}}
-.alert-item.follow{border-left:3px solid var(--blue);}
-.alert-item.sub{border-left:3px solid var(--purple);}
-.alert-item.gift{border-left:3px solid var(--green);}
-.alert-item.vote{border-left:3px solid var(--blaze);}
-.alert-item b{color:var(--text);}
-
-.lb-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;
-  padding:9px 12px;margin-bottom:6px;transition:box-shadow .3s,border-color .3s;}
-.lb-row.pulse{border-color:var(--blaze);box-shadow:0 0 0 2px var(--blazedim);}
-.lb-rank{width:18px;font-weight:700;font-size:11px;color:var(--blaze);}
-.lb-av{width:26px;height:26px;border-radius:50%;flex-shrink:0;}
-.lb-name{font-size:11px;font-weight:600;flex:1;}
-.lb-badges{display:inline-flex;gap:3px;margin-left:5px;}
-.mini-badge{font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;text-transform:uppercase;}
-.mb-sub{background:var(--purpledim);color:var(--purple);}
-.mb-gift{background:var(--greendim);color:var(--green);}
-.lb-bar-wrap{width:90px;height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:4px;}
-.lb-bar{height:100%;width:0;background:linear-gradient(90deg,var(--blaze),var(--blaze2));border-radius:2px;transition:width .8s cubic-bezier(.16,1,.3,1);}
-.lb-score{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blaze);transition:color .3s;}
-.lb-score.bump{color:var(--green);}
-
-.ai-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;padding:18px;}
-.ai-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center;transition:.3s;}
-.ai-card.hl{border-color:var(--blaze);background:var(--blazedim);transform:translateY(-3px);}
-.ai-icon{font-size:20px;margin-bottom:5px;}
-.ai-name{font-size:10px;font-weight:700;}
-.chat-input-mock{margin:0 18px 14px;background:var(--card);border:1px solid var(--border2);border-radius:10px;
-  padding:10px 13px;font-size:11px;color:var(--muted2);display:flex;align-items:center;gap:6px;}
-.typed{color:var(--text);font-family:'JetBrains Mono',monospace;}
-.caret{display:inline-block;width:5px;height:12px;background:var(--blaze);margin-left:1px;animation:blink 1s step-end infinite;vertical-align:middle;}
-@keyframes blink{50%{opacity:0;}}
-.reply-bubble{margin:0 18px;background:var(--blazedim);border:1px solid rgba(240,185,11,.2);border-radius:10px;padding:10px 13px;
-  font-size:11px;color:var(--text);opacity:0;transform:translateY(8px);}
-.reply-bubble.show{animation:msgIn .4s ease forwards;}
-.reply-bubble b{color:var(--blaze);}
-
-.viewer-search{margin:16px 18px 8px;background:var(--card);border:1px solid var(--border2);border-radius:9px;
-  padding:9px 12px;font-size:11px;color:var(--muted2);display:flex;align-items:center;gap:8px;}
-.vrow{display:flex;align-items:center;gap:10px;padding:8px 18px;font-size:11px;opacity:0;transform:translateX(-10px);
-  animation:slideIn .4s ease forwards;border-bottom:1px solid var(--border);}
-@keyframes slideIn{to{opacity:1;transform:translateX(0);}}
-.shop-tbl{font-size:11px;margin:12px 18px 0;border-collapse:collapse;width:calc(100% - 36px);}
-.shop-tbl th{text-align:left;color:var(--muted);text-transform:uppercase;font-size:9px;padding:6px 8px;border-bottom:1px solid var(--border);}
-.shop-tbl td{padding:8px 8px;border-bottom:1px solid var(--border);}
-
-.overlay-stream{position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(240,185,11,.15),transparent 50%),linear-gradient(135deg,#1a1020,#0a0a12);}
-.stream-hud{position:absolute;top:16px;left:16px;display:flex;align-items:center;gap:6px;background:rgba(240,80,80,.15);
-  border:1px solid rgba(240,80,80,.4);border-radius:6px;padding:4px 9px;font-size:9px;font-weight:700;color:#F05050;}
-.overlay-widget{position:absolute;top:22px;right:22px;background:rgba(19,23,32,.7);backdrop-filter:blur(14px);
-  border:1px solid rgba(240,185,11,.25);border-radius:14px;padding:13px 15px;width:210px;box-shadow:0 20px 50px rgba(0,0,0,.4);}
-.ow-title{font-size:9px;color:var(--blaze);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:7px;}
-.overlay-alert{position:absolute;bottom:22px;left:22px;background:rgba(19,23,32,.85);backdrop-filter:blur(14px);
-  border:1px solid rgba(34,212,122,.3);border-radius:12px;padding:10px 14px;font-size:11px;opacity:0;transform:translateY(10px);
-  box-shadow:0 20px 50px rgba(0,0,0,.4);}
-.overlay-alert.show{animation:msgIn .5s cubic-bezier(.16,1,.3,1) forwards;}
-
-.toggle-mock{width:36px;height:21px;border-radius:11px;background:var(--border2);position:relative;transition:background .3s;}
-.toggle-mock.on{background:var(--blaze);}
-.toggle-mock::after{content:'';position:absolute;width:15px;height:15px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .3s;}
-.toggle-mock.on::after{left:18px;}
-.set-row{display:flex;justify-content:space-between;align-items:center;background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:11px 14px;margin:8px 18px;font-size:11px;font-weight:600;}
-
-.cta-btn{margin-top:26px;display:inline-flex;align-items:center;gap:8px;background:var(--blaze);color:#000;
-  padding:14px 30px;border-radius:12px;font-weight:700;font-size:15px;box-shadow:0 12px 40px rgba(240,185,11,.3);}
-.cta-sub{margin-top:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
-
-.scene-label{position:absolute;top:26px;left:50%;transform:translateX(-50%);text-align:center;opacity:0;
-  animation:fadeUp .6s ease forwards .2s;}
-.scene-label .eyebrow{font-size:10px;letter-spacing:3px;color:var(--blaze);text-transform:uppercase;font-weight:700;}
-.scene-label .headline{font-size:18px;font-weight:700;margin-top:5px;}
-
-#chrome{position:absolute;bottom:0;left:0;right:0;padding:20px 28px 24px;z-index:50;background:linear-gradient(to top,rgba(0,0,0,.5),transparent);}
-#progress-track{width:100%;height:3px;background:rgba(255,255,255,.12);border-radius:2px;overflow:hidden;margin-bottom:12px;}
-#progress-fill{height:100%;width:0%;background:var(--blaze);border-radius:2px;}
-#controls{display:flex;align-items:center;justify-content:space-between;}
-.ctrl-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--text);
-  width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
-.ctrl-btn:hover{border-color:var(--blaze);color:var(--blaze);}
-
-#start-overlay{position:absolute;inset:0;background:#000;z-index:200;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:20px;cursor:pointer;}
-#start-overlay .logo-word{font-size:52px;}
-#play-btn{width:74px;height:74px;border-radius:50%;background:var(--blaze);display:flex;align-items:center;justify-content:center;
-  box-shadow:0 0 0 0 rgba(240,185,11,.5);animation:pulse-btn 2s infinite;}
-@keyframes pulse-btn{0%{box-shadow:0 0 0 0 rgba(240,185,11,.5);}70%{box-shadow:0 0 0 22px rgba(240,185,11,0);}100%{box-shadow:0 0 0 0 rgba(240,185,11,0);}}
-#start-overlay .hint{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
-#start-overlay.hidden{display:none;}
-
-/* ══════════════ NEW: Games + Poll scenes ══════════════ */
-.game-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:18px;}
-.game-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;transition:.3s;}
-.game-card.hl{border-color:var(--blaze);background:var(--blazedim);transform:translateY(-3px);}
-.game-icon{font-size:20px;margin-bottom:5px;}
-.game-cmd{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blaze);font-weight:700;}
-.game-desc{font-size:10px;color:var(--muted2);margin-top:2px;}
-.game-result{margin:0 18px;background:var(--card);border:1px solid var(--border2);border-radius:10px;padding:12px 15px;
-  font-size:12px;opacity:0;transform:translateY(8px) scale(.96);}
-.game-result.show{animation:msgIn .45s cubic-bezier(.16,1,.3,1) forwards;}
-.game-result .gr-icon{font-size:22px;margin-bottom:4px;}
-.game-result b{color:var(--green);}
-
-.poll-wrap{padding:26px 30px;}
-.poll-q{font-size:16px;font-weight:700;margin-bottom:16px;}
-.poll-opt{margin-bottom:12px;}
-.poll-opt-hdr{display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:5px;}
-.poll-opt-hdr .pct{font-family:'JetBrains Mono',monospace;color:var(--blaze);}
-.poll-bar-wrap{height:10px;background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
-.poll-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--blaze),var(--blaze2));border-radius:6px;transition:width 1s cubic-bezier(.16,1,.3,1);}
-.poll-votes{margin-top:16px;font-size:11px;color:var(--muted2);font-family:'JetBrains Mono',monospace;}
-.poll-winner{margin-top:14px;display:inline-flex;align-items:center;gap:6px;background:var(--greendim);border:1px solid rgba(34,212,122,.3);
-  color:var(--green);padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;opacity:0;transform:scale(.9);}
-.poll-winner.show{animation:msgIn .4s ease forwards;}
-
-/* ══════════════ NEW: Bot Commands + Shop Live scenes ══════════════ */
-.cmds-wrap{padding:16px 18px;height:100%;overflow:hidden;}
-.cmds-section-lbl{font-size:10px;font-weight:700;color:var(--blaze);text-transform:uppercase;letter-spacing:1px;margin:12px 0 7px;}
-.cmds-section-lbl:first-child{margin-top:0;}
-.cmds-grid2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
-.cmd-chip{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 10px;opacity:0;transform:translateY(8px);
-  animation:msgIn .35s ease forwards;}
-.cmd-chip code{color:var(--blaze);font-family:'JetBrains Mono',monospace;font-size:10px;display:block;}
-.cmd-chip span{color:var(--muted2);font-size:9px;}
-
-.shop-live{display:grid;grid-template-columns:1fr 230px;height:100%;overflow:hidden;}
-.shop-live-main{padding:14px 16px;overflow:hidden;}
-.shop-live-side{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
-.shop-item-row{display:flex;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--border);
-  border-radius:10px;padding:10px 13px;margin-bottom:7px;opacity:0;transform:translateX(-10px);animation:slideIn .4s ease forwards;}
-.shop-item-name{font-size:11px;font-weight:600;}
-.shop-item-cmd{font-size:9px;color:var(--muted2);font-family:'JetBrains Mono',monospace;margin-top:2px;}
-.shop-item-cost{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--green);}
-.purchase-toast{background:var(--greendim);border:1px solid rgba(34,212,122,.3);border-radius:9px;padding:8px 10px;font-size:10px;
-  margin-bottom:6px;opacity:0;transform:translateX(14px);animation:alertIn .4s cubic-bezier(.16,1,.3,1) forwards;}
-.purchase-toast b{color:var(--green);}
-
-/* ══════════════ MOBILE — additive, doesn't touch desktop rules above ══════════════ */
-@media (max-width: 640px){
-  .frame{width:96vw;height:80vh;border-radius:12px;}
-  .frame-bar{height:28px;padding:0 8px;gap:4px;}
-  .dot{width:7px;height:7px;}
-  .frame-url{margin-left:8px;font-size:8px;padding:2px 6px;max-width:130px;}
-
-  .logo-word{font-size:38px;}
-  #start-overlay .logo-word{font-size:34px;}
-  .tagline{font-size:11px;padding:0 20px;}
-  #play-btn{width:62px;height:62px;}
-  #start-overlay .hint{font-size:9px;}
-
-  .hero-mock{padding:26px 18px;}
-  .hero-mock h1{font-size:21px;}
-  .hero-mock p{font-size:11px;}
-  .hero-btn{padding:10px 18px;font-size:11px;margin-top:16px;}
-
-  .tabs-mini{padding:6px 8px;gap:2px;overflow-x:auto;}
-  .tab-mini{padding:5px 8px;font-size:9px;white-space:nowrap;}
-
-  /* Stack the 3-column live dashboard into one scrollable column on mobile */
-  .mega{display:flex;flex-direction:column;overflow-y:auto;height:100%;}
-  .mega-side{border-right:none;border-bottom:1px solid var(--border);padding:10px;}
-  .mega-stats{grid-template-columns:repeat(4,1fr);}
-  .mega-stat{padding:5px;}
-  .mega-stat .v{font-size:12px;}
-  .mega-stat .l{font-size:6.5px;}
-  .mega-main{padding:10px;}
-  .mega-right{border-left:none;border-top:1px solid var(--border);min-height:220px;}
-  .lb-row{padding:7px 9px;gap:7px;}
-  .lb-av{width:22px;height:22px;}
-  .lb-name{font-size:10px;}
-  .lb-bar-wrap{width:60px;}
-  .lb-score{font-size:11px;}
-
-  .ai-grid{grid-template-columns:repeat(2,1fr);gap:7px;padding:12px;}
-  .ai-card{padding:11px 6px;}
-  .ai-icon{font-size:17px;}
-  .ai-name{font-size:9px;}
-  .chat-input-mock{margin:0 12px 10px;padding:8px 10px;font-size:10px;flex-wrap:wrap;}
-  .reply-bubble{margin:0 12px;font-size:10px;padding:8px 10px;}
-
-  .viewer-search{margin:12px 12px 6px;padding:8px 10px;font-size:10px;}
-  .vrow{padding:7px 12px;font-size:10px;gap:7px;}
-  .shop-tbl{margin:8px 12px 0;width:calc(100% - 24px);font-size:9px;}
-  .shop-tbl th{font-size:7.5px;padding:5px 5px;}
-  .shop-tbl td{padding:6px 5px;}
-
-  .overlay-widget{top:12px;right:12px;width:150px;padding:9px 10px;}
-  .ow-title{font-size:7.5px;}
-  .overlay-alert{bottom:12px;left:12px;right:12px;font-size:9px;padding:8px 10px;}
-  .stream-hud{top:10px;left:10px;font-size:7.5px;padding:3px 7px;}
-
-  .set-row{margin:6px 12px;padding:9px 11px;font-size:10px;}
-  .toggle-mock{width:30px;height:18px;}
-  .toggle-mock::after{width:12px;height:12px;}
-  .toggle-mock.on::after{left:14px;}
-
-  .cta-btn{padding:11px 22px;font-size:12px;margin-top:18px;}
-  .cta-sub{font-size:10px;}
-
-  .scene-label{top:14px;width:88vw;}
-  .scene-label .eyebrow{font-size:8px;letter-spacing:2px;}
-  .scene-label .headline{font-size:13px;margin-top:3px;}
-
-  #chrome{padding:12px 14px 14px;}
-  #cursor{display:none;} /* touch devices have no cursor to simulate — avoid a floating ghost dot */
-  .click-ripple{display:none;}
-
-  .game-grid{grid-template-columns:repeat(2,1fr);gap:7px;padding:12px;}
-  .game-card{padding:10px;}
-  .game-icon{font-size:16px;}
-  .game-cmd{font-size:9px;}
-  .game-desc{font-size:8px;}
-  .game-result{margin:0 12px;padding:9px 11px;font-size:10px;}
-
-  .poll-wrap{padding:16px 16px;}
-  .poll-q{font-size:12px;margin-bottom:12px;}
-  .poll-opt-hdr{font-size:10px;}
-  .poll-bar-wrap{height:8px;}
-  .poll-votes{font-size:9px;margin-top:10px;}
-  .poll-winner{font-size:9px;padding:5px 10px;margin-top:10px;}
-
-  .cmds-wrap{padding:10px 12px;}
-  .cmds-section-lbl{font-size:8px;margin:9px 0 5px;}
-  .cmds-grid2{grid-template-columns:1fr 1fr;gap:5px;}
-  .cmd-chip{padding:6px 8px;}
-  .cmd-chip code{font-size:8.5px;}
-  .cmd-chip span{font-size:7.5px;}
-
-  .shop-live{display:flex;flex-direction:column;overflow-y:auto;}
-  .shop-live-main{padding:10px 12px;}
-  .shop-live-side{border-left:none;border-top:1px solid var(--border);min-height:160px;}
-  .shop-item-row{padding:8px 10px;}
-  .shop-item-name{font-size:10px;}
-  .shop-item-cmd{font-size:8px;}
-  .shop-item-cost{font-size:10px;}
-}
+  .footer-note {
+    text-align:center;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 18px;
+    line-height: 1.5;
+  }
+  .footer-note code { background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
 </style>
 </head>
 <body>
-
-<div id="stage">
-  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
-
-  <div class="scene" data-scene="0" style="flex-direction:column;">
-    <div class="logo-word" id="logo-intro"></div>
-    <div class="tagline">The smartest bot on Blaze.stream</div>
+<div class="wrap">
+  <div class="brand">
+    <h1>BOB SWAP</h1>
+    <p>$BOB ⇄ HERESY / WHERESY — routed through Cave V2 on The Grotto</p>
   </div>
 
-  <div class="scene" data-scene="1">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url">blazeguy.vercel.app</div></div>
-      <div class="frame-body">
-        <div class="hero-mock">
-          <h1>The smartest bot<br>on <span>Blaze.stream</span></h1>
-          <p>Loyalty tracking, mini games, polls, custom commands, loyalty shop and more — all free.</p>
-          <div class="hero-btn">⚡ Login with Blaze to manage your dashboard</div>
-        </div>
+  <div class="card">
+    <div class="toprow">
+      <h2 id="walletLabel">Not connected</h2>
+      <div style="display:flex; gap:8px;">
+        <button class="settings-btn" id="settingsToggle">⚙ Slippage</button>
+        <button class="settings-btn" id="connectBtn">Connect</button>
       </div>
     </div>
-    <div class="scene-label"><div class="eyebrow">Get started</div><div class="headline">One click to connect your channel</div></div>
-  </div>
 
-  <div class="scene" data-scene="2">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="mega">
-          <div class="mega-side">
-            <div class="mega-lbl">Live Stats</div>
-            <div class="mega-stats">
-              <div class="mega-stat"><div class="v" id="st-chatters">0</div><div class="l">Chatters</div></div>
-              <div class="mega-stat"><div class="v" id="st-msgs">0</div><div class="l">Messages</div></div>
-              <div class="mega-stat"><div class="v" id="st-follows">0</div><div class="l">Follows</div></div>
-              <div class="mega-stat"><div class="v" id="st-subs">0</div><div class="l">Subs</div></div>
-            </div>
-            <div class="mega-lbl">Commands</div>
-            <div style="font-size:9px;color:var(--muted2);line-height:2.1;font-family:'JetBrains Mono',monospace;">
-              !devoted<br>!leaderboard<br>!shop<br>!roast<br>!brb
-            </div>
-          </div>
-          <div class="mega-main">
-            <div class="mega-lbl" style="margin-bottom:10px;">🏆 Devotion Leaderboard</div>
-            <div id="lb-rows"></div>
-          </div>
-          <div class="mega-right">
-            <div class="mega-right-hdr">Live Alerts</div>
-            <div id="alert-feed" style="padding:8px;overflow:hidden;"></div>
-            <div class="mega-right-hdr" style="border-top:1px solid var(--border);">Live Chat</div>
-            <div class="feed"><div class="feed-inner" id="chat-feed"></div></div>
-          </div>
-        </div>
+    <div class="settings-panel" id="settingsPanel">
+      <div>Slippage tolerance</div>
+      <div class="slippage-row">
+        <button data-slip="0.1">0.1%</button>
+        <button data-slip="0.5" class="active">0.5%</button>
+        <button data-slip="1" >1%</button>
+        <input type="text" id="customSlip" placeholder="Custom %" />
       </div>
     </div>
-    <div class="scene-label"><div class="eyebrow">Real-time, not a mockup</div><div class="headline">Chat, alerts, and the leaderboard move together, live</div></div>
-  </div>
 
-  <div class="scene" data-scene="3">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="tabs-mini"><div class="tab-mini">🏆 Board</div><div class="tab-mini">🔔 Alerts</div>
-          <div class="tab-mini on">🤖 AI Tools</div><div class="tab-mini">🛒 Shop</div></div>
-        <div class="ai-grid">
-          <div class="ai-card" id="ai-roast"><div class="ai-icon">🔥</div><div class="ai-name">Roast</div></div>
-          <div class="ai-card"><div class="ai-icon">💛</div><div class="ai-name">Compliment</div></div>
-          <div class="ai-card"><div class="ai-icon">🔮</div><div class="ai-name">Predict</div></div>
-          <div class="ai-card"><div class="ai-icon">📖</div><div class="ai-name">Story</div></div>
-        </div>
-        <div class="chat-input-mock">Run in chat: <span class="typed" id="ai-typed"></span><span class="caret"></span></div>
-        <div class="reply-bubble" id="ai-reply"><b>⚡ blazeguy:</b> <span id="ai-reply-text"></span></div>
+    <div class="field">
+      <div class="field-label">
+        <span>From</span>
+        <span class="bal" id="fromBal">Balance: —</span>
+      </div>
+      <div class="field-main">
+        <input type="text" id="amountIn" placeholder="0.0" autocomplete="off" />
+        <select class="token-select" id="fromToken"></select>
       </div>
     </div>
-    <div class="scene-label"><div class="eyebrow">AI Tools</div><div class="headline">Gemini-powered replies, posted straight to chat</div></div>
-  </div>
 
-  <div class="scene" data-scene="4">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url">blazeguy.vercel.app/viewers.html</div></div>
-      <div class="frame-body">
-        <div class="viewer-search">🔍 <span id="search-typed"></span><span class="caret"></span></div>
-        <div id="viewer-rows"></div>
-        <table class="shop-tbl" id="shop-tbl" style="display:none;">
-          <tr><th>Viewer</th><th>Item</th><th>Cost</th></tr>
-          <tr id="shop-row-1"><td>@nova_bee</td><td>Shoutout</td><td style="color:var(--green)">200 pts</td></tr>
-          <tr id="shop-row-2"><td>@kirin_tv</td><td>Song Request</td><td style="color:var(--green)">150 pts</td></tr>
-          <tr id="shop-row-3"><td>@ash_exe</td><td>Emote Unlock</td><td style="color:var(--green)">90 pts</td></tr>
-        </table>
+    <div class="swap-arrow-row">
+      <div class="swap-arrow" id="flipBtn">⇅</div>
+    </div>
+
+    <div class="field">
+      <div class="field-label">
+        <span>To (estimated)</span>
+        <span class="bal" id="toBal">Balance: —</span>
+      </div>
+      <div class="field-main">
+        <input type="text" id="amountOut" placeholder="0.0" disabled />
+        <select class="token-select" id="toToken"></select>
       </div>
     </div>
-    <div class="scene-label"><div class="eyebrow">Every viewer, searchable</div><div class="headline">Full history — not just the top 20</div></div>
-  </div>
 
-  <div class="scene" data-scene="5">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url">blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="cmds-wrap">
-          <div class="cmds-section-lbl" id="cmds-lbl-1">🏆 Loyalty</div>
-          <div class="cmds-grid2" id="cmds-row-1">
-            <div class="cmd-chip"><code>!devoted</code><span>Top 5 loyal chatters</span></div>
-            <div class="cmd-chip"><code>!loyalty</code><span>Rank & score</span></div>
-            <div class="cmd-chip"><code>!balance</code><span>Point balance</span></div>
-          </div>
-          <div class="cmds-section-lbl" id="cmds-lbl-2">🎮 Games</div>
-          <div class="cmds-grid2" id="cmds-row-2">
-            <div class="cmd-chip"><code>!coinflip</code><span>Bet on heads/tails</span></div>
-            <div class="cmd-chip"><code>!rps</code><span>Rock paper scissors</span></div>
-            <div class="cmd-chip"><code>!trivia</code><span>Quick trivia round</span></div>
-          </div>
-          <div class="cmds-section-lbl" id="cmds-lbl-3">⚙ Stream Tools</div>
-          <div class="cmds-grid2" id="cmds-row-3">
-            <div class="cmd-chip"><code>!poll</code><span>Live viewer poll</span></div>
-            <div class="cmd-chip"><code>!brb</code><span>BRB mode timer</span></div>
-            <div class="cmd-chip"><code>!addcmd</code><span>Custom command</span></div>
-          </div>
-        </div>
-      </div>
+    <div class="rate-line" id="rateLine" style="display:none;">
+      <span id="rateText">—</span>
+      <span id="priceImpact"></span>
     </div>
-    <div class="scene-label"><div class="eyebrow">Every command, one place</div><div class="headline">Loyalty, games, AI, and stream tools — all typed with !</div></div>
-  </div>
 
-  <div class="scene" data-scene="6">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="shop-live">
-          <div class="shop-live-main">
-            <div class="mega-lbl" style="margin-bottom:10px;">🛒 Loyalty Shop</div>
-            <div class="shop-item-row" style="animation-delay:.05s;">
-              <div><div class="shop-item-name">Channel Shoutout</div><div class="shop-item-cmd">!buy shoutout</div></div>
-              <div class="shop-item-cost">200 pts</div>
-            </div>
-            <div class="shop-item-row" style="animation-delay:.15s;">
-              <div><div class="shop-item-name">Song Request</div><div class="shop-item-cmd">!buy song</div></div>
-              <div class="shop-item-cost">150 pts</div>
-            </div>
-            <div class="shop-item-row" style="animation-delay:.25s;">
-              <div><div class="shop-item-name">Emote Unlock</div><div class="shop-item-cmd">!buy emote</div></div>
-              <div class="shop-item-cost">90 pts</div>
-            </div>
-            <div class="chat-input-mock" style="margin:14px 0 0;">Chat: <span class="typed" id="shop-typed"></span><span class="caret"></span></div>
-            <div class="reply-bubble" id="shop-reply" style="margin:10px 0 0;"><b>⚡ blazeguy:</b> <span id="shop-reply-text"></span></div>
-          </div>
-          <div class="shop-live-side">
-            <div class="mega-right-hdr">Recent Purchases</div>
-            <div id="purchase-feed" style="padding:9px;overflow:hidden;"></div>
-          </div>
-        </div>
-      </div>
+    <div class="warn" id="legacyWarn" style="display:none;">
+      Heads up: the HERESY token address you gave doesn't match the Cave router's wrapped-native (WETH) address, so it isn't wired into swap routing here — only native HERESY and WHERESY are. Let me know if that address is actually a separate token (e.g. a staking receipt token) and I'll add a dedicated route for it.
     </div>
-    <div class="scene-label"><div class="eyebrow">Loyalty shop</div><div class="headline">Viewers redeem points live — every purchase logged</div></div>
+
+    <button class="action-btn" id="approveBtn" style="display:none;">Approve</button>
+    <button class="action-btn" id="swapBtn" disabled>Enter an amount</button>
+
+    <div class="status" id="statusLine"></div>
   </div>
 
-  <div class="scene" data-scene="7">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url">OBS — Browser Source</div></div>
-      <div class="frame-body">
-        <div class="overlay-stream">
-          <div class="stream-hud">● LIVE</div>
-          <div class="overlay-widget"><div class="ow-title">🏆 Top Devoted</div><div id="ow-rows"></div></div>
-          <div class="overlay-alert" id="ow-alert"></div>
-        </div>
-      </div>
-    </div>
-    <div class="scene-label"><div class="eyebrow">On-stream overlay</div><div class="headline">Transparent, always synced to the live feed</div></div>
-  </div>
-
-  <div class="scene" data-scene="6">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url">blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="tabs-mini"><div class="tab-mini">🏆 Board</div><div class="tab-mini">🛒 Shop</div><div class="tab-mini on">⚙ Settings</div></div>
-        <div style="padding-top:8px;">
-          <div class="set-row"><span>Spam Protection</span><div class="toggle-mock on" id="tog1"></div></div>
-          <div class="set-row"><span>Event Announcements</span><div class="toggle-mock on" id="tog2"></div></div>
-          <div class="set-row"><span>Currency Name</span><span style="color:var(--blaze);font-family:'JetBrains Mono',monospace;" id="currency-typed"></span></div>
-        </div>
-      </div>
-    </div>
-    <div class="scene-label"><div class="eyebrow">Full control</div><div class="headline">Moderation, currency, announcements — all yours</div></div>
-  </div>
-
-  <div class="scene" data-scene="7">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="tabs-mini"><div class="tab-mini">🏆 Board</div><div class="tab-mini on">🎮 Games</div>
-          <div class="tab-mini">🤖 AI Tools</div><div class="tab-mini">🛒 Shop</div></div>
-        <div class="game-grid">
-          <div class="game-card" id="game-coinflip"><div class="game-icon">🪙</div><div class="game-cmd">!coinflip heads 10</div><div class="game-desc">Bet points on heads or tails</div></div>
-          <div class="game-card"><div class="game-icon">🎲</div><div class="game-cmd">!roll 6 10</div><div class="game-desc">Roll dice, bet on the number</div></div>
-          <div class="game-card"><div class="game-icon">✂️</div><div class="game-cmd">!rps rock 10</div><div class="game-desc">Rock paper scissors vs the bot</div></div>
-          <div class="game-card"><div class="game-icon">🧠</div><div class="game-cmd">!trivia</div><div class="game-desc">Fastest correct answer wins</div></div>
-        </div>
-        <div class="game-result" id="game-result">
-          <div class="gr-icon">🪙</div>
-          <div><b>@ash_exe</b> called heads — <b>Heads!</b> Won <b>20 pts</b> 🎉</div>
-        </div>
-      </div>
-    </div>
-    <div class="scene-label"><div class="eyebrow">Mini games</div><div class="headline">Coinflip, dice, RPS, trivia — points on the line, right in chat</div></div>
-  </div>
-
-  <div class="scene" data-scene="8">
-    <div class="frame">
-      <div class="frame-bar"><div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-        <div class="frame-url"><span class="live-dot"></span>blazeguy.vercel.app/dashboard</div></div>
-      <div class="frame-body">
-        <div class="poll-wrap">
-          <div class="poll-q">🗳️ Poll: What should we play next?</div>
-          <div class="poll-opt">
-            <div class="poll-opt-hdr"><span>A — Ranked queue</span><span class="pct" id="poll-pct-a">0%</span></div>
-            <div class="poll-bar-wrap"><div class="poll-bar" id="poll-bar-a"></div></div>
-          </div>
-          <div class="poll-opt">
-            <div class="poll-opt-hdr"><span>B — Chill co-op</span><span class="pct" id="poll-pct-b">0%</span></div>
-            <div class="poll-bar-wrap"><div class="poll-bar" id="poll-bar-b"></div></div>
-          </div>
-          <div class="poll-votes" id="poll-votes">0 votes</div>
-          <div class="poll-winner" id="poll-winner">✅ Ranked queue wins — starting now!</div>
-        </div>
-      </div>
-    </div>
-    <div class="scene-label"><div class="eyebrow">Live polls</div><div class="headline">Chat votes with !vote — bars fill in real time</div></div>
-  </div>
-
-  <div class="scene" data-scene="9" style="flex-direction:column;">
-    <div class="logo-word" id="logo-outro"></div>
-    <div class="cta-btn">⚡ Add blazeguy to your channel — free</div>
-    <div class="cta-sub">blaze.stream/blazeguy</div>
-  </div>
-
-  <div id="cursor"><svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-    <path d="M2 1L2 17L6.5 13.5L9 19L11.5 18L9 12.5L15 12.5L2 1Z" fill="#F0B90B" stroke="#080B10" stroke-width="1"/>
-  </svg></div>
-
-  <div id="chrome">
-    <div id="progress-track"><div id="progress-fill"></div></div>
-    <div id="controls" style="justify-content:flex-end;">
-      <div style="display:flex;gap:8px;">
-        <div class="ctrl-btn" id="replay-btn" title="Replay">↺</div>
-        <div class="ctrl-btn" id="pause-btn" title="Pause">❚❚</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="start-overlay">
-    <div class="logo-word" id="logo-start"></div>
-    <div id="play-btn"><svg width="24" height="24" viewBox="0 0 26 26" fill="none"><path d="M8 5L21 13L8 21V5Z" fill="#000"/></svg></div>
-    <div class="hint">Click to play with sound</div>
+  <div class="footer-note">
+    Chain ID <code>36463</code> · Router <code id="routerAddr"></code><br/>
+    Always verify amounts and slippage before confirming in your wallet.
   </div>
 </div>
 
 <script>
-function letterFill(el, text){
-  el.innerHTML = '';
-  [...text].forEach((ch,i) => {
-    const s = document.createElement('span');
-    s.textContent = ch === ' ' ? '\u00A0' : ch;
-    s.style.animationDelay = (i*0.035)+'s';
-    el.appendChild(s);
-  });
-}
-letterFill(document.getElementById('logo-start'), 'blazeguy');
-letterFill(document.getElementById('logo-intro'), 'blazeguy');
-letterFill(document.getElementById('logo-outro'), 'blazeguy');
+const { ethers } = window;
 
-let actx;
-function sfx(type){
-  try{
-    if(!actx) actx = new (window.AudioContext||window.webkitAudioContext)();
-    const o = actx.createOscillator(), g = actx.createGain();
-    o.connect(g); g.connect(actx.destination);
-    const now = actx.currentTime;
-    if(type==='whoosh'){
-      o.type='sine'; o.frequency.setValueAtTime(220,now); o.frequency.exponentialRampToValueAtTime(60,now+.4);
-      g.gain.setValueAtTime(.05,now); g.gain.exponentialRampToValueAtTime(.001,now+.4);
-      o.start(now); o.stop(now+.4);
-    } else if(type==='click'){
-      o.type='sine'; o.frequency.setValueAtTime(1200,now);
-      g.gain.setValueAtTime(.06,now); g.gain.exponentialRampToValueAtTime(.001,now+.08);
-      o.start(now); o.stop(now+.08);
-    } else if(type==='pop'){
-      o.type='sine'; o.frequency.setValueAtTime(700,now); o.frequency.exponentialRampToValueAtTime(1000,now+.1);
-      g.gain.setValueAtTime(.035,now); g.gain.exponentialRampToValueAtTime(.001,now+.15);
-      o.start(now); o.stop(now+.15);
-    } else if(type==='chime'){
-      o.type='triangle'; o.frequency.setValueAtTime(880,now); o.frequency.exponentialRampToValueAtTime(1320,now+.3);
-      g.gain.setValueAtTime(.05,now); g.gain.exponentialRampToValueAtTime(.001,now+.6);
-      o.start(now); o.stop(now+.6);
-    }
-  }catch(e){}
-}
+// ---------- Config ----------
+const CHAIN = {
+  chainIdHex: '0x8e6f', // 36463
+  chainIdDec: 36463,
+  chainName: 'The Grotto',
+  nativeCurrency: { name: 'heresy', symbol: 'HERESY', decimals: 18 },
+  rpcUrls: ['https://subnets.avax.network/thegrotto/mainnet/rpc'],
+  blockExplorerUrls: ['https://subnets.avax.network/thegrotto']
+};
 
-const cursorEl = document.getElementById('cursor');
-const stage = document.getElementById('stage');
-function moveCursor(xPct, yPct, cb, delay){
-  const r = stage.getBoundingClientRect();
-  cursorEl.style.left = (r.width*xPct)+'px';
-  cursorEl.style.top  = (r.height*yPct)+'px';
-  if(cb) setTimeout(cb, delay||680);
-}
-function clickAt(xPct,yPct){
-  const r = stage.getBoundingClientRect();
-  const ripple = document.createElement('div');
-  ripple.className='click-ripple go';
-  ripple.style.left=(r.width*xPct)+'px'; ripple.style.top=(r.height*yPct)+'px';
-  stage.appendChild(ripple);
-  sfx('click');
-  setTimeout(()=>ripple.remove(),550);
-}
-cursorEl.style.left='50%'; cursorEl.style.top='50%';
+const ADDR = {
+  BOB: '0x06057d79dBC506f7c0803F052E6c823AA4A25dEA',
+  WHERESY: '0xfA99B368B5fc1f5a061bc393dFf73BE8a097667D',
+  HERESY_LEGACY: '0x432d38F83a50EC77C409D086e97448794cf76dCF', // not wired into routing, see legacyWarn
+  ROUTER: '0x1c9C1459a01ab34498b74024798DF140607a3966',
+  FACTORY: '0xfc13BFD4369e6366cAbd7811448CF29b8fA2a404'
+};
+const NATIVE = 'NATIVE';
 
-function typeInto(el, text, speed, cb){
-  el.textContent=''; let i=0;
-  const t=setInterval(()=>{ el.textContent+=text[i]; i++; if(i>=text.length){clearInterval(t); if(cb)cb();} }, speed);
-}
-function countUp(el, target, dur){
-  const start=Date.now();
-  function tick(){
-    const p = Math.min(1,(Date.now()-start)/dur);
-    el.textContent = Math.round(target * (1-Math.pow(1-p,3)));
-    if(p<1) requestAnimationFrame(tick);
-  }
-  tick();
-}
-
-const VIEWERS = [
-  {n:'nova_bee', type:'sub', av:'linear-gradient(135deg,#F0B90B,#9B6CF5)'},
-  {n:'kirin_tv', type:'follower', av:'linear-gradient(135deg,#4C8EF5,#22D47A)'},
-  {n:'ash_exe', type:'viewer', av:'linear-gradient(135deg,#F05050,#F0B90B)'},
-  {n:'mochi_plays', type:'viewer', av:'linear-gradient(135deg,#9B6CF5,#4C8EF5)'},
+const ROUTER_ABI = [
+  'function WETH() view returns (address)',
+  'function getAmountsOut(uint amountIn, address[] calldata path) view returns (uint[] memory amounts)',
+  'function swapExactTokensForTokens(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) returns (uint[] memory amounts)',
+  'function swapExactTokensForETH(uint amountIn, uint amountOutMin, address[] calldata path, address to, uint deadline) returns (uint[] memory amounts)',
+  'function swapExactETHForTokens(uint amountOutMin, address[] calldata path, address to, uint deadline) payable returns (uint[] memory amounts)'
 ];
-let lbScores = {nova_bee:2140, kirin_tv:1870, ash_exe:1420, mochi_plays:990};
+const ERC20_ABI = [
+  'function balanceOf(address) view returns (uint256)',
+  'function decimals() view returns (uint8)',
+  'function symbol() view returns (string)',
+  'function allowance(address,address) view returns (uint256)',
+  'function approve(address,uint256) returns (bool)'
+];
 
-function initLeaderboard(){
-  const wrap = document.getElementById('lb-rows'); wrap.innerHTML='';
-  Object.keys(lbScores).forEach((n,idx)=>{
-    const row = document.createElement('div');
-    row.className='lb-row'; row.id='lbrow-'+n;
-    row.style.opacity='0'; row.style.transform='translateX(-14px)';
-    row.style.transition='opacity .4s ease, transform .4s ease, box-shadow .3s, border-color .3s';
-    const v = VIEWERS.find(x=>x.n===n);
-    row.innerHTML = `<div class="lb-rank">#${idx+1}</div><div class="lb-av" style="background:${v.av}"></div>
-      <div class="lb-name">@${n}<span class="lb-badges" id="badges-${n}">${v.type==='sub'?'<span class="mini-badge mb-sub">SUB</span>':''}</span>
-      <div class="lb-bar-wrap"><div class="lb-bar" id="bar-${n}"></div></div></div>
-      <div class="lb-score" id="score-${n}">${lbScores[n]}</div>`;
-    wrap.appendChild(row);
-    setTimeout(()=>{ row.style.opacity='1'; row.style.transform='translateX(0)'; renderBar(n); }, 120+idx*130);
-  });
+document.getElementById('routerAddr').textContent = ADDR.ROUTER.slice(0,6) + '…' + ADDR.ROUTER.slice(-4);
+
+// ---------- State ----------
+let provider, signer, userAddress, router, wethAddress;
+let slippagePct = 0.5;
+let bobDecimals = 18;
+
+const TOKENS = {
+  HERESY: { symbol: 'HERESY', address: NATIVE, decimals: 18 },
+  WHERESY: { symbol: 'WHERESY', address: ADDR.WHERESY, decimals: 18 },
+  BOB: { symbol: 'BOB', address: ADDR.BOB, decimals: 18 } // decimals refreshed on load
+};
+
+let fromKey = 'BOB';
+let toKey = 'HERESY';
+
+const $ = (id) => document.getElementById(id);
+
+function populateSelects() {
+  const opts = Object.keys(TOKENS).map(k => `<option value="${k}">${TOKENS[k].symbol}</option>`).join('');
+  $('fromToken').innerHTML = opts;
+  $('toToken').innerHTML = opts;
+  $('fromToken').value = fromKey;
+  $('toToken').value = toKey;
 }
-function renderBar(n){
-  const max = Math.max(...Object.values(lbScores));
-  const b = document.getElementById('bar-'+n);
-  if(b) b.style.width = Math.round((lbScores[n]/max)*100)+'%';
-}
-function reorderLeaderboard(){
-  const wrap = document.getElementById('lb-rows');
-  const sorted = Object.entries(lbScores).sort((a,b)=>b[1]-a[1]);
-  sorted.forEach(([n],idx)=>{
-    const row = document.getElementById('lbrow-'+n);
-    if(row){ row.querySelector('.lb-rank').textContent = '#'+(idx+1); wrap.appendChild(row); }
-  });
-}
-function bumpScore(n, amount){
-  if(!(n in lbScores)) return;
-  lbScores[n] = (lbScores[n]||0) + amount;
-  const scoreEl = document.getElementById('score-'+n);
-  if(scoreEl){ scoreEl.textContent = lbScores[n]; scoreEl.classList.add('bump'); setTimeout(()=>scoreEl.classList.remove('bump'),400); }
-  const row = document.getElementById('lbrow-'+n);
-  if(row){ row.classList.add('pulse'); setTimeout(()=>row.classList.remove('pulse'),500); }
-  Object.keys(lbScores).forEach(renderBar);
-  reorderLeaderboard();
-}
+populateSelects();
 
-function pushChat(u,t,m){
-  const feed = document.getElementById('chat-feed');
-  if(!feed) return;
-  const cls = t==='sub'?'s-sub':t==='mod'?'s-mod':'s-viewer';
-  const div = document.createElement('div');
-  div.className='chat-msg';
-  div.innerHTML = `<span class="chat-sender ${cls}">${u}:</span><span class="chat-text">${m}</span>`;
-  feed.appendChild(div);
-  while(feed.children.length>6) feed.removeChild(feed.firstChild);
-  const stEl=document.getElementById('st-msgs');
-  if(stEl) stEl.textContent = (parseInt(stEl.textContent)||0)+1;
-}
-function pushBotTyping(cb){
-  const feed = document.getElementById('chat-feed');
-  const dots = document.createElement('div');
-  dots.className='typing-dots'; dots.innerHTML='<span></span><span></span><span></span>';
-  feed.appendChild(dots);
-  while(feed.children.length>6) feed.removeChild(feed.firstChild);
-  setTimeout(()=>{ dots.remove(); if(cb) cb(); }, 700);
-}
-function pushBotMsg(html){
-  const feed = document.getElementById('chat-feed');
-  const div = document.createElement('div');
-  div.className='bot-msg';
-  div.innerHTML = html;
-  feed.appendChild(div);
-  while(feed.children.length>6) feed.removeChild(feed.firstChild);
-}
-function pushAlert(type, html){
-  const wrap = document.getElementById('alert-feed');
-  if(!wrap) return;
-  const icons = {follow:'💙', sub:'💜', gift:'🎁', vote:'🗳️'};
-  const div = document.createElement('div');
-  div.className = 'alert-item '+type;
-  div.innerHTML = `<div style="flex-shrink:0;">${icons[type]}</div><div>${html}</div>`;
-  wrap.prepend(div);
-  while(wrap.children.length>3) wrap.removeChild(wrap.lastChild);
-  sfx('pop');
-}
+// legacy token note always shown since it's never routed
+$('legacyWarn').style.display = 'block';
 
-let dashTimers = [];
-function clearDashTimers(){ dashTimers.forEach(t=>clearTimeout(t)); dashTimers=[]; }
-
-function runLiveDashboard(){
-  document.getElementById('lb-rows').innerHTML='';
-  document.getElementById('chat-feed').innerHTML='';
-  document.getElementById('alert-feed').innerHTML='';
-  lbScores = {nova_bee:2140, kirin_tv:1870, ash_exe:1420, mochi_plays:990};
-  ['st-chatters','st-msgs','st-follows','st-subs'].forEach(id=>document.getElementById(id).textContent='0');
-  clearDashTimers();
-  initLeaderboard();
-
-  countUp(document.getElementById('st-chatters'), 148, 1600);
-  countUp(document.getElementById('st-follows'), 12, 1600);
-  countUp(document.getElementById('st-subs'), 6, 1600);
-
-  const script = [
-    {d:600,  fn:()=>pushChat('ash_exe','viewer','yooo lets goooo 🔥')},
-    {d:1300, fn:()=>pushChat('mochi_plays','viewer','that clip was insane')},
-    {d:2100, fn:()=>{ pushAlert('follow','<b>@kirin_tv</b> just followed!'); pushChat('kirin_tv','follower','just followed!! excited to be here'); }},
-    {d:3100, fn:()=>pushChat('nova_bee','sub','day 47 of watching lol')},
-    {d:4000, fn:()=>{ pushAlert('sub','<b>@nova_bee</b> subscribed — 3 months!'); bumpScore('nova_bee', 50); }},
-    {d:5000, fn:()=>pushChat('nova_bee','sub','!leaderboard')},
-    {d:5700, fn:()=>pushBotTyping(()=>pushBotMsg('<b>⚡ blazeguy:</b> 🏆 Top 3 — 1. @nova_bee 2. @kirin_tv 3. @ash_exe'))},
-    {d:7200, fn:()=>{ pushAlert('gift','<b>@nova_bee</b> gifted 5 subs! 🎁'); bumpScore('nova_bee', 150); }},
-    {d:8200, fn:()=>pushChat('ash_exe','viewer','W stream today')},
-    {d:9000, fn:()=>bumpScore('kirin_tv', 80)},
-    {d:9700, fn:()=>pushChat('mochi_plays','viewer','chat is cooking rn')},
-    {d:10600,fn:()=>pushAlert('vote','Poll: <b>Next game?</b> — 62% say yes')},
-    {d:11500,fn:()=>pushChat('nova_bee','sub','gg gg gg')},
-    {d:12400,fn:()=>bumpScore('ash_exe', 40)},
-    {d:13200,fn:()=>pushChat('kirin_tv','follower','!balance')},
-    {d:13800,fn:()=>pushBotTyping(()=>pushBotMsg('<b>⚡ blazeguy:</b> @kirin_tv — 1,950 pts 💰'))},
-    {d:15200,fn:()=>pushChat('mochi_plays','viewer','pog')},
-  ];
-  script.forEach(s => dashTimers.push(setTimeout(s.fn, s.d)));
-
-  moveCursor(.5,.5);
-  dashTimers.push(setTimeout(()=>moveCursor(.28,.72,()=>clickAt(.28,.72)), 900));
-}
-
-function runAiTools(){
-  document.getElementById('ai-roast').classList.remove('hl');
-  document.getElementById('ai-typed').textContent='';
-  const bubble = document.getElementById('ai-reply');
-  bubble.classList.remove('show');
-  document.getElementById('ai-reply-text').textContent='';
-  setTimeout(()=>{
-    moveCursor(.28,.4,()=>{
-      clickAt(.28,.4);
-      document.getElementById('ai-roast').classList.add('hl');
-      setTimeout(()=>typeInto(document.getElementById('ai-typed'), '!roast @kirin_tv', 50, ()=>{
-        setTimeout(()=>{
-          document.getElementById('ai-reply-text').textContent = '@kirin_tv still buffering their comeback since day 1 💀🔥';
-          bubble.classList.add('show');
-          sfx('pop');
-        }, 500);
-      }), 300);
-    });
-  }, 400);
-}
-
-function runShopViewers(){
-  document.getElementById('viewer-rows').innerHTML='';
-  document.getElementById('shop-tbl').style.display='none';
-  typeInto(document.getElementById('search-typed'), 'nova', 90, ()=>{
-    setTimeout(()=>{
-      const wrap = document.getElementById('viewer-rows');
-      const results = [{n:'nova_bee', s:2290, m:'2 months'},{n:'nova_wolf', s:410, m:'5 days'}];
-      results.forEach((r,idx)=>{
-        const row = document.createElement('div');
-        row.className='vrow'; row.style.animationDelay=(idx*0.15)+'s';
-        row.innerHTML = `<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--blaze),var(--purple));"></div>
-          <span style="font-weight:600;flex:1;">@${r.n}</span><span style="color:var(--muted2);">${r.m}</span>
-          <span style="color:var(--blaze);font-family:'JetBrains Mono',monospace;font-weight:700;">${r.s} pts</span>`;
-        wrap.appendChild(row);
-      });
-    }, 300);
-  });
-  setTimeout(()=>{
-    document.getElementById('shop-tbl').style.display='table';
-    [1,2,3].forEach((n,idx)=>{
-      const el=document.getElementById('shop-row-'+n);
-      el.style.opacity='0'; el.style.transition='opacity .4s';
-      setTimeout(()=>{ el.style.opacity='1'; }, idx*220);
-    });
-  }, 2400);
-}
-
-function runOverlay(){
-  const wrap = document.getElementById('ow-rows'); wrap.innerHTML='';
-  const users=['@nova_bee — 2290','@kirin_tv — 1950','@ash_exe — 1460'];
-  users.forEach((u,idx)=>{
-    const row=document.createElement('div');
-    row.style.cssText='font-size:11px;padding:4px 0;opacity:0;transform:translateY(6px);transition:.4s;';
-    row.textContent=(idx+1)+'. '+u;
-    wrap.appendChild(row);
-    setTimeout(()=>{ row.style.opacity='1'; row.style.transform='translateY(0)'; }, 300+idx*180);
-  });
-  const alertEl = document.getElementById('ow-alert');
-  alertEl.classList.remove('show');
-  setTimeout(()=>{
-    alertEl.innerHTML = '🎁 <b style="color:var(--green)">@nova_bee</b> gifted 5 subs!';
-    alertEl.classList.add('show');
-    sfx('pop');
-  }, 1400);
-}
-
-function runSettings(){
-  document.getElementById('currency-typed').textContent='';
-  setTimeout(()=>{ typeInto(document.getElementById('currency-typed'), 'gems', 100); }, 1200);
-}
-
-const scenes = [...document.querySelectorAll('.scene')];
-let current = -1, playing = false, timer = null, progressStart=0;
-const DURATIONS = [2800, 4600, 17000, 7200, 6800, 6200, 7200, 6600, 4800, 6200, 6800, 5200];
-const TOTAL = DURATIONS.reduce((a,b)=>a+b,0);
-const progressFill = document.getElementById('progress-fill');
-
-function goScene(i){
-  if(i>=scenes.length){ playing=false; return; }
-  if(current>=0) scenes[current].classList.remove('active');
-  current = i;
-  progressStart = Date.now();
-  scenes[i].classList.add('active');
-  sfx('whoosh');
-  runSceneScript(i);
-  clearTimeout(timer);
-  if(playing) timer = setTimeout(()=>goScene(i+1), DURATIONS[i]);
-}
-
-function runGames(){
-  document.getElementById('game-coinflip').classList.remove('hl');
-  const result = document.getElementById('game-result');
-  result.classList.remove('show');
-  setTimeout(()=>{
-    moveCursor(.28,.36,()=>{
-      clickAt(.28,.36);
-      document.getElementById('game-coinflip').classList.add('hl');
-      setTimeout(()=>{
-        result.classList.add('show');
-        sfx('pop');
-      }, 500);
-    });
-  }, 500);
-}
-
-function runPoll(){
-  ['poll-pct-a','poll-pct-b'].forEach(id=>document.getElementById(id).textContent='0%');
-  ['poll-bar-a','poll-bar-b'].forEach(id=>document.getElementById(id).style.width='0%');
-  document.getElementById('poll-votes').textContent='0 votes';
-  const winner = document.getElementById('poll-winner');
-  winner.classList.remove('show');
-
-  let votesA=0, votesB=0;
-  const totalTicks = 14;
-  let tick=0;
-  const iv = setInterval(()=>{
-    tick++;
-    if(Math.random() < 0.62) votesA++; else votesB++;
-    const total = votesA+votesB;
-    const pctA = Math.round((votesA/total)*100), pctB = 100-pctA;
-    document.getElementById('poll-bar-a').style.width = pctA+'%';
-    document.getElementById('poll-bar-b').style.width = pctB+'%';
-    document.getElementById('poll-pct-a').textContent = pctA+'%';
-    document.getElementById('poll-pct-b').textContent = pctB+'%';
-    document.getElementById('poll-votes').textContent = total+' votes';
-    if(tick>=totalTicks){
-      clearInterval(iv);
-      setTimeout(()=>{ winner.classList.add('show'); sfx('chime'); }, 300);
-    }
-  }, 260);
-}
-
-function runCommands(){
-  [1,2,3].forEach(n=>{
-    const row = document.getElementById('cmds-row-'+n);
-    if(!row) return;
-    [...row.children].forEach((chip,idx)=>{
-      chip.style.animation = 'none';
-      void chip.offsetWidth; // force reflow so the animation restarts cleanly
-      chip.style.animation = '';
-      chip.style.animationDelay = ((n-1)*0.5 + idx*0.1)+'s';
-    });
-  });
-}
-
-function runShopLive(){
-  document.querySelectorAll('.shop-live .shop-item-row').forEach(row=>{
-    const delay = row.style.animationDelay;
-    row.style.animation = 'none';
-    void row.offsetWidth;
-    row.style.animation = '';
-    row.style.animationDelay = delay;
-  });
-  document.getElementById('purchase-feed').innerHTML = '';
-  const bubble = document.getElementById('shop-reply');
-  bubble.classList.remove('show');
-  document.getElementById('shop-reply-text').textContent = '';
-  typeInto(document.getElementById('shop-typed'), '!buy shoutout', 55, ()=>{
-    setTimeout(()=>{
-      document.getElementById('shop-reply-text').textContent = '@ash_exe redeemed "Channel Shoutout" for 200 pts! 🎉';
-      bubble.classList.add('show');
-      sfx('pop');
-      const feed = document.getElementById('purchase-feed');
-      const toast = document.createElement('div');
-      toast.className = 'purchase-toast';
-      toast.innerHTML = '<b>@ash_exe</b> — Channel Shoutout <span style="color:var(--muted2)">· 200 pts</span>';
-      feed.prepend(toast);
-    }, 500);
-  });
-  setTimeout(()=>{
-    const feed = document.getElementById('purchase-feed');
-    const items = [
-      {u:'kirin_tv', item:'Song Request', c:150},
-      {u:'mochi_plays', item:'Emote Unlock', c:90},
-    ];
-    items.forEach((p,idx)=>{
-      setTimeout(()=>{
-        const toast = document.createElement('div');
-        toast.className = 'purchase-toast';
-        toast.innerHTML = `<b>@${p.u}</b> — ${p.item} <span style="color:var(--muted2)">· ${p.c} pts</span>`;
-        feed.prepend(toast);
-        while(feed.children.length>4) feed.removeChild(feed.lastChild);
-      }, idx*900);
-    });
-  }, 2400);
-}
-
-function runSceneScript(i){
-  cursorEl.style.opacity = (i===0 || i===11) ? 0 : 1;
-  if(i===1) moveCursor(.5,.7,()=>clickAt(.5,.7));
-  if(i===2) runLiveDashboard();
-  if(i===3) runAiTools();
-  if(i===4) runShopViewers();
-  if(i===5) runCommands();
-  if(i===6) runShopLive();
-  if(i===7) runOverlay();
-  if(i===8) runSettings();
-  if(i===9) runGames();
-  if(i===10) runPoll();
-  if(i===11) sfx('chime');
-}
-
-document.getElementById('start-overlay').addEventListener('click', () => {
-  document.getElementById('start-overlay').classList.add('hidden');
-  playing = true;
-  goScene(0);
+// ---------- Settings ----------
+$('settingsToggle').onclick = () => $('settingsPanel').classList.toggle('open');
+document.querySelectorAll('.slippage-row button[data-slip]').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.slippage-row button[data-slip]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    slippagePct = parseFloat(btn.dataset.slip);
+    $('customSlip').value = '';
+    refreshQuote();
+  };
 });
-document.getElementById('pause-btn').addEventListener('click', (e) => {
-  playing = !playing;
-  e.target.textContent = playing ? '❚❚' : '▶';
-  if(playing){
-    const elapsed = Date.now()-progressStart;
-    const remaining = Math.max(200, DURATIONS[current]-elapsed);
-    timer = setTimeout(()=>goScene(current+1), remaining);
-  } else clearTimeout(timer);
-});
-document.getElementById('replay-btn').addEventListener('click', () => {
-  clearTimeout(timer); clearDashTimers(); playing = true;
-  document.getElementById('pause-btn').textContent = '❚❚';
-  if(current>=0) scenes[current].classList.remove('active');
-  current = -1;
-  goScene(0);
-});
-
-(function tick(){
-  if(current>=0){
-    const totalUpTo = DURATIONS.slice(0,current).reduce((a,b)=>a+b,0);
-    const elapsed = playing ? (Date.now()-progressStart) : 0;
-    const pct = Math.min(100, ((totalUpTo+elapsed)/TOTAL)*100);
-    progressFill.style.width = pct+'%';
+$('customSlip').oninput = (e) => {
+  const v = parseFloat(e.target.value);
+  if (!isNaN(v) && v > 0 && v < 50) {
+    document.querySelectorAll('.slippage-row button[data-slip]').forEach(b => b.classList.remove('active'));
+    slippagePct = v;
+    refreshQuote();
   }
-  requestAnimationFrame(tick);
-})();
+};
+
+// ---------- Wallet ----------
+async function connect() {
+  if (!window.ethereum) {
+    setStatus('No injected wallet found. Install MetaMask or Core.', true);
+    return;
+  }
+  try {
+    provider = new ethers.BrowserProvider(window.ethereum);
+    await provider.send('eth_requestAccounts', []);
+    await ensureChain();
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    router = new ethers.Contract(ADDR.ROUTER, ROUTER_ABI, signer);
+    wethAddress = await router.WETH();
+
+    $('walletLabel').textContent = userAddress.slice(0,6) + '…' + userAddress.slice(-4);
+    $('connectBtn').textContent = 'Connected';
+
+    const bobRead = new ethers.Contract(ADDR.BOB, ERC20_ABI, provider);
+    try { bobDecimals = await bobRead.decimals(); TOKENS.BOB.decimals = bobDecimals; } catch(e) {}
+
+    window.ethereum.on('accountsChanged', () => window.location.reload());
+    window.ethereum.on('chainChanged', () => window.location.reload());
+
+    await refreshBalances();
+    await refreshQuote();
+    setStatus('');
+  } catch (err) {
+    console.error(err);
+    setStatus(err.message || 'Failed to connect', true);
+  }
+}
+$('connectBtn').onclick = connect;
+
+async function ensureChain() {
+  const net = await provider.send('eth_chainId', []);
+  if (net.toLowerCase() === CHAIN.chainIdHex) return;
+  try {
+    await provider.send('wallet_switchEthereumChain', [{ chainId: CHAIN.chainIdHex }]);
+  } catch (switchErr) {
+    if (switchErr.code === 4902) {
+      await provider.send('wallet_addEthereumChain', [{
+        chainId: CHAIN.chainIdHex,
+        chainName: CHAIN.chainName,
+        nativeCurrency: CHAIN.nativeCurrency,
+        rpcUrls: CHAIN.rpcUrls,
+        blockExplorerUrls: CHAIN.blockExplorerUrls
+      }]);
+    } else {
+      throw switchErr;
+    }
+  }
+}
+
+// ---------- Helpers ----------
+function tokenAddrForPath(key) {
+  const t = TOKENS[key];
+  return t.address === NATIVE ? wethAddress : t.address;
+}
+function isNativeKey(key) { return TOKENS[key].address === NATIVE; }
+
+async function balanceOf(key) {
+  if (!userAddress) return null;
+  const t = TOKENS[key];
+  if (t.address === NATIVE) {
+    return await provider.getBalance(userAddress);
+  }
+  const c = new ethers.Contract(t.address, ERC20_ABI, provider);
+  return await c.balanceOf(userAddress);
+}
+
+async function refreshBalances() {
+  if (!userAddress) return;
+  try {
+    const fromB = await balanceOf(fromKey);
+    const toB = await balanceOf(toKey);
+    $('fromBal').textContent = 'Balance: ' + fmt(fromB, TOKENS[fromKey].decimals);
+    $('toBal').textContent = 'Balance: ' + fmt(toB, TOKENS[toKey].decimals);
+  } catch (e) { console.error(e); }
+}
+
+function fmt(bn, decimals) {
+  if (bn === null || bn === undefined) return '—';
+  const s = ethers.formatUnits(bn, decimals);
+  const n = parseFloat(s);
+  return n.toLocaleString(undefined, { maximumFractionDigits: 6 });
+}
+
+function buildPath() {
+  return [tokenAddrForPath(fromKey), tokenAddrForPath(toKey)];
+}
+
+let quoteTimer = null;
+function scheduleQuote() {
+  clearTimeout(quoteTimer);
+  quoteTimer = setTimeout(refreshQuote, 350);
+}
+
+async function refreshQuote() {
+  const amtStr = $('amountIn').value;
+  if (!amtStr || isNaN(parseFloat(amtStr)) || parseFloat(amtStr) <= 0) {
+    $('amountOut').value = '';
+    $('rateLine').style.display = 'none';
+    updateSwapBtn(null);
+    return;
+  }
+  if (!router) {
+    updateSwapBtn(null, 'Connect wallet');
+    return;
+  }
+  if (fromKey === toKey) {
+    setStatus('Choose two different tokens', true);
+    return;
+  }
+  try {
+    const amountIn = ethers.parseUnits(amtStr, TOKENS[fromKey].decimals);
+    const path = buildPath();
+    const amounts = await router.getAmountsOut(amountIn, path);
+    const out = amounts[amounts.length - 1];
+    $('amountOut').value = ethers.formatUnits(out, TOKENS[toKey].decimals);
+    $('rateLine').style.display = 'flex';
+    const rate = parseFloat(ethers.formatUnits(out, TOKENS[toKey].decimals)) / parseFloat(amtStr);
+    $('rateText').textContent = `1 ${TOKENS[fromKey].symbol} ≈ ${rate.toLocaleString(undefined,{maximumFractionDigits:6})} ${TOKENS[toKey].symbol}`;
+    $('priceImpact').textContent = `Slippage ${slippagePct}%`;
+    setStatus('');
+    await updateSwapBtn(amountIn, out);
+  } catch (err) {
+    console.error(err);
+    $('amountOut').value = '';
+    setStatus('No route / insufficient liquidity for this pair', true);
+    updateSwapBtn(null);
+  }
+}
+
+async function updateSwapBtn(amountIn, minOutRef) {
+  const btn = $('swapBtn');
+  const approveBtn = $('approveBtn');
+  if (!userAddress) {
+    btn.disabled = true; btn.textContent = 'Connect wallet first';
+    approveBtn.style.display = 'none';
+    return;
+  }
+  if (!amountIn) {
+    btn.disabled = true; btn.textContent = 'Enter an amount';
+    approveBtn.style.display = 'none';
+    return;
+  }
+  if (!isNativeKey(fromKey)) {
+    const c = new ethers.Contract(TOKENS[fromKey].address, ERC20_ABI, provider);
+    const allowance = await c.allowance(userAddress, ADDR.ROUTER);
+    if (allowance < amountIn) {
+      approveBtn.style.display = 'block';
+      approveBtn.textContent = `Approve ${TOKENS[fromKey].symbol}`;
+      btn.disabled = true;
+      btn.textContent = 'Approve first';
+      return;
+    }
+  }
+  approveBtn.style.display = 'none';
+  btn.disabled = false;
+  btn.textContent = `Swap ${TOKENS[fromKey].symbol} → ${TOKENS[toKey].symbol}`;
+}
+
+$('approveBtn').onclick = async () => {
+  try {
+    setStatus('Approving…');
+    const c = new ethers.Contract(TOKENS[fromKey].address, ERC20_ABI, signer);
+    const tx = await c.approve(ADDR.ROUTER, ethers.MaxUint256);
+    setStatus('Waiting for confirmation…');
+    await tx.wait();
+    setStatus('Approved.', false, true);
+    await refreshQuote();
+  } catch (err) {
+    console.error(err);
+    setStatus(err.shortMessage || err.message || 'Approve failed', true);
+  }
+};
+
+$('swapBtn').onclick = async () => {
+  try {
+    const amtStr = $('amountIn').value;
+    const amountIn = ethers.parseUnits(amtStr, TOKENS[fromKey].decimals);
+    const path = buildPath();
+    const amounts = await router.getAmountsOut(amountIn, path);
+    const quotedOut = amounts[amounts.length - 1];
+    const slipBps = BigInt(Math.round(slippagePct * 100));
+    const minOut = quotedOut - (quotedOut * slipBps / 10000n);
+    const deadline = Math.floor(Date.now() / 1000) + 60 * 20;
+
+    setStatus('Confirm in wallet…');
+    let tx;
+    if (isNativeKey(fromKey)) {
+      tx = await router.swapExactETHForTokens(minOut, path, userAddress, deadline, { value: amountIn });
+    } else if (isNativeKey(toKey)) {
+      tx = await router.swapExactTokensForETH(amountIn, minOut, path, userAddress, deadline);
+    } else {
+      tx = await router.swapExactTokensForTokens(amountIn, minOut, path, userAddress, deadline);
+    }
+    setStatus(`Pending: <a href="${CHAIN.blockExplorerUrls[0]}/tx/${tx.hash}" target="_blank">${tx.hash.slice(0,10)}…</a>`);
+    await tx.wait();
+    setStatus('Swap confirmed ✓', false, true);
+    $('amountIn').value = '';
+    $('amountOut').value = '';
+    await refreshBalances();
+  } catch (err) {
+    console.error(err);
+    setStatus(err.shortMessage || err.message || 'Swap failed', true);
+  }
+};
+
+function setStatus(html, isError=false, isSuccess=false) {
+  const el = $('statusLine');
+  el.innerHTML = html;
+  el.className = 'status' + (isError ? ' error' : '') + (isSuccess ? ' success' : '');
+}
+
+// ---------- Field wiring ----------
+$('amountIn').addEventListener('input', scheduleQuote);
+$('fromToken').addEventListener('change', async (e) => {
+  fromKey = e.target.value;
+  if (fromKey === toKey) { // auto-swap the other side
+    toKey = Object.keys(TOKENS).find(k => k !== fromKey);
+    $('toToken').value = toKey;
+  }
+  await refreshBalances();
+  await refreshQuote();
+});
+$('toToken').addEventListener('change', async (e) => {
+  toKey = e.target.value;
+  if (fromKey === toKey) {
+    fromKey = Object.keys(TOKENS).find(k => k !== toKey);
+    $('fromToken').value = fromKey;
+  }
+  await refreshBalances();
+  await refreshQuote();
+});
+$('flipBtn').addEventListener('click', async () => {
+  [fromKey, toKey] = [toKey, fromKey];
+  $('fromToken').value = fromKey;
+  $('toToken').value = toKey;
+  $('amountIn').value = '';
+  $('amountOut').value = '';
+  await refreshBalances();
+  await refreshQuote();
+});
+$('fromBal').addEventListener('click', async () => {
+  if (!userAddress) return;
+  const b = await balanceOf(fromKey);
+  if (b === null) return;
+  // leave a little native for gas if selling native
+  const val = isNativeKey(fromKey) ? (b > ethers.parseEther('0.01') ? b - ethers.parseEther('0.01') : 0n) : b;
+  $('amountIn').value = ethers.formatUnits(val, TOKENS[fromKey].decimals);
+  scheduleQuote();
+});
 </script>
 </body>
 </html>
