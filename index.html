@@ -338,6 +338,18 @@ function friendlyError(e){
   if(/insufficient/i.test(msg)) return 'Insufficient balance or gas.';
   return msg.slice(0,200);
 }
+function parseTokenAmount(value, decimals, label, allowZero=false){
+  const raw = String(value || '').trim();
+  if(!/^(?:\d+\.?\d*|\.\d+)$/.test(raw)) throw new Error(label+' must be a plain decimal number.');
+  const parsed = ethers.parseUnits(raw, decimals);
+  if(parsed < 0n || (!allowZero && parsed === 0n)) throw new Error(label+' must be greater than zero.');
+  return parsed;
+}
+async function ensureGrottoNetwork(){
+  await switchToGrotto();
+  const chainId = await window.ethereum.request({method:'eth_chainId'});
+  if(String(chainId).toLowerCase() !== GROTTO_CHAIN_ID_HEX.toLowerCase()) throw new Error('Wallet is not connected to The Grotto.');
+}
 
 // Always plain decimal digits — never scientific notation, however small the number.
 function fmtAdaptive(num){
@@ -397,6 +409,7 @@ async function switchToAvax(){
 async function addTokenToWallet(){
   if(!window.ethereum){ toast('No wallet found.','error'); return; }
   try{
+    await switchToAvax();
     await window.ethereum.request({
       method:'wallet_watchAsset',
       params:{type:'ERC20',options:{address:BOB_REMOTE_AVAX,symbol:'BOB',decimals:18}}
@@ -564,10 +577,16 @@ async function refreshBalances(){
 async function doSwap(){
   if(!userAddress){ connectWallet(); return; }
   if(!poolInfo){ toast('Pool data still loading…','error'); return; }
+  try{
+    await ensureGrottoNetwork();
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+  }catch(e){ toast(friendlyError(e),'error'); return; }
   const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
   if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
 
-  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
+  const amountInput = document.getElementById('in-amount').value;
+  const amtIn = parseFloat(amountInput || '0');
   if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
 
   const bobToOther = direction==='bob-to-pool';
@@ -582,7 +601,10 @@ async function doSwap(){
   const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
 
   const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  const amountInWei = ethers.parseUnits(amtIn.toString(), inDecimals);
+  let amountInWei;
+  try{
+    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
+  }catch(e){ toast(friendlyError(e),'error'); return; }
   const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
 
   const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
@@ -634,27 +656,29 @@ async function refreshBridgeBalances(){
 
 async function doBridge(){
   if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value;
-  const amt = parseFloat(amtStr || '0');
-  if(!amt || amt<=0){ toast('Enter an amount to bridge','error'); return; }
+  const amtStr = document.getElementById('bridge-amount').value.trim();
   const recipientInput = document.getElementById('bridge-recipient').value.trim();
   const recipient = recipientInput || userAddress;
+  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
+  const feeStr = document.getElementById('bridge-fee').value.trim();
   if(!ethers.isAddress(recipient)){ toast('Recipient is not a valid address','error'); return; }
-  const requiredGasLimit = BigInt(document.getElementById('bridge-gaslimit').value || '350000');
-  const feeAmt = parseFloat(document.getElementById('bridge-fee').value || '0');
+  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
 
   const btn = document.getElementById('btn-bridge');
   btn.disabled = true;
   try{
-    setTxStatus('tx-bridge','🔎 Reading Avalanche C-Chain blockchain ID…','pending');
+    await ensureGrottoNetwork();
+    signer = await provider.getSigner();
+    userAddress = await signer.getAddress();
+    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
+    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
+    const requiredGasLimit = BigInt(gasLimitStr);
+    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
     // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
     // instead of hardcoding a value that could be wrong for this deployment.
     const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
     const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
     const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const amountWei = ethers.parseUnits(amt.toString(), 18);
-    const feeWei = ethers.parseUnits(feeAmt.toString(), 18);
 
     const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
     const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
@@ -683,8 +707,8 @@ async function doBridge(){
     setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
     await tx.wait(1);
 
-    setTxStatus('tx-bridge','✅ Bridge transaction sent! Wrapped $BOB should land on Avalanche within a couple minutes.','success');
-    toast('Bridge tx sent 🎉','success');
+    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
+    toast('Bridge submitted — awaiting Avalanche delivery.','success');
     document.getElementById('bridge-amount').value='';
     refreshBridgeBalances();
   }catch(e){
