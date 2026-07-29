@@ -61,7 +61,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.97
 .card{background:rgba(24,24,24,.85);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:12px;padding:20px;}
 .info-tip{display:flex;gap:10px;background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.2);border-radius:10px;padding:12px 14px;font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:16px;}
 .info-tip b{color:var(--text);}
-.price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
+.price-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:18px;}
 .price-card{background:rgba(24,24,24,.85);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
 .price-card .sym{display:flex;align-items:center;justify-content:center;gap:5px;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
 .price-card .sym img{width:14px;height:14px;border-radius:50%;}
@@ -160,6 +160,7 @@ input:focus{outline:none;border-color:var(--orange);}
     <div class="nav-tabs">
       <button class="nav-tab active" id="tab-swap" onclick="showPage('swap')">Swap</button>
       <button class="nav-tab" id="tab-bridge" onclick="showPage('bridge')">Bridge</button>
+      <button class="nav-tab" id="tab-fees" onclick="showPage('fees')">Fees</button>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;">
@@ -174,18 +175,23 @@ input:focus{outline:none;border-color:var(--orange);}
 <div class="page active" id="page-swap">
   <div class="container">
     <div class="section-title">Swap on The Grotto</div>
-    <div class="section-sub">Live pool price · $BOB ⇄ WHERESY ⇄ HERESY (native)</div>
+    <div class="section-sub">Live pool price · $BOB ⇄ $UNKNOWN ⇄ WHERESY ⇄ HERESY (native)</div>
 
     <div class="info-tip">
       <span>🕯️</span>
-      <div><b>Pool:</b> <a class="addr-link mono" href="https://cave.money/pools/0xf8602d664840dd329baefa8692801d21167d6e69" target="_blank">0xf860…d6e69</a> is $BOB / WHERESY. HERESY is the chain's native gas token — WHERESY is its 1:1 wrapped ERC20 (like WAVAX), confirmed from your own <span class="mono">deposit()</span> tx. Picking BOB⇄HERESY auto-routes through WHERESY: wrap/unwrap + pool swap in one click.</div>
+      <div><b>Pools:</b> <a class="addr-link mono" href="https://cave.money/pools/0xf8602d664840dd329baefa8692801d21167d6e69" target="_blank">0xf860…d6e69</a> is $BOB / WHERESY, and <a class="addr-link mono" href="https://cave.money/pools/0x470e37fc4b15058e96a079b224bebf6fa960e9e7" target="_blank">0x470e…0e9e7</a> is $UNKNOWN / WHERESY. HERESY is the chain's native gas token — WHERESY is its 1:1 wrapped ERC20 (like WAVAX). Any pair (incl. BOB⇄UNKNOWN) auto-routes through WHERESY: wrap/unwrap + pool swap(s) in one click. A 1% platform fee applies on the input amount whenever a route touches a pool, sent to <a class="addr-link mono" href="https://subnets.avax.network/thegrotto/address/0x46914D5DC59598801e435AF2a08928Da87C60dF0" target="_blank">0x4691…60dF0</a> — see the <span class="mono">Fees</span> tab.</div>
     </div>
 
-    <div class="price-grid">
+    <div class="price-grid" id="price-grid">
       <div class="price-card">
         <div class="sym"><img src="https://bp.enterthegrotto.xyz/_next/image?url=%2Fimages%2Fbp-coin.png&w=96&q=75&dpl=dpl_GcjBAnqUhkqnWvG35bbXPrmWxs3t" alt=""/>$BOB</div>
         <div class="val" id="px-bob-usd">$0.0000</div>
         <div class="sub" id="px-bob-usd-sub">via Avax dexscreener ref.</div>
+      </div>
+      <div class="price-card">
+        <div class="sym"><img src="https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-IMG_6144-1780319275259-2737.jpeg&w=64&q=75" alt=""/>$UNKNOWN</div>
+        <div class="val" id="px-unknown-usd">$0.0000</div>
+        <div class="sub" id="px-unknown-usd-sub">derived from pool</div>
       </div>
       <div class="price-card">
         <div class="sym">1 BOB ≈</div>
@@ -242,7 +248,8 @@ input:focus{outline:none;border-color:var(--orange);}
         <div><span>Pool price</span><b id="det-price">–</b></div>
         <div><span>Price impact</span><b id="det-impact">–</b></div>
         <div><span>Min. received</span><b id="det-min">–</b></div>
-        <div><span>Fee (0.3% on pool leg)</span><b id="det-fee">–</b></div>
+        <div><span>Pool fee (0.3% per hop)</span><b id="det-fee">–</b></div>
+        <div><span>Platform fee (1%)</span><b id="det-platform-fee">–</b></div>
       </div>
 
       <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="btn-swap" onclick="doSwap()">Connect Wallet</button>
@@ -251,6 +258,20 @@ input:focus{outline:none;border-color:var(--orange);}
         <div class="progress-seg" id="seg-2"><div class="fill"></div></div>
       </div>
       <div id="tx-swap" class="tx-status"></div>
+    </div>
+
+    <div class="card" id="chart-card" style="margin-top:16px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+        <div style="font-family:var(--font-display);font-size:1.1rem;letter-spacing:1px;" id="chart-title">$BOB / USD</div>
+        <a class="addr-link mono" style="font-size:.72rem;" id="chart-ext-link" href="https://dexscreener.com/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b" target="_blank">Open full chart ↗</a>
+      </div>
+      <div id="chart-dexscreener" style="position:relative;width:100%;height:420px;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+        <iframe id="chart-iframe" src="https://dexscreener.com/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b?embed=1&theme=dark&trades=0&info=0" style="width:100%;height:100%;border:0;" title="BOB price chart"></iframe>
+      </div>
+      <div id="chart-unknown" style="display:none;">
+        <canvas id="unknown-chart-canvas" width="800" height="280" style="width:100%;height:280px;display:block;background:var(--dark);border:1px solid var(--border);border-radius:8px;"></canvas>
+        <div class="sub" style="font-size:.7rem;color:var(--muted);margin-top:8px;line-height:1.5;">$UNKNOWN isn't indexed on Dexscreener (Grotto L1 subnet), so this is a <b style="color:var(--text);">live session chart</b> sampled from the pool every 20s while this page is open — not full history. For the pool's own chart/history, use the link above (opens cave.money).</div>
+      </div>
     </div>
   </div>
 </div>
@@ -325,6 +346,47 @@ input:focus{outline:none;border-color:var(--orange);}
   </div>
 </div>
 
+<!-- ============ FEES PAGE ============ -->
+<div class="page" id="page-fees">
+  <div class="container">
+    <div class="section-title">Platform Fees</div>
+    <div class="section-sub">1% is taken from the input amount on every swap that touches a pool, and sent to the fee wallet below.</div>
+
+    <div class="info-tip">
+      <span>🧾</span>
+      <div><b>Fee wallet:</b> <a class="addr-link mono" href="https://subnets.avax.network/thegrotto/address/0x46914D5DC59598801e435AF2a08928Da87C60dF0" target="_blank">0x4691…60dF0 ↗</a>. The numbers below are the wallet's <b>current on-chain balances</b> for each swap token — the simplest reliable proxy for fees collected, since the wallet only receives fee transfers here. If it's ever used for anything else, or funds are moved out, this will no longer equal "total fees ever paid." Values refresh automatically and can be refreshed manually too.</div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="bridge-row">
+        <div class="l">Total value in fee wallet (est.)</div>
+        <div class="r" id="fees-total-usd" style="font-family:var(--font-display);font-size:1.3rem;color:var(--orange);">$0.00</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="bridge-row">
+        <div class="l">$BOB balance</div>
+        <div class="r" id="fees-bal-bob">–</div>
+      </div>
+      <div class="bridge-row">
+        <div class="l">$UNKNOWN balance</div>
+        <div class="r" id="fees-bal-unknown">–</div>
+      </div>
+      <div class="bridge-row">
+        <div class="l">$WHERESY balance</div>
+        <div class="r" id="fees-bal-wheresy">–</div>
+      </div>
+      <div class="bridge-row">
+        <div class="l">HERESY (native) balance</div>
+        <div class="r" id="fees-bal-heresy">–</div>
+      </div>
+    </div>
+
+    <button class="btn btn-ghost" style="width:100%;" onclick="refreshFeesPage()">Refresh fee wallet balances</button>
+  </div>
+</div>
+
 <script>
 // ==================== CONFIG ====================
 const GROTTO_CHAIN_ID = 36463;
@@ -336,7 +398,10 @@ const AVAX_C_RPC = 'https://api.avax.network/ext/bc/C/rpc';
 
 const BOB_GROTTO   = '0x06057d79dBC506f7c0803F052E6c823AA4A25dEA';
 const WHERESY_ADDR = '0xfA99B368B5fc1f5a061bc393dFf73BE8a097667D'; // wrapped native HERESY (WETH9-style)
-const POOL_ADDR    = '0xf8602d664840dd329baefa8692801d21167d6e69'; // BOB / WHERESY
+const UNKNOWN_ADDR = '0x219F9287ABa63bB0e966e12b7305539CcaDAF218';
+
+const BOB_POOL_ADDR     = '0xf8602d664840dd329baefa8692801d21167d6e69'; // BOB / WHERESY
+const UNKNOWN_POOL_ADDR = '0x470e37fc4b15058e96a079b224bebf6fa960e9e7'; // UNKNOWN / WHERESY
 
 const BOB_HOME_GROTTO = '0x362c34d5df39458be2fe3a2f132dd45f0f4189a3';
 const BOB_REMOTE_AVAX = '0x2f524f453430520ca26e5485017abaa80231c53d';
@@ -345,11 +410,19 @@ const WARP_PRECOMPILE = '0x0200000000000000000000000000000000000005';
 const WARP_ABI = ["function getBlockchainID() view returns (bytes32)"];
 
 const DEXSCREENER_BOB_AVAX = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b';
+const DEXSCREENER_BOB_CHART_URL = 'https://dexscreener.com/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b?embed=1&theme=dark&trades=0&info=0';
+const DEXSCREENER_BOB_LINK = 'https://dexscreener.com/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b';
+const UNKNOWN_POOL_LINK = 'https://cave.money/pools/0x470e37fc4b15058e96a079b224bebf6fa960e9e7';
+
+// 1% platform fee on the input amount, on any route that touches a pool
+const FEE_WALLET = '0x46914D5DC59598801e435AF2a08928Da87C60dF0';
+const FEE_BPS = 100; // 100 / 10000 = 1%
 
 const ICONS = {
   BOB:     'https://bp.enterthegrotto.xyz/_next/image?url=%2Fimages%2Fbp-coin.png&w=96&q=75&dpl=dpl_GcjBAnqUhkqnWvG35bbXPrmWxs3t',
   WHERESY: 'https://grottoexplorer.xyz/assets/configs/network_icon.png',
-  HERESY:  'https://grottoexplorer.xyz/assets/configs/network_icon.png'
+  HERESY:  'https://grottoexplorer.xyz/assets/configs/network_icon.png',
+  UNKNOWN: 'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-IMG_6144-1780319275259-2737.jpeg&w=64&q=75'
 };
 
 const ERC20_ABI = [
@@ -375,21 +448,33 @@ const TOKEN_HOME_ABI = [
 ];
 
 const TOKENS = {
-  BOB:     { symbol:'BOB',     type:'erc20',  address:BOB_GROTTO,   decimals:18 },
-  WHERESY: { symbol:'WHERESY', type:'erc20',  address:WHERESY_ADDR, decimals:18 },
-  HERESY:  { symbol:'HERESY',  type:'native', address:null,         decimals:18 }
+  BOB:     { symbol:'BOB',     type:'erc20',  address:BOB_GROTTO,     decimals:18 },
+  UNKNOWN: { symbol:'UNKNOWN', type:'erc20',  address:UNKNOWN_ADDR,   decimals:18 },
+  WHERESY: { symbol:'WHERESY', type:'erc20',  address:WHERESY_ADDR,   decimals:18 },
+  HERESY:  { symbol:'HERESY',  type:'native', address:null,           decimals:18 }
 };
+// "Spoke" tokens each have their own pool paired against WHERESY (the hub).
+const SPOKE_POOLS = {
+  BOB:     BOB_POOL_ADDR,
+  UNKNOWN: UNKNOWN_POOL_ADDR
+};
+const TOKEN_ORDER = ['BOB','UNKNOWN','WHERESY','HERESY'];
 
 // ==================== STATE ====================
 let provider=null, signer=null, userAddress=null;
 let roProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
-let pairRO = new ethers.Contract(POOL_ADDR, PAIR_ABI, roProvider);
 let bobRO = new ethers.Contract(BOB_GROTTO, ERC20_ABI, roProvider);
+
+// one read-only pair contract per spoke pool
+let pairRO = {};
+Object.keys(SPOKE_POOLS).forEach(k=>{ pairRO[k] = new ethers.Contract(SPOKE_POOLS[k], PAIR_ABI, roProvider); });
 
 let fromKey = 'BOB', toKey = 'HERESY';
 let slippagePct = 1;
-let poolInfo = null;   // {bobIsToken0, bobReserve, wheresyReserve}
+// poolInfo[key] = {spokeIsToken0, spokeReserve, wheresyReserve} for each spoke pool (BOB, UNKNOWN)
+let poolInfo = {};
 let bobUsd = 0;
+let unknownPriceHistory = []; // [{t, usd}] live session samples for the UNKNOWN chart
 
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -397,6 +482,7 @@ function showPage(p){
   document.getElementById('page-'+p).classList.add('active');
   document.getElementById('tab-'+p).classList.add('active');
   if(p==='bridge') refreshBridgeBalances();
+  if(p==='fees') refreshFeesPage();
 }
 function toggleAdvanced(){ document.getElementById('adv-panel').classList.toggle('open'); }
 
@@ -480,7 +566,7 @@ initEmbers();
 function buildTokenMenu(side){
   const menu = document.getElementById(side+'-menu');
   menu.innerHTML = '';
-  ['BOB','WHERESY','HERESY'].forEach(key=>{
+  TOKEN_ORDER.forEach(key=>{
     const item = document.createElement('div');
     item.className = 'token-menu-item';
     item.innerHTML = `<img src="${ICONS[key]}" alt=""/><span>${key}</span>`;
@@ -514,6 +600,7 @@ function selectToken(side, key){
   }
   updateRouteLine();
   updateEstimate();
+  updateChartForSelection();
   refreshBalances();
   updateSwapButtonLabel();
 }
@@ -566,29 +653,48 @@ async function addTokenToWallet(){
 }
 
 // ==================== PRICES ====================
-async function refreshPrices(){
+async function loadPoolInfo(spoke){
   try{
-    const [reserves, token0] = await Promise.all([pairRO.getReserves(), pairRO.token0()]);
-    const bobIsToken0 = token0.toLowerCase() === BOB_GROTTO.toLowerCase();
+    const pair = pairRO[spoke];
+    const spokeAddr = TOKENS[spoke].address;
+    const [reserves, token0] = await Promise.all([pair.getReserves(), pair.token0()]);
+    const spokeIsToken0 = token0.toLowerCase() === spokeAddr.toLowerCase();
     const r0 = parseFloat(ethers.formatUnits(reserves[0], 18));
     const r1 = parseFloat(ethers.formatUnits(reserves[1], 18));
-    const bobReserve = bobIsToken0 ? r0 : r1;
-    const wheresyReserve = bobIsToken0 ? r1 : r0;
-    poolInfo = { bobIsToken0, bobReserve, wheresyReserve };
+    const spokeReserve = spokeIsToken0 ? r0 : r1;
+    const wheresyReserve = spokeIsToken0 ? r1 : r0;
+    poolInfo[spoke] = { spokeIsToken0, spokeReserve, wheresyReserve };
+  }catch(e){ console.warn('pool load failed for '+spoke, e); }
+}
 
-    const wheresyPerBob = bobReserve>0 ? wheresyReserve/bobReserve : 0;
+async function refreshPrices(){
+  await Promise.all(Object.keys(SPOKE_POOLS).map(loadPoolInfo));
+
+  const bobInfo = poolInfo['BOB'];
+  if(bobInfo && bobInfo.spokeReserve>0){
+    const wheresyPerBob = bobInfo.wheresyReserve/bobInfo.spokeReserve;
     document.getElementById('px1-val').textContent = fmtAdaptive(wheresyPerBob);
     document.getElementById('det-price').textContent = `1 BOB = ${fmtAdaptive(wheresyPerBob)} WHERESY`;
-
-    if(bobUsd>0 && wheresyPerBob>0){
-      const wheresyUsd = bobUsd / wheresyPerBob;
-      document.getElementById('px-wheresy-usd').textContent = fmtUsd(wheresyUsd);
-    }
-    updateEstimate();
-  }catch(e){
-    console.warn('price load failed', e);
+  } else {
     document.getElementById('px1-val').textContent='–';
   }
+
+  const wheresyUsdNow = tokenUsd('WHERESY');
+  if(wheresyUsdNow>0) document.getElementById('px-wheresy-usd').textContent = fmtUsd(wheresyUsdNow);
+
+  const unknownUsdNow = tokenUsd('UNKNOWN');
+  document.getElementById('px-unknown-usd').textContent = fmtUsd(unknownUsdNow);
+  const unkInfo = poolInfo['UNKNOWN'];
+  if(unkInfo && unkInfo.spokeReserve>0){
+    document.getElementById('px-unknown-usd-sub').textContent = `1 UNKNOWN ≈ ${fmtAdaptive(unkInfo.wheresyReserve/unkInfo.spokeReserve)} WHERESY`;
+  }
+  if(unknownUsdNow>0){
+    unknownPriceHistory.push({t:Date.now(), usd:unknownUsdNow});
+    if(unknownPriceHistory.length>240) unknownPriceHistory.shift();
+    drawUnknownChart();
+  }
+
+  updateEstimate();
 
   try{
     const res = await fetch(DEXSCREENER_BOB_AVAX);
@@ -599,6 +705,9 @@ async function refreshPrices(){
       document.getElementById('px-bob-usd').textContent = fmtUsd(bobUsd);
       const chg = pair.priceChange?.h24;
       document.getElementById('px-bob-usd-sub').textContent = chg!=null ? `${chg>0?'+':''}${chg}% 24h (Avax ref.)` : 'via Avax dexscreener ref.';
+      const wUsd = tokenUsd('WHERESY');
+      if(wUsd>0) document.getElementById('px-wheresy-usd').textContent = fmtUsd(wUsd);
+      document.getElementById('px-unknown-usd').textContent = fmtUsd(tokenUsd('UNKNOWN'));
       updateEstimate();
     }
   }catch(e){ console.warn('usd price fetch failed', e); }
@@ -606,23 +715,51 @@ async function refreshPrices(){
 
 function tokenUsd(key){
   if(key==='BOB') return bobUsd;
-  if(!poolInfo || poolInfo.bobReserve<=0) return 0;
-  const wheresyPerBob = poolInfo.wheresyReserve/poolInfo.bobReserve;
-  return wheresyPerBob>0 ? bobUsd/wheresyPerBob : 0;
+  if(key==='WHERESY' || key==='HERESY'){
+    const info = poolInfo['BOB'];
+    if(bobUsd>0 && info && info.spokeReserve>0){
+      const wheresyPerBob = info.wheresyReserve/info.spokeReserve;
+      return wheresyPerBob>0 ? bobUsd/wheresyPerBob : 0;
+    }
+    return 0;
+  }
+  if(key==='UNKNOWN'){
+    const wheresyUsdVal = tokenUsd('WHERESY');
+    const info = poolInfo['UNKNOWN'];
+    if(wheresyUsdVal>0 && info && info.spokeReserve>0){
+      const wheresyPerUnknown = info.wheresyReserve/info.spokeReserve;
+      return wheresyPerUnknown * wheresyUsdVal;
+    }
+    return 0;
+  }
+  return 0;
 }
 
 // ==================== ROUTING ====================
+// Every non-hub token (BOB, UNKNOWN) routes through WHERESY, the hub.
+// HERESY <-> WHERESY is a 1:1 wrap/unwrap (no pool). Max path length is 2 steps.
+function buildPath(from, to){
+  if(from===to) return null;
+  const steps = [];
+  let cur = from;
+  if(cur === 'HERESY'){ steps.push({kind:'wrap', dir:'wrap'}); cur='WHERESY'; }
+  else if(cur !== 'WHERESY'){ steps.push({kind:'pool', spoke:cur, dir:'sell'}); cur='WHERESY'; }
+  if(cur === to) return steps;
+  if(to === 'HERESY'){ steps.push({kind:'wrap', dir:'unwrap'}); }
+  else if(to !== 'WHERESY'){ steps.push({kind:'pool', spoke:to, dir:'buy'}); }
+  return steps;
+}
+
 function updateRouteLine(){
   const line = document.getElementById('route-line');
-  if((fromKey==='BOB'&&toKey==='WHERESY')||(fromKey==='WHERESY'&&toKey==='BOB')){
-    line.textContent = `Route: ${fromKey} → pool → ${toKey}`;
-  } else if((fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY')){
-    line.textContent = fromKey==='HERESY' ? 'Route: wrap HERESY → WHERESY (1:1)' : 'Route: unwrap WHERESY → HERESY (1:1)';
-  } else if(fromKey==='BOB'&&toKey==='HERESY'){
-    line.textContent = 'Route: BOB → pool → WHERESY → unwrap → HERESY';
-  } else if(fromKey==='HERESY'&&toKey==='BOB'){
-    line.textContent = 'Route: HERESY → wrap → WHERESY → pool → BOB';
-  } else { line.textContent=''; }
+  const path = buildPath(fromKey, toKey);
+  if(!path || path.length===0){ line.textContent=''; return; }
+  const parts = path.map(s=> s.kind==='wrap'
+    ? (s.dir==='wrap' ? 'wrap HERESY→WHERESY (1:1)' : 'unwrap WHERESY→HERESY (1:1)')
+    : (s.dir==='sell' ? `${s.spoke}→pool→WHERESY` : `WHERESY→pool→${s.spoke}`)
+  );
+  const hasPool = path.some(s=>s.kind==='pool');
+  line.textContent = 'Route: ' + parts.join(' → ') + (hasPool ? '  ·  1% platform fee applies' : '');
 }
 
 function flipDirection(){
@@ -638,6 +775,7 @@ function flipDirection(){
   document.getElementById('out-amount').value='';
   updateRouteLine();
   updateEstimate();
+  updateChartForSelection();
   refreshBalances();
   updateSwapButtonLabel();
 }
@@ -657,42 +795,73 @@ function getAmountOut(amountIn, reserveIn, reserveOut){
   return numerator/denominator;
 }
 
-function computeRoute(amtIn){
-  if(fromKey===toKey || amtIn<=0) return {amountOut:0};
-  const wrapPair = (fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY');
-  if(wrapPair) return {amountOut:amtIn};
-  if(!poolInfo) return {amountOut:0};
-  if(fromKey==='BOB'&&toKey==='WHERESY') return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve)};
-  if(fromKey==='WHERESY'&&toKey==='BOB') return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve)};
-  if(fromKey==='BOB'&&toKey==='HERESY') return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve)};
-  if(fromKey==='HERESY'&&toKey==='BOB') return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve)};
-  return {amountOut:0};
+// Walk a path with a starting amount, returning the final output and per-step detail.
+function walkPath(path, amtIn){
+  let amt = amtIn;
+  const details = [];
+  for(const step of path){
+    if(step.kind==='wrap'){
+      details.push({...step, amountIn:amt, amountOut:amt});
+    } else {
+      const info = poolInfo[step.spoke];
+      if(!info || info.spokeReserve<=0 || info.wheresyReserve<=0){ return {amountOut:0, details:[]}; }
+      const reserveIn = step.dir==='sell' ? info.spokeReserve : info.wheresyReserve;
+      const reserveOut = step.dir==='sell' ? info.wheresyReserve : info.spokeReserve;
+      const out = getAmountOut(amt, reserveIn, reserveOut);
+      details.push({...step, amountIn:amt, amountOut:out});
+      amt = out;
+    }
+  }
+  return {amountOut:amt, details};
+}
+
+// Full route: applies the 1% platform fee (if the route touches a pool) before walking the path.
+function computeRoute(rawAmtIn){
+  const path = buildPath(fromKey, toKey);
+  if(!path || rawAmtIn<=0) return {amountOut:0, path:[], details:[], hasPool:false, feeAmt:0, amtAfterFee:0};
+  const hasPool = path.some(s=>s.kind==='pool');
+  const feeAmt = hasPool ? rawAmtIn * FEE_BPS/10000 : 0;
+  const amtAfterFee = rawAmtIn - feeAmt;
+  const {amountOut, details} = walkPath(path, amtAfterFee);
+  return {amountOut, path, details, hasPool, feeAmt, amtAfterFee};
 }
 
 function updateEstimate(){
-  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
-  const {amountOut} = computeRoute(amtIn);
+  const rawAmtIn = parseFloat(document.getElementById('in-amount').value || '0');
+  const route = computeRoute(rawAmtIn);
+  const amountOut = route.amountOut;
   const outEl = document.getElementById('out-amount');
   outEl.value = amountOut>0 ? fmtAdaptive(amountOut) : '';
   pulse(outEl);
 
-  document.getElementById('usd-from').textContent = '≈ ' + fmtUsd(amtIn * tokenUsd(fromKey));
+  document.getElementById('usd-from').textContent = '≈ ' + fmtUsd(rawAmtIn * tokenUsd(fromKey));
   document.getElementById('usd-to').textContent = '≈ ' + fmtUsd(amountOut * tokenUsd(toKey));
 
   let impact = 0;
-  if(poolInfo && amtIn>0 && (fromKey==='BOB'||toKey==='BOB')){
-    const bobSide = fromKey==='BOB';
-    const rIn = bobSide? poolInfo.bobReserve : poolInfo.wheresyReserve;
-    const rOut = bobSide? poolInfo.wheresyReserve : poolInfo.bobReserve;
-    const spot = rIn>0 ? amtIn*(rOut/rIn) : 0;
-    const real = getAmountOut(amtIn, rIn, rOut);
-    impact = spot>0 ? ((spot-real)/spot*100) : 0;
+  if(route.details && route.details.length && rawAmtIn>0){
+    let spotTotal=0, realTotal=0;
+    route.details.forEach(d=>{
+      if(d.kind!=='pool') return;
+      const info = poolInfo[d.spoke];
+      if(!info) return;
+      const rIn = d.dir==='sell'? info.spokeReserve : info.wheresyReserve;
+      const rOut = d.dir==='sell'? info.wheresyReserve : info.spokeReserve;
+      spotTotal += rIn>0 ? d.amountIn*(rOut/rIn) : 0;
+      realTotal += d.amountOut;
+    });
+    if(spotTotal>0) impact = (spotTotal-realTotal)/spotTotal*100;
   }
-  document.getElementById('det-impact').textContent = amtIn>0 ? impact.toFixed(2)+'%' : '–';
+  document.getElementById('det-impact').textContent = rawAmtIn>0 && route.hasPool ? impact.toFixed(2)+'%' : '–';
 
   const minReceived = amountOut * (1 - slippagePct/100);
   document.getElementById('det-min').textContent = amountOut>0 ? fmtAdaptive(minReceived)+' '+toKey : '–';
-  document.getElementById('det-fee').textContent = amtIn>0 ? fmtAdaptive(amtIn*0.003)+' '+fromKey : '–';
+
+  const poolHops = route.details ? route.details.filter(d=>d.kind==='pool').length : 0;
+  document.getElementById('det-fee').textContent = rawAmtIn>0 && poolHops>0 ? `0.3% × ${poolHops} hop${poolHops>1?'s':''}` : '–';
+
+  document.getElementById('det-platform-fee').textContent = rawAmtIn>0
+    ? (route.hasPool ? `${fmtAdaptive(route.feeAmt)} ${fromKey} → fee wallet` : 'No fee (wrap only)')
+    : '–';
 }
 
 async function getBalance(key){
@@ -728,61 +897,65 @@ function updateSwapButtonLabel(){
 
 async function doSwap(){
   if(!userAddress){ connectWallet(); return; }
-  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
+  const rawAmtIn = parseFloat(document.getElementById('in-amount').value || '0');
+  if(!rawAmtIn || rawAmtIn<=0){ toast('Enter an amount','error'); return; }
   if(fromKey===toKey){ toast('Pick two different tokens','error'); return; }
 
-  const {amountOut} = computeRoute(amtIn);
-  if(amountOut<=0){ toast('Not enough liquidity for this amount, or prices are still loading','error'); return; }
-  const amountOutMin = amountOut * (1 - slippagePct/100);
-  const amountInWei = ethers.parseUnits(amtIn.toString(), 18);
+  const path = buildPath(fromKey, toKey);
+  if(!path || path.length===0){ toast('Pick two different tokens','error'); return; }
+
+  const route = computeRoute(rawAmtIn);
+  if(route.amountOut<=0){ toast('Not enough liquidity for this amount, or prices are still loading','error'); return; }
 
   const btn = document.getElementById('btn-swap');
   const coin = document.getElementById('coin-fly');
   document.getElementById('coin-fly-img').src = ICONS[toKey];
   btn.disabled = true;
   coin.classList.add('go');
-
-  const twoHop = (fromKey==='BOB'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='BOB');
-  const isWrapOnly = (fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY');
-  resetProgress(twoHop);
+  resetProgress(path.length>1);
 
   try{
-    if(isWrapOnly){
-      setProgress(1,'active');
-      setTxStatus('tx-swap', fromKey==='HERESY' ? 'Wrapping HERESY → WHERESY (sign in wallet)…' : 'Unwrapping WHERESY → HERESY (sign in wallet)…','pending',true);
-      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
-      let tx;
-      if(fromKey==='HERESY'){ tx = await w.deposit({value:amountInWei}); }
-      else { tx = await w.withdraw(amountInWei); }
-      await tx.wait(1);
-      setProgress(1,'done');
+    // 1) platform fee, taken off the top of the input amount, only if this route touches a pool
+    if(route.hasPool && route.feeAmt>0){
+      setTxStatus('tx-swap', `Sending 1% platform fee in ${fromKey} (sign in wallet)…`,'pending',true);
+      if(TOKENS[fromKey].type==='native'){
+        const feeWei = ethers.parseUnits(route.feeAmt.toFixed(18), 18);
+        const txFee = await signer.sendTransaction({ to: FEE_WALLET, value: feeWei });
+        await txFee.wait(1);
+      } else {
+        const feeC = new ethers.Contract(TOKENS[fromKey].address, ERC20_ABI, signer);
+        const feeWei = ethers.parseUnits(route.feeAmt.toFixed(18), 18);
+        const txFee = await feeC.transfer(FEE_WALLET, feeWei);
+        await txFee.wait(1);
+      }
     }
-    else if(fromKey==='BOB'&&toKey==='WHERESY'){
-      await runPoolSwap('BOB','WHERESY',amtIn,amountOutMin,1,1);
-    }
-    else if(fromKey==='WHERESY'&&toKey==='BOB'){
-      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,1,1);
-    }
-    else if(fromKey==='BOB'&&toKey==='HERESY'){
-      const wOut = await runPoolSwap('BOB','WHERESY',amtIn,0,1,2);
-      setProgress(2,'active');
-      setTxStatus('tx-swap','Unwrapping WHERESY → HERESY (sign in wallet)…','pending',true);
-      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
-      const bal = await w.balanceOf(userAddress);
-      const wantWei = ethers.parseUnits(wOut.toFixed(18),18);
-      const tx2 = await w.withdraw(bal < wantWei ? bal : wantWei);
-      await tx2.wait(1);
-      setProgress(2,'done');
-    }
-    else if(fromKey==='HERESY'&&toKey==='BOB'){
-      setProgress(1,'active');
-      setTxStatus('tx-swap','Wrapping HERESY → WHERESY (sign in wallet)…','pending',true);
-      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
-      const tx1 = await w.deposit({value:amountInWei});
-      await tx1.wait(1);
-      setProgress(1,'done');
-      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,2,2);
+
+    // 2) walk the route
+    let amt = route.hasPool ? route.amtAfterFee : rawAmtIn;
+    for(let i=0;i<path.length;i++){
+      const step = path[i];
+      const stepNum = i+1;
+      const isLastStep = i===path.length-1;
+      setProgress(stepNum,'active');
+
+      if(step.kind==='wrap'){
+        const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
+        if(step.dir==='wrap'){
+          setTxStatus('tx-swap', `Step ${stepNum}/${path.length} — wrapping HERESY → WHERESY (sign in wallet)…`,'pending',true);
+          const amtWei = ethers.parseUnits(amt.toFixed(18), 18);
+          const tx = await w.deposit({value:amtWei});
+          await tx.wait(1);
+        } else {
+          setTxStatus('tx-swap', `Step ${stepNum}/${path.length} — unwrapping WHERESY → HERESY (sign in wallet)…`,'pending',true);
+          const bal = await w.balanceOf(userAddress);
+          const wantWei = ethers.parseUnits(amt.toFixed(18), 18);
+          const tx = await w.withdraw(bal < wantWei ? bal : wantWei);
+          await tx.wait(1);
+        }
+        setProgress(stepNum,'done');
+      } else {
+        amt = await runPoolSwap(step, amt, isLastStep ? route.amountOut : 0, stepNum, path.length);
+      }
     }
 
     setTxStatus('tx-swap','✅ Swap complete!','success');
@@ -791,6 +964,7 @@ async function doSwap(){
     document.getElementById('out-amount').value='';
     refreshPrices();
     refreshBalances();
+    refreshFeesPage();
   }catch(e){
     setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
     setProgress(1,''); setProgress(2,'');
@@ -800,28 +974,35 @@ async function doSwap(){
   }
 }
 
-async function runPoolSwap(inKey,outKey,amtIn,amountOutMinFloat,stepNum,totalSteps){
-  const reserveIn = inKey==='BOB'? poolInfo.bobReserve : poolInfo.wheresyReserve;
-  const reserveOut = inKey==='BOB'? poolInfo.wheresyReserve : poolInfo.bobReserve;
+// Executes one pool hop of a route. `step` = {kind:'pool', spoke, dir:'sell'|'buy'}.
+// `finalAmountOutFloat` (>0) means this is the last hop: use the slippage-adjusted min instead of the raw estimate.
+async function runPoolSwap(step, amtIn, finalAmountOutFloat, stepNum, totalSteps){
+  const pairInfo = poolInfo[step.spoke];
+  const reserveIn = step.dir==='sell' ? pairInfo.spokeReserve : pairInfo.wheresyReserve;
+  const reserveOut = step.dir==='sell' ? pairInfo.wheresyReserve : pairInfo.spokeReserve;
   const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  const minOut = amountOutMinFloat>0 ? amountOutMinFloat : amtOut*(1-slippagePct/100);
-  const amountInWei = ethers.parseUnits(amtIn.toString(), 18);
+  const minOut = finalAmountOutFloat>0 ? finalAmountOutFloat*(1-slippagePct/100) : amtOut;
+
+  const inKey = step.dir==='sell' ? step.spoke : 'WHERESY';
+  const outKeyLocal = step.dir==='sell' ? 'WHERESY' : step.spoke;
+  const poolAddr = SPOKE_POOLS[step.spoke];
+
+  const amountInWei = ethers.parseUnits(amtIn.toFixed(18), 18);
   const amountOutWei = ethers.parseUnits(Math.max(minOut,0).toFixed(18), 18);
 
-  const tokenInAddr = inKey==='BOB'? BOB_GROTTO : WHERESY_ADDR;
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
+  const tokenIn = new ethers.Contract(TOKENS[inKey].address, ERC20_ABI, signer);
 
   setProgress(stepNum,'active');
   setTxStatus('tx-swap', `Step ${stepNum}/${totalSteps} — sending ${inKey} to the pool (sign in wallet)…`,'pending',true);
-  const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
+  const tx1 = await tokenIn.transfer(poolAddr, amountInWei);
   await tx1.wait(1);
 
-  const outIsToken0 = poolInfo.bobIsToken0 ? outKey!=='BOB' : outKey==='BOB';
+  const outIsToken0 = (step.dir==='sell') ? pairInfo.spokeIsToken0 : !pairInfo.spokeIsToken0;
   const amount0Out = outIsToken0 ? amountOutWei : 0n;
   const amount1Out = outIsToken0 ? 0n : amountOutWei;
 
   setTxStatus('tx-swap', `Step ${stepNum}/${totalSteps} — executing swap (sign in wallet)…`,'pending',true);
-  const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
+  const pairWrite = new ethers.Contract(poolAddr, PAIR_ABI, signer);
   const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
   await tx2.wait(1);
   setProgress(stepNum,'done');
@@ -905,12 +1086,119 @@ async function doBridge(){
   }
 }
 
+// ==================== CHART ====================
+// Shows the real Dexscreener embed for $BOB, and a live client-drawn chart for
+// $UNKNOWN (Dexscreener doesn't index this Grotto L1 subnet, so there's no pair to embed).
+function updateChartForSelection(){
+  const dexEl = document.getElementById('chart-dexscreener');
+  const unkEl = document.getElementById('chart-unknown');
+  const titleEl = document.getElementById('chart-title');
+  const linkEl = document.getElementById('chart-ext-link');
+  const showsBob = (fromKey==='BOB' || toKey==='BOB');
+  const showsUnknown = (fromKey==='UNKNOWN' || toKey==='UNKNOWN');
+
+  if(showsUnknown && !showsBob){
+    dexEl.style.display='none';
+    unkEl.style.display='block';
+    titleEl.textContent = '$UNKNOWN / USD (live session)';
+    linkEl.href = UNKNOWN_POOL_LINK;
+    linkEl.textContent = 'View pool on cave.money ↗';
+    drawUnknownChart();
+  } else {
+    dexEl.style.display='block';
+    unkEl.style.display='none';
+    titleEl.textContent = '$BOB / USD';
+    linkEl.href = DEXSCREENER_BOB_LINK;
+    linkEl.textContent = 'Open full chart ↗';
+  }
+}
+
+function drawUnknownChart(){
+  const canvas = document.getElementById('unknown-chart-canvas');
+  if(!canvas || canvas.offsetParent===null) return; // skip drawing while hidden
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  ctx.clearRect(0,0,w,h);
+
+  const pts = unknownPriceHistory;
+  if(pts.length < 2){
+    ctx.fillStyle = '#888888';
+    ctx.font = '13px sans-serif';
+    ctx.fillText('Collecting live price samples…', 16, h/2);
+    return;
+  }
+  const values = pts.map(p=>p.usd);
+  const min = Math.min(...values), max = Math.max(...values);
+  const pad = 24;
+  const range = (max-min) || (max*0.01) || 1;
+
+  // gradient fill under the line, styled like a dexscreener-ish chart
+  const up = values[values.length-1] >= values[0];
+  const lineColor = up ? '#22C55E' : '#E8350A';
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, up ? 'rgba(34,197,94,.35)' : 'rgba(232,53,10,.35)');
+  grad.addColorStop(1, 'rgba(34,197,94,0)');
+
+  const xStep = (w - pad*2) / (pts.length-1);
+  ctx.beginPath();
+  pts.forEach((p,i)=>{
+    const x = pad + i*xStep;
+    const y = pad + (h-pad*2) * (1 - (p.usd-min)/range);
+    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.lineTo(pad + (pts.length-1)*xStep, h-pad);
+  ctx.lineTo(pad, h-pad);
+  ctx.closePath();
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.fillStyle = '#888888';
+  ctx.font = '11px monospace';
+  ctx.fillText(fmtUsd(max), 6, pad);
+  ctx.fillText(fmtUsd(min), 6, h-pad+4);
+  ctx.fillStyle = lineColor;
+  ctx.font = 'bold 13px monospace';
+  ctx.fillText(fmtUsd(values[values.length-1]), w-100, pad);
+}
+
+// ==================== FEES PAGE ====================
+async function refreshFeesPage(){
+  const setRow = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  try{
+    const [bobBal, unkBal, wheresyBal, heresyBal] = await Promise.all([
+      new ethers.Contract(BOB_GROTTO, ERC20_ABI, roProvider).balanceOf(FEE_WALLET),
+      new ethers.Contract(UNKNOWN_ADDR, ERC20_ABI, roProvider).balanceOf(FEE_WALLET),
+      new ethers.Contract(WHERESY_ADDR, ERC20_ABI, roProvider).balanceOf(FEE_WALLET),
+      roProvider.getBalance(FEE_WALLET)
+    ]);
+    const bobF = parseFloat(ethers.formatUnits(bobBal,18));
+    const unkF = parseFloat(ethers.formatUnits(unkBal,18));
+    const wheresyF = parseFloat(ethers.formatUnits(wheresyBal,18));
+    const heresyF = parseFloat(ethers.formatUnits(heresyBal,18));
+
+    setRow('fees-bal-bob', fmtAdaptive(bobF)+' BOB ('+fmtUsd(bobF*tokenUsd('BOB'))+')');
+    setRow('fees-bal-unknown', fmtAdaptive(unkF)+' UNKNOWN ('+fmtUsd(unkF*tokenUsd('UNKNOWN'))+')');
+    setRow('fees-bal-wheresy', fmtAdaptive(wheresyF)+' WHERESY ('+fmtUsd(wheresyF*tokenUsd('WHERESY'))+')');
+    setRow('fees-bal-heresy', fmtAdaptive(heresyF)+' HERESY ('+fmtUsd(heresyF*tokenUsd('HERESY'))+')');
+
+    const totalUsd = bobF*tokenUsd('BOB') + unkF*tokenUsd('UNKNOWN') + wheresyF*tokenUsd('WHERESY') + heresyF*tokenUsd('HERESY');
+    setRow('fees-total-usd', fmtUsd(totalUsd));
+  }catch(e){
+    console.warn('fees page load failed', e);
+  }
+}
+
 // ==================== INIT ====================
 buildTokenMenu('from');
 buildTokenMenu('to');
 document.getElementById('from-picker-icon').src = ICONS[fromKey];
 document.getElementById('to-picker-icon').src = ICONS[toKey];
 updateRouteLine();
+updateChartForSelection();
 refreshPrices();
 setInterval(refreshPrices, 20000);
 </script>
