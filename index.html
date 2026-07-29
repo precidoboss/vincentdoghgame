@@ -17,11 +17,31 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;}
-body{background:var(--black);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;}
+body{background:var(--black);color:var(--text);font-family:var(--font-body);font-size:15px;line-height:1.6;min-height:100vh;overflow-x:hidden;position:relative;}
 ::selection{background:rgba(255,107,26,.35);color:#fff;}
 h1,h2,h3,h4{font-family:var(--font-display);letter-spacing:1px;line-height:1.1;}
 .mono{font-family:var(--font-mono);}
-.container{max-width:900px;margin:0 auto;padding:0 16px;}
+.container{max-width:900px;margin:0 auto;padding:0 16px;position:relative;z-index:1;}
+
+/* ===== animated background ===== */
+#bg-fx{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:var(--black);}
+.bg-glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.35;}
+.bg-glow.g1{width:520px;height:520px;background:radial-gradient(circle,var(--red),transparent 70%);top:-160px;left:-120px;animation:driftA 22s ease-in-out infinite;}
+.bg-glow.g2{width:600px;height:600px;background:radial-gradient(circle,var(--orange),transparent 70%);bottom:-220px;right:-160px;animation:driftB 26s ease-in-out infinite;}
+.bg-glow.g3{width:380px;height:380px;background:radial-gradient(circle,var(--amber),transparent 70%);top:40%;left:60%;animation:driftC 30s ease-in-out infinite;}
+@keyframes driftA{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(80px,60px) scale(1.15);}}
+@keyframes driftB{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-70px,-50px) scale(1.1);}}
+@keyframes driftC{0%,100%{transform:translate(0,0) scale(1);}50%{transform:translate(-50px,70px) scale(.9);}}
+.ember{position:absolute;bottom:-20px;border-radius:50%;background:radial-gradient(circle,#FFB35C,var(--orange) 60%,transparent 75%);opacity:0;animation-name:emberRise;animation-timing-function:ease-in;animation-iteration-count:infinite;}
+@keyframes emberRise{
+  0%{transform:translate(0,0) scale(1);opacity:0;}
+  8%{opacity:.9;}
+  50%{transform:translate(var(--drift,20px),-52vh) scale(.8);opacity:.7;}
+  92%{opacity:.15;}
+  100%{transform:translate(calc(var(--drift,20px) * 1.6),-104vh) scale(.3);opacity:0;}
+}
+.grid-fx{position:absolute;inset:0;background-image:linear-gradient(rgba(255,107,26,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,107,26,.05) 1px,transparent 1px);background-size:42px 42px;mask-image:radial-gradient(circle at 50% 30%,black,transparent 75%);}
+
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.97);border-bottom:1px solid var(--border);backdrop-filter:blur(16px);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .nav-logo{font-family:var(--font-display);font-size:1.6rem;letter-spacing:2px;flex-shrink:0;}
 .nav-logo span{color:var(--red);}
@@ -36,32 +56,38 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.97
 .btn-ghost:hover{border-color:var(--orange);color:var(--orange);}
 .btn-sm{padding:6px 10px;font-size:.7rem;}
 .btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-.page{display:none;padding:80px 0 60px;}
+.page{display:none;padding:80px 0 60px;position:relative;z-index:1;}
 .page.active{display:block;}
-.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;}
-.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
-.badge-amber{background:rgba(255,149,0,.15);color:var(--amber);border:1px solid rgba(255,149,0,.35);}
-.badge-green{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.35);}
+.card{background:rgba(24,24,24,.85);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:12px;padding:20px;}
 .info-tip{display:flex;gap:10px;background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.2);border-radius:10px;padding:12px 14px;font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:16px;}
 .info-tip b{color:var(--text);}
 .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
-.price-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
-.price-card .sym{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.price-card{background:rgba(24,24,24,.85);backdrop-filter:blur(6px);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+.price-card .sym{display:flex;align-items:center;justify-content:center;gap:5px;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
+.price-card .sym img{width:14px;height:14px;border-radius:50%;}
 .price-card .val{font-family:var(--font-display);font-size:1.2rem;color:var(--orange);word-break:break-all;}
 .price-card .sub{font-size:.68rem;color:var(--muted);margin-top:2px;}
 label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
-input,select{width:100%;padding:11px 12px;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:1rem;}
-input:focus,select:focus{outline:none;border-color:var(--orange);}
-select{-webkit-appearance:none;appearance:none;cursor:pointer;}
+input{width:100%;padding:11px 12px;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:1rem;}
+input:focus{outline:none;border-color:var(--orange);}
 .swap-box{max-width:460px;margin:0 auto;position:relative;}
-.swap-io{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:box-shadow .3s;}
+.swap-io{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:box-shadow .3s;position:relative;}
 .swap-io-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .swap-io-top span{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
 .swap-io input{background:transparent;border:none;padding:0;font-size:1.4rem;}
 .swap-io input:focus{outline:none;}
 .swap-io-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
 .usd-val{font-size:.72rem;color:var(--muted);font-family:var(--font-mono);}
-.token-select{background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);color:var(--orange);font-weight:800;font-size:.85rem;padding:6px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap;font-family:var(--font-body);cursor:pointer;width:auto;}
+
+.token-picker{display:flex;align-items:center;gap:6px;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);color:var(--orange);font-weight:800;font-size:.85rem;padding:6px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap;cursor:pointer;position:relative;user-select:none;}
+.token-picker img{width:18px;height:18px;border-radius:50%;background:#000;object-fit:cover;}
+.token-picker .caret{font-size:.6rem;opacity:.7;}
+.token-menu{display:none;position:absolute;top:calc(100% + 8px);right:0;background:#1c1c1c;border:1px solid var(--border);border-radius:10px;padding:6px;min-width:160px;box-shadow:0 12px 30px rgba(0,0,0,.5);z-index:20;}
+.token-menu.open{display:block;}
+.token-menu-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;cursor:pointer;font-size:.85rem;color:var(--text);font-weight:600;}
+.token-menu-item:hover{background:rgba(255,107,26,.12);}
+.token-menu-item img{width:20px;height:20px;border-radius:50%;background:#000;object-fit:cover;}
+
 .swap-arrow{display:flex;justify-content:center;margin:6px 0;position:relative;z-index:2;}
 .swap-arrow button{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--orange);cursor:pointer;font-size:1.1rem;transition:transform .35s cubic-bezier(.34,1.56,.64,1),border-color .2s;}
 .swap-arrow button:hover{border-color:var(--orange);}
@@ -86,6 +112,7 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
 .pulse-once{animation:pulseOnce .5s ease;}
 @keyframes pulseOnce{0%{transform:scale(1);}30%{transform:scale(1.04);color:var(--orange);}100%{transform:scale(1);}}
 .coin-fly{position:absolute;font-size:1.4rem;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:5;}
+.coin-fly img{width:32px;height:32px;border-radius:50%;}
 .coin-fly.go{animation:coinFly 1s ease-in-out;}
 @keyframes coinFly{0%{opacity:0;transform:translate(-50%,-140%) scale(.6) rotate(0deg);}20%{opacity:1;}50%{transform:translate(-50%,-50%) scale(1.3) rotate(180deg);opacity:1;}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,60%) scale(.6) rotate(360deg);}}
 .slippage-row{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;}
@@ -119,6 +146,14 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
 </head>
 <body>
 
+<div id="bg-fx">
+  <div class="bg-glow g1"></div>
+  <div class="bg-glow g2"></div>
+  <div class="bg-glow g3"></div>
+  <div class="grid-fx"></div>
+  <div id="ember-layer"></div>
+</div>
+
 <nav>
   <div style="display:flex;align-items:center;gap:14px;min-width:0;">
     <div class="nav-logo">HERESY<span>DEX</span></div>
@@ -148,7 +183,7 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
 
     <div class="price-grid">
       <div class="price-card">
-        <div class="sym">$BOB</div>
+        <div class="sym"><img src="https://bp.enterthegrotto.xyz/_next/image?url=%2Fimages%2Fbp-coin.png&w=96&q=75&dpl=dpl_GcjBAnqUhkqnWvG35bbXPrmWxs3t" alt=""/>$BOB</div>
         <div class="val" id="px-bob-usd">$0.0000</div>
         <div class="sub" id="px-bob-usd-sub">via Avax dexscreener ref.</div>
       </div>
@@ -158,23 +193,24 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
         <div class="sub">WHERESY / HERESY</div>
       </div>
       <div class="price-card">
-        <div class="sym">$WHERESY / $HERESY</div>
+        <div class="sym"><img src="https://grottoexplorer.xyz/assets/configs/network_icon.png" alt=""/>$WHERESY / $HERESY</div>
         <div class="val" id="px-wheresy-usd">$0.0000</div>
         <div class="sub">derived from pool</div>
       </div>
     </div>
 
     <div class="card swap-box">
-      <div class="coin-fly" id="coin-fly">🕯️</div>
+      <div class="coin-fly" id="coin-fly"><img id="coin-fly-img" src="" alt=""/></div>
       <div class="swap-io" id="io-from">
         <div class="swap-io-top"><span>You pay</span><span id="bal-from">Balance: –</span></div>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="number" id="in-amount" placeholder="0.0" oninput="onAmountChange()"/>
-          <select class="token-select" id="from-token-select" onchange="onTokenSelectChange('from')">
-            <option value="BOB">🔥 BOB</option>
-            <option value="WHERESY">🌫 WHERESY</option>
-            <option value="HERESY">🕯️ HERESY</option>
-          </select>
+          <div class="token-picker" id="from-picker" onclick="toggleTokenMenu('from')">
+            <img id="from-picker-icon" src="" alt=""/>
+            <span id="from-picker-label">BOB</span>
+            <span class="caret">▾</span>
+            <div class="token-menu" id="from-menu"></div>
+          </div>
         </div>
         <div class="swap-io-bottom"><span class="usd-val" id="usd-from">≈ $0.00</span><span></span></div>
       </div>
@@ -183,11 +219,12 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
         <div class="swap-io-top"><span>You receive (est.)</span><span id="bal-to">Balance: –</span></div>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="text" id="out-amount" placeholder="0.0" disabled/>
-          <select class="token-select" id="to-token-select" onchange="onTokenSelectChange('to')">
-            <option value="BOB">🔥 BOB</option>
-            <option value="WHERESY">🌫 WHERESY</option>
-            <option value="HERESY" selected>🕯️ HERESY</option>
-          </select>
+          <div class="token-picker" id="to-picker" onclick="toggleTokenMenu('to')">
+            <img id="to-picker-icon" src="" alt=""/>
+            <span id="to-picker-label">HERESY</span>
+            <span class="caret">▾</span>
+            <div class="token-menu" id="to-menu"></div>
+          </div>
         </div>
         <div class="swap-io-bottom"><span class="usd-val" id="usd-to">≈ $0.00</span><span></span></div>
       </div>
@@ -309,6 +346,12 @@ const WARP_ABI = ["function getBlockchainID() view returns (bytes32)"];
 
 const DEXSCREENER_BOB_AVAX = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b';
 
+const ICONS = {
+  BOB:     'https://bp.enterthegrotto.xyz/_next/image?url=%2Fimages%2Fbp-coin.png&w=96&q=75&dpl=dpl_GcjBAnqUhkqnWvG35bbXPrmWxs3t',
+  WHERESY: 'https://grottoexplorer.xyz/assets/configs/network_icon.png',
+  HERESY:  'https://grottoexplorer.xyz/assets/configs/network_icon.png'
+};
+
 const ERC20_ABI = [
   "function decimals() view returns (uint8)",
   "function symbol() view returns (string)",
@@ -332,9 +375,9 @@ const TOKEN_HOME_ABI = [
 ];
 
 const TOKENS = {
-  BOB:     { symbol:'BOB',     icon:'🔥', type:'erc20',  address:BOB_GROTTO,   decimals:18 },
-  WHERESY: { symbol:'WHERESY', icon:'🌫', type:'erc20',  address:WHERESY_ADDR, decimals:18 },
-  HERESY:  { symbol:'HERESY',  icon:'🕯️', type:'native', address:null,         decimals:18 }
+  BOB:     { symbol:'BOB',     type:'erc20',  address:BOB_GROTTO,   decimals:18 },
+  WHERESY: { symbol:'WHERESY', type:'erc20',  address:WHERESY_ADDR, decimals:18 },
+  HERESY:  { symbol:'HERESY',  type:'native', address:null,         decimals:18 }
 };
 
 // ==================== STATE ====================
@@ -342,7 +385,6 @@ let provider=null, signer=null, userAddress=null;
 let roProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
 let pairRO = new ethers.Contract(POOL_ADDR, PAIR_ABI, roProvider);
 let bobRO = new ethers.Contract(BOB_GROTTO, ERC20_ABI, roProvider);
-let wheresyRO = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, roProvider);
 
 let fromKey = 'BOB', toKey = 'HERESY';
 let slippagePct = 1;
@@ -377,7 +419,7 @@ function friendlyError(e){
   if(/insufficient/i.test(msg)) return 'Insufficient balance or gas.';
   return msg.slice(0,200);
 }
-function setProgress(step, state){ // step: 1|2, state: 'active'|'done'
+function setProgress(step, state){
   const seg = document.getElementById('seg-'+step);
   seg.classList.remove('active','done');
   if(state) seg.classList.add(state);
@@ -389,7 +431,6 @@ function resetProgress(twoStep){
 }
 function pulse(el){ el.classList.remove('pulse-once'); void el.offsetWidth; el.classList.add('pulse-once'); }
 
-// Always plain decimal digits — never scientific notation, however small the number.
 function fmtAdaptive(num){
   if(num===0 || num==null || isNaN(num)) return '0';
   if(!isFinite(num)) return '–';
@@ -410,6 +451,71 @@ function fmtUsd(num){
   const leadingZeros = Math.max(0, -Math.floor(Math.log10(abs)) - 1);
   const decimals = Math.min(leadingZeros + 4, 12);
   return '$' + num.toFixed(decimals).replace(/0+$/,'').replace(/\.$/,'');
+}
+
+// ==================== BACKGROUND FX ====================
+function initEmbers(){
+  const layer = document.getElementById('ember-layer');
+  const n = window.innerWidth < 640 ? 14 : 26;
+  for(let i=0;i<n;i++){
+    const e = document.createElement('div');
+    e.className = 'ember';
+    const size = 3 + Math.random()*7;
+    const left = Math.random()*100;
+    const dur = 9 + Math.random()*10;
+    const delay = Math.random()*dur;
+    const drift = (Math.random()*140-70).toFixed(0)+'px';
+    e.style.width = size+'px';
+    e.style.height = size+'px';
+    e.style.left = left+'%';
+    e.style.setProperty('--drift', drift);
+    e.style.animationDuration = dur+'s';
+    e.style.animationDelay = '-'+delay+'s';
+    layer.appendChild(e);
+  }
+}
+initEmbers();
+
+// ==================== TOKEN PICKER (custom dropdown w/ icons) ====================
+function buildTokenMenu(side){
+  const menu = document.getElementById(side+'-menu');
+  menu.innerHTML = '';
+  ['BOB','WHERESY','HERESY'].forEach(key=>{
+    const item = document.createElement('div');
+    item.className = 'token-menu-item';
+    item.innerHTML = `<img src="${ICONS[key]}" alt=""/><span>${key}</span>`;
+    item.onclick = (ev)=>{ ev.stopPropagation(); selectToken(side, key); closeAllMenus(); };
+    menu.appendChild(item);
+  });
+}
+function toggleTokenMenu(side){
+  event.stopPropagation();
+  const isOpen = document.getElementById(side+'-menu').classList.contains('open');
+  closeAllMenus();
+  if(!isOpen) document.getElementById(side+'-menu').classList.add('open');
+}
+function closeAllMenus(){
+  document.getElementById('from-menu').classList.remove('open');
+  document.getElementById('to-menu').classList.remove('open');
+}
+document.addEventListener('click', closeAllMenus);
+
+function selectToken(side, key){
+  if(side==='from'){
+    if(key===toKey){ toKey = fromKey; document.getElementById('to-picker-label').textContent=toKey; document.getElementById('to-picker-icon').src=ICONS[toKey]; }
+    fromKey = key;
+    document.getElementById('from-picker-label').textContent = fromKey;
+    document.getElementById('from-picker-icon').src = ICONS[fromKey];
+  } else {
+    if(key===fromKey){ fromKey = toKey; document.getElementById('from-picker-label').textContent=fromKey; document.getElementById('from-picker-icon').src=ICONS[fromKey]; }
+    toKey = key;
+    document.getElementById('to-picker-label').textContent = toKey;
+    document.getElementById('to-picker-icon').src = ICONS[toKey];
+  }
+  updateRouteLine();
+  updateEstimate();
+  refreshBalances();
+  updateSwapButtonLabel();
 }
 
 // ==================== WALLET ====================
@@ -493,7 +599,6 @@ async function refreshPrices(){
       document.getElementById('px-bob-usd').textContent = fmtUsd(bobUsd);
       const chg = pair.priceChange?.h24;
       document.getElementById('px-bob-usd-sub').textContent = chg!=null ? `${chg>0?'+':''}${chg}% 24h (Avax ref.)` : 'via Avax dexscreener ref.';
-      refreshPrices.usdDone = true;
       updateEstimate();
     }
   }catch(e){ console.warn('usd price fetch failed', e); }
@@ -503,28 +608,10 @@ function tokenUsd(key){
   if(key==='BOB') return bobUsd;
   if(!poolInfo || poolInfo.bobReserve<=0) return 0;
   const wheresyPerBob = poolInfo.wheresyReserve/poolInfo.bobReserve;
-  return wheresyPerBob>0 ? bobUsd/wheresyPerBob : 0; // WHERESY & HERESY share the same 1:1 price
+  return wheresyPerBob>0 ? bobUsd/wheresyPerBob : 0;
 }
 
-// ==================== TOKEN SELECTION / ROUTING ====================
-function onTokenSelectChange(side){
-  const fromSel = document.getElementById('from-token-select');
-  const toSel = document.getElementById('to-token-select');
-  if(side==='from' && fromSel.value===toSel.value){
-    // bump the other side to something different
-    const opts=['BOB','WHERESY','HERESY'].filter(k=>k!==fromSel.value);
-    toSel.value = opts[0];
-  }
-  if(side==='to' && toSel.value===fromSel.value){
-    const opts=['BOB','WHERESY','HERESY'].filter(k=>k!==toSel.value);
-    fromSel.value = opts[0];
-  }
-  fromKey = fromSel.value; toKey = toSel.value;
-  updateRouteLine();
-  updateEstimate();
-  refreshBalances();
-  updateSwapButtonLabel();
-}
+// ==================== ROUTING ====================
 function updateRouteLine(){
   const line = document.getElementById('route-line');
   if((fromKey==='BOB'&&toKey==='WHERESY')||(fromKey==='WHERESY'&&toKey==='BOB')){
@@ -543,8 +630,10 @@ function flipDirection(){
   btn.classList.add('spin');
   setTimeout(()=>btn.classList.remove('spin'),400);
   const tmp = fromKey; fromKey = toKey; toKey = tmp;
-  document.getElementById('from-token-select').value = fromKey;
-  document.getElementById('to-token-select').value = toKey;
+  document.getElementById('from-picker-label').textContent = fromKey;
+  document.getElementById('from-picker-icon').src = ICONS[fromKey];
+  document.getElementById('to-picker-label').textContent = toKey;
+  document.getElementById('to-picker-icon').src = ICONS[toKey];
   document.getElementById('in-amount').value='';
   document.getElementById('out-amount').value='';
   updateRouteLine();
@@ -568,28 +657,16 @@ function getAmountOut(amountIn, reserveIn, reserveOut){
   return numerator/denominator;
 }
 
-// returns {amountOut, poolLegIn, poolLegOut, usesPool}
 function computeRoute(amtIn){
-  if(fromKey===toKey || amtIn<=0) return {amountOut:0, usesPool:false};
+  if(fromKey===toKey || amtIn<=0) return {amountOut:0};
   const wrapPair = (fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY');
-  if(wrapPair) return {amountOut:amtIn, usesPool:false}; // 1:1 wrap/unwrap
-
-  if(!poolInfo) return {amountOut:0, usesPool:true};
-  if((fromKey==='BOB'&&toKey==='WHERESY')){
-    return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve), usesPool:true};
-  }
-  if((fromKey==='WHERESY'&&toKey==='BOB')){
-    return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve), usesPool:true};
-  }
-  if(fromKey==='BOB'&&toKey==='HERESY'){
-    const wOut = getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve);
-    return {amountOut:wOut, usesPool:true}; // unwrap leg is 1:1
-  }
-  if(fromKey==='HERESY'&&toKey==='BOB'){
-    const bOut = getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve); // wrap leg 1:1 first
-    return {amountOut:bOut, usesPool:true};
-  }
-  return {amountOut:0, usesPool:false};
+  if(wrapPair) return {amountOut:amtIn};
+  if(!poolInfo) return {amountOut:0};
+  if(fromKey==='BOB'&&toKey==='WHERESY') return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve)};
+  if(fromKey==='WHERESY'&&toKey==='BOB') return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve)};
+  if(fromKey==='BOB'&&toKey==='HERESY') return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve)};
+  if(fromKey==='HERESY'&&toKey==='BOB') return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve)};
+  return {amountOut:0};
 }
 
 function updateEstimate(){
@@ -602,21 +679,14 @@ function updateEstimate(){
   document.getElementById('usd-from').textContent = '≈ ' + fmtUsd(amtIn * tokenUsd(fromKey));
   document.getElementById('usd-to').textContent = '≈ ' + fmtUsd(amountOut * tokenUsd(toKey));
 
-  const usesPool = !((fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY'));
-  if(usesPool && poolInfo && amtIn>0){
-    const reserveIn = (fromKey==='BOB'||fromKey==='HERESY') ? poolInfo.bobReserve*0 : 0; // placeholder unused
-  }
-  // impact only meaningful for legs that actually touch the pool
   let impact = 0;
-  if(poolInfo && amtIn>0){
-    if(fromKey==='BOB'||toKey==='BOB'){
-      const bobSide = fromKey==='BOB';
-      const rIn = bobSide? poolInfo.bobReserve : poolInfo.wheresyReserve;
-      const rOut = bobSide? poolInfo.wheresyReserve : poolInfo.bobReserve;
-      const spot = rIn>0 ? amtIn*(rOut/rIn) : 0;
-      const real = getAmountOut(amtIn, rIn, rOut);
-      impact = spot>0 ? ((spot-real)/spot*100) : 0;
-    }
+  if(poolInfo && amtIn>0 && (fromKey==='BOB'||toKey==='BOB')){
+    const bobSide = fromKey==='BOB';
+    const rIn = bobSide? poolInfo.bobReserve : poolInfo.wheresyReserve;
+    const rOut = bobSide? poolInfo.wheresyReserve : poolInfo.bobReserve;
+    const spot = rIn>0 ? amtIn*(rOut/rIn) : 0;
+    const real = getAmountOut(amtIn, rIn, rOut);
+    impact = spot>0 ? ((spot-real)/spot*100) : 0;
   }
   document.getElementById('det-impact').textContent = amtIn>0 ? impact.toFixed(2)+'%' : '–';
 
@@ -669,6 +739,7 @@ async function doSwap(){
 
   const btn = document.getElementById('btn-swap');
   const coin = document.getElementById('coin-fly');
+  document.getElementById('coin-fly-img').src = ICONS[toKey];
   btn.disabled = true;
   coin.classList.add('go');
 
@@ -688,31 +759,29 @@ async function doSwap(){
       setProgress(1,'done');
     }
     else if(fromKey==='BOB'&&toKey==='WHERESY'){
-      await runPoolSwap('BOB','WHERESY',amtIn,amountOutMin,1,twoHop?2:1);
+      await runPoolSwap('BOB','WHERESY',amtIn,amountOutMin,1,1);
     }
     else if(fromKey==='WHERESY'&&toKey==='BOB'){
-      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,1,twoHop?2:1);
+      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,1,1);
     }
     else if(fromKey==='BOB'&&toKey==='HERESY'){
-      // hop 1: BOB -> WHERESY via pool
-      const wOut = await runPoolSwap('BOB','WHERESY',amtIn,0,1,2); // slippage applied on final leg only
+      const wOut = await runPoolSwap('BOB','WHERESY',amtIn,0,1,2);
       setProgress(2,'active');
       setTxStatus('tx-swap','Unwrapping WHERESY → HERESY (sign in wallet)…','pending',true);
       const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
       const bal = await w.balanceOf(userAddress);
-      const tx2 = await w.withdraw(bal < ethers.parseUnits(wOut.toFixed(18),18) ? bal : ethers.parseUnits(wOut.toFixed(18),18));
+      const wantWei = ethers.parseUnits(wOut.toFixed(18),18);
+      const tx2 = await w.withdraw(bal < wantWei ? bal : wantWei);
       await tx2.wait(1);
       setProgress(2,'done');
     }
     else if(fromKey==='HERESY'&&toKey==='BOB'){
-      // hop 1: wrap HERESY -> WHERESY
       setProgress(1,'active');
       setTxStatus('tx-swap','Wrapping HERESY → WHERESY (sign in wallet)…','pending',true);
       const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
       const tx1 = await w.deposit({value:amountInWei});
       await tx1.wait(1);
       setProgress(1,'done');
-      // hop 2: WHERESY -> BOB via pool
       await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,2,2);
     }
 
@@ -731,7 +800,6 @@ async function doSwap(){
   }
 }
 
-// executes one pool-leg swap (transfer-to-pair + pair.swap). Returns the actual amountOut estimate used.
 async function runPoolSwap(inKey,outKey,amtIn,amountOutMinFloat,stepNum,totalSteps){
   const reserveIn = inKey==='BOB'? poolInfo.bobReserve : poolInfo.wheresyReserve;
   const reserveOut = inKey==='BOB'? poolInfo.wheresyReserve : poolInfo.bobReserve;
@@ -838,8 +906,10 @@ async function doBridge(){
 }
 
 // ==================== INIT ====================
-document.getElementById('from-token-select').value = fromKey;
-document.getElementById('to-token-select').value = toKey;
+buildTokenMenu('from');
+buildTokenMenu('to');
+document.getElementById('from-picker-icon').src = ICONS[fromKey];
+document.getElementById('to-picker-icon').src = ICONS[toKey];
 updateRouteLine();
 refreshPrices();
 setInterval(refreshPrices, 20000);
