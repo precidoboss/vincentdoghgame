@@ -42,37 +42,52 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(10,10,10,.97
 .badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.5px;}
 .badge-amber{background:rgba(255,149,0,.15);color:var(--amber);border:1px solid rgba(255,149,0,.35);}
 .badge-green{background:rgba(34,197,94,.15);color:var(--success);border:1px solid rgba(34,197,94,.35);}
-.badge-muted{background:rgba(136,136,136,.15);color:var(--muted);border:1px solid rgba(136,136,136,.3);}
 .info-tip{display:flex;gap:10px;background:rgba(255,107,26,.06);border:1px solid rgba(255,107,26,.2);border-radius:10px;padding:12px 14px;font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:16px;}
 .info-tip b{color:var(--text);}
 .price-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;}
 .price-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
 .price-card .sym{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
-.price-card .val{font-family:var(--font-display);font-size:1.25rem;color:var(--orange);word-break:break-all;}
+.price-card .val{font-family:var(--font-display);font-size:1.2rem;color:var(--orange);word-break:break-all;}
 .price-card .sub{font-size:.68rem;color:var(--muted);margin-top:2px;}
 label{display:block;font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
 input,select{width:100%;padding:11px 12px;background:var(--dark);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-mono);font-size:1rem;}
 input:focus,select:focus{outline:none;border-color:var(--orange);}
 select{-webkit-appearance:none;appearance:none;cursor:pointer;}
-.swap-box{max-width:460px;margin:0 auto;}
-.swap-io{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.swap-box{max-width:460px;margin:0 auto;position:relative;}
+.swap-io{background:var(--dark);border:1px solid var(--border);border-radius:10px;padding:12px 14px;transition:box-shadow .3s;}
 .swap-io-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
 .swap-io-top span{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
 .swap-io input{background:transparent;border:none;padding:0;font-size:1.4rem;}
 .swap-io input:focus{outline:none;}
-.token-select{display:flex;align-items:center;gap:6px;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);color:var(--orange);font-weight:800;font-size:.85rem;padding:6px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap;font-family:var(--font-body);cursor:pointer;}
-.swap-arrow{display:flex;justify-content:center;margin:6px 0;}
-.swap-arrow button{width:34px;height:34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--orange);cursor:pointer;font-size:1rem;}
+.swap-io-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:4px;}
+.usd-val{font-size:.72rem;color:var(--muted);font-family:var(--font-mono);}
+.token-select{background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);color:var(--orange);font-weight:800;font-size:.85rem;padding:6px 10px;border-radius:20px;flex-shrink:0;white-space:nowrap;font-family:var(--font-body);cursor:pointer;width:auto;}
+.swap-arrow{display:flex;justify-content:center;margin:6px 0;position:relative;z-index:2;}
+.swap-arrow button{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--orange);cursor:pointer;font-size:1.1rem;transition:transform .35s cubic-bezier(.34,1.56,.64,1),border-color .2s;}
 .swap-arrow button:hover{border-color:var(--orange);}
+.swap-arrow button.spin{transform:rotate(180deg);}
 .swap-details{font-size:.76rem;color:var(--muted);margin:12px 0;display:flex;flex-direction:column;gap:5px;}
-.swap-usd{font-family:var(--font-mono);font-size:.72rem;color:var(--muted);margin-top:6px;text-align:left;}
 .swap-details div{display:flex;justify-content:space-between;gap:10px;}
 .swap-details b{color:var(--text);font-weight:600;text-align:right;word-break:break-all;}
-.tx-status{padding:10px 14px;border-radius:8px;font-size:.8rem;margin-top:12px;display:none;}
-.tx-status.show{display:block;}
+.route-line{font-size:.72rem;color:var(--orange);text-align:center;margin:2px 0 10px;font-family:var(--font-mono);}
+.tx-status{padding:10px 14px;border-radius:8px;font-size:.8rem;margin-top:12px;display:none;align-items:center;gap:8px;}
+.tx-status.show{display:flex;}
 .tx-pending{background:rgba(255,149,0,.1);color:var(--amber);border:1px solid rgba(255,149,0,.3);}
 .tx-success{background:rgba(34,197,94,.1);color:var(--success);border:1px solid rgba(34,197,94,.3);}
 .tx-error{background:rgba(232,53,10,.1);color:var(--red);border:1px solid rgba(232,53,10,.3);}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-top-color:transparent;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.progress-track{display:flex;gap:4px;margin-top:10px;}
+.progress-seg{flex:1;height:4px;border-radius:3px;background:var(--border);overflow:hidden;position:relative;}
+.progress-seg .fill{position:absolute;left:0;top:0;bottom:0;width:0%;background:linear-gradient(90deg,var(--red),var(--orange));border-radius:3px;transition:width .5s ease;}
+.progress-seg.active .fill{width:60%;animation:pulseFill 1.2s ease-in-out infinite;}
+.progress-seg.done .fill{width:100%;animation:none;}
+@keyframes pulseFill{0%,100%{width:35%;}50%{width:75%;}}
+.pulse-once{animation:pulseOnce .5s ease;}
+@keyframes pulseOnce{0%{transform:scale(1);}30%{transform:scale(1.04);color:var(--orange);}100%{transform:scale(1);}}
+.coin-fly{position:absolute;font-size:1.4rem;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0;z-index:5;}
+.coin-fly.go{animation:coinFly 1s ease-in-out;}
+@keyframes coinFly{0%{opacity:0;transform:translate(-50%,-140%) scale(.6) rotate(0deg);}20%{opacity:1;}50%{transform:translate(-50%,-50%) scale(1.3) rotate(180deg);opacity:1;}80%{opacity:1;}100%{opacity:0;transform:translate(-50%,60%) scale(.6) rotate(360deg);}}
 .slippage-row{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap;}
 .slip-btn{padding:5px 10px;border-radius:20px;background:var(--dark);border:1px solid var(--border);color:var(--muted);font-size:.7rem;font-weight:700;cursor:pointer;}
 .slip-btn.active{border-color:var(--orange);color:var(--orange);background:rgba(255,107,26,.1);}
@@ -124,51 +139,60 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
 <div class="page active" id="page-swap">
   <div class="container">
     <div class="section-title">Swap on The Grotto</div>
-    <div class="section-sub">Live pool price · direct on-chain swap against the Cave V2 pool</div>
+    <div class="section-sub">Live pool price · $BOB ⇄ WHERESY ⇄ HERESY (native)</div>
 
     <div class="info-tip">
       <span>🕯️</span>
-      <div><b>Pool:</b> <a class="addr-link mono" href="https://cave.money/pools/0xf8602d664840dd329baefa8692801d21167d6e69" target="_blank">0xf860…d6e69</a> — swaps go straight to this contract, no third-party router. On load the app checks on-chain which of HERESY / WHERESY is actually paired with BOB here; whichever one isn't in the pool is shown as info-only until a pool for it exists.</div>
+      <div><b>Pool:</b> <a class="addr-link mono" href="https://cave.money/pools/0xf8602d664840dd329baefa8692801d21167d6e69" target="_blank">0xf860…d6e69</a> is $BOB / WHERESY. HERESY is the chain's native gas token — WHERESY is its 1:1 wrapped ERC20 (like WAVAX), confirmed from your own <span class="mono">deposit()</span> tx. Picking BOB⇄HERESY auto-routes through WHERESY: wrap/unwrap + pool swap in one click.</div>
     </div>
 
     <div class="price-grid">
       <div class="price-card">
-        <div class="sym">$BOB (Grotto)</div>
+        <div class="sym">$BOB</div>
         <div class="val" id="px-bob-usd">$0.0000</div>
         <div class="sub" id="px-bob-usd-sub">via Avax dexscreener ref.</div>
       </div>
       <div class="price-card">
-        <div class="sym" id="px1-label">1 BOB ≈</div>
+        <div class="sym">1 BOB ≈</div>
         <div class="val" id="px1-val">–</div>
-        <div class="sub" id="px1-sub">–</div>
+        <div class="sub">WHERESY / HERESY</div>
       </div>
       <div class="price-card">
-        <div class="sym" id="px2-label">1 BOB ≈</div>
-        <div class="val" id="px2-val">–</div>
-        <div class="sub" id="px2-sub">–</div>
+        <div class="sym">$WHERESY / $HERESY</div>
+        <div class="val" id="px-wheresy-usd">$0.0000</div>
+        <div class="sub">derived from pool</div>
       </div>
     </div>
 
     <div class="card swap-box">
-      <div class="swap-io">
+      <div class="coin-fly" id="coin-fly">🕯️</div>
+      <div class="swap-io" id="io-from">
         <div class="swap-io-top"><span>You pay</span><span id="bal-from">Balance: –</span></div>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="number" id="in-amount" placeholder="0.0" oninput="onAmountChange()"/>
-          <div class="token-pill" id="pill-from" style="display:flex;align-items:center;gap:6px;background:rgba(255,107,26,.1);border:1px solid rgba(255,107,26,.3);color:var(--orange);font-weight:800;font-size:.85rem;padding:6px 12px;border-radius:20px;">🔥 BOB</div>
+          <select class="token-select" id="from-token-select" onchange="onTokenSelectChange('from')">
+            <option value="BOB">🔥 BOB</option>
+            <option value="WHERESY">🌫 WHERESY</option>
+            <option value="HERESY">🕯️ HERESY</option>
+          </select>
         </div>
-        <div class="swap-usd" id="usd-from">≈ $–</div>
+        <div class="swap-io-bottom"><span class="usd-val" id="usd-from">≈ $0.00</span><span></span></div>
       </div>
-      <div class="swap-arrow"><button onclick="flipDirection()">⇅</button></div>
-      <div class="swap-io">
+      <div class="swap-arrow"><button id="flip-btn" onclick="flipDirection()">⇅</button></div>
+      <div class="swap-io" id="io-to">
         <div class="swap-io-top"><span>You receive (est.)</span><span id="bal-to">Balance: –</span></div>
         <div style="display:flex;align-items:center;gap:10px;">
           <input type="text" id="out-amount" placeholder="0.0" disabled/>
-          <select class="token-select" id="to-token-select" onchange="onToTokenChange()">
-            <option value="pool">Loading…</option>
+          <select class="token-select" id="to-token-select" onchange="onTokenSelectChange('to')">
+            <option value="BOB">🔥 BOB</option>
+            <option value="WHERESY">🌫 WHERESY</option>
+            <option value="HERESY" selected>🕯️ HERESY</option>
           </select>
         </div>
-        <div class="swap-usd" id="usd-to">≈ $–</div>
+        <div class="swap-io-bottom"><span class="usd-val" id="usd-to">≈ $0.00</span><span></span></div>
       </div>
+
+      <div class="route-line" id="route-line"></div>
 
       <div class="slippage-row">
         <span style="font-size:.72rem;color:var(--muted);text-transform:uppercase;">Slippage</span>
@@ -181,10 +205,14 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
         <div><span>Pool price</span><b id="det-price">–</b></div>
         <div><span>Price impact</span><b id="det-impact">–</b></div>
         <div><span>Min. received</span><b id="det-min">–</b></div>
-        <div><span>Fee (0.3%)</span><b id="det-fee">–</b></div>
+        <div><span>Fee (0.3% on pool leg)</span><b id="det-fee">–</b></div>
       </div>
 
       <button class="btn btn-primary" style="width:100%;margin-top:8px;" id="btn-swap" onclick="doSwap()">Connect Wallet</button>
+      <div class="progress-track" id="progress-track" style="display:none;">
+        <div class="progress-seg" id="seg-1"><div class="fill"></div></div>
+        <div class="progress-seg" id="seg-2"><div class="fill"></div></div>
+      </div>
       <div id="tx-swap" class="tx-status"></div>
     </div>
   </div>
@@ -199,7 +227,7 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;}
     <div class="info-tip">
       <span>🌉</span>
       <div>
-        This sends a real <span class="mono">send()</span> transaction to the ERC20TokenHome contract, using the standard ICTT ABI and a destination blockchain ID read live from Avalanche's Warp precompile (not hardcoded). It's built from the public ICTT spec and your own successful bridge tx trace, but wasn't pulled from the official bridge frontend's source, so treat it as best-effort: <b>test with a small amount first.</b> If anything looks off, use <b>Open Official Bridge</b> below instead — that's the known-good path.
+        This sends a real <span class="mono">send()</span> transaction to the ERC20TokenHome contract, using the standard ICTT ABI and a destination blockchain ID read live from Avalanche's Warp precompile (not hardcoded). Built from the public ICTT spec plus your own successful bridge tx trace, but not pulled from the official frontend's source — <b>test with a small amount first.</b> If anything looks off, use <b>Open Official Bridge</b> instead.
       </div>
     </div>
 
@@ -270,19 +298,14 @@ const AVAX_CHAIN_ID_HEX = '0xA86A'; // 43114
 const AVAX_C_RPC = 'https://api.avax.network/ext/bc/C/rpc';
 
 const BOB_GROTTO   = '0x06057d79dBC506f7c0803F052E6c823AA4A25dEA';
-const HERESY_ADDR  = '0x432d38F83a50EC77C409D086e97448794cf76dCF';
-const WHERESY_ADDR = '0xfA99B368B5fc1f5a061bc393dFf73BE8a097667D';
-const POOL_ADDR    = '0xf8602d664840dd329baefa8692801d21167d6e69';
+const WHERESY_ADDR = '0xfA99B368B5fc1f5a061bc393dFf73BE8a097667D'; // wrapped native HERESY (WETH9-style)
+const POOL_ADDR    = '0xf8602d664840dd329baefa8692801d21167d6e69'; // BOB / WHERESY
 
 const BOB_HOME_GROTTO = '0x362c34d5df39458be2fe3a2f132dd45f0f4189a3';
 const BOB_REMOTE_AVAX = '0x2f524f453430520ca26e5485017abaa80231c53d';
 
 const WARP_PRECOMPILE = '0x0200000000000000000000000000000000000005';
 const WARP_ABI = ["function getBlockchainID() view returns (bytes32)"];
-const WRAPPED_NATIVE_ABI = [
-  "function deposit() payable",
-  "function withdraw(uint256 amount)"
-];
 
 const DEXSCREENER_BOB_AVAX = 'https://api.dexscreener.com/latest/dex/pairs/avalanche/0x200ce172bf316d302d8e38e712fe0d093162b84b';
 
@@ -294,30 +317,37 @@ const ERC20_ABI = [
   "function allowance(address owner, address spender) view returns (uint256)",
   "function transfer(address to, uint256 amount) returns (bool)"
 ];
+const WRAP_ABI = ERC20_ABI.concat([
+  "function deposit() payable",
+  "function withdraw(uint256 wad)"
+]);
 const PAIR_ABI = [
   "function getReserves() view returns (uint112 reserve0, uint112 reserve1, uint32 blockTimestampLast)",
   "function token0() view returns (address)",
   "function token1() view returns (address)",
   "function swap(uint256 amount0Out, uint256 amount1Out, address to, bytes calldata data)"
 ];
-// Standard Avalanche ICTT TokenHome ABI (ava-labs/icm-contracts)
 const TOKEN_HOME_ABI = [
   "function send((bytes32 destinationBlockchainID, address destinationTokenTransferrerAddress, address recipient, address primaryFeeTokenAddress, uint256 primaryFee, uint256 secondaryFee, uint256 requiredGasLimit, address multiHopFallback) input, uint256 amount)"
 ];
+
+const TOKENS = {
+  BOB:     { symbol:'BOB',     icon:'🔥', type:'erc20',  address:BOB_GROTTO,   decimals:18 },
+  WHERESY: { symbol:'WHERESY', icon:'🌫', type:'erc20',  address:WHERESY_ADDR, decimals:18 },
+  HERESY:  { symbol:'HERESY',  icon:'🕯️', type:'native', address:null,         decimals:18 }
+};
 
 // ==================== STATE ====================
 let provider=null, signer=null, userAddress=null;
 let roProvider = new ethers.JsonRpcProvider(GROTTO_RPC);
 let pairRO = new ethers.Contract(POOL_ADDR, PAIR_ABI, roProvider);
 let bobRO = new ethers.Contract(BOB_GROTTO, ERC20_ABI, roProvider);
+let wheresyRO = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, roProvider);
 
-let direction = 'bob-to-pool'; // or 'pool-to-bob'
+let fromKey = 'BOB', toKey = 'HERESY';
 let slippagePct = 1;
-let poolInfo = null;      // {token0,token1,dec0,dec1,bobIsToken0,bobReserve,otherReserve,otherAddr,otherSymbol,otherDecimals}
-let heresyStatus = null;  // {addr, symbol, decimals, inPool}
-let wheresyStatus = null; // {addr, symbol, decimals, inPool}
-let selectedTo = null;    // 'heresy' | 'wheresy' — whichever the dropdown currently points to
-let bobUsdPrice = null;
+let poolInfo = null;   // {bobIsToken0, bobReserve, wheresyReserve}
+let bobUsd = 0;
 
 function showPage(p){
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -336,9 +366,10 @@ function toast(msg,type='info'){
   setTimeout(()=>el.classList.add('show'),10);
   setTimeout(()=>{el.classList.remove('show');setTimeout(()=>el.remove(),300);},3500);
 }
-function setTxStatus(id,msg,type){
+function setTxStatus(id,msg,type,spinner){
   const el=document.getElementById(id);
-  el.textContent=msg; el.className=`tx-status show tx-${type}`;
+  el.innerHTML = (spinner? '<span class="spinner"></span>':'') + '<span>'+msg+'</span>';
+  el.className = `tx-status show tx-${type}`;
 }
 function friendlyError(e){
   const msg = e?.reason || e?.shortMessage || e?.message || String(e);
@@ -346,32 +377,39 @@ function friendlyError(e){
   if(/insufficient/i.test(msg)) return 'Insufficient balance or gas.';
   return msg.slice(0,200);
 }
-function parseTokenAmount(value, decimals, label, allowZero=false){
-  const raw = String(value || '').trim();
-  if(!/^(?:\d+\.?\d*|\.\d+)$/.test(raw)) throw new Error(label+' must be a plain decimal number.');
-  const parsed = ethers.parseUnits(raw, decimals);
-  if(parsed < 0n || (!allowZero && parsed === 0n)) throw new Error(label+' must be greater than zero.');
-  return parsed;
+function setProgress(step, state){ // step: 1|2, state: 'active'|'done'
+  const seg = document.getElementById('seg-'+step);
+  seg.classList.remove('active','done');
+  if(state) seg.classList.add(state);
 }
-async function ensureGrottoNetwork(){
-  await switchToGrotto();
-  const chainId = await window.ethereum.request({method:'eth_chainId'});
-  if(String(chainId).toLowerCase() !== GROTTO_CHAIN_ID_HEX.toLowerCase()) throw new Error('Wallet is not connected to The Grotto.');
+function resetProgress(twoStep){
+  document.getElementById('progress-track').style.display='flex';
+  setProgress(1,''); setProgress(2,'');
+  document.getElementById('seg-2').style.opacity = twoStep ? '1':'0.25';
 }
+function pulse(el){ el.classList.remove('pulse-once'); void el.offsetWidth; el.classList.add('pulse-once'); }
 
 // Always plain decimal digits — never scientific notation, however small the number.
 function fmtAdaptive(num){
-  if(num===0 || num==null) return '0';
+  if(num===0 || num==null || isNaN(num)) return '0';
   if(!isFinite(num)) return '–';
   const abs = Math.abs(num);
   if(abs >= 1000) return num.toLocaleString(undefined,{maximumFractionDigits:2});
   if(abs >= 1) return num.toLocaleString(undefined,{maximumFractionDigits:6});
-  // for numbers < 1: show enough leading decimal places to reveal ~4 significant digits
   const leadingZeros = Math.max(0, -Math.floor(Math.log10(abs)) - 1);
-  const decimals = Math.min(leadingZeros + 5, 18); // hard cap so it never explodes
+  const decimals = Math.min(leadingZeros + 5, 18);
   let s = num.toFixed(decimals);
   s = s.replace(/0+$/,'').replace(/\.$/,'');
   return s === '' || s === '-' ? '0' : s;
+}
+function fmtUsd(num){
+  if(!isFinite(num) || num==null) return '$0.00';
+  const abs = Math.abs(num);
+  if(abs===0) return '$0.00';
+  if(abs >= 1) return '$' + num.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  const leadingZeros = Math.max(0, -Math.floor(Math.log10(abs)) - 1);
+  const decimals = Math.min(leadingZeros + 4, 12);
+  return '$' + num.toFixed(decimals).replace(/0+$/,'').replace(/\.$/,'');
 }
 
 // ==================== WALLET ====================
@@ -387,10 +425,10 @@ async function connectWallet(){
     document.getElementById('nav-addr').textContent = userAddress.slice(0,6)+'…'+userAddress.slice(-4);
     document.getElementById('btn-connect').textContent='Connected';
     document.getElementById('btn-connect').disabled = true;
-    document.getElementById('btn-swap').textContent='Review Swap';
     document.getElementById('btn-bridge').textContent='Bridge $BOB';
     toast('Wallet connected');
     refreshBalances();
+    updateSwapButtonLabel();
   }catch(e){ toast(friendlyError(e),'error'); }
 }
 async function switchToGrotto(){
@@ -411,13 +449,9 @@ async function switchToGrotto(){
     } else { throw switchError; }
   }
 }
-async function switchToAvax(){
-  await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:AVAX_CHAIN_ID_HEX}]});
-}
 async function addTokenToWallet(){
   if(!window.ethereum){ toast('No wallet found.','error'); return; }
   try{
-    await switchToAvax();
     await window.ethereum.request({
       method:'wallet_watchAsset',
       params:{type:'ERC20',options:{address:BOB_REMOTE_AVAX,symbol:'BOB',decimals:18}}
@@ -428,62 +462,26 @@ async function addTokenToWallet(){
 // ==================== PRICES ====================
 async function refreshPrices(){
   try{
-    const [reserves, token0, token1] = await Promise.all([pairRO.getReserves(), pairRO.token0(), pairRO.token1()]);
+    const [reserves, token0] = await Promise.all([pairRO.getReserves(), pairRO.token0()]);
     const bobIsToken0 = token0.toLowerCase() === BOB_GROTTO.toLowerCase();
-    const otherAddr = bobIsToken0 ? token1 : token0;
-    const [dec0, dec1, otherSymbol] = await Promise.all([
-      new ethers.Contract(token0, ERC20_ABI, roProvider).decimals(),
-      new ethers.Contract(token1, ERC20_ABI, roProvider).decimals(),
-      new ethers.Contract(otherAddr, ERC20_ABI, roProvider).symbol().catch(()=>'???')
-    ]);
-    const r0 = parseFloat(ethers.formatUnits(reserves[0], dec0));
-    const r1 = parseFloat(ethers.formatUnits(reserves[1], dec1));
+    const r0 = parseFloat(ethers.formatUnits(reserves[0], 18));
+    const r1 = parseFloat(ethers.formatUnits(reserves[1], 18));
     const bobReserve = bobIsToken0 ? r0 : r1;
-    const otherReserve = bobIsToken0 ? r1 : r0;
-    const otherDecimals = bobIsToken0 ? dec1 : dec0;
+    const wheresyReserve = bobIsToken0 ? r1 : r0;
+    poolInfo = { bobIsToken0, bobReserve, wheresyReserve };
 
-    poolInfo = { token0, token1, dec0, dec1, bobIsToken0, bobReserve, otherReserve, otherAddr, otherSymbol, otherDecimals };
-
-    const isHeresyInPool  = otherAddr.toLowerCase() === HERESY_ADDR.toLowerCase();
-    const isWheresyInPool = otherAddr.toLowerCase() === WHERESY_ADDR.toLowerCase();
-
-    heresyStatus  = { addr:HERESY_ADDR,  symbol: isHeresyInPool ? otherSymbol : 'HERESY',  inPool:isHeresyInPool };
-    wheresyStatus = { addr:WHERESY_ADDR, symbol: isWheresyInPool ? otherSymbol : 'WHERESY', inPool:isWheresyInPool };
-
-    // populate the "receive" token dropdown once we know what's real
-    const sel = document.getElementById('to-token-select');
-    if(sel.options.length<2 || sel.dataset.built!=='1'){
-      sel.innerHTML = '';
-      const optH = document.createElement('option'); optH.value='heresy';
-      optH.textContent = heresyStatus.inPool ? `🔥 ${heresyStatus.symbol}` : `🔥 HERESY (no pool yet)`;
-      const optW = document.createElement('option'); optW.value='wheresy';
-      optW.textContent = wheresyStatus.inPool ? `🌫 ${wheresyStatus.symbol}` : `🌫 WHERESY (no pool yet)`;
-      sel.appendChild(optH); sel.appendChild(optW);
-      sel.value = isHeresyInPool ? 'heresy' : 'wheresy';
-      selectedTo = sel.value;
-      sel.dataset.built='1';
-    }
-
-    const wheresyPerBob = bobReserve>0 ? otherReserve/bobReserve : 0;
-
-    // card 1: whichever token is actually tradable in the pool
-    document.getElementById('px1-label').textContent = `1 BOB ≈`;
+    const wheresyPerBob = bobReserve>0 ? wheresyReserve/bobReserve : 0;
     document.getElementById('px1-val').textContent = fmtAdaptive(wheresyPerBob);
-    document.getElementById('px1-sub').textContent = otherSymbol + ' (live pool)';
+    document.getElementById('det-price').textContent = `1 BOB = ${fmtAdaptive(wheresyPerBob)} WHERESY`;
 
-    // card 2: the other requested token, honestly labeled as unpriced if no pool
-    const otherName = isHeresyInPool ? wheresyStatus.symbol : heresyStatus.symbol;
-    document.getElementById('px2-label').textContent = isHeresyInPool ? '1 BOB ≈' : '1 BOB ≈';
-    document.getElementById('px2-val').textContent = 'no pool';
-    document.getElementById('px2-sub').textContent = `${otherName} — send me its pool address to price it`;
-
-    document.getElementById('det-price').textContent = `1 BOB = ${fmtAdaptive(wheresyPerBob)} ${otherSymbol}`;
-
+    if(bobUsd>0 && wheresyPerBob>0){
+      const wheresyUsd = bobUsd / wheresyPerBob;
+      document.getElementById('px-wheresy-usd').textContent = fmtUsd(wheresyUsd);
+    }
     updateEstimate();
   }catch(e){
     console.warn('price load failed', e);
     document.getElementById('px1-val').textContent='–';
-    document.getElementById('px2-val').textContent='–';
   }
 
   try{
@@ -491,834 +489,68 @@ async function refreshPrices(){
     const data = await res.json();
     const pair = data.pair || (data.pairs && data.pairs[0]);
     if(pair && pair.priceUsd){
-      bobUsdPrice = parseFloat(pair.priceUsd);
-      document.getElementById('px-bob-usd').textContent = '
-      document.getElementById('px-bob-usd-sub').textContent = chg!=null ? `${chg>0?'+':''}${chg}% 24h (Avax ref.)` : 'via Avax dexscreener ref.';
-    }
-  }catch(e){ console.warn('usd price fetch failed', e); }
-}
-
-function hasNativeHeresyRoute(){
-  return selectedTo==='heresy' && wheresyStatus?.inPool;
-}
-function onToTokenChange(){
-  const sel = document.getElementById('to-token-select');
-  selectedTo = sel.value;
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  const canRoute = Boolean(status?.inPool || hasNativeHeresyRoute());
-  const btn = document.getElementById('btn-swap');
-  if(!canRoute){
-    btn.textContent = 'No route for this token yet';
-    btn.disabled = true;
-  } else if(userAddress){
-    btn.textContent = hasNativeHeresyRoute() ? 'Review Route (3 steps)' : 'Review Swap';
-    btn.disabled = false;
-  }
-  updateEstimate();
-  refreshBalances();
-}
-
-// ==================== SWAP ====================
-function flipDirection(){
-  direction = direction==='bob-to-pool' ? 'pool-to-bob' : 'bob-to-pool';
-  const fromPill = document.getElementById('pill-from');
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  const label = status ? (status.symbol) : 'TOKEN';
-  if(direction==='bob-to-pool'){ fromPill.textContent='🔥 BOB'; }
-  else { fromPill.textContent = (selectedTo==='heresy'?'🔥 ':'🌫 ') + label; }
-  document.getElementById('in-amount').value='';
-  document.getElementById('out-amount').value='';
-  onToTokenChange();
-}
-function setSlippage(v, btn){
-  slippagePct = v;
-  document.querySelectorAll('.slip-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  updateEstimate();
-}
-function onAmountChange(){ updateEstimate(); }
-
-function getAmountOut(amountIn, reserveIn, reserveOut){
-  if(amountIn<=0 || reserveIn<=0 || reserveOut<=0) return 0;
-  const amountInWithFee = amountIn * 997;
-  const numerator = amountInWithFee * reserveOut;
-  const denominator = (reserveIn * 1000) + amountInWithFee;
-  return numerator/denominator;
-}
-
-function updateEstimate(){
-  if(!poolInfo) return;
-  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
-  const bobToOther = direction==='bob-to-pool';
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  document.getElementById('out-amount').value = amtOut>0 ? fmtAdaptive(amtOut) : '';
-
-  const spotOut = reserveIn>0 ? amtIn*(reserveOut/reserveIn) : 0;
-  const impact = spotOut>0 ? ((spotOut-amtOut)/spotOut*100) : 0;
-  document.getElementById('det-impact').textContent = amtIn>0 ? impact.toFixed(2)+'%' : '–';
-
-  const minReceived = amtOut * (1 - slippagePct/100);
-  document.getElementById('det-min').textContent = amtOut>0 ? fmtAdaptive(minReceived) : '–';
-  document.getElementById('det-fee').textContent = amtIn>0 ? fmtAdaptive(amtIn*0.003) + (bobToOther?' BOB':' '+poolInfo.otherSymbol) : '–';
-  updateUsdValues(amtIn, amtOut, bobToOther);
-}
-function formatUsd(value){
-  if(!Number.isFinite(value) || value <= 0) return '≈ $–';
-  if(value < 0.01) return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const nativeRoute = hasNativeHeresyRoute();
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), nativeRoute ? roProvider.getBalance(userAddress) : otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,nativeRoute ? 18 : poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  const nativeRoute = hasNativeHeresyRoute();
-  if(!status || (!status.inPool && !nativeRoute)){ toast('No live route for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    const totalSteps = nativeRoute ? 3 : 2;
-    let step = 1;
-    if(nativeRoute && !bobToOther){
-      setTxStatus('tx-swap',`📝 Step ${step++}/${totalSteps} — Wrapping HERESY into wHERESY (sign in wallet)…`,'pending');
-      const wrappedWrite = new ethers.Contract(WHERESY_ADDR, WRAPPED_NATIVE_ABI, signer);
-      const wrapTx = await wrappedWrite.deposit({value:amountInWei});
-      await wrapTx.wait(1);
-    }
-
-    setTxStatus('tx-swap',`📝 Step ${step++}/${totalSteps} — Sending tokens to the pool (sign in wallet)…`,'pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap',`📝 Step ${step++}/${totalSteps} — Executing swap (sign in wallet)…`,'pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming swap on The Grotto…','pending');
-    await tx2.wait(1);
-
-    if(nativeRoute && bobToOther){
-      setTxStatus('tx-swap',`📝 Step ${step}/${totalSteps} — Unwrapping wHERESY into HERESY (sign in wallet)…`,'pending');
-      const wrappedWrite = new ethers.Contract(WHERESY_ADDR, WRAPPED_NATIVE_ABI, signer);
-      const unwrapTx = await wrappedWrite.withdraw(amountOutWei);
-      await unwrapTx.wait(1);
-    }
-
-    setTxStatus('tx-swap',nativeRoute ? '✅ Route complete: BOB ↔ HERESY via wHERESY.' : '✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toFixed(6);
-  if(value < 1) return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toFixed(4);
-  return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toLocaleString(undefined,{maximumFractionDigits:2});
-}
-function updateUsdValues(amountIn, amountOut, bobToOther){
-  const otherUsd = bobUsdPrice && poolInfo?.bobReserve>0 ? bobUsdPrice * (poolInfo.otherReserve / poolInfo.bobReserve) : null;
-  const fromUsd = bobToOther ? amountIn * bobUsdPrice : amountIn * otherUsd;
-  const toUsd = bobToOther ? amountOut * otherUsd : amountOut * bobUsdPrice;
-  document.getElementById('usd-from').textContent = formatUsd(fromUsd);
-  document.getElementById('usd-to').textContent = formatUsd(toUsd);
-}
-
-async function refreshBalances(){
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + bobUsdPrice.toFixed(6);
-      updateEstimate();
+      bobUsd = parseFloat(pair.priceUsd);
+      document.getElementById('px-bob-usd').textContent = fmtUsd(bobUsd);
       const chg = pair.priceChange?.h24;
       document.getElementById('px-bob-usd-sub').textContent = chg!=null ? `${chg>0?'+':''}${chg}% 24h (Avax ref.)` : 'via Avax dexscreener ref.';
+      refreshPrices.usdDone = true;
+      updateEstimate();
     }
   }catch(e){ console.warn('usd price fetch failed', e); }
 }
 
-function hasNativeHeresyRoute(){
-  return selectedTo==='heresy' && wheresyStatus?.inPool;
-}
-function onToTokenChange(){
-  const sel = document.getElementById('to-token-select');
-  selectedTo = sel.value;
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  const canRoute = Boolean(status?.inPool || hasNativeHeresyRoute());
-  const btn = document.getElementById('btn-swap');
-  if(!canRoute){
-    btn.textContent = 'No route for this token yet';
-    btn.disabled = true;
-  } else if(userAddress){
-    btn.textContent = hasNativeHeresyRoute() ? 'Review Route (3 steps)' : 'Review Swap';
-    btn.disabled = false;
-  }
-  updateEstimate();
-  refreshBalances();
+function tokenUsd(key){
+  if(key==='BOB') return bobUsd;
+  if(!poolInfo || poolInfo.bobReserve<=0) return 0;
+  const wheresyPerBob = poolInfo.wheresyReserve/poolInfo.bobReserve;
+  return wheresyPerBob>0 ? bobUsd/wheresyPerBob : 0; // WHERESY & HERESY share the same 1:1 price
 }
 
-// ==================== SWAP ====================
+// ==================== TOKEN SELECTION / ROUTING ====================
+function onTokenSelectChange(side){
+  const fromSel = document.getElementById('from-token-select');
+  const toSel = document.getElementById('to-token-select');
+  if(side==='from' && fromSel.value===toSel.value){
+    // bump the other side to something different
+    const opts=['BOB','WHERESY','HERESY'].filter(k=>k!==fromSel.value);
+    toSel.value = opts[0];
+  }
+  if(side==='to' && toSel.value===fromSel.value){
+    const opts=['BOB','WHERESY','HERESY'].filter(k=>k!==toSel.value);
+    fromSel.value = opts[0];
+  }
+  fromKey = fromSel.value; toKey = toSel.value;
+  updateRouteLine();
+  updateEstimate();
+  refreshBalances();
+  updateSwapButtonLabel();
+}
+function updateRouteLine(){
+  const line = document.getElementById('route-line');
+  if((fromKey==='BOB'&&toKey==='WHERESY')||(fromKey==='WHERESY'&&toKey==='BOB')){
+    line.textContent = `Route: ${fromKey} → pool → ${toKey}`;
+  } else if((fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY')){
+    line.textContent = fromKey==='HERESY' ? 'Route: wrap HERESY → WHERESY (1:1)' : 'Route: unwrap WHERESY → HERESY (1:1)';
+  } else if(fromKey==='BOB'&&toKey==='HERESY'){
+    line.textContent = 'Route: BOB → pool → WHERESY → unwrap → HERESY';
+  } else if(fromKey==='HERESY'&&toKey==='BOB'){
+    line.textContent = 'Route: HERESY → wrap → WHERESY → pool → BOB';
+  } else { line.textContent=''; }
+}
+
 function flipDirection(){
-  direction = direction==='bob-to-pool' ? 'pool-to-bob' : 'bob-to-pool';
-  const fromPill = document.getElementById('pill-from');
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  const label = status ? (status.symbol) : 'TOKEN';
-  if(direction==='bob-to-pool'){ fromPill.textContent='🔥 BOB'; }
-  else { fromPill.textContent = (selectedTo==='heresy'?'🔥 ':'🌫 ') + label; }
+  const btn = document.getElementById('flip-btn');
+  btn.classList.add('spin');
+  setTimeout(()=>btn.classList.remove('spin'),400);
+  const tmp = fromKey; fromKey = toKey; toKey = tmp;
+  document.getElementById('from-token-select').value = fromKey;
+  document.getElementById('to-token-select').value = toKey;
   document.getElementById('in-amount').value='';
   document.getElementById('out-amount').value='';
-  onToTokenChange();
+  updateRouteLine();
+  updateEstimate();
+  refreshBalances();
+  updateSwapButtonLabel();
 }
 function setSlippage(v, btn){
   slippagePct = v;
@@ -1336,621 +568,153 @@ function getAmountOut(amountIn, reserveIn, reserveOut){
   return numerator/denominator;
 }
 
-function updateEstimate(){
-  if(!poolInfo) return;
-  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
-  const bobToOther = direction==='bob-to-pool';
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  document.getElementById('out-amount').value = amtOut>0 ? fmtAdaptive(amtOut) : '';
+// returns {amountOut, poolLegIn, poolLegOut, usesPool}
+function computeRoute(amtIn){
+  if(fromKey===toKey || amtIn<=0) return {amountOut:0, usesPool:false};
+  const wrapPair = (fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY');
+  if(wrapPair) return {amountOut:amtIn, usesPool:false}; // 1:1 wrap/unwrap
 
-  const spotOut = reserveIn>0 ? amtIn*(reserveOut/reserveIn) : 0;
-  const impact = spotOut>0 ? ((spotOut-amtOut)/spotOut*100) : 0;
+  if(!poolInfo) return {amountOut:0, usesPool:true};
+  if((fromKey==='BOB'&&toKey==='WHERESY')){
+    return {amountOut:getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve), usesPool:true};
+  }
+  if((fromKey==='WHERESY'&&toKey==='BOB')){
+    return {amountOut:getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve), usesPool:true};
+  }
+  if(fromKey==='BOB'&&toKey==='HERESY'){
+    const wOut = getAmountOut(amtIn, poolInfo.bobReserve, poolInfo.wheresyReserve);
+    return {amountOut:wOut, usesPool:true}; // unwrap leg is 1:1
+  }
+  if(fromKey==='HERESY'&&toKey==='BOB'){
+    const bOut = getAmountOut(amtIn, poolInfo.wheresyReserve, poolInfo.bobReserve); // wrap leg 1:1 first
+    return {amountOut:bOut, usesPool:true};
+  }
+  return {amountOut:0, usesPool:false};
+}
+
+function updateEstimate(){
+  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
+  const {amountOut} = computeRoute(amtIn);
+  const outEl = document.getElementById('out-amount');
+  outEl.value = amountOut>0 ? fmtAdaptive(amountOut) : '';
+  pulse(outEl);
+
+  document.getElementById('usd-from').textContent = '≈ ' + fmtUsd(amtIn * tokenUsd(fromKey));
+  document.getElementById('usd-to').textContent = '≈ ' + fmtUsd(amountOut * tokenUsd(toKey));
+
+  const usesPool = !((fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY'));
+  if(usesPool && poolInfo && amtIn>0){
+    const reserveIn = (fromKey==='BOB'||fromKey==='HERESY') ? poolInfo.bobReserve*0 : 0; // placeholder unused
+  }
+  // impact only meaningful for legs that actually touch the pool
+  let impact = 0;
+  if(poolInfo && amtIn>0){
+    if(fromKey==='BOB'||toKey==='BOB'){
+      const bobSide = fromKey==='BOB';
+      const rIn = bobSide? poolInfo.bobReserve : poolInfo.wheresyReserve;
+      const rOut = bobSide? poolInfo.wheresyReserve : poolInfo.bobReserve;
+      const spot = rIn>0 ? amtIn*(rOut/rIn) : 0;
+      const real = getAmountOut(amtIn, rIn, rOut);
+      impact = spot>0 ? ((spot-real)/spot*100) : 0;
+    }
+  }
   document.getElementById('det-impact').textContent = amtIn>0 ? impact.toFixed(2)+'%' : '–';
 
-  const minReceived = amtOut * (1 - slippagePct/100);
-  document.getElementById('det-min').textContent = amtOut>0 ? fmtAdaptive(minReceived) : '–';
-  document.getElementById('det-fee').textContent = amtIn>0 ? fmtAdaptive(amtIn*0.003) + (bobToOther?' BOB':' '+poolInfo.otherSymbol) : '–';
-  updateUsdValues(amtIn, amtOut, bobToOther);
+  const minReceived = amountOut * (1 - slippagePct/100);
+  document.getElementById('det-min').textContent = amountOut>0 ? fmtAdaptive(minReceived)+' '+toKey : '–';
+  document.getElementById('det-fee').textContent = amtIn>0 ? fmtAdaptive(amtIn*0.003)+' '+fromKey : '–';
 }
-function formatUsd(value){
-  if(!Number.isFinite(value) || value <= 0) return '≈ $–';
-  if(value < 0.01) return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
+
+async function getBalance(key){
+  if(!userAddress) return 0;
   try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
+    if(TOKENS[key].type==='native'){
+      const bal = await roProvider.getBalance(userAddress);
+      return parseFloat(ethers.formatUnits(bal,18));
     } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
+      const c = new ethers.Contract(TOKENS[key].address, ERC20_ABI, roProvider);
+      const bal = await c.balanceOf(userAddress);
+      return parseFloat(ethers.formatUnits(bal,18));
     }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toFixed(6);
-  if(value < 1) return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toFixed(4);
-  return '≈ 
-  document.getElementById('bal-from').textContent='Balance: –';
-  document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
-}
-
-async function doSwap(){
-  if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
-  if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
-
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
-
-  const btn = document.getElementById('btn-swap');
-  btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
-
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
-
-    setTxStatus('tx-swap','✅ Swap complete!','success');
-    toast('Swap complete 🎉','success');
-    document.getElementById('in-amount').value='';
-    document.getElementById('out-amount').value='';
-    refreshPrices();
-    refreshBalances();
-  }catch(e){
-    setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== BRIDGE ====================
-async function refreshBridgeBalances(){
-  document.getElementById('bal-bob-grotto').textContent = '–';
-  document.getElementById('bal-bob-avax').textContent = '–';
-  if(!userAddress) return;
-  try{
-    const bal = await bobRO.balanceOf(userAddress);
-    document.getElementById('bal-bob-grotto').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-  try{
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const remote = new ethers.Contract(BOB_REMOTE_AVAX, ERC20_ABI, avaxProvider);
-    const bal = await remote.balanceOf(userAddress);
-    document.getElementById('bal-bob-avax').textContent = fmtAdaptive(parseFloat(ethers.formatUnits(bal,18))) + ' BOB';
-  }catch(e){}
-}
-
-async function doBridge(){
-  if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
-  const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
-
-  const btn = document.getElementById('btn-bridge');
-  btn.disabled = true;
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
-    const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
-    const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
-    const destinationBlockchainID = await warpAvax.getBlockchainID();
-
-    const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
-    const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
-
-    const totalNeeded = amountWei + feeWei;
-    const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
-    if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
-      const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
-      await txA.wait(1);
-    }
-
-    const input = {
-      destinationBlockchainID,
-      destinationTokenTransferrerAddress: BOB_REMOTE_AVAX,
-      recipient,
-      primaryFeeTokenAddress: BOB_GROTTO,
-      primaryFee: feeWei,
-      secondaryFee: 0n,
-      requiredGasLimit,
-      multiHopFallback: ethers.ZeroAddress
-    };
-
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
-    const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
-    await tx.wait(1);
-
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
-    document.getElementById('bridge-amount').value='';
-    refreshBridgeBalances();
-  }catch(e){
-    setTxStatus('tx-bridge','❌ '+friendlyError(e)+' — try "Open Official Bridge" instead.','error');
-  }finally{
-    btn.disabled = false;
-  }
-}
-
-// ==================== INIT ====================
-refreshPrices();
-setInterval(refreshPrices, 20000);
-</script>
-</body>
-</html>
- + value.toLocaleString(undefined,{maximumFractionDigits:2});
-}
-function updateUsdValues(amountIn, amountOut, bobToOther){
-  const otherUsd = bobUsdPrice && poolInfo?.bobReserve>0 ? bobUsdPrice * (poolInfo.otherReserve / poolInfo.bobReserve) : null;
-  const fromUsd = bobToOther ? amountIn * bobUsdPrice : amountIn * otherUsd;
-  const toUsd = bobToOther ? amountOut * otherUsd : amountOut * bobUsdPrice;
-  document.getElementById('usd-from').textContent = formatUsd(fromUsd);
-  document.getElementById('usd-to').textContent = formatUsd(toUsd);
+  }catch(e){ return 0; }
 }
 
 async function refreshBalances(){
   document.getElementById('bal-from').textContent='Balance: –';
   document.getElementById('bal-to').textContent='Balance: –';
-  if(!userAddress || !poolInfo) return;
-  try{
-    const otherRO = new ethers.Contract(poolInfo.otherAddr, ERC20_ABI, roProvider);
-    const [bobBal, otherBal] = await Promise.all([
-      bobRO.balanceOf(userAddress), otherRO.balanceOf(userAddress)
-    ]);
-    const bobFmt = fmtAdaptive(parseFloat(ethers.formatUnits(bobBal,18)));
-    const otherFmt = fmtAdaptive(parseFloat(ethers.formatUnits(otherBal,poolInfo.otherDecimals)));
-    if(direction==='bob-to-pool'){
-      document.getElementById('bal-from').textContent = 'Balance: '+bobFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+otherFmt;
-    } else {
-      document.getElementById('bal-from').textContent = 'Balance: '+otherFmt;
-      document.getElementById('bal-to').textContent = 'Balance: '+bobFmt;
-    }
-  }catch(e){ console.warn('balance fetch failed', e); }
+  if(!userAddress) return;
+  const [fromBal, toBal] = await Promise.all([getBalance(fromKey), getBalance(toKey)]);
+  document.getElementById('bal-from').textContent = 'Balance: ' + fmtAdaptive(fromBal);
+  document.getElementById('bal-to').textContent = 'Balance: ' + fmtAdaptive(toBal);
+}
+
+function updateSwapButtonLabel(){
+  const btn = document.getElementById('btn-swap');
+  if(!userAddress){ btn.textContent='Connect Wallet'; btn.disabled=false; return; }
+  if(fromKey===toKey){ btn.textContent='Choose different tokens'; btn.disabled=true; return; }
+  btn.textContent = `Swap ${fromKey} → ${toKey}`;
+  btn.disabled=false;
 }
 
 async function doSwap(){
   if(!userAddress){ connectWallet(); return; }
-  if(!poolInfo){ toast('Pool data still loading…','error'); return; }
-  try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const status = selectedTo==='heresy' ? heresyStatus : wheresyStatus;
-  if(!status || !status.inPool){ toast('No live pool for this token yet.','error'); return; }
-
-  const amountInput = document.getElementById('in-amount').value;
-  const amtIn = parseFloat(amountInput || '0');
+  const amtIn = parseFloat(document.getElementById('in-amount').value || '0');
   if(!amtIn || amtIn<=0){ toast('Enter an amount','error'); return; }
+  if(fromKey===toKey){ toast('Pick two different tokens','error'); return; }
 
-  const bobToOther = direction==='bob-to-pool';
-  const tokenInAddr = bobToOther ? BOB_GROTTO : poolInfo.otherAddr;
-  const reserveIn = bobToOther ? poolInfo.bobReserve : poolInfo.otherReserve;
-  const reserveOut = bobToOther ? poolInfo.otherReserve : poolInfo.bobReserve;
-  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
-  if(amtOut<=0){ toast('Not enough liquidity for this amount','error'); return; }
-  const amountOutMin = amtOut * (1 - slippagePct/100);
-
-  const inDecimals = bobToOther ? 18 : poolInfo.otherDecimals;
-  const outDecimals = bobToOther ? poolInfo.otherDecimals : 18;
-
-  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
-  let amountInWei;
-  try{
-    amountInWei = parseTokenAmount(amountInput, inDecimals, 'Amount');
-  }catch(e){ toast(friendlyError(e),'error'); return; }
-  const amountOutWei = ethers.parseUnits(amountOutMin.toFixed(outDecimals), outDecimals);
-
-  const outIsToken0 = poolInfo.bobIsToken0 ? !bobToOther : bobToOther;
-  const amount0Out = outIsToken0 ? amountOutWei : 0n;
-  const amount1Out = outIsToken0 ? 0n : amountOutWei;
+  const {amountOut} = computeRoute(amtIn);
+  if(amountOut<=0){ toast('Not enough liquidity for this amount, or prices are still loading','error'); return; }
+  const amountOutMin = amountOut * (1 - slippagePct/100);
+  const amountInWei = ethers.parseUnits(amtIn.toString(), 18);
 
   const btn = document.getElementById('btn-swap');
+  const coin = document.getElementById('coin-fly');
   btn.disabled = true;
-  try{
-    setTxStatus('tx-swap','📝 Step 1/2 — Sending tokens to the pool (sign in wallet)…','pending');
-    const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
-    await tx1.wait(1);
+  coin.classList.add('go');
 
-    setTxStatus('tx-swap','📝 Step 2/2 — Executing swap (sign in wallet)…','pending');
-    const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
-    const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
-    setTxStatus('tx-swap','⏳ Confirming on-chain…','pending');
-    await tx2.wait(1);
+  const twoHop = (fromKey==='BOB'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='BOB');
+  const isWrapOnly = (fromKey==='WHERESY'&&toKey==='HERESY')||(fromKey==='HERESY'&&toKey==='WHERESY');
+  resetProgress(twoHop);
+
+  try{
+    if(isWrapOnly){
+      setProgress(1,'active');
+      setTxStatus('tx-swap', fromKey==='HERESY' ? 'Wrapping HERESY → WHERESY (sign in wallet)…' : 'Unwrapping WHERESY → HERESY (sign in wallet)…','pending',true);
+      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
+      let tx;
+      if(fromKey==='HERESY'){ tx = await w.deposit({value:amountInWei}); }
+      else { tx = await w.withdraw(amountInWei); }
+      await tx.wait(1);
+      setProgress(1,'done');
+    }
+    else if(fromKey==='BOB'&&toKey==='WHERESY'){
+      await runPoolSwap('BOB','WHERESY',amtIn,amountOutMin,1,twoHop?2:1);
+    }
+    else if(fromKey==='WHERESY'&&toKey==='BOB'){
+      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,1,twoHop?2:1);
+    }
+    else if(fromKey==='BOB'&&toKey==='HERESY'){
+      // hop 1: BOB -> WHERESY via pool
+      const wOut = await runPoolSwap('BOB','WHERESY',amtIn,0,1,2); // slippage applied on final leg only
+      setProgress(2,'active');
+      setTxStatus('tx-swap','Unwrapping WHERESY → HERESY (sign in wallet)…','pending',true);
+      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
+      const bal = await w.balanceOf(userAddress);
+      const tx2 = await w.withdraw(bal < ethers.parseUnits(wOut.toFixed(18),18) ? bal : ethers.parseUnits(wOut.toFixed(18),18));
+      await tx2.wait(1);
+      setProgress(2,'done');
+    }
+    else if(fromKey==='HERESY'&&toKey==='BOB'){
+      // hop 1: wrap HERESY -> WHERESY
+      setProgress(1,'active');
+      setTxStatus('tx-swap','Wrapping HERESY → WHERESY (sign in wallet)…','pending',true);
+      const w = new ethers.Contract(WHERESY_ADDR, WRAP_ABI, signer);
+      const tx1 = await w.deposit({value:amountInWei});
+      await tx1.wait(1);
+      setProgress(1,'done');
+      // hop 2: WHERESY -> BOB via pool
+      await runPoolSwap('WHERESY','BOB',amtIn,amountOutMin,2,2);
+    }
 
     setTxStatus('tx-swap','✅ Swap complete!','success');
     toast('Swap complete 🎉','success');
@@ -1960,9 +724,40 @@ async function doSwap(){
     refreshBalances();
   }catch(e){
     setTxStatus('tx-swap','❌ '+friendlyError(e),'error');
+    setProgress(1,''); setProgress(2,'');
   }finally{
     btn.disabled = false;
+    setTimeout(()=>coin.classList.remove('go'),1000);
   }
+}
+
+// executes one pool-leg swap (transfer-to-pair + pair.swap). Returns the actual amountOut estimate used.
+async function runPoolSwap(inKey,outKey,amtIn,amountOutMinFloat,stepNum,totalSteps){
+  const reserveIn = inKey==='BOB'? poolInfo.bobReserve : poolInfo.wheresyReserve;
+  const reserveOut = inKey==='BOB'? poolInfo.wheresyReserve : poolInfo.bobReserve;
+  const amtOut = getAmountOut(amtIn, reserveIn, reserveOut);
+  const minOut = amountOutMinFloat>0 ? amountOutMinFloat : amtOut*(1-slippagePct/100);
+  const amountInWei = ethers.parseUnits(amtIn.toString(), 18);
+  const amountOutWei = ethers.parseUnits(Math.max(minOut,0).toFixed(18), 18);
+
+  const tokenInAddr = inKey==='BOB'? BOB_GROTTO : WHERESY_ADDR;
+  const tokenIn = new ethers.Contract(tokenInAddr, ERC20_ABI, signer);
+
+  setProgress(stepNum,'active');
+  setTxStatus('tx-swap', `Step ${stepNum}/${totalSteps} — sending ${inKey} to the pool (sign in wallet)…`,'pending',true);
+  const tx1 = await tokenIn.transfer(POOL_ADDR, amountInWei);
+  await tx1.wait(1);
+
+  const outIsToken0 = poolInfo.bobIsToken0 ? outKey!=='BOB' : outKey==='BOB';
+  const amount0Out = outIsToken0 ? amountOutWei : 0n;
+  const amount1Out = outIsToken0 ? 0n : amountOutWei;
+
+  setTxStatus('tx-swap', `Step ${stepNum}/${totalSteps} — executing swap (sign in wallet)…`,'pending',true);
+  const pairWrite = new ethers.Contract(POOL_ADDR, PAIR_ABI, signer);
+  const tx2 = await pairWrite.swap(amount0Out, amount1Out, userAddress, '0x');
+  await tx2.wait(1);
+  setProgress(stepNum,'done');
+  return amtOut;
 }
 
 // ==================== BRIDGE ====================
@@ -1984,29 +779,25 @@ async function refreshBridgeBalances(){
 
 async function doBridge(){
   if(!userAddress){ connectWallet(); return; }
-  const amtStr = document.getElementById('bridge-amount').value.trim();
+  const amtStr = document.getElementById('bridge-amount').value;
+  const amt = parseFloat(amtStr || '0');
+  if(!amt || amt<=0){ toast('Enter an amount to bridge','error'); return; }
   const recipientInput = document.getElementById('bridge-recipient').value.trim();
-  const gasLimitStr = document.getElementById('bridge-gaslimit').value.trim();
-  const feeStr = document.getElementById('bridge-fee').value.trim();
-  if(!/^\d+$/.test(gasLimitStr) || BigInt(gasLimitStr) === 0n){ toast('Gas limit must be a positive whole number.','error'); return; }
+  const recipient = recipientInput || userAddress;
+  if(!ethers.isAddress(recipient)){ toast('Recipient is not a valid address','error'); return; }
+  const requiredGasLimit = BigInt(document.getElementById('bridge-gaslimit').value || '350000');
+  const feeAmt = parseFloat(document.getElementById('bridge-fee').value || '0');
 
   const btn = document.getElementById('btn-bridge');
   btn.disabled = true;
   try{
-    await ensureGrottoNetwork();
-    signer = await provider.getSigner();
-    userAddress = await signer.getAddress();
-    const recipient = recipientInput || userAddress;
-    if(!ethers.isAddress(recipient)) throw new Error('Recipient is not a valid address.');
-    const amountWei = parseTokenAmount(amtStr, 18, 'Bridge amount');
-    const feeWei = parseTokenAmount(feeStr || '0', 18, 'Relayer fee', true);
-    const requiredGasLimit = BigInt(gasLimitStr);
-    setTxStatus('tx-bridge','🔎 Validating destination and preparing bridge transaction…','pending');
-    // Read the destination (Avalanche C-Chain) blockchain ID live from its own Warp precompile,
-    // instead of hardcoding a value that could be wrong for this deployment.
+    setTxStatus('tx-bridge','Reading Avalanche C-Chain blockchain ID…','pending',true);
     const avaxProvider = new ethers.JsonRpcProvider(AVAX_C_RPC);
     const warpAvax = new ethers.Contract(WARP_PRECOMPILE, WARP_ABI, avaxProvider);
     const destinationBlockchainID = await warpAvax.getBlockchainID();
+
+    const amountWei = ethers.parseUnits(amt.toString(), 18);
+    const feeWei = ethers.parseUnits(feeAmt.toString(), 18);
 
     const bobWrite = new ethers.Contract(BOB_GROTTO, ERC20_ABI, signer);
     const homeWrite = new ethers.Contract(BOB_HOME_GROTTO, TOKEN_HOME_ABI, signer);
@@ -2014,7 +805,7 @@ async function doBridge(){
     const totalNeeded = amountWei + feeWei;
     const allowance = await bobWrite.allowance(userAddress, BOB_HOME_GROTTO);
     if(allowance < totalNeeded){
-      setTxStatus('tx-bridge','📝 Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending');
+      setTxStatus('tx-bridge','Step 1/2 — Approve $BOB for the bridge (sign in wallet)…','pending',true);
       const txA = await bobWrite.approve(BOB_HOME_GROTTO, totalNeeded);
       await txA.wait(1);
     }
@@ -2030,13 +821,13 @@ async function doBridge(){
       multiHopFallback: ethers.ZeroAddress
     };
 
-    setTxStatus('tx-bridge','📝 Step 2/2 — Sending across the bridge (sign in wallet)…','pending');
+    setTxStatus('tx-bridge','Step 2/2 — Sending across the bridge (sign in wallet)…','pending',true);
     const tx = await homeWrite.send(input, amountWei);
-    setTxStatus('tx-bridge','⏳ Confirming on Grotto — funds arrive on Avalanche a little after this confirms…','pending');
+    setTxStatus('tx-bridge','Confirming on Grotto — funds arrive on Avalanche shortly after…','pending',true);
     await tx.wait(1);
 
-    setTxStatus('tx-bridge','✅ Submitted on The Grotto. Avalanche delivery is still pending; verify it in the official bridge before treating it as complete.','success');
-    toast('Bridge submitted — awaiting Avalanche delivery.','success');
+    setTxStatus('tx-bridge','✅ Bridge transaction sent! Wrapped $BOB should land on Avalanche within a couple minutes.','success');
+    toast('Bridge tx sent 🎉','success');
     document.getElementById('bridge-amount').value='';
     refreshBridgeBalances();
   }catch(e){
@@ -2047,6 +838,9 @@ async function doBridge(){
 }
 
 // ==================== INIT ====================
+document.getElementById('from-token-select').value = fromKey;
+document.getElementById('to-token-select').value = toKey;
+updateRouteLine();
 refreshPrices();
 setInterval(refreshPrices, 20000);
 </script>
