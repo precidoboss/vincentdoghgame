@@ -233,7 +233,10 @@ nav{padding:0 10px;}
 <button class="slip-btn" onclick="setSlippage(0.5,this)">0.5%</button>
 <button class="slip-btn active" onclick="setSlippage(1,this)">1%</button>
 <button class="slip-btn" onclick="setSlippage(3,this)">3%</button>
+<input type="number" id="custom-slip" placeholder="Custom" min="0.01" max="50" step="0.1" style="width:70px;padding:5px 8px;font-size:.7rem;border-radius:20px;" oninput="setCustomSlippage(this.value)"/>
+<span style="font-size:.7rem;color:var(--muted);">%</span>
 </div>
+
 
 <div class="swap-details">
 <div><span>Rate</span><b id="det-price">–</b></div>
@@ -355,14 +358,14 @@ const TOKENS = {
   WHERESY: { symbol:'WHERESY', type:'erc20',  address: WHERESY_ADDR,       decimals:18, icon:'https://grottoexplorer.xyz/assets/configs/network_icon.png' },
   BOB:     { symbol:'BOB',     type:'erc20',  address:'0x06057d79dBC506f7c0803F052E6c823AA4A25dEA', decimals:18, pool:'0xF8602d664840DD329BaEfA8692801D21167D6E69', icon:'https://bp.enterthegrotto.xyz/_next/image?url=%2Fimages%2Fbp-coin.png&w=96&q=75&dpl=dpl_GcjBAnqUhkqnWvG35bbXPrmWxs3t' },
   CAVE:    { symbol:'CAVE',    type:'erc20',  address:'0x246002aecBcd1B125e87301814Dd259Cb5fa6ED6', decimals:18, pool:'0xE9437aBA09b2a3Ad288C7296B3cF197eE96de045' },
-  EARLY:   { symbol:'EARLY',   type:'erc20',  address:'0x06E5A4c7068993Dc73DbA2C87D92bEEb06B895e3', decimals:18, pool:'0x3Fa08d722D552B7D62f6ef4A6bF5d3C4e8a1D8a9' },
-  USDC:    { symbol:'USDC',    type:'erc20',  address:'0x9B0e6F566a531b8dD500DD51B0250034Ddd58366', decimals:6,  pool:'0xD61246153091D323CDF92650287B91765ea8d910' },
-  ANAL:    { symbol:'ANAL',    type:'erc20',  address:'0x44a5163e580CcCe3A1dBe19C13770Bb554d113c4', decimals:18, pool:'0x79cA749Ea2503Fe03A3383fA8229a9be2e84A655', lowLiq:true },
-  ERNIE:   { symbol:'ERNIE',   type:'erc20',  address:'0x055fA249CFB586fF595FdCAE54E4e454Da346DF0', decimals:18, pool:'0x212218d7d519a556bbd16e3012AC6C9A3DEb8710', lowLiq:true },
-  GREG:    { symbol:'GREG',    type:'erc20',  address:'0x4CEE1f4b3808db3c6f47d521E2AB73c0A2126301', decimals:18, pool:'0xf6414180817a3fba575AfDeD570653Ca814BB191', lowLiq:true },
-  SNS:     { symbol:'SNS',     type:'erc20',  address:'0x8f65793a8dB5C31f2Feb5804Ccc65f90Ff52391c', decimals:18, pool:'0x8826325D8Dcb2ebe980D2b7d8F0034b777841825', lowLiq:true },
-  UNKOWN:  { symbol:'UNKOWN',  type:'erc20',  address:'0x219F9287ABa63bB0e966e12b7305539CcaDAF218', decimals:18, pool:'0x470E37FC4B15058e96A079B224BebF6Fa960e9e7', lowLiq:true },
-  NPL:     { symbol:'NPL',     type:'erc20',  address:'0x1FB721Afd78175B94a5E66AA8a46Fb024bDFBE39', decimals:18, pool:'0x25968f5055e9220Dd7F6C91f25A9E77A0222b572', lowLiq:true },
+  EARLY:   { symbol:'EARLY',   type:'erc20',  address:'0x06E5A4c7068993Dc73DbA2C87D92bEEb06B895e3', decimals:18, pool:'0x3Fa08d722D552B7D62f6ef4A6bF5d3C4e8a1D8a9', icon:'https://cave.money/_next/image?url=%2Ftoken_images%2FEARLY.png&w=64&q=75&dpl=dpl_DgKkYSpURTtXetkvnwKQQ2sG8UMn' },
+  USDC:    { symbol:'USDC',    type:'erc20',  address:'0x9B0e6F566a531b8dD500DD51B0250034Ddd58366', decimals:6,  pool:'0xD61246153091D323CDF92650287B91765ea8d910', icon:'https://cave.money/token_images/USDC.svg?dpl=dpl_DgKkYSpURTtXetkvnwKQQ2sG8U' },
+  ANAL:    { symbol:'ANAL',    type:'erc20',  address:'0x44a5163e580CcCe3A1dBe19C13770Bb554d113c4', decimals:18, pool:'0x79cA749Ea2503Fe03A3383fA8229a9be2e84A655', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-ADLogoNew-1769975640567-7204.png&w=64&q=75' },
+  ERNIE:   { symbol:'ERNIE',   type:'erc20',  address:'0x055fA249CFB586fF595FdCAE54E4e454Da346DF0', decimals:18, pool:'0x212218d7d519a556bbd16e3012AC6C9A3DEb8710', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-logo1-1768333994638-5194.png&w=64&q=75' },
+  GREG:    { symbol:'GREG',    type:'erc20',  address:'0x4CEE1f4b3808db3c6f47d521E2AB73c0A2126301', decimals:18, pool:'0xf6414180817a3fba575AfDeD570653Ca814BB191', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-2A15A7DE-4875-4576-99EE-527D20830940-1768673742988-5869.png&w=64&q=75' },
+  SNS:     { symbol:'SNS',     type:'erc20',  address:'0x8f65793a8dB5C31f2Feb5804Ccc65f90Ff52391c', decimals:18, pool:'0x8826325D8Dcb2ebe980D2b7d8F0034b777841825', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-315f1120-8611-4517-9956-daf74e608c60-1779646031273-4970.jpg&w=64&q=75' },
+  UNKOWN:  { symbol:'UNKOWN',  type:'erc20',  address:'0x219F9287ABa63bB0e966e12b7305539CcaDAF218', decimals:18, pool:'0x470E37FC4B15058e96A079B224BebF6Fa960e9e7', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-IMG_6144-1780319275259-2737.jpeg&w=64&q=75' },
+  NPL:     { symbol:'NPL',     type:'erc20',  address:'0x1FB721Afd78175B94a5E66AA8a46Fb024bDFBE39', decimals:18, pool:'0x25968f5055e9220Dd7F6C91f25A9E77A0222b572', lowLiq:true, icon:'https://cave.money/_next/image?url=https%3A%2F%2Fapi.enterthegrotto.xyz%2Fimages%2Fuploads%2Ftoken-565F85E0-8EB3-400C-826C-210946BB1502-1768683610308-5531.png&w=64&q=75' },
 };
 
 const ROUTER_ABI = [
@@ -699,6 +702,14 @@ function setSlippage(v, btn){
   slippagePct = v;
   document.querySelectorAll('.slip-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  document.getElementById('custom-slip').value = '';
+  updateEstimate();
+}
+function setCustomSlippage(v){
+  const n = parseFloat(v);
+  if(!v || isNaN(n) || n<=0){ return; }
+  slippagePct = Math.min(n, 50);
+  document.querySelectorAll('.slip-btn').forEach(b=>b.classList.remove('active'));
   updateEstimate();
 }
 function onAmountChange(){
